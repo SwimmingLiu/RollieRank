@@ -1,0 +1,58 @@
+name: RollieRank verification
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rollierank-verification-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      CI: "true"
+      VERIFY_OUTPUT: test-results/verification
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.19"
+      - name: Install application dependencies
+        run: |
+          npm ci
+          npm ci --prefix docs/ui-exploration/ios-v3/ui
+      - name: Install verification dependencies
+        run: |
+          uv sync --frozen --group verify
+          uv run --frozen --group verify python -m playwright install --with-deps chromium
+      - name: Doctor
+        run: >-
+          uv run --frozen --group verify python scripts/verify-rollierank.py doctor
+          --output test-results/verification
+      # The CLI rejects zero-exit test runs containing skips and retains current interaction screenshots.
+      - name: Verify feedback regressions, threaded comments, cohorts, timing, sharing and current preview assets
+        run: >-
+          uv run --frozen --group verify python scripts/verify-rollierank.py all
+          --output test-results/verification
+      - name: Upload verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rollierank-verification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: test-results/verification
+          if-no-files-found: warn
+          retention-days: 14

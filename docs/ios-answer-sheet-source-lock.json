@@ -1,0 +1,13 @@
+{
+  "scope": "Native answer sheet component, stylesheet and focused React test",
+  "sha256": {
+    "docs/ui-exploration/ios-v3/ui/answer-sheet.tsx": "a4a67586bf0613410b9bc1c1adfec581079b8b43bd09ec9c91c54b54e75c6d62",
+    "docs/ui-exploration/ios-v3/features/answer-sheet.css": "d316c90f51828e5891706346b7ef8454732cb841d5fa1c29ddb4e1fa68e5cd32",
+    "test/ios-answer-sheet-browser.test.js": "5350e9e0907c98b5c3e060d6d7167693c8bf9068cbecdd89f51e9c3edefeb0a6"
+  },
+  "verification": "test-results/ios-answer-sheet/verification.json",
+  "scopedTypecheck": "passed",
+  "actualReactBrowserTest": "passed",
+  "sourceUnchangedSinceVerification": true,
+  "pendingIntegration": "Coordinator owns app.js, bridge exports, CSS import, public vendor build and actual-port combined acceptance."
+}

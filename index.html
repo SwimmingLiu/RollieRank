@@ -2,79 +2,32 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#245445" />
-    <meta name="description" content="卷卷小榜：四海行测套题答案录入、自动计分与逐题得分报告。" />
-    <title>卷卷小榜 · 行测估分</title>
-    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <!-- 原页面采用单一估分工作区；完整原型使用紫粉品牌与可路由的应用外壳。 -->
+    <meta name="theme-color" content="#f7f4fa" />
+    <meta
+      name="description"
+      content="卷卷小榜，记录每一次行测练习。选套卷、录答案、看成绩，找到下一次进步的方向。"
+    />
+    <title>卷卷小榜 · 把每一次进步记下来</title>
+    <link rel="icon" href="/ios-v3/assets/brand/rollierank-logo-transparent.png" type="image/png" />
     <link rel="stylesheet" href="./styles.css" />
     <script type="module" src="./src/app.js"></script>
   </head>
   <body>
-    <svg class="icon-sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-      <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
-      <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 4v16h17M9 15v-4m5 4V7m5 8v-5"/></symbol>
-      <symbol id="i-left" viewBox="0 0 24 24"><path d="m14 6-6 6 6 6"/></symbol>
-      <symbol id="i-right" viewBox="0 0 24 24"><path d="m10 6 6 6-6 6"/></symbol>
-      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
-      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
-      <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
-      <symbol id="i-paste" viewBox="0 0 24 24"><path d="M8 5H5v16h14V5h-3M9 3h6v4H9zM8 12h8m-8 4h5"/></symbol>
-      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
-      <symbol id="i-rules" viewBox="0 0 24 24"><path d="M5 3h14v18H5zM9 7h6m-6 5h6m-6 5h3"/></symbol>
-      <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4 4v6h6M4.5 10a8 8 0 1 1-.3 5"/></symbol>
-      <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></symbol>
-      <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h1m4 0h1m4 0h1M6 12h1m4 0h1m4 0h1m-10 4h10"/></symbol>
-    </svg>
-    <header class="site-header">
-      <div class="header-inner">
-        <a class="brand" href="./" aria-label="卷卷小榜首页"><img src="./favicon.svg" width="38" height="38" alt="" /><span>卷卷小榜<span class="brand-caption">RollieRank</span></span></a>
-        <span class="header-divider"></span><span class="product-name">行测估分</span>
-        <div id="save-state" class="save-state" role="status"><span class="status-dot"></span>草稿保存在本机</div>
+    <div id="app">
+      <div class="boot-state">
+        <img src="/ios-v3/assets/brand/rollierank-logo-transparent.png" width="48" height="48" alt="" />
+        <p>正在打开你的练习本…</p>
       </div>
-    </header>
-    <main class="page-shell">
-      <section class="page-heading" aria-labelledby="page-title">
-        <div><div class="eyebrow"><span></span>2026 下半年 · 一期套题</div><h1 id="page-title">每一分，都算清楚。</h1><p>录入你的答案，生成这一次练习的得分报告。</p></div>
-        <div class="exam-spec"><div><strong>130</strong><span>道单选题</span></div><i></i><div><strong>100</strong><span>分满分</span></div></div>
-      </section>
-      <div class="workspace-toolbar">
-        <div class="view-tabs" role="tablist" aria-label="工作区视图">
-          <button id="entry-tab" type="button" role="tab" aria-controls="workspace" aria-selected="true" data-action="view" data-view="entry"><svg class="icon"><use href="#i-grid"/></svg>答案录入</button>
-          <button id="report-tab" type="button" role="tab" aria-controls="workspace" aria-selected="false" data-action="view" data-view="report"><svg class="icon"><use href="#i-chart"/></svg>得分报告</button>
-        </div>
-        <button class="text-button rules-trigger" type="button" data-action="rules"><svg class="icon"><use href="#i-rules"/></svg>评分规则</button>
-      </div>
-      <section class="paper-bar" aria-label="套卷选择">
-        <div class="paper-cover" aria-hidden="true"><span>行测</span><strong id="paper-number">01</strong></div>
-        <div class="paper-select-wrap"><label for="paper-select">当前套卷</label><select id="paper-select" aria-label="选择套卷"></select></div>
-        <span class="paper-tag">地市级 / 行政执法类</span>
-        <div class="paper-arrows"><button type="button" class="icon-button" data-action="paper-prev" aria-label="上一套"><svg class="icon"><use href="#i-left"/></svg></button><button type="button" class="icon-button" data-action="paper-next" aria-label="下一套"><svg class="icon"><use href="#i-right"/></svg></button></div>
-      </section>
-      <div id="workspace" role="tabpanel" aria-labelledby="entry-tab"></div>
-      <footer class="page-footer"><span>卷卷小榜 <span class="footer-dot">·</span> 把练习记下来</span><span>按提供的评分参考估分</span></footer>
-    </main>
-    <dialog id="bulk-dialog" aria-labelledby="bulk-title">
-      <div class="dialog-heading"><div><span class="eyebrow">快速录入</span><h2 id="bulk-title">批量粘贴答案</h2></div><button type="button" class="icon-button" data-action="close-dialog" aria-label="关闭批量录入"><svg class="icon"><use href="#i-close"/></svg></button></div>
-      <p class="dialog-description">支持连续选项或带题号的答案，空题用 <code>-</code> 占位。</p>
-      <div class="format-examples"><span><b>连续选项</b><code>ABCD-ABCD</code></span><span><b>逐题编号</b><code>1.A 2.B 3.C</code></span><span><b>五题分组</b><code>1-5 ABCDA</code></span></div>
-      <label class="field-label" for="bulk-start">连续选项的起始题号 <input id="bulk-start" type="number" min="1" max="130" value="1" inputmode="numeric" /></label>
-      <label class="sr-only" for="bulk-input">需要导入的答案</label><textarea id="bulk-input" rows="5" placeholder="在这里粘贴你的答案…" spellcheck="false" autocapitalize="characters"></textarea>
-      <div id="bulk-preview" class="bulk-preview" aria-live="polite">粘贴后会先预览，再确认录入。</div>
-      <div class="dialog-actions"><button type="button" class="secondary-button" data-action="close-dialog">取消</button><button type="button" class="primary-button" id="bulk-confirm" data-action="bulk-confirm" disabled>确认录入</button></div>
-    </dialog>
-    <dialog id="rules-dialog" class="rules-dialog" aria-labelledby="rules-title">
-      <div class="dialog-heading"><div><span class="eyebrow">130 题 · 100 分</span><h2 id="rules-title">评分规则</h2></div><button type="button" class="icon-button" data-action="close-dialog" aria-label="关闭评分规则"><svg class="icon"><use href="#i-close"/></svg></button></div>
-      <p class="dialog-description">按提供图片中的地市级／行政执法类标准计分。答对得对应分值，答错和未答得 0 分。</p>
-      <div id="rules-content"></div>
-      <div class="dialog-actions"><button type="button" class="primary-button" data-action="close-dialog">知道了</button></div>
-    </dialog>
-    <dialog id="confirm-dialog" class="confirm-dialog" aria-labelledby="confirm-title">
-      <div class="dialog-heading"><h2 id="confirm-title"></h2><button type="button" class="icon-button" data-action="close-dialog" aria-label="关闭确认"><svg class="icon"><use href="#i-close"/></svg></button></div>
-      <p id="confirm-description" class="dialog-description"></p>
-      <div class="dialog-actions"><button type="button" class="secondary-button" data-action="close-dialog">取消</button><button type="button" id="confirm-action" class="primary-button"></button></div>
-    </dialog>
-    <div id="toast" role="status" class="toast" hidden></div>
-    <noscript><p class="noscript">请启用 JavaScript 后使用答案录入和自动计分。</p></noscript>
+    </div>
+    <dialog id="modal" aria-labelledby="modal-title"></dialog>
+    <div id="toast" class="toast" role="status" hidden></div>
+    <noscript
+      ><p class="boot-state">请启用 JavaScript 后使用卷卷小榜。</p></noscript
+    >
   </body>
 </html>

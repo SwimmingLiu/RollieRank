@@ -1,0 +1,38 @@
+{
+  "chinese": {
+    "family": "阿里妈妈方圆体VF",
+    "css_family": "FangYuan",
+    "file": "FangYuanVariable.woff2",
+    "source": "https://fonts.alibabadesign.com/AlimamaFangYuanTiVF/AlimamaFangYuanTiVF-Thin/AlimamaFangYuanTiVF-Thin.woff2",
+    "terms": "https://www.alibabafonts.com/#/more",
+    "copyright": "Copyright(c)2023Alibaba(China)Co.,Ltd.All rights reserved.",
+    "original_file_unmodified": true,
+    "axes": {
+      "wght": [
+        200,
+        700
+      ],
+      "BEVL": [
+        1,
+        100
+      ]
+    },
+    "selected_shape": 100,
+    "sha256": "2f36da22906ae5d601ce4af009cea08e8b538a9da47e9762c5dd520ac2f3e08f"
+  },
+  "latin_and_data": {
+    "family": "Nunito",
+    "file": "NunitoVariable.woff2",
+    "source": "https://github.com/google/fonts/tree/main/ofl/nunito",
+    "license": "Nunito-OFL.txt",
+    "processing": "lossless WOFF2 compression of original TTF",
+    "sha256": "c185cf2153c0f286c98d165331d359faa826a9b6e19c261af6dfe3969fa6387c"
+  },
+  "display": {
+    "family": "Fraunces",
+    "file": "FrauncesVariable.woff2",
+    "source": "https://github.com/google/fonts/tree/main/ofl/fraunces",
+    "license": "Fraunces-OFL.txt",
+    "sha256": "b37284bcb325796035a546156157949375e87e403157e3c3f3bc3253e2dd858c"
+  }
+}

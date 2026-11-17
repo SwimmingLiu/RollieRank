@@ -1,0 +1,67 @@
+/* 功能模块使用当前纸卡、字体和珊瑚色，避免根应用主题覆盖既有 iOS 界面。 */
+.ios-feature-host {
+  --bg: #faf9f8; --card: #fff; --ink: #332e2c; --secondary: #6f6864;
+  --muted: #918983; --brand: #cf8978; --brand-dark: #a96656;
+  --soft: #f8eeea; --line: #eee9e6; --green: #62846d; --red: #b87569;
+  --rose: #b87569; --pink: #f4ded7; --red-soft: #fbf0ed;
+  font-family: inherit; color: var(--ink); min-width: 0; max-width: 100%;
+}
+.ios-feature-host:empty { display: none; }
+/* 根字体为15px时组件的2rem图标按钮只有30px，统一保留至少32px触区。 */
+body.beui-island button { min-width:32px; min-height:32px; }
+.ios-feature-host a { color: inherit; text-decoration: none; }
+.ios-feature-host .card { background: #fff; border: 1px solid var(--line); border-radius: 18px; }
+.ios-feature-host .icon { display: inline-block; width: 17px; height: 17px; flex-shrink: 0; vertical-align: middle; }
+.ios-feature-host .button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 42px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); font: inherit; cursor: pointer; }
+.ios-feature-host .button.primary { background: #f5e1db; border-color: #edd3ca; }
+.ios-feature-host .button.outline { background: #fff; }
+.ios-feature-host .button.soft { background: var(--soft); }
+.ios-feature-host .button.full { width: 100%; }
+.ios-feature-host button:disabled { opacity: .45; cursor: default; }
+.ios-feature-host .text-button { display: inline-flex; align-items: center; gap: 5px; padding: 6px; color: var(--secondary); background: none; border: 0; font: inherit; }
+.ios-feature-host .field-label { display: grid; gap: 7px; font-size: 13px; color: var(--secondary); }
+/* 这里只适配原生表单；beUI Input 的 peer 字段自行保留左右图标所需的内边距。 */
+.ios-feature-host input:not([type=checkbox]):not([type=radio]):not([type=file]):not(.peer), .ios-feature-host textarea, .ios-feature-host select { max-width: 100%; border: 1px solid #e8e3df; border-radius: 10px; background: #fff; color: var(--ink); padding: 10px 11px; font: inherit; }
+.ios-feature-host textarea { width: 100%; resize: vertical; }
+.ios-feature-host input:focus-visible, .ios-feature-host button:focus-visible, .ios-feature-host textarea:focus-visible, .ios-feature-host select:focus-visible, .ios-feature-host a:focus-visible { outline: 2px solid #b87765; outline-offset: 3px; }
+.ios-feature-host .tag { padding: 4px 8px; border-radius: 8px; background: var(--soft); color: var(--secondary); font-size: 11px; }
+.ios-feature-host .avatar { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: #f2e8e3; color: #86695b; }
+.ios-feature-host .back-link { display: inline-flex; align-items: center; gap: 5px; color: var(--secondary); font-size: 13px; }
+.ios-feature-host .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.ios-feature-sheet { padding-bottom: 12px; }
+/* 业务抽屉已有统一内容边距，外层组件不再叠加一层，标题与正文对齐。 */
+body.beui-island .rr-sheet > [data-slot="bottom-sheet-body"] { padding:0 !important; }
+body.beui-island .rr-sheet .sheet-heading { padding-inline:20px; }
+body.beui-island .rr-sheet #sheet-content { padding-inline:20px; }
+/* 原岗位模块的 dialog 宽度不能套到 BottomSheet 的内层内容，否则会挤出右侧操作。 */
+.ios-feature-sheet.positions-modal { width: 100%; max-width: 100%; }
+.ios-feature-sheet .modal-actions { display: flex; gap: 10px; justify-content: flex-end; padding-top: 16px; }
+.ios-feature-sheet .dialog-description { color: var(--secondary); line-height: 1.7; }
+.ios-feature-sheet form { min-width: 0; }
+.ios-service-notice { padding: 14px 16px; margin: 0 0 16px; border: 1px solid #ecdfd8; border-radius: 14px; font-size: 13px; line-height: 1.7; background: #fffbf8; color: #79665b; }
+.ios-service-notice p { margin: 5px 0 10px; }
+.ios-service-notice button { font: inherit; }
+.ios-feature-page { padding: 12px 0 24px; }
+.ios-feature-host .positions-profile, .ios-feature-host .analytics-entry, .ios-feature-host .correction-card { margin: 14px 0; }
+/* 真实卷可能有九个题型，保留成熟 Tabs 的横向浏览，不能按旧七类固定宽度压缩文字。 */
+/* 主板块归并后七项在常规手机中等分，窄屏保留原生横向访问。 */
+.ios-positions-rank .rr2-rank-tab-list { display: flex !important; flex-wrap: nowrap !important; width: 100% !important; min-width: 324px; }
+.ios-positions-rank .rr2-rank-tab-list > div { flex: 1 0 auto !important; width: auto !important; min-width: 44px; }
+.ios-positions-rank .rr2-rank-tab { min-width: 44px !important; padding-inline: 6px !important; font-size:12px!important; white-space: nowrap; }
+/* 原生导航已显示整体分析标题，保留同卷标题和筛选说明，避免整体页重复同一标题。 */
+.view[data-page=stats] .analytics-page[data-analytics-scope=overall] .analytics-page-title h1 { display: none; }
+@media(max-width: 360px) { .ios-feature-host .button { padding: 9px 11px; font-size: 12px; } }
+
+/* 导航与正文保持同一纸卡材质；当前页由柔和底色与字重表达。 */
+body.beui-island #bottom:has(.tabbar){padding:7px 14px max(8px,env(safe-area-inset-bottom));border:0;background:var(--bg,#fcf8f1);backdrop-filter:none}
+body.beui-island .tabbar{display:flex;gap:6px;margin:0;padding:5px!important;border:1px solid #e7dac3;border-radius:22px;background:#fffdf7;box-shadow:0 3px 0 #e9dfce}
+body.beui-island .tabbar button{display:flex!important;flex-direction:row;justify-content:center;align-items:center;gap:8px;min-height:46px!important;height:46px!important;padding:0 12px!important;border-radius:16px!important;font-size:13px!important;font-weight:500;color:#9c8a71!important;background:transparent!important;white-space:nowrap}
+body.beui-island .tabbar button.selected{background:#eee0c5!important;color:#59442b!important;font-weight:650;box-shadow:inset 0 1px 0 #fff5df}
+body.beui-island .tabbar button.selected:before{display:none!important}
+body.beui-island .tabbar .ico{width:20px;height:20px;stroke-width:1.7}
+body.beui-island .tabbar button.selected .ico{stroke-width:1.9}
+
+/* 报告主动作与两个图标使用同一48px轨道，不受入口卡通用padding影响。 */
+body.beui-island #app[data-page=report] #bottom .row-actions{align-items:center;gap:12px}
+body.beui-island #app[data-page=report] #bottom .row-actions .primary{height:48px!important;min-height:48px!important;margin:0!important}
+body.beui-island #app[data-page=report] #bottom .row-actions .icon-button,body.beui-island #app[data-page=report] #bottom .row-actions .rr-report-comment{display:grid!important;place-items:center;align-self:center;width:48px!important;min-width:48px!important;height:48px!important;min-height:48px!important;padding:0!important;margin:0!important;gap:0!important;box-shadow:none!important}

@@ -1,0 +1,21 @@
+.ios-answer-sheet { min-width: 0; color: var(--ink, #302e2b); font-family: var(--ui-font, inherit); }
+.ios-answer-sheet-summary { display: flex; align-items: baseline; gap: 4px; padding: 0 2px 9px; margin: 0; font-size: 12px; line-height: 1.5; color: #81766d; }
+.ios-answer-sheet-summary strong { font-size: 14px; color: #484039; font-weight: 650; }
+.ios-answer-sheet-list { max-height: min(52svh, 460px); min-height: 0; overflow: auto; overscroll-behavior: contain; overflow-anchor: none; scrollbar-width: thin; scrollbar-color: #ded5c9 transparent; padding: 0 3px 8px; }
+.ios-answer-sheet-group { margin: 0 0 12px; min-width: 0; }
+.ios-answer-sheet-group:last-child { margin-bottom: 0; }
+.ios-answer-sheet-group-title { position: sticky; top: 0; z-index: 1; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 12px 1px 10px; margin: 0; background: #fff; color: #51483f; font-size: 13px; font-weight: 600; line-height: 1.5; }
+.ios-answer-sheet-group-title span { min-width: 0; }
+.ios-answer-sheet-group-title small { flex-shrink: 0; color: #928779; font-size: 11px; font-weight: 450; white-space: nowrap; }
+.ios-answer-sheet-grid { --ios-answer-sheet-columns: 5; display: grid; grid-template-columns: repeat(var(--ios-answer-sheet-columns), minmax(0, 1fr)); gap: 8px; }
+/* beUI size utilities are scoped by .beui-island; match that specificity to retain square cells. */
+.ios-answer-sheet .ios-answer-sheet-cell { box-sizing: border-box; position: relative; display: grid; place-items: center; width: 100%; min-width: 44px; min-height: 44px; height: auto; aspect-ratio: 1; padding: 11px 0 0; border: 1px solid #eae3d9; border-radius: 13px; background: #fff; color: #3f3832; box-shadow: none; line-height: 1; }
+.ios-answer-sheet .ios-answer-sheet-cell[data-answer-state=answered] { background: #f5ecdb; border-color: #eadfc9; }
+.ios-answer-sheet .ios-answer-sheet-cell[aria-current=true] { border: 2px solid #d49a90; box-shadow: 0 0 0 1px #f7e6e1 inset; }
+.ios-answer-sheet-number { position: absolute; top: 7px; left: 8px; color: #8c8073; font: 500 11px/1.2 var(--ui-font, inherit); font-variant-numeric: tabular-nums; }
+.ios-answer-sheet-answer { font: 650 20px/1.1 var(--ui-font, inherit); color: #493c31; }
+.ios-answer-sheet-blank { color: #d8d1c7; font-size: 15px; font-weight: 400; line-height: 1; }
+.ios-answer-sheet .ios-answer-sheet-cell:focus-visible { outline: 2px solid #675d52; outline-offset: 2px; }
+@media (max-width: 350px) {
+  .ios-answer-sheet-grid { --ios-answer-sheet-columns: 4; }
+}

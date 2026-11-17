@@ -1,0 +1,120 @@
+/* 计时与录答扩展沿用纸卡主题，工具保持在答卷和所属弹层内。 */
+body.beui-island .rr-home:has(.rr-home-timer) { gap:20px; }
+body.beui-island .rr-home-timer { padding:0!important; gap:0!important; background:#fffdf7!important; border:1px solid #e4d6bf!important; border-radius:20px!important; box-shadow:0 3px 0 #e9dfcc!important; }
+body.beui-island .rr-home-timer > [data-slot=card-content] { display:flex; align-items:center; gap:11px; padding:16px!important; }
+body.beui-island .rr-home-timer-icon { display:grid; place-items:center; flex:none; width:40px; height:40px; border:1px solid #e3d0ad; border-radius:13px; background:#f0e4cb; color:#9d7746; }
+body.beui-island .rr-home-timer h2 { margin:0 0 6px; font-size:15px; font-weight:650; color:#463a2c; }
+body.beui-island .rr-home-timer small { color:#a08a6d; font-size:11px; }
+body.beui-island .rr-home-timer-value { margin-left:auto; display:flex; align-items:baseline; gap:3px; white-space:nowrap; }
+body.beui-island .rr-home-timer-value strong { font:650 28px/1 var(--display-font,serif); letter-spacing:-.6px; color:#655033; font-variant-numeric:tabular-nums; }
+body.beui-island .rr-home-timer-action { display:grid; place-items:center; width:32px; height:32px; flex:none; border-radius:50%; background:#302d26; color:#fffaf1; }
+body.beui-island .rr-timer-paper-picker { display:grid; gap:12px; }
+body.beui-island .rr-timer-paper-search [data-state] { height:44px; border:1px solid #e3d6c2; border-radius:12px; background:#fffdf8; }
+body.beui-island .rr-timer-paper-search input.peer { border:0!important; border-radius:0!important; background:transparent!important; box-shadow:none!important; padding:0 12px 0 38px!important; font-size:14px; }
+body.beui-island .rr-timer-paper-list { display:grid; gap:0; }
+body.beui-island .rr-timer-paper-option { display:flex; width:100%; justify-content:flex-start; gap:10px; padding:12px 2px; min-height:66px; height:auto; border-radius:0; border-bottom:1px solid #eee3d1; color:#66543d; }
+/* 套卷主标签承载题量和分钟，避免旧的两行网格把信息重新拆小。 */
+body.beui-island .rr-timer-paper-option > .rr-timer-paper-copy { min-width:0; flex:1; text-align:left; }
+@media(max-width:350px) { body.beui-island .rr-home-timer > [data-slot=card-content] { padding:13px!important; gap:8px; } body.beui-island .rr-home-timer-value strong { font-size:24px; } body.beui-island .rr-home-timer-icon { width:34px; height:36px; } }
+body.beui-island .rr-entry-tools { padding:2px 20px 0; }
+body.beui-island .rr-entry-toolbar { display:flex; align-items:center; gap:4px; min-height:42px; }
+body.beui-island .rr-entry-toolbar button { min-height:36px!important; height:36px!important; font-size:12px!important; padding:0 8px!important; border-radius:10px!important; color:#7d6b55!important; box-shadow:none!important; }
+body.beui-island .rr-entry-toolbar button[aria-label^="切换"],body.beui-island .rr-entry-toolbar button[aria-label="做题计时"] { width:36px!important; min-width:36px!important; padding:0!important; }
+body.beui-island .rr-entry-section-picker { gap:5px!important; }
+body.beui-island .rr-entry-toolbar-space { flex:1; }
+body.beui-island .rr-entry-marks { gap:3px!important; }
+body.beui-island .rr-entry-single-nav { display:flex; align-items:center; justify-content:space-between; padding:5px 0 10px; color:#8c7d6a; font-size:12px; }
+body.beui-island .rr-entry-single-nav button { width:36px; height:36px; min-height:36px; padding:0; }
+body.beui-island .rr-entry-single-nav b { color:#3d3326; font-size:17px; }
+body.beui-island .entry-number { position:relative; display:grid!important; place-items:center; width:34px!important; min-width:34px!important; height:44px!important; min-height:44px!important; padding:0!important; border:0!important; background:transparent!important; box-shadow:none!important; border-radius:8px!important; font-size:13px!important; color:#9b8d7b!important; }
+body.beui-island .entry-number.is-marked { color:#ae7457!important; background:#f2e2c8!important; }
+body.beui-island .entry-number .entry-mark-dot { position:absolute; width:4px; height:4px; border-radius:50%; background:#b9825f; bottom:5px; }
+body.beui-island .answer-row.is-review-marked { background:#f8efdE55; }
+body.beui-island .answer-content [hidden] { display:none!important; }
+body.beui-island .entry-mode-single { padding:8px 22px 24px; }
+body.beui-island .entry-mode-single .answer-section { border:1px solid #e8dbc5; border-radius:22px; background:#fffdf8; padding:16px; box-shadow:0 4px 0 #e7ddcd; }
+body.beui-island .entry-mode-single .type-heading { display:none; }
+body.beui-island .entry-mode-single .answer-row { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; border:0; padding:0; }
+body.beui-island .entry-mode-single .answer-row > strong { grid-column:1/-1; display:flex; justify-content:center; padding-bottom:8px; }
+body.beui-island .entry-mode-single .entry-number { width:52px!important; height:52px!important; font:650 24px/1 var(--display-font,serif)!important; }
+body.beui-island .entry-mode-single .choice { height:68px!important; min-height:68px!important; font-size:22px!important; }
+body.beui-island .rr-session-sheet { font-family:var(--ui-font,inherit); background:#fffdf8!important; color:#3c3329; }
+body.beui-island .rr-session-timer { display:grid; gap:15px; padding:4px 0 6px; }
+body.beui-island .rr-session-paper-context { margin:0 0 12px; color:#9a8568; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+body.beui-island .rr-session-timer-heading { display:flex; align-items:center; gap:8px; color:#8f7149; }
+body.beui-island .rr-session-timer-heading h2 { margin:0; font-size:16px; color:#3c3329; }
+body.beui-island .rr-session-total-plan { display:flex; gap:12px; align-items:center; padding:12px; border:1px solid #eadcc6; border-radius:14px; background:#fbf3e5; }
+body.beui-island .rr-session-total-plan label { flex:1; font-size:14px; }
+body.beui-island .rr-session-total-plan > span { font-size:12px; color:#8e7d65; }
+body.beui-island .rr-session-plan-input { width:76px; flex:none; }
+body.beui-island .rr-session-plan-input [data-state] { border-radius:10px!important; height:38px!important; border:1px solid #e5d6bd!important; background:#fffdf8; }
+body.beui-island .rr-session-plan-input input.peer { text-align:center; width:100%; padding:0 5px!important; border:0!important; box-shadow:none!important; background:transparent!important; border-radius:0!important; font:550 16px/1 var(--ui-font,inherit)!important; }
+body.beui-island .rr-session-presets { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+body.beui-island .rr-session-presets button { min-height:36px; height:36px; padding:0 6px; font-size:12px; border-radius:10px; }
+body.beui-island .rr-session-presets button[aria-pressed=true] { background:#f0dfbf; color:#6e4e29; border-color:#cfb88c; }
+body.beui-island .rr-session-modules { display:grid; gap:2px; }
+body.beui-island .rr-session-modules > div { display:grid; grid-template-columns:minmax(0,1fr) auto 36px; gap:8px; align-items:center; padding:4px 0; border-bottom:1px solid #eee3d3; }
+body.beui-island .rr-session-module-name { justify-content:flex-start!important; gap:7px!important; font-size:13px!important; padding:0 5px!important; min-width:0; min-height:38px; height:38px; border-radius:9px; color:#7d6b55; }
+body.beui-island .rr-session-module-dot { width:14px; height:14px; flex:none; border:1px solid #ddd0ba; border-radius:50%; }
+body.beui-island .rr-session-modules > .is-active .rr-session-module-name { background:#f8efdf; color:#a1784b; }
+body.beui-island .rr-session-modules b { font-size:15px; font-weight:550; font-variant-numeric:tabular-nums; }
+body.beui-island .rr-session-modules small { font-size:11px; color:#99866d; white-space:nowrap; }
+body.beui-island .rr-session-actions { display:flex; gap:10px; padding-top:6px; }
+body.beui-island .rr-session-actions button { flex:1; min-height:46px; height:46px; font-size:13px; padding-inline:8px; }
+body.beui-island .rr-session-actions button:last-child { background:#302d26; color:#fffdf8; }
+body.beui-island .rr-session-clock { text-align:center; display:grid; gap:12px; padding:12px 0 6px; }
+body.beui-island .rr-session-clock > strong { font-family:var(--display-font,serif); font-size:48px; line-height:1.1; font-variant-numeric:tabular-nums; color:#3b3326; }
+body.beui-island .rr-session-clock small { color:#9c886a; font-size:12px; }
+body.beui-island .rr-entry-chapter-list { display:grid; gap:4px; }
+body.beui-island .rr-entry-chapter-list button { display:flex!important; justify-content:flex-start!important; gap:12px; width:100%; min-height:48px; padding:9px 10px!important; border-bottom:1px solid #eee4d5; border-radius:0; font-size:14px; }
+body.beui-island .rr-entry-chapter-list button span { flex:1; text-align:left; }
+body.beui-island .rr-entry-chapter-list button small { font-size:12px; color:#9a876c; }
+body.beui-island .rr-entry-review-list { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+body.beui-island .rr-entry-review-list button { display:flex; flex-direction:column; gap:4px; min-height:66px; height:auto; border-radius:12px; padding:8px 4px; }
+body.beui-island .rr-entry-review-list b { font-size:17px; color:#5f4931; }
+body.beui-island .rr-entry-review-list small { font-size:11px; }
+body.beui-island .rr-entry-review-list p { grid-column:1/-1; text-align:center; padding:24px 0; font-size:13px; color:#9a876c; }
+body.beui-island .rr-session-report { margin:0; padding:0!important; gap:0!important; border:1px solid #e7dccb!important; border-radius:18px!important; background:#fffdf8!important; box-shadow:none!important; }
+body.beui-island .rr-session-report > [data-slot=card-content] { padding:11px 13px!important; }
+body.beui-island .rr-session-report-toggle { display:flex!important; width:100%; gap:9px; justify-content:flex-start!important; padding:0!important; height:auto!important; min-height:42px; color:#8b7250; }
+body.beui-island .rr-session-report-toggle > span { display:grid; gap:4px; flex:1; text-align:left; }
+body.beui-island .rr-session-report-toggle b { font-size:13px; font-weight:600; color:#4a3c2e; }
+body.beui-island .rr-session-report-toggle small { font-size:11px; color:#a18662; }
+body.beui-island .rr-session-report-toggle strong { font-size:21px; font-family:var(--display-font,serif); color:#4a3c2e; }
+body.beui-island .rr-session-report-meta { display:flex; justify-content:space-between; margin:10px 0; color:#9a876c; font-size:12px; }
+body.beui-island .rr-session-report-detail table { width:100%; table-layout:fixed; border-collapse:collapse; font-size:11px; }
+body.beui-island .rr-session-report-detail th,body.beui-island .rr-session-report-detail td { text-align:right; padding:9px 2px; border-top:1px solid #eee4d4; font-variant-numeric:tabular-nums; font-weight:400; }
+body.beui-island .rr-session-report-detail th:first-child { text-align:left; width:31%; }
+body.beui-island .rr-session-report-detail thead { color:#9a876c; }
+body.beui-island .rr-session-report-detail .is-over { color:#be7864; }
+body.beui-island .ios-answer-sheet-cell[data-review-marked=true]:after { content:""; position:absolute; top:6px; right:6px; width:5px; height:5px; border-radius:50%; background:#bc8d58; }
+@media(max-width:350px) { .rr-entry-tools { padding-inline:14px; }.entry-mode-single { padding-inline:16px; }.rr-session-total-plan { gap:8px; }.rr-session-modules > div { gap:5px; grid-template-columns:minmax(0,1fr) auto 30px; }.rr-session-report { margin-inline:16px; } }
+
+body.beui-island .entry-number:not(.is-marked) .entry-mark-dot { display:none; }
+body.beui-island .rr-session-paused { justify-self:center; font-size:12px; color:#a07e55; }
+/* 留空是交卷的有效结果，三项紧凑计数与总题量一致，不能只显示正误。 */
+body.beui-island .rr3-outcomes.has-blank { grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+body.beui-island .rr3-outcomes.has-blank > span { flex-wrap:wrap; justify-content:center; gap:4px; padding:9px 5px; }
+body.beui-island .rr3-outcomes.has-blank b { font-size:22px; }
+body.beui-island .rr3-outcomes.has-blank small { font-size:10px; }
+body.beui-island .rr3-outcomes.has-blank .rr6-outcome-icon { width:21px; height:21px; }
+body.beui-island .rr-outcome-blank { color:#988363; }
+body.beui-island .rr-outcome-blank .rr6-outcome-icon { background:#ebe2ce; }
+/* 窄屏卷卡仍把分数、单位与箭头当作一个比较区域，避免“分”孤立换行。 */
+body.beui-island .rr3-paper-score { display:inline-flex; align-items:baseline; white-space:nowrap; }
+@media(max-width:350px) {
+  body.beui-island .rr3-paper-score { font-size:26px; }
+  body.beui-island .rr3-paper-foot { gap:2px; }
+  body.beui-island .rr3-paper-foot > svg { width:13px; height:13px; }
+}
+
+/* 录入状态沿用同一暖色图标底，不再与独立计时动作竞争。 */
+body.beui-island .rr3-paper-edit-badge{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:#faeedb;color:#b0804b;margin-top:-4px;margin-right:-4px;flex:none}
+
+/* 书签补上“存疑”，触屏能理解用途；320px仍保留四个完整选项和独立点击区。 */
+body.beui-island .answer-row{grid-template-columns:22px repeat(4,minmax(0,1fr)) 46px;gap:5px}
+body.beui-island .entry-mark-button{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:46px!important;min-width:46px!important;height:44px!important;min-height:44px!important;padding:0!important;border:0!important;border-radius:9px!important;background:transparent!important;color:#9e896b!important;box-shadow:none!important}
+body.beui-island .entry-mark-button svg{width:12px;height:13px}
+body.beui-island .entry-mark-label{font-size:10px;line-height:1;white-space:nowrap}
+body.beui-island .entry-mark-button.is-marked{color:#a57441!important;background:#f2e1c4!important}
+body.beui-island .entry-mark-button.is-marked svg{fill:#dfc79c}

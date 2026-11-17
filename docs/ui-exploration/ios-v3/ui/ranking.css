@@ -1,0 +1,78 @@
+/* Compact ranks share the existing typography and coral palette; scene space
+   belongs to the podium's actual camera rather than a cropped empty wrapper. */
+.rr2-ranking{padding:22px 22px 24px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.rr2-rank-heading{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:11px;min-height:35px}
+.rr2-rank-heading h1{font-size:24px;font-weight:650;line-height:1.3;letter-spacing:-.8px;white-space:nowrap}
+.rr2-rank-identity{display:flex;align-items:center;justify-content:flex-end;gap:5px;min-width:0;color:#71717a;font-size:11px;line-height:1.6;font-weight:400;letter-spacing:-.15px}
+.rr2-rank-identity>span:last-child{min-width:0;text-align:right;text-wrap:balance}
+.rr2-rank-publisher{width:15px!important;height:15px!important;flex:0 0 15px;border-radius:50%;background:transparent!important;box-shadow:none!important}
+.rr2-rank-publisher img{width:100%;height:100%;object-fit:contain}
+.rr2-rank-tabs{min-width:0;width:100%}
+.rr2-rank-tab-list{width:100%!important;display:flex!important;padding:4px!important;gap:0!important;background:#f3f3f5!important;border-radius:13px!important}
+.rr2-rank-tab-list>div{flex:1;min-width:0}
+.rr2-rank-tab{width:100%;min-height:42px!important;font-size:13px!important;font-weight:550!important;border-radius:10px!important}
+.rr2-rank-tab-indicator{background:#fff!important;border:1px solid #e7e7eb!important;box-shadow:0 2px 5px #18181b06!important;border-radius:10px!important}
+.rr2-rank-tab[data-tabs-value][aria-selected=true]{color:#18181b!important}
+.rr2-rank-tab [data-tabs-label]{color:#18181b!important}
+.rr2-rank-stage{height:260px!important;min-height:260px;display:block!important;gap:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible}
+.rr2-rank-stage-content{height:100%;padding:0!important}
+.rr2-podium{height:100%;width:100%;isolation:isolate;overflow:visible}
+.rr2-podium-person{width:100px;display:flex;align-items:center;flex-direction:column;gap:4px;text-align:center;z-index:2;pointer-events:none;will-change:top,opacity}
+.rr2-podium-avatar{height:35px!important;width:35px!important;border-radius:50%!important;display:inline-flex!important;border:1px solid #fff!important;background:#f3f3f5!important;box-shadow:0 4px 10px #18181b05!important;flex-shrink:0}
+.rr2-podium-avatar img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.rr2-podium-person[data-place="1"] .rr2-podium-avatar{height:39px!important;width:39px!important;border:2px solid #fff!important;box-shadow:0 0 0 1px #edd3d1,0 5px 12px #b479730b!important}
+.rr2-podium-name{font-size:11px;line-height:1.5;font-weight:400;color:#71717a;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.rr2-podium-score{display:inline-flex;align-items:baseline;justify-content:center;gap:2px;font-variant-numeric:tabular-nums;line-height:1.2;white-space:nowrap}
+.rr2-podium-score strong{font-size:18px;font-weight:600;letter-spacing:-.9px}
+.rr2-podium-score small{font-size:10px;color:#9999a2;font-weight:400}
+.rr2-podium-number{font:550 35px/1 var(--ui-font);letter-spacing:-1.5px;color:#707078;z-index:1;pointer-events:none}
+.rr2-podium-number[data-place="1"]{color:#ad6264;font-weight:600}
+.rr2-rank-self{padding:0!important;gap:0!important;border-radius:18px!important;border:1px solid #f5dfd9!important;background:#fff2ef!important;box-shadow:0 4px 13px -12px #ab686040!important}
+.rr2-rank-self-content{min-height:75px;display:flex;align-items:center;gap:13px;padding:14px 16px!important}
+.rr2-rank-place{display:inline-flex;align-items:baseline;white-space:nowrap;color:#d37375;font-size:29px;font-weight:600;letter-spacing:-1.3px;font-variant-numeric:tabular-nums}
+.rr2-rank-place small{font:400 11px/1.4 var(--ui-font);letter-spacing:0;color:#a57570}
+.rr2-rank-mine{font-size:12px!important;font-weight:550!important;border:0!important;padding:3px 0!important;box-shadow:none!important;background:transparent!important;white-space:nowrap}
+.rr2-rank-self-score{margin-left:auto;color:#18181b;font-size:28px;line-height:1.1;font-weight:600;letter-spacing:-1.25px;white-space:nowrap}
+.rr2-rank-results{padding:0!important;gap:0!important;border:0!important;background:transparent!important;box-shadow:none!important;border-radius:0!important}
+.rr2-rank-results-content{padding:0!important}
+.rr2-rank-list{margin:0;padding:0;list-style:none}
+.rr2-rank-row{display:grid;grid-template-columns:29px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:59px;padding:11px 2px;border-bottom:1px solid #f0f0f3}
+.rr2-rank-row:last-child{border-bottom:0}
+.rr2-rank-row-place{font-size:13px!important;font-weight:450!important;color:#a0a0aa!important;letter-spacing:.02em;padding:0!important;border:0!important;box-shadow:none!important;background:transparent!important;justify-content:flex-start!important}
+.rr2-rank-row-name{color:#71717a;font-size:13px;line-height:1.6;min-width:0;overflow-wrap:anywhere}
+.rr2-rank-row-score{font-size:23px;line-height:1.2;letter-spacing:-.8px;font-weight:550;color:#242428;white-space:nowrap}
+@media(max-width:350px){
+ .rr2-ranking{padding:18px 18px 20px;gap:12px}
+ .rr2-rank-heading{column-gap:9px;min-height:38px}
+ .rr2-rank-heading h1{font-size:23px}
+ .rr2-rank-identity{font-size:11px;gap:4px}
+ .rr2-rank-tab{font-size:12px!important;padding-left:10px!important;padding-right:10px!important}
+ .rr2-rank-stage{height:242px!important;min-height:242px}
+ .rr2-podium-person{width:88px}
+ .rr2-podium-name{font-size:11px}
+ .rr2-podium-score strong{font-size:16px}
+ .rr2-podium-avatar{width:33px!important;height:33px!important}
+ .rr2-podium-person[data-place="1"] .rr2-podium-avatar{width:37px!important;height:37px!important}
+ .rr2-podium-number{font-size:30px}
+ .rr2-rank-self-content{gap:10px;padding:13px!important;min-height:72px}
+ .rr2-rank-place{font-size:26px}.rr2-rank-self-score{font-size:25px}
+ .rr2-rank-row{min-height:57px;gap:10px}
+}
+@media(max-width:280px){
+ .rr2-ranking{padding:14px 12px 18px;gap:10px}
+ .rr2-rank-heading{column-gap:6px}
+ .rr2-rank-heading h1{font-size:21px}
+ .rr2-rank-identity{font-size:11px}
+ .rr2-rank-stage{height:226px!important;min-height:226px}
+ .rr2-podium-person{width:72px;gap:3px}
+ .rr2-podium-name{font-size:10px}
+ .rr2-podium-score strong{font-size:14px;letter-spacing:-.6px}
+ .rr2-podium-avatar{width:29px!important;height:29px!important}
+ .rr2-podium-person[data-place="1"] .rr2-podium-avatar{width:32px!important;height:32px!important}
+ .rr2-podium-number{font-size:26px}
+ .rr2-rank-self-content{flex-wrap:wrap;gap:8px;padding:12px!important}
+ .rr2-rank-self-score{font-size:23px}
+ .rr2-rank-row{grid-template-columns:23px minmax(0,1fr) auto;gap:8px}
+ .rr2-rank-row-name{font-size:12px}.rr2-rank-row-score{font-size:20px}
+}
+@media(prefers-reduced-motion:reduce){.rr2-podium-person{will-change:auto}}

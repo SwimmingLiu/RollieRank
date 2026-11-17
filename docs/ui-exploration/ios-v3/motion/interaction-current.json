@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "viewport": [
+    390,
+    844
+  ],
+  "actions": [
+    "home-first-use",
+    "list-entry",
+    "single-question",
+    "papers-draft",
+    "home-real-draft",
+    "timer-publishers",
+    "timer-custom",
+    "timer-paused"
+  ],
+  "errors": [],
+  "gif": "motion/interaction-current.gif",
+  "gifSha256": "33518f0d98cff9ee2dd5b0c6dbf887d08fb1630eaa4fa3a9f91aac72b71bb106",
+  "sources": {
+    "scripts/record-ios-preview.mjs": "c27b23f8a0462a7dc449c0966c76698051a11414ca228781e6d7bf98c20d09d5",
+    "docs/ui-exploration/ios-v3/app.js": "91b4174119121efdd55329f1ec9a71a12ff7d69570b20d72564ef5be9b507daf",
+    "docs/ui-exploration/ios-v3/app.html": "1eebd110be34adb10b1b83ba3bc223eec87cdcd5a25047850b1c9b2864195db3",
+    "docs/ui-exploration/ios-v3/vendor/beui.js": "e102ccc4160b72b4d089c30c568d5c08d11f0b1c1f1e0f2879248f3551c2651b",
+    "docs/ui-exploration/ios-v3/features/base.css": "7cd8afd4b17800c0cc0995a2dc526eb49324588360a24631ba649b787a78dd37",
+    "docs/ui-exploration/ios-v3/features/practice-session.css": "72e70af43fdb74796bf090894a6f0f609c5627a85a3e104aef921d01bed4f5da",
+    "docs/ui-exploration/ios-v3/features/timer-configuration.css": "7aa94e9cdc9a8c4d0d63b07f485b475bab6dbd8197c093628a1adfa52edff9a1",
+    "docs/ui-exploration/ios-v3/features/single-answer.css": "895cdba173cb53540d78a44b947e29f94dc96e8a9f8aa264be1da1e9817ca633",
+    "docs/ui-exploration/ios-v3/assets/brand/rollierank-logo-transparent.png": "6bd654d51d8b0b1ce538ce83c65fd0c5e2e109e02839a4d0538fc638199a3020"
+  },
+  "evidence": "/Users/swimmingliu/data/github-proj/RollieRank/test-results/feedback-reaudit/preview-motion-two-category"
+}

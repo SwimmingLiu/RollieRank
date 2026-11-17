@@ -4,3 +4,11 @@ dist/
 node_modules/
 .DS_Store
 test-results/
+# 本机套卷、提交凭证和管理审计含练习数据，不进入版本库。
+.local/
+
+# Design-tool evidence (large media), kept local.
+.beauye/
+.venv/
+.claude/
+mini-program/project.private.config.json

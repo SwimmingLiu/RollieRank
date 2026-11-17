@@ -1,0 +1,159 @@
+{
+  "publisherProfiles": {
+    "地市": {
+      "sourceFile": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
+      "sourceSha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff",
+      "sections": [
+        {
+          "id": "politics",
+          "name": "政治理论",
+          "start": 1,
+          "end": 20,
+          "cents": 70
+        },
+        {
+          "id": "common",
+          "name": "常识判断",
+          "start": 21,
+          "end": 35,
+          "cents": 70
+        },
+        {
+          "id": "language",
+          "name": "言语理解",
+          "start": 36,
+          "end": 65,
+          "cents": 80
+        },
+        {
+          "id": "quantity",
+          "name": "数量关系",
+          "start": 66,
+          "end": 75,
+          "cents": 80
+        },
+        {
+          "id": "graphic",
+          "name": "图形推理",
+          "start": 76,
+          "end": 85,
+          "cents": 80
+        },
+        {
+          "id": "definition",
+          "name": "定义判断",
+          "start": 86,
+          "end": 95,
+          "cents": 80
+        },
+        {
+          "id": "analogy",
+          "name": "类比推理",
+          "start": 96,
+          "end": 100,
+          "cents": 70
+        },
+        {
+          "id": "logic",
+          "name": "逻辑判断",
+          "start": 101,
+          "end": 110,
+          "cents": 80
+        },
+        {
+          "id": "data",
+          "name": "资料分析",
+          "start": 111,
+          "end": 130,
+          "cents": 80
+        }
+      ]
+    },
+    "副省": {
+      "sourceFile": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
+      "sourceSha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2",
+      "sections": [
+        {
+          "id": "politics",
+          "name": "政治理论",
+          "start": 1,
+          "end": 20,
+          "cents": 70
+        },
+        {
+          "id": "common",
+          "name": "常识判断",
+          "start": 21,
+          "end": 35,
+          "cents": 70
+        },
+        {
+          "id": "language",
+          "name": "言语理解",
+          "start": 36,
+          "end": 65,
+          "cents": 70
+        },
+        {
+          "id": "quantity",
+          "name": "数量关系",
+          "start": 66,
+          "end": 80,
+          "cents": 70
+        },
+        {
+          "id": "graphic",
+          "name": "图形推理",
+          "start": 81,
+          "end": 90,
+          "cents": 80
+        },
+        {
+          "id": "definition",
+          "name": "定义判断",
+          "start": 91,
+          "end": 100,
+          "cents": 80
+        },
+        {
+          "id": "analogy",
+          "name": "类比推理",
+          "start": 101,
+          "end": 105,
+          "cents": 80
+        },
+        {
+          "id": "logic",
+          "name": "逻辑判断",
+          "start": 106,
+          "end": 115,
+          "cents": 80
+        },
+        {
+          "id": "data",
+          "name": "资料分析",
+          "start": 116,
+          "end": 135,
+          "cents": 80
+        }
+      ]
+    }
+  },
+  "referenceRule": {
+    "id": "guokao-practice-v1",
+    "label": "平台国考参考估分",
+    "normalizationMaxCents": 10000,
+    "weights": {
+      "politics": 50,
+      "common": 50,
+      "language": 80,
+      "quantity": 100,
+      "reasoning": 80,
+      "graphic": 80,
+      "definition": 80,
+      "analogy": 80,
+      "logic": 85,
+      "data": 100
+    }
+  }
+}

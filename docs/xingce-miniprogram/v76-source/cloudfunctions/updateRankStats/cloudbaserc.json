@@ -1,0 +1,1 @@
+{"envId":"cloud1-8g137o5da8d5e269","region":"ap-shanghai","functionRoot":"./","functions":[{"name":"updateRankStats","dir":".","timeout":120,"memorySize":512,"runtime":"Nodejs16.13","handler":"index.main","installDependency":true,"triggers":[]}]}

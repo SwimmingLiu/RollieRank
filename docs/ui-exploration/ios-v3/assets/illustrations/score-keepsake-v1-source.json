@@ -1,0 +1,12 @@
+{
+  "source": "built-in image_gen",
+  "original": "/Users/swimmingliu/.codex/generated_images/01a1ba11-b9e3-7d50-94c8-a3fc448e3e50/exec-68768547-c991-46cd-b3e5-bcb58c868d92.png",
+  "sha256": "4fc7e43228d0d0dae0c4227826b9bc8cc1985ded7f31298ae951c44f015e4aa7",
+  "purpose": "Original decorative achievement illustration; contains no live score or rank data.",
+  "transparent_background": true,
+  "consumer_asset": {
+    "path": "score-keepsake-v1-640.png",
+    "sha256": "7120b79c7dcd166fc76096e5bbc2ef376d0de3c7160eb37a5f3520c1c22be9f7",
+    "transform": "Resized to640px with sips; original and alpha preserved."
+  }
+}

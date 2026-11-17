@@ -1,0 +1,43 @@
+/* 学习工具沿用卷卡的两列纸面节奏，入口整卡可点，避免外接表单占用记录页。 */
+.rr-practice-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.rr-practice-tool{padding:0!important;gap:0!important;border:1px solid #e8dfd0!important;border-radius:19px!important;background:#fffdf8!important;box-shadow:0 3px 0 #e9dfce}
+/* 两张工具卡只呈现入口与当前值，避免挤占下方历史列表。 */
+.rr-practice-tool-content{padding:13px 14px!important;display:flex;flex-direction:column;gap:8px;min-height:80px}
+.rr-practice-tool-label{display:flex;align-items:center;gap:6px;color:#847560;font-size:12px;font-weight:550}
+.rr-practice-tool-label svg{flex:none}.rr-practice-tool.analysis .rr-practice-tool-label{color:#a16e65}
+.rr-practice-tool-value{display:flex;align-items:center;justify-content:space-between;gap:7px;min-width:0}
+.rr-practice-tool-value>strong{font-size:15px;font-weight:650;line-height:1.45;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.rr-practice-tool-value>svg{flex:none;color:#a7967c}.rr-practice-tool.analysis strong{display:flex;align-items:baseline;gap:5px}
+.rr-practice-tool-value b{font-size:20px;font-weight:650;line-height:1}.rr-practice-tool-value small{font-size:11px;font-weight:400;color:#8d8170}
+.rr-practice-tool-loader,.rr-position-spinner{animation:rr-position-spin .9s linear infinite}@keyframes rr-position-spin{to{transform:rotate(360deg)}}
+.rr-position-picker{font-family:var(--ui-font,inherit);color:#302f28;display:flex;flex-direction:column;max-height:calc(70svh - 44px);min-height:180px;min-width:0}
+.rr-position-exams{display:grid;grid-template-columns:1fr 1fr;gap:4px;flex:none;padding:3px;background:#f4efe6;border-radius:12px;margin-bottom:12px}
+.rr-position-exams>button{height:38px!important;min-height:38px!important;font-size:13px!important;border-radius:9px!important;color:#91816a!important}
+.rr-position-exams>button[aria-pressed=true]{background:#fffdf8!important;color:#4c4234!important;box-shadow:0 1px 3px #75654b12}
+.rr-position-context{flex:none;color:#9b8d7b;font-size:11px;margin:0 0 12px;padding-left:18px}
+.rr-position-source{font:inherit!important;color:inherit!important;padding:0!important;height:auto!important;min-height:32px!important;gap:5px!important}
+.rr-position-path{list-style:none;padding:0 0 12px;margin:0;flex:none}
+.rr-position-path li{position:relative;display:flex;align-items:center;gap:14px;padding:0 0 0 18px;min-height:40px}
+.rr-position-path li:not(:last-child):before{content:"";position:absolute;width:1px;left:3px;top:22px;bottom:-3px;background:#e7dfd3}
+.rr-position-path-dot{position:absolute;left:0;top:17px;width:7px;height:7px;border-radius:50%;background:#e6ddcf}
+.rr-position-path li.current{font-size:14px;font-weight:650;color:#c07c6f}.rr-position-path .current .rr-position-path-dot{background:#dfb0a4}
+.rr-position-path-item{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;text-align:left!important;width:100%;height:auto!important;min-height:40px!important;padding:7px 0!important;white-space:normal!important;font:inherit!important;font-size:13px!important;font-weight:600!important;color:#514a3f!important;line-height:1.5!important}
+.rr-position-path-item svg{flex:none;color:#b4a792}
+.rr-position-search{flex:none;margin-bottom:10px}.rr-position-search-field{border-radius:13px!important;border-color:#e9e0d2!important;background:#fffdf8!important;box-shadow:none!important}.rr-position-search-input{font-size:13px!important}
+/* 搜索框边框属于外层控件，文本保留 beUI 图标留位，并避免浏览器重复显示清空图标。 */
+.rr-position-search-input{background:transparent!important;border:0!important;border-radius:0!important;outline:none!important}
+.rr-position-search-field:has(.rr-position-search-clear) .rr-position-search-input{padding-inline-end:52px!important}
+.rr-position-search-input::-webkit-search-cancel-button{appearance:none}
+/* 列表只纵向滚动，长机构名在文本槽内换行，避免生成第二根横向滚动条。 */
+.rr-position-options{border-top:1px solid #eee7dc;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;flex:1;padding:3px 0 8px}
+.rr-position-option{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;width:100%;height:auto!important;min-height:52px!important;padding:13px 3px!important;border-radius:0!important;background:transparent!important;text-align:left!important;font-family:inherit!important;white-space:normal!important;border-bottom:1px solid #f0eae0;color:#3b372f!important;line-height:1.55!important}
+.rr-position-option>span{display:flex;flex-direction:column;gap:4px;min-width:0}.rr-position-option-title{font-size:14px;font-weight:500;overflow-wrap:anywhere}.rr-position-option small{font-size:11px;color:#a0917a;font-weight:400;letter-spacing:.02em}.rr-position-option>svg{flex:none;color:#b7aa94}.rr-position-option.selected{color:#a56e5d!important}.rr-position-option.selected>svg{color:#b17865}
+.rr-position-option-wrap{display:flex;align-items:center;border-bottom:1px solid #f0eae0}.rr-position-option-wrap .rr-position-option{border-bottom:0;flex:1;min-width:0}.rr-position-info{flex:none;width:40px!important;min-width:40px!important;height:44px!important;color:#ad9d84!important}
+.rr-position-detail{display:flex;flex-direction:column;max-height:calc(70svh - 44px);color:#39352e;font-family:var(--ui-font,inherit)}.rr-position-detail h3{font-size:17px;line-height:1.5;margin:10px 0 5px}.rr-position-detail-code{font-size:12px;color:#a08d70;margin:0 0 10px}.rr-position-detail-back{align-self:flex-start;padding:0!important;height:30px!important;min-height:30px!important;gap:3px!important;color:#9b866a!important;font-size:12px!important}
+.rr-position-detail-fields{overflow-y:auto;min-height:0;font-size:13px;line-height:1.7}.rr-position-detail-fields dl{margin:0}.rr-position-detail-fields dl>div{display:grid;grid-template-columns:64px minmax(0,1fr);gap:12px;padding:12px 0;border-top:1px solid #efe7db}.rr-position-detail-fields dt{color:#a08e73}.rr-position-detail-fields dd{margin:0;overflow-wrap:anywhere}.rr-position-detail-fields a{display:flex;align-items:center;gap:4px;color:#a57964;font-size:12px;margin:12px 0}.rr-position-detail-select{margin-top:14px;width:100%;min-height:46px!important;flex:none}
+.rr-position-state{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:24px 8px;font-size:12px;color:#9a8d78;text-align:center}.rr-position-state p{margin:0}.rr-position-more{width:100%;font-size:12px!important;color:#9a8261!important;min-height:44px!important}
+.rr-position-prompt{padding-top:6px}
+.rr-position-prompt-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}.rr-position-prompt-actions>button{width:100%;height:46px!important;min-height:46px!important;margin:0!important;font-size:14px!important;border-radius:999px!important;white-space:nowrap}
+.rr-position-prompt-actions .secondary{background:#fffdf8!important;border:1px solid #ded3c1!important;color:#655947!important}
+@media(max-width:350px){.rr-practice-tools{gap:10px}.rr-practice-tool-content{padding:14px 12px!important}.rr-practice-tool-value>strong{font-size:16px}.rr-position-path-item{font-size:12px!important}.rr-position-option-title{font-size:13px}.rr-position-prompt-actions{gap:10px}}
+@media(prefers-reduced-motion:reduce){.rr-position-spinner,.rr-practice-tool-loader{animation:none}}

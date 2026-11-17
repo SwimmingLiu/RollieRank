@@ -1,0 +1,79 @@
+/* 历史占用剩余空间，筛选不随结果滚走；旧“最近三条”容器不再限制完整历史。 */
+.view[data-page="me"] { overflow: hidden; padding-bottom: 0; }
+#records-ui { height: 100%; min-height: 0; }
+.rr2-profile { height: 100%; min-height: 0; display: flex; flex-direction: column; gap: 18px; padding: 20px 22px 0; }
+.rr2-profile-identity { flex: none; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; gap: 0 !important; }
+.rr2-profile-person { display: flex; align-items: center; gap: 15px; padding: 0 !important; min-height: 70px; }
+.rr2-profile-avatar { width: 58px !important; height: 58px !important; flex: none; border-radius: 50%; border: 1px solid #f1d8d6; background: #fff0ed !important; color: #a76564 !important; box-shadow: 0 3px 8px -6px #8d41442a; }
+.rr2-profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.rr2-profile-person-copy { min-width: 0; }
+.rr2-profile-person-copy h2 { margin: 0; color: #18181b; font-size: 24px; line-height: 1.3; font-weight: 650; letter-spacing: -.7px; overflow-wrap: anywhere; }
+.rr2-profile-person-copy p { display: flex; align-items: baseline; gap: 5px; margin-top: 6px; color: #71717a; font-size: 13px; }
+.rr2-profile-person-copy p > span:first-child { color: #45454e; font-weight: 550; }
+.rr2-profile-controls { flex: none; display: flex; flex-direction: column; gap: 12px; }
+.rr2-profile-search-field { height: 46px !important; border-radius: 14px !important; border-color: #e8e8ec !important; background: #fafafa; }
+.rr2-profile-search-field[data-state="focused"] { background: #fff; border-color: #c49b99 !important; box-shadow: 0 0 0 2px #f6dfdc !important; }
+.rr2-profile-search-input { min-height: 44px; font-size: 14px !important; line-height: 1.5 !important; color: #27272a; }
+.rr2-profile-search-input::placeholder { color: #84848e; opacity: 1; }
+.rr2-profile-search-input::-webkit-search-cancel-button { appearance: none; }
+.rr2-profile-search-icon { color: #92929c; }
+.rr2-profile-search-clear button { width: 44px !important; height: 44px !important; min-height: 44px; border-radius: 12px; color: #71717a; }
+.rr2-profile-tabs { width: 100%; }
+.rr2-profile-tab-list { display: flex !important; width: 100% !important; min-height: 46px; padding: 3px !important; border-radius: 13px !important; background: #f4f4f5 !important; }
+.rr2-profile-tab-list > div { min-width: 0; flex: 1; }
+.rr2-profile-tab { width: 100%; min-height: 42px; padding-inline: 10px !important; font-size: 13px !important; font-weight: 500; border-radius: 10px; color: #71717a; white-space: nowrap; }
+.rr2-profile-tab[aria-selected="true"] { color: #18181b; }
+.rr2-profile-tab [data-tabs-label] { color: #18181b !important; }
+.rr2-profile-tab-indicator { border-radius: 10px !important; border: 1px solid #ececef !important; background: #fff !important; box-shadow: 0 1px 3px #18181b06 !important; }
+.rr2-profile-scroll { flex: 1; min-height: 0; position: relative; overflow: hidden; margin: 0 -3px; }
+.rr2-profile-viewport { height: 100%; width: 100%; min-height: 0; border-radius: 16px 16px 0 0; overflow: auto !important; overscroll-behavior: contain; scrollbar-width: none !important; touch-action: pan-y; scroll-behavior: auto; }
+.rr2-profile-viewport::-webkit-scrollbar { display: none; }
+.rr2-profile-viewport:focus-visible { outline: 2px solid #c88c8d; outline-offset: -2px; }
+.rr2-record-list { display: flex; flex-direction: column; gap: 10px; padding: 2px 3px 20px; }
+.rr2-record-card { gap: 0 !important; padding: 16px 0 !important; border: 1px solid #ececef !important; border-radius: 16px !important; background: #fff !important; box-shadow: 0 2px 4px -4px #18181b20; }
+.rr2-record-card:hover { border-color: #dcd5d5 !important; }
+.rr2-record-line { display: flex; align-items: center; gap: 13px; padding: 0 14px !important; min-height: 50px; }
+.rr2-record-paper { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 33px; flex: none; color: #a6a6af; font-size: 27px; font-weight: 500; line-height: 1; letter-spacing: -1px; }
+.rr2-record-paper small { font: 11px/1.2 var(--ui-font); letter-spacing: 0; color: #91919b; }
+.rr2-record-context { flex: 1; min-width: 0; }
+.rr2-record-context > strong { display: block; color: #27272a; font-size: 13px; line-height: 1.55; font-weight: 550; overflow-wrap: anywhere; }
+.rr2-record-context > strong > span { color: #71717a; font-weight: 400; }
+.rr2-record-context > strong > b { color: #a86165; font-weight: 650; }
+.rr2-record-detail { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 5px; min-height: 24px; }
+.rr2-record-kind { color: #85858f; font-size: 12px; line-height: 1.5; }
+.rr2-record-result,.rr2-record-progress { display: inline-flex; height: 24px !important; gap: 4px !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; color: #62626d !important; box-shadow: none !important; font-size: 12px !important; line-height: 1.4 !important; }
+.rr2-record-result svg { color: #358365; }
+.rr2-record-progress svg { color: #9c7b79; }
+.rr2-record-result small,.rr2-record-progress small { font-size: 11px; color: #85858f; }
+.rr2-record-result .num,.rr2-record-progress .num { font-size: 13px; font-weight: 550; letter-spacing: -.25px; }
+.rr2-record-open { position: static !important; width: 44px !important; min-width: 44px; height: 44px !important; min-height: 44px; padding: 0 !important; flex: none; margin-right: -8px; border-radius: 12px !important; color: #8a8a94; }
+.rr2-profile-empty { margin-top: 7px; padding: 31px 0 !important; border-color: #ededf0 !important; background: #fafafa !important; box-shadow: none !important; }
+.rr2-profile-empty-content { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 0 20px !important; text-align: center; }
+.rr2-profile-empty-content > svg { margin-bottom: 4px; color: #b3a1a0; }
+.rr2-profile-empty-content h3 { color: #4b4b54; font-size: 15px; line-height: 1.5; font-weight: 550; }
+.rr2-profile-empty-content p { color: #85858f; font-size: 13px; line-height: 1.65; max-width: 235px; }
+.rr2-profile-empty-content button { min-height: 44px; margin-top: 2px; border-radius: 12px !important; font-size: 13px; }
+@media(max-width:350px) {
+  .rr2-profile { padding-inline: 18px; gap: 16px; }
+  .rr2-profile-person { gap: 13px; }
+  .rr2-record-line { gap: 9px; padding-inline: 12px !important; }
+  .rr2-record-paper { width: 29px; font-size: 25px; }
+  .rr2-record-context > strong { font-size: 12px; }
+  .rr2-record-detail { gap: 8px; }
+  .rr2-record-open { margin-right: -8px; }
+}
+/* 放大阅读时允许字段自然换行，操作保留独立44px目标，结果仍由同一纵向区访问。 */
+@media(max-width:280px) {
+  .rr2-profile { padding: 14px 12px 0; gap: 12px; }
+  .rr2-profile-person { gap: 11px; min-height: 62px; }
+  .rr2-profile-avatar { width: 50px !important; height: 50px !important; }
+  .rr2-profile-person-copy h2 { font-size: 21px; }
+  .rr2-profile-person-copy p { font-size: 12px; }
+  .rr2-profile-tab { padding-inline: 5px !important; font-size: 12px !important; }
+  .rr2-record-line { display: grid; grid-template-columns: 27px minmax(0,1fr); gap: 8px; }
+  .rr2-record-paper { align-self: start; margin-top: 4px; width: 27px; font-size: 24px; }
+  .rr2-record-context { grid-column: 2; }
+  .rr2-record-detail { gap: 4px 7px; }
+  .rr2-record-open { grid-column: 2; justify-self: end; margin: -2px -5px -7px 0; }
+  .rr2-record-context > strong { font-size: 12px; }
+}

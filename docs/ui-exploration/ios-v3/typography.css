@@ -1,0 +1,10 @@
+/* One paired family covers Chinese, Latin and data numerals throughout the prototype. */
+@font-face{font-family:FangYuan;src:url("assets/fonts/FangYuanVariable.woff2") format("woff2");font-weight:200 700;font-style:normal;font-display:swap}
+@font-face{font-family:Nunito;src:url("assets/fonts/NunitoVariable.woff2") format("woff2");font-weight:200 1000;font-style:normal;font-display:swap}
+:root{--ui-font:Nunito,FangYuan,-apple-system,BlinkMacSystemFont,sans-serif;--display-font:Fraunces,FangYuan,serif;font-family:var(--ui-font);font-variation-settings:"BEVL" 100}
+body,button,input,select,textarea{font-family:var(--ui-font);font-variation-settings:"BEVL" 100}
+.num{font-family:var(--ui-font);font-variant-numeric:tabular-nums}
+
+/* Registry slots use the same family as the native shell, including all text inputs and numeric labels. */
+.beui-island{--font-sans:var(--ui-font);--default-font-family:var(--ui-font);--font-mono:var(--ui-font);--default-mono-font-family:var(--ui-font);--font-serif:var(--display-font)}
+.detail-type-row th{font-variation-settings:"BEVL" 100!important}

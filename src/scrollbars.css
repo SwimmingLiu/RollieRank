@@ -1,0 +1,16 @@
+/* 全局滚动条采用纸卡的暖灰，轨道透明且两端留空，避免抢过内容与操作。 */
+:root{--rr-scroll-thumb:rgba(146,126,94,.2);--rr-scroll-active:rgba(146,126,94,.36);--rr-scroll-y-inset:12px;--rr-scroll-x-inset:12px}
+*{scrollbar-color:var(--rr-scroll-thumb) transparent;scrollbar-width:thin}
+@supports selector(::-webkit-scrollbar){
+ /* 标准颜色非auto会让Chromium忽略伪元素尺寸，必须交回同一套细线绘制。 */
+ html,html body,html body [class]{scrollbar-width:auto;scrollbar-color:auto}
+ html::-webkit-scrollbar,body::-webkit-scrollbar,html body [class]::-webkit-scrollbar{width:2px;height:2px}
+ html::-webkit-scrollbar-track,body::-webkit-scrollbar-track,html body [class]::-webkit-scrollbar-track{background:transparent}
+ html::-webkit-scrollbar-track:vertical,body::-webkit-scrollbar-track:vertical,html body [class]::-webkit-scrollbar-track:vertical{margin-top:var(--rr-scroll-y-inset);margin-bottom:var(--rr-scroll-y-inset)}
+ html::-webkit-scrollbar-track:horizontal,body::-webkit-scrollbar-track:horizontal,html body [class]::-webkit-scrollbar-track:horizontal{margin-left:var(--rr-scroll-x-inset);margin-right:var(--rr-scroll-x-inset)}
+ html::-webkit-scrollbar-thumb,body::-webkit-scrollbar-thumb,html body [class]::-webkit-scrollbar-thumb{background:var(--rr-scroll-thumb);border-radius:999px}
+ html::-webkit-scrollbar-thumb:hover,body::-webkit-scrollbar-thumb:hover,html body [class]::-webkit-scrollbar-thumb:hover{background:var(--rr-scroll-active)}
+ html::-webkit-scrollbar-corner,body::-webkit-scrollbar-corner,html body [class]::-webkit-scrollbar-corner{background:transparent}
+}
+/* 抽屉拖动提示沿用同一低对比暖灰，只缩小标记，不改变拖动与关闭行为。 */
+body.beui-island [role=dialog] .cursor-grab>div{width:28px;height:3px;background:var(--rr-scroll-thumb)}

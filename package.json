@@ -3,12 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "卷卷小榜 · 行测答案录入与计分 H5",
+  "description": "卷卷小榜 · 选卷、估分、复盘与同卷比较原型",
   "scripts": {
     "dev": "node scripts/serve.mjs",
+    "dev:ios": "PORT=4781 node scripts/serve.mjs",
+    "verify:ios": "python3 scripts/verify-ios-features.py",
+    "verify": "python3 scripts/verify-rollierank.py",
+    "verify:ci": "python3 scripts/verify-rollierank.py all --output test-results/verification",
     "start": "node scripts/serve.mjs",
-    "test": "node --test",
+    "test": "node --test test/*.test.js",
+    "preview": "node scripts/serve.mjs --dist",
     "build": "node scripts/build.mjs"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "playwright": "1.65.0"
+  }
 }

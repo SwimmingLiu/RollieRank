@@ -1,0 +1,95 @@
+@import url("../../../../src/features/positions.css");
+
+/* Only the imported positions island and its beUI sheet adopt iOS tokens; the existing paper cards and application shell retain their owners. */
+.ios-positions-region,.ios-positions-modal{--brand:#18181b;--brand-dark:#18181b;--soft:#fff0ec;--card:#fff;--secondary:#71717a;--red:#bc3e49;font-family:var(--ui-font,inherit)}
+.ios-positions-region .icon,.ios-positions-sheet .icon{width:16px;height:16px;vertical-align:middle;flex:none}
+.ios-positions-region .positions-profile,.ios-positions-region .positions-admin{margin:0;padding:18px;border:1px solid var(--line,#e4e4e7);border-radius:18px;background:#fff;color:var(--ink,#18181b);box-shadow:none}
+.ios-positions-region .positions-profile{flex-direction:column;align-items:stretch;gap:14px}
+.ios-positions-region .positions-profile h2,.ios-positions-region .positions-admin h2{font-size:15px;font-weight:600}
+.ios-positions-region .positions-profile p{font-size:13px;line-height:1.65}
+.ios-positions-region .positions-profile .positions-job-title{font-size:15px;line-height:1.6}
+.ios-positions-region .positions-actions{flex-wrap:wrap;gap:10px}
+.ios-positions-region .positions-caption,.ios-positions-sheet .positions-caption{font-size:12px;color:#71717a}
+.ios-positions-region .button,.ios-positions-sheet .button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:10px 15px;border:1px solid #e4e4e7;border-radius:999px;background:#fff;color:#18181b;font-family:inherit;font-size:13px;line-height:1.5;font-weight:550;cursor:pointer}
+.ios-positions-region .button.primary,.ios-positions-sheet .button.primary{background:#18181b;border-color:#18181b;color:#fff}
+.ios-positions-region .button.soft,.ios-positions-sheet .button.soft{background:#fff0ec;border-color:#fff0ec;color:#613e3b}
+.ios-positions-region .text-button,.ios-positions-sheet .text-button{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:7px 4px;color:#71717a;font-family:inherit;font-size:12px}
+.ios-positions-region .button:disabled,.ios-positions-sheet .button:disabled{opacity:.4;cursor:default}
+.ios-positions-region input:focus-visible,.ios-positions-region select:focus-visible,.ios-positions-sheet input:focus-visible,.ios-positions-sheet select:focus-visible,.ios-positions-sheet button:focus-visible{outline:2px solid #18181b;outline-offset:3px}
+.ios-positions-sheet{color:#18181b;font-family:var(--ui-font,inherit);min-width:0}
+.ios-positions-sheet p{line-height:1.65}
+.ios-positions-sheet-actions{display:flex;justify-content:flex-end;align-items:center;flex-wrap:wrap;gap:10px;width:100%}
+.ios-positions-sheet .positions-filter-grid{grid-template-columns:1fr 1fr}
+.ios-positions-sheet .positions-filter-grid label:last-child{grid-column:1/-1}
+.ios-positions-sheet input,.ios-positions-sheet select,.ios-positions-region .positions-import-form input,.ios-positions-region .positions-import-form select{font-family:inherit;color:#18181b;background:#fff;border-color:#e4e4e7}
+.ios-positions-sheet .field-label{display:flex;flex-direction:column;gap:8px;font-size:13px}
+.ios-positions-sheet .field-label input{width:100%;min-height:44px;padding:10px 12px;border:1px solid #e4e4e7;border-radius:12px}
+.ios-positions-sheet .positions-picker-list{max-height:min(34dvh,360px);scrollbar-width:thin}
+.ios-positions-sheet .positions-picker-row{align-items:center;padding:14px 2px;gap:10px}
+.ios-positions-sheet .positions-picker-row h3{font-size:14px;line-height:1.6}
+.ios-positions-sheet .positions-picker-row .button{flex:none;padding-inline:12px}
+.ios-positions-sheet .positions-picker-meta,.ios-positions-sheet .positions-pagination{font-size:12px;color:#71717a}
+.ios-positions-sheet .positions-empty{min-height:100px;padding:24px 10px}
+.ios-positions-sheet .positions-error,.ios-positions-region .positions-error{color:#bc3e49}
+.ios-positions-sheet .positions-pagination{padding-top:12px;gap:10px}
+.ios-positions-rank{width:100%;min-width:0}
+.ios-positions-scope{display:flex;flex-direction:column;gap:10px;min-width:0}
+.ios-positions-scope>[role=group]{display:flex;flex-wrap:wrap;gap:5px}
+.ios-positions-scope button{min-height:40px;border-radius:999px;font-size:12px;padding:8px 12px}
+.ios-positions-scope button[aria-pressed=true]{background:#fff0ec;color:#613e3b}
+.ios-positions-scope>p{display:flex;justify-content:space-between;gap:12px;align-items:start;font-size:12px;line-height:1.6;color:#71717a;overflow-wrap:anywhere}
+.ios-positions-scope>p>span{flex:none;white-space:nowrap}
+.ios-positions-reminder{padding:10px 12px;border-radius:12px;background:#fff0ec;color:#613e3b;font-size:12px;line-height:1.6}
+.ios-positions-reminder button{margin-left:4px}
+.ios-positions-participation{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.ios-positions-participation button{font-size:12px;min-height:42px}
+.ios-positions-status{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;min-height:116px;padding:20px 8px;color:#71717a;text-align:center;font-size:13px;line-height:1.7}
+.ios-positions-unranked{font-size:15px!important;line-height:1.5!important}
+.ios-positions-rank .rr6-winner-name{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.ios-positions-rank .rr6-winner-wrap.place-1{grid-column:2}
+.ios-positions-rank .rr6-winner-wrap.place-2{grid-column:1;grid-row:1}
+.ios-positions-rank .rr6-winner-wrap.place-3{grid-column:3;grid-row:1}
+.ios-positions-score-detail{display:block;font-family:var(--ui-font,inherit);font-size:10px;line-height:1.5;font-weight:400;color:#71717a;white-space:normal}
+.ios-positions-rank .rr6-row-score>small{font-size:10px;font-weight:400;margin-left:3px}
+.ios-positions-is-me{background:#fff0ec;border-radius:12px}
+.ios-positions-rank-paging{display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;color:#71717a}
+.ios-positions-rank-paging button{font-size:12px;padding-inline:12px;min-height:42px}
+/* 榜单头部只承担导航、上榜设置与规则，不再用文字工具栏占据版面。 */
+.rr6-ranking .rr6-rank-header{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;min-height:44px}
+.rr6-rank-tools{display:flex;align-items:center;justify-content:flex-end;gap:2px}
+.rr6-rank-tools button{display:inline-flex!important;align-items:center;justify-content:center;gap:4px;height:36px!important;min-height:36px!important;padding:0 7px!important;border:0!important;border-radius:10px!important;background:transparent!important;box-shadow:none!important;color:#766852!important;font-size:12px!important;font-weight:550}
+.rr6-rank-tools button[data-position-action=participation]{min-width:57px}
+.rr6-rank-tools button[data-position-action=rules]{width:36px!important;min-width:36px!important;padding:0!important}
+.rr6-rank-tools button:hover,.rr6-rank-tools button:focus-visible{background:#eee5d8!important}
+/* 单行身份省去日期和文档徽标的重复占位，保留机构、实际系列、卷类和套号。 */
+.rr6-ranking .rr6-rank-context>[data-slot=card-content]{display:flex;align-items:center;gap:6px;padding:10px 11px!important}
+.rr6-ranking .rr6-rank-context span{min-width:0}
+.rr6-ranking .rr6-rank-context>[data-slot=card-content]>[data-slot=avatar]{width:21px!important;height:21px!important;flex-shrink:0}
+.rr6-ranking .rr6-context-identity{display:flex;align-items:baseline;gap:5px;white-space:nowrap;font-size:12px;line-height:1.5;color:#786a56}
+.rr6-context-identity b{font-weight:650;color:#403a31}
+.rr6-ranking .rr6-context-identity>span{flex-shrink:0;white-space:nowrap}
+.rr6-ranking .rr6-context-paper{color:#554732}
+/* 范围与岗位说明合成一张纸卡，人数用图标与数字表达。 */
+.rr6-ranking .ios-positions-scope{gap:8px}
+.rr6-ranking .rr2-rank-tab-list{width:100%!important;min-width:0!important;padding:3px!important}
+.rr6-ranking .rr2-rank-tab-list>div{flex:1 1 0!important;min-width:0!important}
+.rr6-ranking .rr2-rank-tab{min-width:0!important;padding:0 1px!important;font-size:11px!important}
+.rr6-rank-scope-switch{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));flex-wrap:nowrap!important;gap:3px!important;padding:3px;border-radius:12px;background:#eee7dc}
+.rr6-rank-scope-switch button{display:inline-flex!important;align-items:center;justify-content:center;gap:4px;min-height:34px!important;height:34px!important;padding:0 7px!important;border:0!important;border-radius:9px!important;background:transparent!important;color:#8a7b67!important;font-size:12px!important;box-shadow:none!important}
+.rr6-rank-scope-switch button[aria-pressed=true]{background:#fffdf8!important;color:#403a31!important;box-shadow:0 1px 3px #5b4a3114!important}
+.rr6-rank-place{padding:0!important;gap:0!important;border:1px solid #e9dfd0!important;border-radius:14px!important;background:#fffaf1!important;box-shadow:none!important}
+.rr6-rank-place>[data-slot=card-content]{display:grid!important;grid-template-columns:31px minmax(0,1fr) auto auto;align-items:center;gap:9px;min-height:57px;padding:9px 11px!important}
+.rr6-rank-place-icon{display:grid;place-items:center;width:31px;height:31px;border-radius:10px;background:#efe2ca;color:#8e7145}
+.rr6-rank-place>[data-slot=card-content]>div{min-width:0;display:flex;flex-direction:column;gap:2px}
+.rr6-rank-place strong{font-size:13px;line-height:1.35;font-weight:650;color:#473f34;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rr6-rank-place small{font-size:10px;line-height:1.35;color:#95866f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rr6-rank-people{display:inline-flex;align-items:center;gap:3px;height:25px;padding:0 7px;border-radius:8px;background:#f1e7d8;color:#7d6e59;font-size:11px;font-weight:600}
+/* 短标签仍保留可触达的按钮高度，避免缩小视觉后误伤移动端点击区域。 */
+.rr6-rank-place button{height:34px!important;min-height:34px!important;padding:0 8px!important;border-radius:8px!important;font-size:11px!important;background:#2d2b25!important;color:#fffaf1!important}
+.rr6-rank-empty{padding:0!important;border:1px solid #e6dccd!important;border-radius:17px!important;background:#fffaf2!important;box-shadow:0 3px 0 #e8dfd1!important}
+.rr6-rank-empty>[data-slot=card-content]{display:flex;align-items:center;gap:9px;min-height:58px;padding:11px 13px!important}
+.rr6-rank-empty-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:#eee1c9;color:#937344}
+.rr6-rank-empty strong{flex:1;font-size:13px;font-weight:650;color:#625440}
+.rr6-rank-empty button{height:32px!important;min-height:32px!important;padding:0 9px!important;border-radius:9px!important;font-size:11px!important;color:#6e5d45!important}
+.ios-positions-region .positions-import-fields{grid-template-columns:1fr}
+@media(max-width:350px){.ios-positions-region .positions-profile,.ios-positions-region .positions-admin{padding:15px}.ios-positions-scope>p{flex-direction:column;gap:4px}.ios-positions-sheet .positions-search-row{gap:6px}.ios-positions-sheet .positions-search-row .button{padding-inline:12px}.ios-positions-sheet-actions{gap:7px}.ios-positions-sheet-actions .button{font-size:12px;padding-inline:12px}.rr6-ranking .rr6-rank-context>[data-slot=card-content]{gap:4px;padding-inline:9px!important}.rr6-ranking .rr6-context-identity{gap:4px;font-size:11px}.rr6-ranking .rr2-rank-tab{padding:0!important;font-size:10px!important}.rr6-rank-place>[data-slot=card-content]{grid-template-columns:28px minmax(0,1fr) auto auto;gap:5px;padding-inline:9px!important}}

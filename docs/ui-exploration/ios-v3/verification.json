@@ -1,0 +1,53 @@
+{
+  "revision": "flow-1113-v2",
+  "scope": "standalone UI prototype",
+  "source_sha256": {
+    "app.js": "071ce5ee5ab94101e1e42e0cae86c3870532f2cc06bf3bf1188cf83e13576a3a",
+    "practice-model.js": "e14d0c4dbf332c5a785ad5208f3715a9493c294c12a60841ac70f30aba732cab",
+    "app.html": "2f3de6e59aa27ce0fb72f34c2b5b0935ac7e892776a46957d61a5cc037a79465",
+    "index.html": "0314dc92948713825fa6a0cf975768fc48c0ba31dc7650414d5a3dd47aee2543",
+    "modern.css": "cd06f29ea30b5632c541ad34f1b8c774b931a0294e1c6551ebe244fee021a30b",
+    "refined.css": "d33c6e1af8ee5518f7a11c2fb35123b554940a017f39297cb4eacaf94e42afe6",
+    "ui/home.tsx": "2fd1b7f1507d4b685136f410c7e663b7b545a4dc659dd89186dbc29715b7d27b",
+    "ui/records.tsx": "2f68d21dfed73dadcfe22a8e1f0492383a0c61127b3844eaf1ad9213e7a99a24",
+    "ui/results.tsx": "5c533d03a2510d19b7b573e8a48643ac8725740ce911157dfb5651550eb4d463",
+    "ui/ranking.tsx": "4fc65ffb731771a174216bb3166b7003df896bbcb8b614ae63e5fb7c141d9280",
+    "vendor/beui.js": "c37585ade1a24f32afc7321968ba34d6f6b0c30ebb041ebe2773bd066b0cfc94",
+    "vendor/beui.css": "24b7f36fff393549eb4bc6dd14b04e560e823ad7500603d6ba17ef1e5208c688"
+  },
+  "evidence_root": "/Users/swimmingliu/data/github-proj/RollieRank/.beauye/tasks/pinterest-reference-redesign/evidence/flow-1113",
+  "asset_key": "8aae64d0938e",
+  "data": {
+    "fixture": "2026 local samples,130 mandatory answers",
+    "sample": "72.50 points,95 correct,35 wrong",
+    "public_rank": "fixed sample18/236",
+    "attempts": "submitted snapshots retained; redo creates a separate draft"
+  },
+  "checks": [
+    "syntax",
+    "ui-types",
+    "ui-bridge",
+    "practice-model"
+  ],
+  "review": {
+    "visual": {
+      "origin": "agent:/root/flow_visual_review",
+      "result": "no_findings_in_reviewed_scope",
+      "scope": "eight390px default pages,320px representative pages,matching PNG;v2 affected layouts reread"
+    },
+    "ux": {
+      "origin": "agent:/root/flow_ux_review",
+      "scope": "resume,submit,wrong review,record recovery; separate local sample session",
+      "result": "path completed;physical touch not certified"
+    }
+  },
+  "services": {
+    "local_preview": "http://127.0.0.1:4781/ios-v3/",
+    "server": "existing Python HTTP server;HTTP200 verified"
+  },
+  "limits": [
+    "Fixed public ranking; no live WeChat identity or server leaderboard integration.",
+    "Browser pointer/keyboard and rendered viewports checked; physical iOS/Android hardware not tested.",
+    "No external invitation was sent; same-paper destination resolved locally."
+  ]
+}

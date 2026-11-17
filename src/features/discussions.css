@@ -1,0 +1,90 @@
+.discussions { margin: 24px 0; color: var(--ink, #342c3d); min-width: 0; }
+.discussions.card { padding: 24px; }
+.discussions-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+.discussions-heading h2 { font-size: 19px; }
+.discussions-heading h2 span { color: var(--secondary, #776c82); font-size: 13px; font-weight: 400; margin-left: 8px; }
+.discussions-fields { padding: 0; margin: 0; border: 0; min-width: 0; }
+.discussions-identity { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+.discussions-identity > div { min-width: 0; flex: 1; }
+.discussions-identity label { display: block; font-size: 13px; margin-bottom: 4px; }
+.discussions input[type="text"], .discussions textarea { display: block; box-sizing: border-box; max-width: 100%; border: 1px solid var(--line, #eee8f2); border-radius: 10px; padding: 10px 12px; background: var(--card, #fff); color: inherit; font: inherit; }
+.discussions input[type="text"] { width: min(100%, 260px); }
+.discussions textarea { width: 100%; resize: vertical; min-height: 72px; }
+.discussions-label { display: block; font-weight: 500; margin-bottom: 8px; }
+.discussions-hint, .discussions-editor-meta, .discussions-help { font-size: 12px; color: var(--secondary, #776c82); }
+.discussions-hint { margin-top: 5px; }
+.discussions-editor-meta { display: flex; justify-content: space-between; gap: 12px; margin-top: 7px; }
+.discussions-editor-meta > :last-child { white-space: nowrap; }
+.discussions-button { display: inline-flex; justify-content: center; align-items: center; gap: 6px; min-height: 44px; padding: 8px 11px; border: 1px solid transparent; border-radius: 9px; color: var(--brand-dark, #644476); background: transparent; font: inherit; font-size: 13px; cursor: pointer; }
+.discussions-button:hover { background: var(--soft, #f1eaf6); }
+.discussions-button:disabled { cursor: not-allowed; opacity: .5; }
+.discussions-button:focus-visible, .discussions input:focus-visible, .discussions textarea:focus-visible, .discussions summary:focus-visible, .discussions a:focus-visible, .discussions-image-button:focus-visible { outline: 3px solid #b796cd; outline-offset: 3px; }
+.discussions-primary { background: var(--brand, #7b5a91); color: #fff; padding-inline: 20px; }
+.discussions-primary:hover { background: var(--brand-dark, #644476); }
+.discussions-toolbar { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+.discussions-toolbar .icon { width: 17px; height: 17px; }
+.discussions-recording { color: #9f3e57; background: var(--red-soft, #fbecf1); }
+.discussions-links-editor { margin-top: 4px; }
+.discussions summary { width: fit-content; min-height: 44px; display: list-item; align-content: center; cursor: pointer; color: var(--brand-dark, #644476); }
+.discussions-links-editor label { display: block; font-size: 12px; margin: 2px 0 6px; }
+.discussions-help { margin-top: 4px; }
+.discussions-help summary { min-height: 36px; color: var(--secondary, #776c82); }
+.discussions-help p { max-width: 680px; margin: 4px 0 12px; line-height: 1.8; }
+.discussions-publish { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; }
+.discussions-error { color: #a13651; font-size: 13px; margin: 10px 0; overflow-wrap: anywhere; }
+.discussions-success { color: #3b725d; font-size: 13px; margin: 10px 0; }
+.discussions [hidden] { display: none !important; }
+.discussions-list { margin-top: 26px; }
+.discussions-comment { display: flex; align-items: flex-start; gap: 12px; padding: 22px 0; border-top: 1px solid var(--line, #eee8f2); }
+.discussions-comment-body { min-width: 0; flex: 1; }
+.discussions-comment-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; column-gap: 16px; row-gap: 3px; margin-bottom: 8px; }
+.discussions-comment-head > b { overflow-wrap: anywhere; }
+.discussions-comment-head > span { color: var(--secondary, #776c82); font-size: 12px; }
+.discussions-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.85; margin: 0; }
+.discussions-avatar { flex: 0 0 40px; width: 40px; height: 40px; border-radius: 14px; background: #ede3f4; color: #67417b; display: inline-grid; place-items: center; font-weight: 600; position: relative; overflow: hidden; }
+.discussions-avatar-1 { background: #f7e2e9; color: #944e69; }
+.discussions-avatar-2 { background: #e1eee7; color: #3e735a; }
+.discussions-avatar-3 { background: #f3e9d8; color: #836239; }
+.discussions-avatar-4 { background: #e3eaf7; color: #496894; }
+.discussions-avatar-5 { background: #eee4e0; color: #845c4b; }
+.discussions-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
+.discussions-avatar img[data-discussions-loaded="true"] { opacity: 1; }
+.discussions-images { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.discussions-image-button { border: 1px solid var(--line, #eee8f2); background: var(--soft, #f1eaf6); border-radius: 12px; padding: 0; width: min(160px, 100%); height: 128px; overflow: hidden; cursor: zoom-in; }
+.discussions-image-button img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.discussions-audio { max-width: 460px; padding: 12px; margin: 12px 0 0; background: var(--bg, #f8f6fa); border-radius: 12px; }
+.discussions-audio figcaption { font-size: 12px; color: var(--secondary, #776c82); overflow-wrap: anywhere; margin-bottom: 7px; }
+.discussions audio { display: block; width: 100%; max-width: 440px; min-width: 0; height: 44px; }
+.discussions-download { display: inline-flex; align-items: center; min-height: 36px; color: var(--brand-dark, #644476); font-size: 12px; text-decoration: underline; }
+.discussions-comment-links { display: grid; gap: 5px; margin-top: 12px; }
+.discussions-link { display: flex; align-items: flex-start; gap: 7px; min-height: 36px; padding-block: 6px; color: var(--brand-dark, #644476); font-size: 13px; text-decoration: underline; }
+.discussions-link > .icon { width: 16px; height: 16px; flex: none; margin-top: 3px; }
+.discussions-link > span { overflow-wrap: anywhere; min-width: 0; }
+.discussions-draft-images { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 12px; margin-top: 14px; }
+.discussions-draft-image { min-width: 0; padding: 10px; background: var(--bg, #f8f6fa); border-radius: 12px; }
+.discussions-draft-image > img { display: block; object-fit: contain; width: 100%; height: 130px; margin-bottom: 8px; }
+.discussions-draft-image label, .discussions-draft-audio label { display: block; margin-bottom: 5px; font-size: 12px; }
+.discussions-draft-image input[type="text"] { width: 100%; }
+.discussions-draft-audio { max-width: 460px; margin-top: 14px; padding: 12px; border-radius: 12px; background: var(--bg, #f8f6fa); }
+.discussions-draft-audio input { margin-bottom: 10px; }
+.discussions-empty { text-align: center; color: var(--secondary, #776c82); font-size: 13px; padding: 26px 0 12px; border-top: 1px solid var(--line, #eee8f2); }
+.discussions-list-status { text-align: center; }
+.discussions-sample { padding: 20px 24px; border-radius: 16px; background: var(--soft, #f1eaf6); }
+.discussions-sample h2 { font-size: 17px; margin-bottom: 6px; }
+.discussions-sample p { color: var(--secondary, #776c82); font-size: 13px; }
+.discussions-full-image { display: block; max-width: 100%; width: auto; max-height: 75vh; height: auto; margin: auto; object-fit: contain; }
+.discussions-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@media (max-width: 600px) {
+  .discussions.card { padding: 18px 14px; }
+  .discussions-heading { gap: 8px; }
+  .discussions-heading h2 { font-size: 17px; }
+  .discussions-identity { gap: 10px; }
+  .discussions-comment { gap: 10px; }
+  .discussions-avatar { flex-basis: 34px; width: 34px; height: 34px; border-radius: 12px; }
+  .discussions-comment-head { display: block; }
+  .discussions-comment-head > span { display: block; margin-top: 2px; }
+  .discussions-editor-meta { font-size: 11px; align-items: flex-start; }
+  .discussions-image-button { width: min(140px, 100%); height: 112px; }
+  .discussions-publish .discussions-primary { flex-shrink: 0; }
+  .discussions-sample { padding: 18px 14px; }
+}

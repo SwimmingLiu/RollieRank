@@ -1,0 +1,110 @@
+{
+  "license": "MIT",
+  "repository": "https://github.com/starc007/ui-components",
+  "revision": "86c3f94cd1f731b0768a76d4287a7960c3cdc1b5",
+  "retrievedAt": "2026-11-12",
+  "entries": [
+    {
+      "path": "components/motion/animated-badge.tsx",
+      "sourceUrl": "https://github.com/starc007/ui-components/blob/86c3f94cd1f731b0768a76d4287a7960c3cdc1b5/components/motion/animated-badge.tsx",
+      "apiUrl": "https://api.github.com/repos/starc007/ui-components/contents/components/motion/animated-badge.tsx?ref=86c3f94cd1f731b0768a76d4287a7960c3cdc1b5",
+      "sha256": "77765e2d9ae74f8ae2658ba261ddc0ce1374ae1d268c8815e284b9567f116d00",
+      "bytes": 7111
+    },
+    {
+      "path": "components/motion/avatar-group.tsx",
+      "sourceUrl": "https://github.com/starc007/ui-components/blob/86c3f94cd1f731b0768a76d4287a7960c3cdc1b5/components/motion/avatar-group.tsx",
+      "apiUrl": "https://api.github.com/repos/starc007/ui-components/contents/components/motion/avatar-group.tsx?ref=86c3f94cd1f731b0768a76d4287a7960c3cdc1b5",
+      "sha256": "c1774f1a34345cf6650efeef152d4161e6ecba55a8f2eab35927f243c08d8830",
+      "bytes": 9064
+    },
+    {
+      "path": "components/motion/number-ticker.tsx",
+      "sourceUrl": "https://github.com/starc007/ui-components/blob/86c3f94cd1f731b0768a76d4287a7960c3cdc1b5/components/motion/number-ticker.tsx",
+      "apiUrl": "https://api.github.com/repos/starc007/ui-components/contents/components/motion/number-ticker.tsx?ref=86c3f94cd1f731b0768a76d4287a7960c3cdc1b5",
+      "sha256": "eecad6e07c4c4b7e2c4c1723d5486c130244fcfc6d7d1c6a0f277d26f0fe72ac",
+      "bytes": 6323
+    },
+    {
+      "path": "components/motion/animated-number.tsx",
+      "sourceUrl": "https://github.com/starc007/ui-components/blob/86c3f94cd1f731b0768a76d4287a7960c3cdc1b5/components/motion/animated-number.tsx",
+      "apiUrl": "https://api.github.com/repos/starc007/ui-components/contents/components/motion/animated-number.tsx?ref=86c3f94cd1f731b0768a76d4287a7960c3cdc1b5",
+      "sha256": "60b86a1d2f9afcf7c7e91df00de4ff62f0500041a4a40b9216e25b2c89363a94",
+      "bytes": 1290
+    },
+    {
+      "path": "components/motion/input.tsx",
+      "sourceUrl": "https://github.com/starc007/ui-components/blob/86c3f94cd1f731b0768a76d4287a7960c3cdc1b5/components/motion/input.tsx",
+      "apiUrl": "https://api.github.com/repos/starc007/ui-components/contents/components/motion/input.tsx?ref=86c3f94cd1f731b0768a76d4287a7960c3cdc1b5",
+      "sha256": "4dd774bbada7f1c9ec283905586a4306593792ea570ae81caa71874d5bdb0b3d",
+      "bytes": 6582
+    },
+    {
+      "path": "components/motion/tooltip.tsx",
+      "sourceUrl": "https://github.com/starc007/ui-components/blob/86c3f94cd1f731b0768a76d4287a7960c3cdc1b5/components/motion/tooltip.tsx",
+      "apiUrl": "https://api.github.com/repos/starc007/ui-components/contents/components/motion/tooltip.tsx?ref=86c3f94cd1f731b0768a76d4287a7960c3cdc1b5",
+      "sha256": "05aa29e1cac3ac96d2ea5f1320e48cc65f905b26ccee8044971d6a0318c776b4",
+      "bytes": 22172
+    },
+    {
+      "path": "lib/hooks/use-dismiss.ts",
+      "sourceUrl": "https://github.com/starc007/ui-components/blob/86c3f94cd1f731b0768a76d4287a7960c3cdc1b5/lib/hooks/use-dismiss.ts",
+      "apiUrl": "https://api.github.com/repos/starc007/ui-components/contents/lib/hooks/use-dismiss.ts?ref=86c3f94cd1f731b0768a76d4287a7960c3cdc1b5",
+      "sha256": "b3243c39f363c9f9b33b528a2e720d5d48370e964b8c6c80747da423a4269a2a",
+      "bytes": 4729
+    },
+    {
+      "path": "components/motion/tooltip-surface.tsx",
+      "sourceUrl": "https://github.com/starc007/ui-components/blob/86c3f94cd1f731b0768a76d4287a7960c3cdc1b5/components/motion/tooltip-surface.tsx",
+      "apiUrl": "https://api.github.com/repos/starc007/ui-components/contents/components/motion/tooltip-surface.tsx?ref=86c3f94cd1f731b0768a76d4287a7960c3cdc1b5",
+      "sha256": "110f8a988771e24762f7a6cc8d108faa35526ba70fb43dd90a656400d746b1df",
+      "bytes": 1336
+    },
+    {
+      "path": "components/motion/tooltip/positioner.tsx",
+      "sourceUrl": "https://github.com/starc007/ui-components/blob/86c3f94cd1f731b0768a76d4287a7960c3cdc1b5/components/motion/tooltip/positioner.tsx",
+      "apiUrl": "https://api.github.com/repos/starc007/ui-components/contents/components/motion/tooltip/positioner.tsx?ref=86c3f94cd1f731b0768a76d4287a7960c3cdc1b5",
+      "sha256": "822fdab7bbe3767b3a78485be8351fb59518f53085a9294b2504a2d49e77e3fb",
+      "bytes": 2364
+    },
+    {
+      "path": "components/motion/tooltip/grace.ts",
+      "sourceUrl": "https://github.com/starc007/ui-components/blob/86c3f94cd1f731b0768a76d4287a7960c3cdc1b5/components/motion/tooltip/grace.ts",
+      "apiUrl": "https://api.github.com/repos/starc007/ui-components/contents/components/motion/tooltip/grace.ts?ref=86c3f94cd1f731b0768a76d4287a7960c3cdc1b5",
+      "sha256": "a79f94a822560008bd903da1a939a6b76f8a2678daaf4733079afdb47d58f568",
+      "bytes": 3145
+    },
+    {
+      "path": "lib/hooks/use-hover-gesture.ts",
+      "sourceUrl": "https://github.com/starc007/ui-components/blob/86c3f94cd1f731b0768a76d4287a7960c3cdc1b5/lib/hooks/use-hover-gesture.ts",
+      "apiUrl": "https://api.github.com/repos/starc007/ui-components/contents/lib/hooks/use-hover-gesture.ts?ref=86c3f94cd1f731b0768a76d4287a7960c3cdc1b5",
+      "sha256": "d381531c81668faf22cada58671451f4e7b53cf8d8718d6768e485139810755d",
+      "bytes": 2215
+    },
+    {
+      "path": "components/motion/tooltip/use-position.ts",
+      "sourceUrl": "https://github.com/starc007/ui-components/blob/86c3f94cd1f731b0768a76d4287a7960c3cdc1b5/components/motion/tooltip/use-position.ts",
+      "apiUrl": "https://api.github.com/repos/starc007/ui-components/contents/components/motion/tooltip/use-position.ts?ref=86c3f94cd1f731b0768a76d4287a7960c3cdc1b5",
+      "sha256": "a6f75e4faa8e2e26d731ac52a72dd1b366d089c81ef10c2b2d35dd17e99d6608",
+      "bytes": 8940
+    },
+    {
+      "path": "lib/hooks/use-tap-gesture.ts",
+      "sourceUrl": "https://github.com/starc007/ui-components/blob/86c3f94cd1f731b0768a76d4287a7960c3cdc1b5/lib/hooks/use-tap-gesture.ts",
+      "apiUrl": "https://api.github.com/repos/starc007/ui-components/contents/lib/hooks/use-tap-gesture.ts?ref=86c3f94cd1f731b0768a76d4287a7960c3cdc1b5",
+      "sha256": "b91954bf9f1cdc1771b2a6eac815d2f4e2493cb2cde5f508b2d96509dd71aeee",
+      "bytes": 2446
+    }
+  ],
+  "composition": {
+    "progress": "https://base-ui.com/react/components/progress",
+    "scrollArea": "https://base-ui.com/react/components/scroll-area",
+    "requiredRuntimeImports": [
+      "@base-ui/react/progress",
+      "@base-ui/react/scroll-area",
+      "@floating-ui/dom"
+    ],
+    "wrapper": "primitives.tsx",
+    "staticExport": "NumberTicker animated=false; ProgressBar/ProgressRing animated=false; reduced-motion also renders final number immediately."
+  }
+}

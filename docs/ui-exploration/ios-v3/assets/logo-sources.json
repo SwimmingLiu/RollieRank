@@ -1,0 +1,28 @@
+{
+  "sihai": {
+    "page": "https://www.sihaigongkao.com/",
+    "asset": "https://n1image.sksight.com/sk-fe-image/2025/03/11/aa021912c31f54f0af89a08337ed4284.png",
+    "file": "sihai-official.png",
+    "processing": "unchanged source image"
+  },
+  "chaoge": {
+    "page": "https://chaogejiaoyu.com/",
+    "asset": "https://chaogejiaoyu.com/static/img/favicon.ico",
+    "file": "chaoge-official.png",
+    "processing": "ICO to PNG, 48x48, no redraw or recolor"
+  },
+  "current": {
+    "sihai": {
+      "display_name": "花生",
+      "file": "publishers/sihai-peanut.svg",
+      "origin": "custom SVG drawn for this prototype",
+      "meaning": "peanut shell with two lobes and a small lattice"
+    },
+    "chaoge": {
+      "display_name": "超格",
+      "file": "publishers/chaoge-study.svg",
+      "origin": "custom SVG drawn for this prototype",
+      "meaning": "open G/book frame and rising page markers"
+    }
+  }
+}

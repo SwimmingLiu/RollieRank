@@ -1,0 +1,25 @@
+{
+  "date": "2026-11-15",
+  "scope": "positions hierarchy backend and import data only; frontend/public entry delegated",
+  "files": {
+    "server/positions.mjs": "f76fa64e300eac1ccdc8c8a8fa5933e23777cb430f66ff9b991dea8ba7ceb85a",
+    "scripts/import-positions.py": "eadc23615cff179aca017e05ee2820da34f25313baa553fd6d3cf315fd7db505",
+    "data/positions/guokao-2027.json": "1fb809a1af7016433f61554b3b9484799ff43ab764086a3d44cfb80bc3c87846",
+    "data/positions/sources/manifest.json": "a670d51217362ae98405ae1282c12b3a29307abc833cc73d69ee39c6570d3c3d",
+    "test/positions-hierarchy.test.js": "5440bb290c846507f485abf39e087d54c76f699bf7c5c3688239158bd0ce6105",
+    "test/positions-import.test.js": "24dc22f3ba3bef175fc7126b2bc4a1e74f73373c7b6e40126cc91cadd9a8e71a",
+    "docs/issue-position-hierarchy.md": "b84cf2393a0ca95b57eb1c9fe6637a7330737427a0a563e4800b5fe4998799c3",
+    "docs/solution-position-hierarchy.md": "9d91a9820688ba7beccb35662ae872b5bc318ebe180bd97275654663df06736e",
+    "docs/integration-ios-position-hierarchy.md": "35a405bdc559f3dcc216bf54018de58fd9ecaeb2ef52db25a3193468f01ca75f",
+    "docs/pr-position-hierarchy.md": "8f191e14bd1beb296eaa090aacfec8f59f599c190f11f6a0cd827fb3b2ff0aea"
+  },
+  "positionCount": 19426,
+  "recruitCount": 35691,
+  "workbookSha256": "6b3da70baabe31a4a202c6b1179040db7003a956bc85c79cd35e3fb739d9520a",
+  "tests": {
+    "passed": 22,
+    "failed": 0,
+    "skipped": 0
+  },
+  "positionIdsSha256": "5115870472bd7bff85ecbe621eb419a44465bc200e870ac97509c6385a36054b"
+}

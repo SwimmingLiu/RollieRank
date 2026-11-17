@@ -2,6 +2,13 @@
 export const PAPERS = [
   {
     "id": "sihai-2026-h2-01",
+    "timeLimitMinutes": 120,
+    "timeLimitKind": "publisher",
+    "timeLimitSource": {
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（1）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "4ebc347ff7d83cea29298201926b404632b9275250b078e6e0f314d4367ec75e",
+      "pdfPage": 3
+    },
     "number": 1,
     "title": "四海 · 第 01 套",
     "sourceFile": "【四海】2026下半年一期行测套题1.pdf",
@@ -38,6 +45,13 @@ export const PAPERS = [
   },
   {
     "id": "sihai-2026-h2-02",
+    "timeLimitMinutes": 120,
+    "timeLimitKind": "publisher",
+    "timeLimitSource": {
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（2）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "27dafaad64275b6a171c474997feba4b013b96bf5db6b77eee2e8ba843c1c23c",
+      "pdfPage": 3
+    },
     "number": 2,
     "title": "四海 · 第 02 套",
     "sourceFile": "【四海】2026下半年一期行测套题2.pdf",
@@ -74,6 +88,13 @@ export const PAPERS = [
   },
   {
     "id": "sihai-2026-h2-03",
+    "timeLimitMinutes": 120,
+    "timeLimitKind": "publisher",
+    "timeLimitSource": {
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（3）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "c09f7854e2e7d91ec5737c96dd6f764563103ade8e33b134d7f69f4bd6f4efc2",
+      "pdfPage": 2
+    },
     "number": 3,
     "title": "四海 · 第 03 套",
     "sourceFile": "【四海】2026下半年一期行测套题3.pdf",
@@ -110,6 +131,13 @@ export const PAPERS = [
   },
   {
     "id": "sihai-2026-h2-04",
+    "timeLimitMinutes": 120,
+    "timeLimitKind": "publisher",
+    "timeLimitSource": {
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（4）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "fe14932e2d8adc482989a7113d26566ccbc56dc0af2906e0b22276d443b635e7",
+      "pdfPage": 3
+    },
     "number": 4,
     "title": "四海 · 第 04 套",
     "sourceFile": "【四海】2026下半年一期行测套题4.pdf",
@@ -146,6 +174,13 @@ export const PAPERS = [
   },
   {
     "id": "sihai-2026-h2-05",
+    "timeLimitMinutes": 120,
+    "timeLimitKind": "publisher",
+    "timeLimitSource": {
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（5）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "6c63376325ad93b6a01186580e5022f8a8c8e84131695c7e826b8648b13e3145",
+      "pdfPage": 3
+    },
     "number": 5,
     "title": "四海 · 第 05 套",
     "sourceFile": "【四海】2026下半年一期行测套题5.pdf",
@@ -182,6 +217,13 @@ export const PAPERS = [
   },
   {
     "id": "sihai-2026-h2-06",
+    "timeLimitMinutes": 120,
+    "timeLimitKind": "publisher",
+    "timeLimitSource": {
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（6）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "ace57de69adf6239adb9daa3d49b25fb10d401f0f5c883097e3a8fa9ddb6ebe0",
+      "pdfPage": 3
+    },
     "number": 6,
     "title": "四海 · 第 06 套",
     "sourceFile": "【四海】2026下半年一期行测套题6.pdf",
@@ -218,6 +260,13 @@ export const PAPERS = [
   },
   {
     "id": "sihai-2026-h2-07",
+    "timeLimitMinutes": 120,
+    "timeLimitKind": "publisher",
+    "timeLimitSource": {
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（7）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "16670f9aa529474e953913d82fe4cfce0de3f5b44622828b3b6b640dd52148c0",
+      "pdfPage": 3
+    },
     "number": 7,
     "title": "四海 · 第 07 套",
     "sourceFile": "【四海】2026下半年一期行测套题7.pdf",
@@ -254,6 +303,13 @@ export const PAPERS = [
   },
   {
     "id": "sihai-2026-h2-08",
+    "timeLimitMinutes": 120,
+    "timeLimitKind": "publisher",
+    "timeLimitSource": {
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（8）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "83b7b09419d428a8c18ab792c04dc552358a5b1d28e0a6cd190ece3aeef05647",
+      "pdfPage": 2
+    },
     "number": 8,
     "title": "四海 · 第 08 套",
     "sourceFile": "【四海】2026下半年一期行测套题8.pdf",
@@ -290,6 +346,13 @@ export const PAPERS = [
   },
   {
     "id": "sihai-2026-h2-09",
+    "timeLimitMinutes": 120,
+    "timeLimitKind": "publisher",
+    "timeLimitSource": {
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（9）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "5a18d0177054146397b63c2256e7bd22c0b1fe6cb9c89ceec4a18ba9fc22a35a",
+      "pdfPage": 2
+    },
     "number": 9,
     "title": "四海 · 第 09 套",
     "sourceFile": "【四海】2026下半年一期行测套题9.pdf",
@@ -326,6 +389,13 @@ export const PAPERS = [
   },
   {
     "id": "sihai-2026-h2-10",
+    "timeLimitMinutes": 120,
+    "timeLimitKind": "publisher",
+    "timeLimitSource": {
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（10）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "4bf67c7ec21576d27996a28ede966e71c3b542c2af4975e76ce1d49fb254c232",
+      "pdfPage": 3
+    },
     "number": 10,
     "title": "四海 · 第 10 套",
     "sourceFile": "【四海】2026下半年一期行测套题10.pdf",
@@ -362,6 +432,13 @@ export const PAPERS = [
   },
   {
     "id": "sihai-2026-h2-11",
+    "timeLimitMinutes": 120,
+    "timeLimitKind": "publisher",
+    "timeLimitSource": {
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（11）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "67d4dc77c9bf442eb46764ac546cdb27047537914b805c256126090ec84f775c",
+      "pdfPage": 3
+    },
     "number": 11,
     "title": "四海 · 第 11 套",
     "sourceFile": "【四海】2026下半年一期行测套题11.pdf",
@@ -398,6 +475,13 @@ export const PAPERS = [
   },
   {
     "id": "sihai-2026-h2-12",
+    "timeLimitMinutes": 120,
+    "timeLimitKind": "publisher",
+    "timeLimitSource": {
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（12）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "26c87b07a84fd77d352ffc168627501e48b87bad05acc736dd2aae3b495a65d8",
+      "pdfPage": 2
+    },
     "number": 12,
     "title": "四海 · 第 12 套",
     "sourceFile": "【四海】2026下半年一期行测套题12.pdf",

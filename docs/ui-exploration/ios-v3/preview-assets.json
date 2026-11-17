@@ -1,0 +1,21 @@
+{
+  "revision": "paper-cards-1114-v3",
+  "key": "6e4ea0bc8b0d",
+  "directory": "screens/ios-refinement-2",
+  "gif": "motion/interaction-current.gif",
+  "hashes": {
+    "screens/ios-refinement-2/admin.png": "1f0350de5e9889675d1afd94afe924d402b08abdf33d8ed8ac003f3430ec7ec5",
+    "screens/ios-refinement-2/details.png": "8cd08cca09c1193816177f7fec7c01eeea06ebdf88e810239d1e41b262e0e5ec",
+    "screens/ios-refinement-2/discussion.png": "8052fb95e82bdec2ed2ae2da51998bb2a6d24bf13475eb489d743e60f104be95",
+    "screens/ios-refinement-2/entry.png": "2248ad4da9611569a93e940092bb53d50c5b426979b158f4cd25c45635f9019b",
+    "screens/ios-refinement-2/home.png": "7e594d55f4e28f659818546b30bc70d721b7e8367be1a0834191dc314b063b22",
+    "screens/ios-refinement-2/me.png": "dc432d304290c8381e75731976be5a00288a2deefcf49f578d01f3e618999294",
+    "screens/ios-refinement-2/papers.png": "f5ad1c7b57e8d2e2ae2e120261e1daa377ea27c4646a69a551dabf72a5d990e3",
+    "screens/ios-refinement-2/rank.png": "9a80b29fbcf4ae7e5757d19f1b2d432ea9dd51999edb44ab6be50c272da3dff7",
+    "screens/ios-refinement-2/report.png": "75e5ae5d1bdfb29dad467c8e8351ffb5a5a45aaa7e378f23cd2f03ffc4e70d1d",
+    "screens/ios-refinement-2/share-poster.png": "97b4b56688815bcc45eb7d35c56410b4cdcb1df187d3142e5c7314ba735232e6",
+    "screens/ios-refinement-2/share.png": "3cb1058ae8e38932179396bbcfb9c804702c5582b7ac2e5fd55963f9353f622f",
+    "screens/ios-refinement-2/stats.png": "d0150f4d72663fd5bb3aea7ed506e9d6d7f297d8314e401976ad29bd04e7efe6",
+    "motion/interaction-current.gif": "33518f0d98cff9ee2dd5b0c6dbf887d08fb1630eaa4fa3a9f91aac72b71bb106"
+  }
+}

@@ -1,0 +1,11 @@
+[project]
+name = "rollierank-verification"
+version = "0.1.0"
+requires-python = ">=3.10"
+
+[dependency-groups]
+papers = [
+    "pymupdf==1.28.2",
+    "pypdf==7.1.0",
+]
+verify = ["openpyxl==3.1.5", "playwright==1.65.0", "xlrd==2.0.2"]

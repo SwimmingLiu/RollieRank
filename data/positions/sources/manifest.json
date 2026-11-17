@@ -1,0 +1,41 @@
+{
+  "verifiedAsOf": "2026-11-14",
+  "latestRecruitmentYear": 2027,
+  "announcementPublishedAt": "2026-10-13",
+  "publisher": "国家公务员局",
+  "attachmentHost": "新华网",
+  "announcementPage": "https://shanghai.chinatax.gov.cn/tax/xxgk/rsxx/202610/t481763.html",
+  "sourcePage": "https://www.xinhuanet.com/edu/20261014/b1348cb4596a4d3d95323b5dcb751c6a/c.html",
+  "downloadUrl": "https://www.xinhuanet.com/edu/20261014/b1348cb4596a4d3d95323b5dcb751c6a/20261014b1348cb4596a4d3d95323b5dcb751c6a_07a614f07a9f7f4465a4e3b0b039d112d1.zip",
+  "retrievedAt": "2026-11-14",
+  "archiveFile": "sources/guokao-2027.zip",
+  "archiveSha256": "bbe7fb85ac4ab2932672203392ef5f1756a454dab54346f0fb42286a874c1831",
+  "workbookFileName": "中央机关及其直属机构2027年度考试录用公务员招考简章.xls",
+  "workbookSha256": "6b3da70baabe31a4a202c6b1179040db7003a956bc85c79cd35e3fb739d9520a",
+  "normalizedFile": "guokao-2027.json",
+  "normalizedSha256": "1fb809a1af7016433f61554b3b9484799ff43ab764086a3d44cfb80bc3c87846",
+  "positionCount": 19426,
+  "recruitCount": 35691,
+  "sheets": [
+    {
+      "name": "中央党群机关",
+      "headerRow": 2,
+      "count": 99
+    },
+    {
+      "name": "中央国家行政机关（本级）",
+      "headerRow": 2,
+      "count": 312
+    },
+    {
+      "name": "中央国家行政机关省级以下直属机构",
+      "headerRow": 2,
+      "count": 18193
+    },
+    {
+      "name": "中央国家行政机关参照公务员法管理事业单位",
+      "headerRow": 2,
+      "count": 822
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "scope": "iOS correction entry refinement, shared public methods and focused iframe test",
+  "sha256": {
+    "src/features/corrections.js": "2b6efc4ec41bb477867728a2a632d5dbc6e18223949c2241d711a244a6b9b64d",
+    "docs/ui-exploration/ios-v3/features/corrections.js": "862ceee80718c435e639184ad8d21cc3049d814b3ba773377f15b9ea0b5e2128",
+    "docs/ui-exploration/ios-v3/features/corrections.css": "f8865d46ae375d96981ffa8df33a5729504cc7e1955110574f8a3ef93ead5ce8",
+    "test/ios-corrections-browser.test.js": "7b8f8682e89c3636d666e23a5a2d6a26062f03adf9d0894a3596f16b03617081"
+  },
+  "browserEvidence": "test-results/ios-corrections-refinement/verification.json",
+  "browserBehaviorGroups": 7,
+  "sourceUnchangedSinceBrowserVerification": true,
+  "pendingIntegration": "Coordinator owns app.js details-title action, report status placement, bridge/vendor build, user port and combined acceptance."
+}
