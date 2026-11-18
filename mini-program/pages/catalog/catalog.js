@@ -46,8 +46,8 @@ Page({
           const answered = draft ? draft.answered || 0 : 0;
           return {
             id: version.id,
-            number: version.number,
-            numberText: version.number ? String(version.number).padStart(2, "0") : catalogUtil.versionTitle(version),
+            number: catalogUtil.numberedPaper(version) ? version.number : 0,
+            numberText: catalogUtil.numberedPaper(version) ? String(version.number).padStart(2, "0") : catalogUtil.versionTitle(version),
             questionCount: version.questionCount,
             draftAnswered: answered,
             submitted: Boolean(best),

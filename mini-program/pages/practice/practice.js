@@ -79,12 +79,7 @@ Page({
         loading: false,
         version: { id: version.id, questionCount: version.questionCount, invigilator: version.timeLimitMinutes || 0 },
         title: catalogUtil.versionTitle(version),
-        identity: [
-          catalogUtil.publisherName(version.institution),
-          String(version.project || "").split(" · ")[0],
-          catalogUtil.periodLabel(version.period),
-          version.number ? "行测" + String(version.number).padStart(2, "0") + "套" : version.title,
-        ].filter(Boolean).join(" · "),
+        identity: catalogUtil.practiceIdentity(version),
         publisherLogo: ASSET[catalogUtil.LOGO[version.institution]] || "",
         current: Math.min(version.questionCount, Math.max(1, Number(draft.current) || 1)),
         single: Boolean(draft.single),

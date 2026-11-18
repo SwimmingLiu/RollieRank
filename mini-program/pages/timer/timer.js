@@ -40,7 +40,7 @@ Page({
       const groups = catalogUtil.groupByInstitution(versions);
       const papers = groups.map(group => ({
         name: group.name,
-        label: catalogUtil.publisherName(group.name),
+        label: group.label,
         versions: group.versions.map(version => ({
           id: version.id,
           label: `${version.number}套`,

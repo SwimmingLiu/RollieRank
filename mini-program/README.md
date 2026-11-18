@@ -10,10 +10,10 @@
 | `pages/catalog` | 机构套卷：按期数分组，显示草稿／已提交状态 |
 | `pages/practice` | 录答案：列表和单题录入、存疑标记、草稿恢复、交卷 |
 | `pages/report` | 成绩：总分、正误、板块得分率和六维雷达、讨论／榜单／分享入口 |
-| `pages/review` | 逐题对照：按错误、未答和题型筛选，复制错题号 |
+| `pages/review` | 逐题对照：按错题、待检查和板块筛选，复制错题号 |
 | `pages/rank` | 同卷榜：全国或岗位范围、前三名纸卡、其余名次 |
 | `pages/records` | 练习记录：身份、岗位、成长分析、搜索与筛选 |
-| `pages/analytics` | 成长分析：得分率走势和题型累计 |
+| `pages/analytics` | 成长分析：按卷型查看得分率、得分和正确率走势 |
 | `pages/share` | 分享：长图、成绩卡、题型、雷达四种 PNG，保存到相册或邀请同卷好友 |
 | `pages/positions` | 选岗：搜索、分页、选择或取消 |
 | `pages/discussion` | 试卷讨论：发表、点赞、回复、图片预览 |
@@ -43,7 +43,7 @@ cli preview --project "$PWD/mini-program" --qr-format image --qr-output /tmp/rol
 ```
 
 ## 资源
-图片与字体已上传到 `https://oss.swimmingliu.cn/static/rollierank/`（用户提供的 `rollie-rank-oss.swimmingliu.cn` 目前返回 404，上传后已确认老域名可用），清单见 `assets-manifest.json`；上传脚本为 `scripts/upload-oss.py`。图标和标签栏图标在 `assets/ui`、`assets/tab`、`assets/tab-active`。
+图片与字体已上传到 `https://rollie-rank-oss.swimmingliu.cn/static/rollierank/`（`rollie-rank` 空间的加速域名），清单见 `assets-manifest.json`；上传脚本为 `scripts/upload-oss.py`。图标和标签栏图标在 `assets/ui`、`assets/tab`、`assets/tab-active`。
 
 ## 尚未接入
 - 微信登录与云端身份（当前用本机随机身份，换机需要备份恢复）。

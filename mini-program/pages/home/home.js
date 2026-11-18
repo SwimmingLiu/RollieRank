@@ -46,11 +46,7 @@ Page({
     try {
       const versions = await api.catalog(force);
       getApp().globalData.versions = versions;
-      const institutions = catalogUtil.groupByInstitution(versions).map(({ name, logo }) => ({
-        name,
-        logo,
-        label: catalogUtil.publisherName(name),
-      }));
+      const institutions = catalogUtil.groupByInstitution(versions).map(({ name, logo, label }) => ({ name, logo, label }));
       this.setData({ institutions, loading: false });
       this.refreshRecent();
     } catch (error) {
@@ -98,7 +94,7 @@ Page({
       const institution = version.institution || "";
       const edition = catalogUtil.periodLabel(version.period);
       const number = String(version.number || "").padStart(2, "0");
-      const paperTitle = version.number && edition ? "行测 " + number + " 套" : record.title;
+      const paperTitle = catalogUtil.numberedPaper(version) ? "行测 " + number + " 套" : record.title;
       const year = String(version.project || record.title).match(/20\d{2}/)?.[0] || "";
       return {
         ...record,

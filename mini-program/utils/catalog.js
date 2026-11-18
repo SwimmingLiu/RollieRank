@@ -21,7 +21,7 @@ function groupByInstitution(versions) {
   for (const version of versions) {
     if (version.status === "draft") continue;
     const key = institutionKey(version);
-    if (!map.has(key)) map.set(key, { name: key, logo: LOGO[key] || null, projects: [], versions: [] });
+    if (!map.has(key)) map.set(key, { name: key, label: publisherName(key), logo: LOGO[key] || null, projects: [], versions: [] });
     map.get(key).versions.push(version);
   }
   const list = [...map.values()];
@@ -70,8 +70,19 @@ function publisherName(name) {
 
 function periodLabel(period) {
   const names = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+  if (/^\d+$/.test(String(period || ""))) return "第" + period + "期";
   const match = String(period || "").match(/^第?([一二三四五六七八九十])期$/);
   return match ? "第" + (names.indexOf(match[1]) + 1) + "期" : period || "";
 }
 
-module.exports = { groupByInstitution, versionTitle, identity, publisherName, periodLabel, LOGO, subjectName, subjectId };
+function numberedPaper(version) {
+  return Boolean(version.number && /(?:第\s*\d+\s*套|^\d+\s*套)$/.test(version.title || ""));
+}
+
+function practiceIdentity(version) {
+  const paper = numberedPaper(version) ? "行测" + String(version.number).padStart(2, "0") + "套" : versionTitle(version);
+  return [publisherName(version.institution), String(version.project || "").split(" · ")[0],
+    periodLabel(version.period), paper].filter(Boolean).join(" · ");
+}
+
+module.exports = { groupByInstitution, versionTitle, identity, numberedPaper, practiceIdentity, publisherName, periodLabel, LOGO, subjectName, subjectId };
