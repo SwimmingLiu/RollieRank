@@ -1,0 +1,19 @@
+[Unit]
+Description=RollieRank API
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/rollierank
+Environment=PORT=4173
+Environment=HOST=127.0.0.1
+Environment=ROLLIERANK_DATA_DIR=/var/lib/rollierank
+EnvironmentFile=-/etc/rollierank.env
+ExecStart=/usr/bin/node /opt/rollierank/scripts/serve.mjs
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
