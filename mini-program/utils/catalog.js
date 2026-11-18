@@ -63,8 +63,17 @@ function versionTitle(version) {
   return version.title || number;
 }
 
+// 录答案页的紧凑身份：机构展示名 · 项目 · 期数 · 卷名。
+function practiceIdentity(version) {
+  const period = /^\d+$/.test(String(version.period || ""))
+    ? `第${version.period}期`
+    : version.period;
+  return [displayName(version.institution), version.project, period, version.title]
+    .filter(Boolean).join(" · ");
+}
+
 function identity(version) {
   return [version.institution, version.period, version.variant].filter(Boolean).join(" · ");
 }
 
-module.exports = { groupByInstitution, versionTitle, identity, LOGO, displayName, subjectName, subjectId };
+module.exports = { groupByInstitution, versionTitle, identity, practiceIdentity, LOGO, displayName, subjectName, subjectId };

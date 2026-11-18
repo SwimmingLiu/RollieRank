@@ -11,6 +11,7 @@ const TABS = [
 
 Page({
   data: {
+    safeTop: 20,
     name: "卷友",
     position: null,
     records: [],
@@ -28,6 +29,7 @@ Page({
   },
 
   onShow() {
+    this.setData({ safeTop: getApp().safeTop() });
     this.refresh();
     if (!this.synced) {
       this.synced = true;

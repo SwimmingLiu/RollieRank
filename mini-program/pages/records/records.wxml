@@ -1,31 +1,34 @@
-<view class="screen screen--tab">
-  <view class="records__head row row--between">
+<view class="screen screen--tab" style="padding-top: {{safeTop}}px;">
+  <!-- 标题居中，右侧设置入口放在胶囊下方，不与系统按钮重叠。 -->
+  <view class="records__head">
     <text class="records__title">练习记录</text>
     <view class="records__settings" bindtap="openSettings">
       <image class="records__settings-icon" src="{{uiBase}}/help.svg" mode="aspectFit" />
     </view>
   </view>
 
-  <view class="card records__profile">
+  <view class="records__profile">
     <image class="records__avatar" src="{{asset.profile}}" mode="aspectFit" />
     <view class="stack grow">
       <text class="records__name" bindtap="openSettings">{{name}}</text>
-      <text class="text-xs">{{totals.count}} 份练习记录</text>
-    </view>
-    <view class="records__totals">
-      <text class="num records__total-num">{{totals.best}}</text>
-      <text class="text-xs">最好成绩</text>
+      <text class="text-xs">{{totals.count}} 份练习</text>
     </view>
   </view>
 
   <view class="records__grid">
     <view class="card press records__cell" bindtap="openPosition">
-      <text class="text-xs">报考岗位</text>
+      <view class="records__cell-head">
+        <image class="records__cell-lead" src="{{uiBase}}/map-pin.svg" mode="aspectFit" />
+        <text class="text-xs">报考岗位</text>
+      </view>
       <text class="records__cell-value ellipsis">{{position ? position.label : '未选岗'}}</text>
       <image class="records__cell-icon" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
     </view>
     <view class="card press records__cell" bindtap="openAnalytics">
-      <text class="text-xs">成长分析</text>
+      <view class="records__cell-head">
+        <image class="records__cell-lead" src="{{uiBase}}/trend.svg" mode="aspectFit" />
+        <text class="text-xs">成长分析</text>
+      </view>
       <text class="records__cell-value">{{records.length > 1 ? '查看进步' : '累计记录'}}</text>
       <image class="records__cell-icon" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
     </view>

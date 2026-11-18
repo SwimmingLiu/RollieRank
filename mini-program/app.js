@@ -19,6 +19,11 @@ App({
     storage.guestId();
   },
 
+  // 页面内容需要从系统状态栏下方开始，这里提供统一的安全顶部高度。
+  safeTop() {
+    return this.globalData.statusBarHeight || 20;
+  },
+
   navMetrics() {
     const { statusBarHeight, menuButton } = this.globalData;
     // 导航栏高度与系统胶囊一致：胶囊上下各留同样的间距，标题与胶囊居中对齐。

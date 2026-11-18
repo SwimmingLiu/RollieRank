@@ -21,7 +21,7 @@
           <image class="timer__chev" src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
         </view>
         <view class="row row--gap timer__papers">
-          <view wx:for="{{papers}}" wx:key="name" class="chip {{activeProject === index ? 'chip--on' : ''}}" data-index="{{index}}" bindtap="openSection">{{item.name}}</view>
+          <view wx:for="{{papers}}" wx:key="name" class="chip {{activeProject === index ? 'chip--on' : ''}}" data-index="{{index}}" bindtap="openSection">{{item.label || item.name}}</view>
         </view>
       </view>
 

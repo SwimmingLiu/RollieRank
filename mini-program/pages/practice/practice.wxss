@@ -19,11 +19,12 @@
 .practice__range-no { font-variant-numeric: tabular-nums; }
 
 .practice__list { padding: 0 16px 30px; }
-.practice__row { display: flex; align-items: center; gap: 10px; padding: 7px 4px; border-bottom: 1px solid #f4f4f5; }
-.practice__no { width: 26px; text-align: center; font-size: 13px; color: #71717a; font-variant-numeric: tabular-nums; }
+.practice__row { display: flex; align-items: center; gap: 10px; padding: 10px 4px; border-bottom: 1px solid #f5f1e9; }
+.practice__no { width: 26px; text-align: center; font-size: 14px; color: #71717a; font-variant-numeric: tabular-nums; }
 .practice__choices { flex: 1; display: flex; gap: 8px; }
-.practice__choice { flex: 1; height: 40px; border-radius: 10px; background: #fffdf8; border: 1px solid #e4e4e7; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #3f3f46; }
+.practice__choice { flex: 1; height: 46px; border-radius: 14px; background: #ffffff; border: 1px solid #e8dcc8; display: flex; align-items: center; justify-content: center; font-size: 17px; color: #71717a; }
 .practice__choice--on { background: #18181b; border-color: #18181b; color: #fcf8f1; font-weight: 600; }
+.practice__choice:active { transform: scale(0.98); }
 .practice__mark { width: 40px; display: flex; flex-direction: column; align-items: center; gap: 1px; color: #b7b1a7; }
 .practice__mark-icon { width: 16px; height: 16px; }
 .practice__mark-label { font-size: 10px; line-height: 1.2; }

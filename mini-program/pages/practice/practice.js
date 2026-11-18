@@ -75,7 +75,7 @@ Page({
         loading: false,
         version: { id: version.id, questionCount: version.questionCount, invigilator: version.timeLimitMinutes || 0 },
         title: catalogUtil.versionTitle(version),
-        identity: catalogUtil.identity(version),
+        identity: catalogUtil.practiceIdentity(version),
         logo: catalogUtil.LOGO[version.institution] || null,
         sections,
         answers,

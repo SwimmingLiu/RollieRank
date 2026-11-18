@@ -1,4 +1,4 @@
-<view class="screen screen--tab safe-top">
+<view class="screen screen--tab" style="padding-top: {{safeTop}}px;">
   <view class="home__head">
     <image class="home__logo" src="{{asset.logo}}" mode="aspectFit" />
     <text class="home__brand">卷卷小榜</text>

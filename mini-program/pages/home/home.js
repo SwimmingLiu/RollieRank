@@ -5,6 +5,7 @@ const { ASSET } = require("../../config.js");
 
 Page({
   data: {
+    safeTop: 20,
     loading: true,
     error: "",
     institutions: [],
@@ -15,6 +16,7 @@ Page({
   },
 
   onLoad() {
+    this.setData({ safeTop: getApp().safeTop() });
     this.load();
   },
 
