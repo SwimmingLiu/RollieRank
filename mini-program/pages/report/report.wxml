@@ -71,7 +71,7 @@
   <view wx:if="{{summary && !publicView}}" class="footer-bar">
     <view class="footer-bar__inner">
       <button class="btn btn--primary" bindtap="review">
-        <image class="btn__icon" src="/assets/tab-active/records.svg" mode="aspectFit" />
+        <image class="btn__icon" src="{{uiBase}}/review-light.svg" mode="aspectFit" />
         {{summary.wrong ? '复盘错题 ' + summary.wrong : '查看答卷'}}
       </button>
       <button class="btn btn--ghost" bindtap="discuss" aria-label="本卷交流"><image class="btn__icon" src="{{uiBase}}/comment.svg" mode="aspectFit" /></button>

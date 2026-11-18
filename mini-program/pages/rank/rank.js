@@ -3,7 +3,7 @@ const storage = require("../../utils/storage.js");
 const format = require("../../utils/format.js");
 
 const { ASSET } = require("../../config.js");
-const { publisherName, periodLabel, LOGO } = require("../../utils/catalog.js");
+const { practiceIdentity, publisherName, subjectName, subjectId, LOGO } = require("../../utils/catalog.js");
 
 const SHORT_LABELS = { 政治理论: "政治", 常识判断: "常识", 言语理解: "言语", 数量关系: "数量", 资料分析: "资料" };
 
@@ -44,13 +44,18 @@ Page({
       if (!attempt) throw new Error("这份成绩不在当前身份下。");
       this.versionId = attempt.versionId;
       this.paperId = attempt.versionId;
-      const subjects = (attempt.report && attempt.report.breakdown) || [];
+      const subjects = new Map();
+      for (const type of attempt.report?.breakdown || []) {
+        if (type.maxCents <= 0) continue;
+        const name = subjectName(type.name);
+        const key = subjectId(type.id, type.name);
+        subjects.set(key, { key, label: SHORT_LABELS[name] || name });
+      }
       this.setData({
         publisher: publisherName(attempt.institution),
         logo: ASSET[LOGO[attempt.institution]] || "",
-        identity: [String(attempt.project || "").split(" · ")[0], periodLabel(attempt.period), attempt.paperTitle].filter(Boolean).join(" · "),
-        dimensions: [{ key: "total", label: "总分" },
-          ...subjects.filter(type => type.maxCents > 0).map(type => ({ key: type.id, label: SHORT_LABELS[type.name] || type.name }))],
+        identity: practiceIdentity({ ...attempt, title: attempt.paperTitle }).split(" · ").slice(1).join(" · "),
+        dimensions: [{ key: "total", label: "总分" }, ...subjects.values()],
       });
       const position = storage.position();
       this.setData({

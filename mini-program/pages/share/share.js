@@ -32,6 +32,7 @@ Page({
     uiBase: "/assets/ui",
     ready: false,
     saving: false,
+    previewSrc: "",
     previewWidth: 0,
     previewHeight: 0,
     previewTop: 0,
@@ -85,7 +86,7 @@ Page({
 
   setMode(event) {
     if (this.data.saving || this.data.mode === event.currentTarget.dataset.key) return;
-    this.setData({ mode: event.currentTarget.dataset.key, ready: false }, () => this.fit());
+    this.setData({ mode: event.currentTarget.dataset.key, ready: false, previewSrc: "" }, () => this.fit());
   },
 
   fit() {
@@ -125,22 +126,27 @@ Page({
     const ctx = canvas.getContext("2d");
     ctx.scale(2, 2);
     drawPoster(ctx, { mode, summary: this.summary, bands: this.bands, images: { brand, publisher, medal } });
-    this.canvas = canvas;
-    this.setData({ ready: true });
+    // An image obeys the scroll-view clip on runtimes that place canvas above the WebView.
+    try {
+      const result = await new Promise((resolve, reject) => {
+        wx.canvasToTempFilePath({
+          canvas, fileType: "png", destWidth: canvas.width, destHeight: canvas.height,
+          success: resolve, fail: reject,
+        });
+      });
+      if (number === this.paintNumber) this.setData({ previewSrc: result.tempFilePath, ready: true });
+    } catch {
+      if (number === this.paintNumber) this.setData({ ready: false, error: "分享图生成失败，请返回重试。" });
+    }
   },
 
   async save() {
     if (!this.data.ready || this.data.saving) return;
     this.setData({ saving: true });
     try {
-      const canvas = this.canvas;
-      const temp = await new Promise((resolve, reject) => {
-        wx.canvasToTempFilePath({
-          canvas, fileType: "png", destWidth: canvas.width, destHeight: canvas.height,
-          success: res => resolve(res.tempFilePath), fail: reject,
-        });
-      });
-      await new Promise((resolve, reject) => wx.saveImageToPhotosAlbum({ filePath: temp, success: resolve, fail: reject }));
+      await new Promise((resolve, reject) => wx.saveImageToPhotosAlbum({
+        filePath: this.data.previewSrc, success: resolve, fail: reject,
+      }));
       wx.showToast({ title: "已保存到相册", icon: "success" });
     } catch (error) {
       const message = String(error.errMsg || error.message || "");

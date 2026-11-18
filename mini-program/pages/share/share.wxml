@@ -7,8 +7,9 @@
       <button wx:for="{{modes}}" wx:key="key" class="share__mode {{mode === item.key ? 'share__mode--on' : ''}}" data-key="{{item.key}}" bindtap="setMode">{{item.label}}</button>
     </view>
     <scroll-view class="share__preview" scroll-y scroll-top="{{previewTop}}">
-      <canvas type="2d" id="shareCanvas" class="share__canvas" style="width: {{previewWidth}}px; height: {{previewHeight}}px;" />
+      <image wx:if="{{previewSrc}}" class="share__image" src="{{previewSrc}}" mode="aspectFit" style="width: {{previewWidth}}px; height: {{previewHeight}}px;" />
     </scroll-view>
+    <canvas type="2d" id="shareCanvas" class="share__canvas" />
     <view class="share__actions">
       <button class="btn btn--primary" bindtap="save" disabled="{{!ready || saving}}">
         <image class="btn__icon" src="{{uiBase}}/download-light.svg" mode="aspectFit" />保存海报

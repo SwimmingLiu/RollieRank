@@ -1,6 +1,6 @@
 .timer { display: flex; flex-direction: column; gap: 12px; padding: 14px 20px 22px; }
 .timer__switch { display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: #ebe4d9; }
-.timer__switch-item { flex: 1; width: 0 !important; min-height: 42px; font-size: 14px; border-radius: 10px; color: #786955; }
+.timer__switch-item { display: flex; align-items: center; justify-content: center; flex: 1; width: 0 !important; min-height: 42px; font-size: 14px; border-radius: 10px; color: #786955; }
 .timer__switch-item--on { background: #fffdf8; color: #34291e; font-weight: 650; }
 .timer__paper, .timer__plan, .timer__clock { min-height: 76px; border-radius: 20px; padding: 14px 16px; background: #fffdf8; border: 1px solid #e6ddce; }
 .timer__paper { display: flex; align-items: center; width: 100% !important; text-align: left; gap: 9px; }
@@ -9,8 +9,8 @@
 .timer__muted { font-size: 12px; color: #978164; }
 .timer__stepper { display: flex; align-items: center; gap: 12px; justify-content: space-between; padding: 11px 0 14px; }
 .timer__step { display: grid; place-items: center; width: 42px !important; min-height: 42px; border: 1px solid #e9dfce; border-radius: 12px; background: #f5ecdb; color: #776045; font-size: 21px; flex: none; }
-.timer__value { display: flex; align-items: baseline; gap: 3px; }
-.timer__input { width: 76px; padding: 7px 4px; background: #fcf8f1; border: 1px solid #e9dfce; border-radius: 10px; font-size: 22px; text-align: center; }
+.timer__value { display: flex; align-items: center; gap: 5px; }
+.timer__input { width: 76px; height: 44px; min-height: 44px; line-height: 44px; padding: 0 4px; background: #fcf8f1; border: 1px solid #e9dfce; border-radius: 10px; font-size: 22px; text-align: center; }
 .timer__modules { padding-top: 7px; }
 .timer__module, .timer__total { display: flex; align-items: center; gap: 8px; min-height: 50px; border-bottom: 1px solid #eee5d6; color: #665643; font-size: 13px; }
 .timer__module .timer__step { width: 33px !important; min-height: 33px; }

@@ -14,7 +14,7 @@
 .records__muted { font-size: 11px; font-weight: 450; color: #9c8d76; }
 .records__tools { display: flex; align-items: center; gap: 8px; }
 .records__tabs { display: flex; min-height: 49px; padding: 3px; border-radius: 13px; background: #ebe4d9; }
-.records__tab { flex: 1; width: 0 !important; min-height: 43px; border-radius: 11px; color: #71717a; font-size: 12px; white-space: nowrap; }
+.records__tab { display: flex; align-items: center; justify-content: center; flex: 1; width: 0 !important; min-height: 43px; border-radius: 11px; color: #71717a; font-size: 12px; white-space: nowrap; }
 .records__tab--on { color: #fffaf0; background: #2d2c25; font-weight: 650; }
 .records__search { width: 42px !important; height: 42px; display: grid; place-items: center; flex: none; border: 1px solid #e6ddce; border-radius: 13px; background: #fffdf8; }
 .records__search image { width: 18px; height: 18px; opacity: .7; }

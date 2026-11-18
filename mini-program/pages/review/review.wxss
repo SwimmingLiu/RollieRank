@@ -3,7 +3,7 @@
 .review__scope { margin-left: -22px; }
 .review__scope image, .review__group-label image { width: 13px; height: 13px; opacity: .6; }
 .review__tabs { display: flex; gap: 4px; padding: 4px; margin: 8px 0 16px; border-radius: 12px; background: #f2f2f4; }
-.review__tab { min-height: 32px; flex: 1; width: 0 !important; color: #71717a; font-size: 13px; border-radius: 8px; white-space: nowrap; }
+.review__tab { display: flex; align-items: center; justify-content: center; min-height: 32px; flex: 1; width: 0 !important; color: #71717a; font-size: 13px; border-radius: 8px; white-space: nowrap; }
 .review__tab--on { background: #18181b; color: #fffdf8; }
 .review__columns { display: grid; grid-template-columns: 44px 1fr 1fr 42px minmax(64px, 1fr); align-items: center; text-align: center; gap: 3px; }
 .review__labels { min-height: 42px; color: #7e725e; background: #f3eee5; border-bottom: 1px solid #e6ddce; font-size: 12px; }
