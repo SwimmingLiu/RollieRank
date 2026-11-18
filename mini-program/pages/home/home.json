@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "rr-tabbar": "/components/rr-tabbar/rr-tabbar"
+  },
+  "navigationStyle": "custom"
+}

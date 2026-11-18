@@ -1,0 +1,12 @@
+.pos__search { margin: 8rpx 28rpx 16rpx; padding: 0 22rpx; height: 92rpx; display: flex; align-items: center; gap: 14rpx; }
+.pos__search-icon { width: 34rpx; height: 34rpx; opacity: 0.55; }
+.pos__facets { white-space: nowrap; padding: 0 28rpx 16rpx; }
+.pos__facet { margin-right: 12rpx; flex-shrink: 0; max-width: 340rpx; overflow: hidden; text-overflow: ellipsis; }
+.pos__meta { padding: 0 32rpx 12rpx; }
+.pos__list { padding: 0 28rpx; display: flex; flex-direction: column; gap: 14rpx; }
+.pos__item { padding: 24rpx; }
+.pos__item--on { border: 2rpx solid #ef7d82; }
+.pos__category { height: 40rpx; font-size: 20rpx; padding: 0 14rpx; }
+.pos__title { display: block; margin-top: 10rpx; font-size: 30rpx; font-weight: 600; }
+.pos__item-foot { margin-top: 14rpx; padding-top: 12rpx; border-top: 2rpx solid #f1ebe0; }
+.pos__pager { display: flex; align-items: center; justify-content: center; gap: 26rpx; padding: 28rpx 0 40rpx; }

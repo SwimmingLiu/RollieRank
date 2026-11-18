@@ -153,6 +153,18 @@ export async function createApi({ dataDirectory, featureFactories = [createPosit
             return true;
         return false;
       };
+      // 本地默认无需凭证；配置维护者凭证后，管理接口必须带匹配的 Bearer 令牌。
+      const requireAdmin = () => {
+        const expected = process.env.ROLLIERANK_REVIEW_TOKEN?.trim();
+        if (!expected) return;
+        const header = request.headers.authorization ?? "";
+        const provided = header.startsWith("Bearer ") ? header.slice(7) : "";
+        if (provided !== expected) {
+          const error = new Error("需要维护者凭证。");
+          error.statusCode = 401;
+          throw error;
+        }
+      };
       if (request.method === "GET" && await dispatchFeatures(undefined)) return true;
       if (request.method === "GET" && pathname === "/api/catalog") {
         send(response, 200, {
@@ -163,6 +175,7 @@ export async function createApi({ dataDirectory, featureFactories = [createPosit
         return true;
       }
       if (request.method === "GET" && pathname === "/api/admin") {
+        requireAdmin();
         send(response, 200, {
           versions: versions.map(publicVersion),
           audit: audit.slice(0, 50),
@@ -324,6 +337,7 @@ export async function createApi({ dataDirectory, featureFactories = [createPosit
         return true;
       }
       if (pathname === "/api/admin/import") {
+        requireAdmin();
         const questions = parseQuestionCsv(input.csv);
         for (const field of [
           "title",
@@ -383,6 +397,7 @@ export async function createApi({ dataDirectory, featureFactories = [createPosit
         return true;
       }
       if (pathname === "/api/admin/status") {
+        requireAdmin();
         const result = await mutate(() => {
           const version = versions.find((v) => v.id === input.versionId);
           if (!version || !["published", "offline"].includes(input.status))

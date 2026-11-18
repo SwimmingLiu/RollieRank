@@ -1,0 +1,16 @@
+.practice__head { padding: 8rpx 32rpx 0; }
+.practice__count { font-size: 28rpx; color: #79767d; margin-left: 20rpx; }
+.practice__filters { margin-top: 22rpx; padding-bottom: 20rpx; border-bottom: 2rpx solid #ece5d8; }
+.practice__section { font-size: 30rpx; font-weight: 600; }
+.practice__chev { width: 26rpx; height: 26rpx; opacity: 0.6; }
+.practice__list { padding: 0 24rpx 40rpx; }
+.practice__row { display: flex; align-items: center; gap: 16rpx; padding: 18rpx 4rpx; border-bottom: 2rpx solid #f4eee3; }
+.practice__no { width: 56rpx; text-align: center; font-size: 28rpx; color: #79767d; }
+.practice__choices { flex: 1; display: flex; gap: 14rpx; }
+.practice__choice { flex: 1; height: 84rpx; border-radius: 22rpx; background: #fffdf8; border: 2rpx solid #ece5d8; display: flex; align-items: center; justify-content: center; font-size: 32rpx; color: #4a443f; transition: transform 100ms ease, background 100ms ease; }
+.practice__choice:active { transform: scale(0.97); }
+.practice__choice--on { background: #2b2724; border-color: #2b2724; color: #fff8ee; font-weight: 600; }
+.practice__mark { width: 88rpx; display: flex; flex-direction: column; align-items: center; gap: 2rpx; color: #b7b1a7; }
+.practice__mark-icon { width: 34rpx; height: 34rpx; }
+.practice__mark-label { font-size: 20rpx; line-height: 1.2; }
+.practice__mark--on { color: #c2565c; }

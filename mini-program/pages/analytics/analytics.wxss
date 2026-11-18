@@ -1,0 +1,11 @@
+.analytics__hero { margin: 12rpx 28rpx 20rpx; padding: 30rpx; background: #fdf0e7; }
+.analytics__average { font-size: 72rpx; font-weight: 700; line-height: 1.1; }
+.analytics__note { display: block; margin-top: 18rpx; }
+.analytics__chart, .analytics__subjects { margin: 0 28rpx 20rpx; padding: 30rpx; }
+.analytics__title { display: block; font-size: 30rpx; font-weight: 600; }
+.analytics__bars { display: flex; align-items: flex-end; gap: 12rpx; margin-top: 26rpx; overflow-x: auto; padding-bottom: 6rpx; }
+.analytics__bar-col { display: flex; flex-direction: column; align-items: center; gap: 8rpx; min-width: 84rpx; }
+.analytics__bar { width: 40rpx; border-radius: 12rpx; background: linear-gradient(180deg, #ef7d82, #f4c9b8); }
+.analytics__bar-date { font-size: 20rpx; color: #79767d; }
+.analytics__subject { margin-top: 24rpx; }
+.analytics__progress { margin-top: 12rpx; }

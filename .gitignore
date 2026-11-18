@@ -12,3 +12,6 @@ test-results/
 .venv/
 .claude/
 mini-program/project.private.config.json
+
+# WeChat DevTools private settings
+mini-program/project.private.config.json

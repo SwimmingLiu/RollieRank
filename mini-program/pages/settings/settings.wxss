@@ -1,0 +1,9 @@
+.set__block { margin: 8rpx 28rpx 20rpx; padding: 28rpx; display: flex; flex-direction: column; gap: 12rpx; }
+.set__label { font-size: 30rpx; font-weight: 600; }
+.set__row { margin-top: 4rpx; }
+.set__input { height: 84rpx; padding: 0 22rpx; border-radius: 24rpx; background: #fcf8f1; border: 2rpx solid #ece5d8; font-size: 30rpx; }
+.set__id { font-size: 22rpx; color: #79767d; font-family: monospace; }
+.set__action { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; padding: 24rpx 0; border-top: 2rpx solid #f1ebe0; }
+.set__action:first-of-type { border-top: none; }
+.set__action--danger { color: #d54e4e; }
+.set__icon { width: 30rpx; height: 30rpx; opacity: 0.45; }

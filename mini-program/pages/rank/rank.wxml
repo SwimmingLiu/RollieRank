@@ -1,0 +1,47 @@
+<view class="screen">
+  <rr-nav title="同卷榜" action-icon="help" bind:action="help" />
+
+  <view wx:if="{{loading}}" class="loading">正在读取榜单…</view>
+  <view wx:elif="{{error}}" class="empty">
+    <text>{{error}}</text>
+    <view class="chip" bindtap="load">重新读取</view>
+  </view>
+
+  <block wx:else>
+    <view class="rank__scope">
+      <view class="tabs">
+        <view wx:for="{{scopes}}" wx:key="key" class="tabs__item {{scope === item.key ? 'tabs__item--on' : ''}}" data-key="{{item.key}}" bindtap="setScope">{{item.label}}</view>
+      </view>
+      <view class="chip rank__pick" bindtap="pickPosition">换岗</view>
+    </view>
+    <view wx:if="{{position}}" class="rank__position text-sm ellipsis">{{position.label}}</view>
+
+    <scroll-view wx:if="{{dimensions.length > 1}}" class="rank__dimensions" scroll-x enable-flex>
+      <view wx:for="{{dimensions}}" wx:key="key" class="chip rank__dimension {{dimension === item.key ? 'chip--on' : ''}}" data-key="{{item.key}}" bindtap="setDimension">{{item.label}}</view>
+    </scroll-view>
+
+    <view class="rank__count">{{count}} 人参与 · 每人取最好一次</view>
+
+    <view class="rank__podium">
+      <view wx:for="{{rows}}" wx:key="publicId" wx:if="{{index < 3}}" class="card press rank__podium-card rank__podium-card--{{index + 1}}" bindtap="openResult" data-id="{{item.publicId}}">
+        <text class="rank__podium-rank">{{index + 1}}</text>
+        <image class="rank__podium-avatar" src="{{assetBase}}/assets/avatars/rank-{{index + 1}}.svg" mode="aspectFit" />
+        <text class="rank__podium-name ellipsis">{{item.name}}</text>
+        <text class="num rank__podium-score">{{item.scoreText}}</text>
+        <text class="text-xs">超越 {{item.surpassed}}</text>
+      </view>
+    </view>
+
+    <view class="rank__list">
+      <view wx:for="{{rows}}" wx:key="publicId" wx:if="{{index >= 3}}" class="card rank__row {{item.isMe ? 'rank__row--me' : ''}}" bindtap="openResult" data-id="{{item.publicId}}">
+        <text class="num rank__row-rank">{{item.rank}}</text>
+        <text class="rank__row-name ellipsis grow">{{item.name}}{{item.isMe ? '（我）' : ''}}</text>
+        <text class="num rank__row-score">{{item.scoreText}}</text>
+      </view>
+      <view wx:if="{{!rows.length}}" class="empty">
+        <image class="empty__icon" src="{{assetBase}}/assets/ui/users.svg" mode="aspectFit" />
+        <text>这份卷还没有其他人参与</text>
+      </view>
+    </view>
+  </block>
+</view>

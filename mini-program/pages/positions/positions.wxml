@@ -1,0 +1,48 @@
+<view class="screen">
+  <rr-nav title="报考岗位" />
+
+  <view class="pos__search card">
+    <image class="pos__search-icon" src="{{assetBase}}/assets/ui/search.svg" mode="aspectFit" />
+    <input class="grow" value="{{keyword}}" placeholder="搜索部门、职位或地区" placeholder-class="text-sm" bindinput="onKeyword" confirm-type="search" bindconfirm="search" />
+    <view class="chip" bindtap="search">搜索</view>
+  </view>
+
+  <scroll-view wx:if="{{facets}}" class="pos__facets" scroll-x enable-flex>
+    <view wx:for="{{facets.exams}}" wx:key="*this" class="chip pos__facet {{exam === item ? 'chip--on' : ''}}" data-exam="{{item}}" bindtap="chooseExam">{{item === 'guokao' ? '国考' : item === 'shengkao' ? '省考' : item}}</view>
+    <view wx:for="{{facets.regions}}" wx:key="*this" class="chip pos__facet {{region === item ? 'chip--on' : ''}}" data-region="{{item}}" bindtap="chooseRegion">{{item}}</view>
+  </scroll-view>
+
+  <view wx:if="{{loading}}" class="loading">正在读取岗位…</view>
+  <view wx:elif="{{error}}" class="empty">
+    <text>{{error}}</text>
+    <view class="chip" bindtap="retry">重新读取</view>
+  </view>
+
+  <block wx:else>
+    <view class="pos__meta row row--between">
+      <text class="text-xs">共 {{total}} 个岗位 · 第 {{page}}/{{pages}} 页</text>
+      <text wx:if="{{current}}" class="text-xs" bindtap="clear">取消选岗</text>
+    </view>
+    <view class="pos__list">
+      <view wx:for="{{items}}" wx:key="id" class="card press pos__item {{item.selected ? 'pos__item--on' : ''}}" data-id="{{item.id}}" data-title="{{item.department}} · {{item.title}}" bindtap="select">
+        <view class="row row--between">
+          <text class="text-xs">{{item.code}}</text>
+          <text class="chip pos__category">{{item.examLabel}}</text>
+        </view>
+        <text class="pos__title">{{item.department}}</text>
+        <text class="text-sm">{{item.title}}</text>
+        <view class="row row--between pos__item-foot">
+          <text class="text-xs">{{item.location}}</text>
+          <text class="text-xs">{{item.selected ? '已选择' : '选这个岗位'}}</text>
+        </view>
+      </view>
+      <view wx:if="{{!items.length}}" class="empty"><text>没有匹配的岗位</text></view>
+    </view>
+
+    <view class="pos__pager">
+      <view class="chip {{page <= 1 ? 'btn--disabled' : ''}}" bindtap="prevPage">上一页</view>
+      <text class="text-sm">{{page}} / {{pages}}</text>
+      <view class="chip {{page >= pages ? 'btn--disabled' : ''}}" bindtap="nextPage">下一页</view>
+    </view>
+  </block>
+</view>

@@ -1,0 +1,167 @@
+{
+  "domain": "https://rollie-rank-oss.swimmingliu.cn",
+  "prefix": "static/rollierank/",
+  "files": [
+    {
+      "path": "assets/answer-paper.svg",
+      "key": "static/rollierank/assets/answer-paper.svg",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/answer-paper.svg",
+      "bytes": 547,
+      "sha256": "776f377401ef6528ac14818d3f885f7b230b9b827af8941aff3caef9d775cfdf"
+    },
+    {
+      "path": "assets/avatars/rank-1.svg",
+      "key": "static/rollierank/assets/avatars/rank-1.svg",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/avatars/rank-1.svg",
+      "bytes": 4925,
+      "sha256": "0e1f697e50333222b36f2593a3cf0a049a2a137e11dcbe5ee59761cf85e7e03a"
+    },
+    {
+      "path": "assets/avatars/rank-2.svg",
+      "key": "static/rollierank/assets/avatars/rank-2.svg",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/avatars/rank-2.svg",
+      "bytes": 6011,
+      "sha256": "6be9e8676a486c6bb052f4d0d8f89ff86f74e814c74e8a52d640b99f7a1c1a14"
+    },
+    {
+      "path": "assets/avatars/rank-3.svg",
+      "key": "static/rollierank/assets/avatars/rank-3.svg",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/avatars/rank-3.svg",
+      "bytes": 5983,
+      "sha256": "4a7d7572d7a8b9d8e3df791aebc0439e90105fffb6992f2b18249984d1c0f326"
+    },
+    {
+      "path": "assets/avatars/rank-4.svg",
+      "key": "static/rollierank/assets/avatars/rank-4.svg",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/avatars/rank-4.svg",
+      "bytes": 5896,
+      "sha256": "39e0764ce8ca3269c1978d2045c95de42a29da6960b0f47177ecbe7fa84fb07a"
+    },
+    {
+      "path": "assets/avatars/rank-5.svg",
+      "key": "static/rollierank/assets/avatars/rank-5.svg",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/avatars/rank-5.svg",
+      "bytes": 4890,
+      "sha256": "b6e35508b59f98e187572910ffed5b66cd1dd1bdd50a2e4dc81588c002581bcb"
+    },
+    {
+      "path": "assets/avatars/rank-6.svg",
+      "key": "static/rollierank/assets/avatars/rank-6.svg",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/avatars/rank-6.svg",
+      "bytes": 5211,
+      "sha256": "9676411ece61dd047d03628e8fbab96051642e159d35cd986303e7344e1559e3"
+    },
+    {
+      "path": "assets/avatars/rank-7.svg",
+      "key": "static/rollierank/assets/avatars/rank-7.svg",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/avatars/rank-7.svg",
+      "bytes": 5981,
+      "sha256": "fb9168041ee491639f467d8f5fa2706b7f728406e5eea7c03d1c26edab99f189"
+    },
+    {
+      "path": "assets/avatars/rank-8.svg",
+      "key": "static/rollierank/assets/avatars/rank-8.svg",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/avatars/rank-8.svg",
+      "bytes": 5510,
+      "sha256": "0765520538b731712be70f6d178020e87b94b0ad35550dcac35eb6230dd66f48"
+    },
+    {
+      "path": "assets/avatars/sources.json",
+      "key": "static/rollierank/assets/avatars/sources.json",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/avatars/sources.json",
+      "bytes": 2092,
+      "sha256": "dda025e73d22da0864c78c1cb4fb4e655275fa01a284c2a418df2634ee45cfba"
+    },
+    {
+      "path": "assets/chaoge-official.png",
+      "key": "static/rollierank/assets/chaoge-official.png",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/chaoge-official.png",
+      "bytes": 1558,
+      "sha256": "25b3077c4947eb552d8b7f5f4a2fff754a9c175f49cd113e0e7e514f1918969d"
+    },
+    {
+      "path": "assets/chaoge-study.svg",
+      "key": "static/rollierank/assets/chaoge-study.svg",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/chaoge-study.svg",
+      "bytes": 394,
+      "sha256": "412cdabbece7e722d834ea44f1d808bdf273e01a4ec095ad66298eb652acbe08"
+    },
+    {
+      "path": "assets/fenbi-mark.svg",
+      "key": "static/rollierank/assets/fenbi-mark.svg",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/fenbi-mark.svg",
+      "bytes": 313,
+      "sha256": "9a67a81dfb10a423903d2bf3477aeeedb4eeef27411b724142b9f1735f620c3e"
+    },
+    {
+      "path": "assets/font-fangyuan.woff2",
+      "key": "static/rollierank/assets/font-fangyuan.woff2",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/font-fangyuan.woff2",
+      "bytes": 2408604,
+      "sha256": "2f36da22906ae5d601ce4af009cea08e8b538a9da47e9762c5dd520ac2f3e08f"
+    },
+    {
+      "path": "assets/font-fraunces.woff2",
+      "key": "static/rollierank/assets/font-fraunces.woff2",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/font-fraunces.woff2",
+      "bytes": 195076,
+      "sha256": "b37284bcb325796035a546156157949375e87e403157e3c3f3bc3253e2dd858c"
+    },
+    {
+      "path": "assets/font-nunito.woff2",
+      "key": "static/rollierank/assets/font-nunito.woff2",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/font-nunito.woff2",
+      "bytes": 101352,
+      "sha256": "c185cf2153c0f286c98d165331d359faa826a9b6e19c261af6dfe3969fa6387c"
+    },
+    {
+      "path": "assets/profile-default.svg",
+      "key": "static/rollierank/assets/profile-default.svg",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/profile-default.svg",
+      "bytes": 370,
+      "sha256": "de73694830265b192f6e7643f9ac77bc3a95252ee4ca62d78649fe2c698fa0f6"
+    },
+    {
+      "path": "assets/rollierank-logo-v4-256.png",
+      "key": "static/rollierank/assets/rollierank-logo-v4-256.png",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/rollierank-logo-v4-256.png",
+      "bytes": 74610,
+      "sha256": "60307bf75a7c4867ff32ed79e1479ace9d36620b0d5ee103656ee697b766d571"
+    },
+    {
+      "path": "assets/score-keepsake-v1-640.png",
+      "key": "static/rollierank/assets/score-keepsake-v1-640.png",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/score-keepsake-v1-640.png",
+      "bytes": 188663,
+      "sha256": "7120b79c7dcd166fc76096e5bbc2ef376d0de3c7160eb37a5f3520c1c22be9f7"
+    },
+    {
+      "path": "assets/score-ribbon.svg",
+      "key": "static/rollierank/assets/score-ribbon.svg",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/score-ribbon.svg",
+      "bytes": 598,
+      "sha256": "00ba5e724c26f4bb3ac8cfb09a8a6a20e46c74f9da4e1ba8f0e4077909dcb0c4"
+    },
+    {
+      "path": "assets/shangancun-mark.svg",
+      "key": "static/rollierank/assets/shangancun-mark.svg",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/shangancun-mark.svg",
+      "bytes": 367,
+      "sha256": "95a9da6428021a7dc93dbbb0ce3ec942487d47e51199bf7de48d7d4e4cd5263d"
+    },
+    {
+      "path": "assets/sihai-official.png",
+      "key": "static/rollierank/assets/sihai-official.png",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/sihai-official.png",
+      "bytes": 3656,
+      "sha256": "0327892dcd40a2f0d9c1ec6f0f1e4493eaf329c2b770ed92c6e0ac714042e4db"
+    },
+    {
+      "path": "assets/sihai-peanut.svg",
+      "key": "static/rollierank/assets/sihai-peanut.svg",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank/assets/sihai-peanut.svg",
+      "bytes": 601,
+      "sha256": "66f61c389ef69db874b22441ab5792657728bf260e0813f31364379672facebe"
+    }
+  ]
+}

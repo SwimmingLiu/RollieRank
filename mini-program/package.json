@@ -1,0 +1,10 @@
+{
+  "name": "rollierank-miniprogram",
+  "private": true,
+  "type": "commonjs",
+  "description": "卷卷小榜微信小程序（原生 WXML/WXSS/JS）",
+  "scripts": {
+    "check": "node tools/check.mjs",
+    "assets": "node tools/serve-static.mjs"
+  }
+}

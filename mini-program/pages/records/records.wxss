@@ -1,0 +1,23 @@
+.records__head { display: flex; align-items: center; padding: 40rpx 32rpx 20rpx; }
+.records__title { font-size: 38rpx; font-weight: 700; }
+.records__settings { width: 64rpx; height: 64rpx; display: flex; align-items: center; justify-content: center; }
+.records__settings-icon { width: 40rpx; height: 40rpx; opacity: 0.6; }
+.records__profile { margin: 0 28rpx; padding: 28rpx; display: flex; align-items: center; gap: 20rpx; background: #f4e3be; }
+.records__avatar { width: 96rpx; height: 96rpx; border-radius: 50%; background: #fffdf8; }
+.records__name { font-size: 36rpx; font-weight: 700; }
+.records__totals { text-align: right; }
+.records__total-num { display: block; font-size: 40rpx; font-weight: 700; }
+.records__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18rpx; padding: 20rpx 28rpx 0; }
+.records__cell { position: relative; padding: 26rpx; }
+.records__cell-value { display: block; margin-top: 10rpx; font-size: 30rpx; font-weight: 600; padding-right: 36rpx; }
+.records__cell-icon { position: absolute; right: 22rpx; bottom: 30rpx; width: 28rpx; height: 28rpx; opacity: 0.45; }
+.records__tabs { display: flex; align-items: center; gap: 16rpx; padding: 26rpx 28rpx 0; }
+.records__search { width: 84rpx; height: 80rpx; border-radius: 28rpx; background: #fffdf8; border: 2rpx solid #ece5d8; display: flex; align-items: center; justify-content: center; }
+.records__search-icon { width: 36rpx; height: 36rpx; opacity: 0.6; }
+.records__search-bar { margin: 16rpx 28rpx 0; padding: 0 26rpx; height: 84rpx; display: flex; align-items: center; }
+.records__list { padding: 20rpx 28rpx 40rpx; display: flex; flex-direction: column; gap: 16rpx; }
+.records__row { padding: 26rpx; }
+.records__row-main { margin-top: 14rpx; }
+.records__row-title { font-size: 30rpx; font-weight: 600; }
+.records__row-score { font-size: 40rpx; font-weight: 700; margin-left: 20rpx; }
+.records__row-meta { margin-top: 16rpx; padding-top: 16rpx; border-top: 2rpx solid #f1ebe0; }

@@ -1,0 +1,22 @@
+.report__hero { margin: 12rpx 28rpx 24rpx; padding: 34rpx; background: #f4e3be; }
+.report__score { font-size: 92rpx; font-weight: 700; line-height: 1.05; }
+.report__stamp { width: 96rpx; height: 96rpx; padding: 18rpx; border-radius: 50%; background: #fffdf8; opacity: 0.9; }
+.report__stats { display: flex; gap: 18rpx; margin-top: 22rpx; }
+.report__stat { flex: 1; height: 104rpx; border-radius: 24rpx; background: #fdf6e6; display: flex; align-items: center; gap: 12rpx; padding: 0 22rpx; }
+.report__stat-icon { font-size: 30rpx; }
+.report__stat-icon--ok { color: #268458; }
+.report__stat-icon--no { color: #d54e4e; }
+.report__stat-num { font-size: 40rpx; font-weight: 700; }
+.report__identity { display: flex; justify-content: space-between; gap: 16rpx; margin-top: 24rpx; padding-top: 20rpx; border-top: 2rpx solid rgba(48, 43, 41, 0.08); }
+.report__actions { display: flex; gap: 18rpx; padding: 0 28rpx; }
+.report__action { flex: 1; padding: 24rpx 0; display: flex; flex-direction: column; align-items: center; gap: 10rpx; }
+.report__action-icon { width: 40rpx; height: 40rpx; }
+.report__action-label { font-size: 25rpx; color: #4a443f; }
+.report__bands { margin: 24rpx 28rpx; padding: 30rpx; }
+.report__bands-title { font-size: 32rpx; font-weight: 600; }
+.report__band { margin-top: 26rpx; }
+.report__band-bar { margin-top: 12rpx; }
+.report__weak { margin-top: 24rpx; padding-top: 20rpx; border-top: 2rpx solid #f1ebe0; display: flex; flex-wrap: wrap; gap: 6rpx; }
+.report__secondary { display: flex; flex-direction: column; gap: 18rpx; padding: 0 28rpx; }
+.report__link { padding: 30rpx; display: flex; align-items: center; justify-content: space-between; }
+.report__link-icon { width: 32rpx; height: 32rpx; opacity: 0.5; }

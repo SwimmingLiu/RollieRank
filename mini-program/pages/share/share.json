@@ -1,0 +1,4 @@
+{
+  "usingComponents": { "rr-nav": "/components/rr-nav/rr-nav" },
+  "navigationStyle": "custom"
+}

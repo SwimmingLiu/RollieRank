@@ -1,0 +1,20 @@
+.disc__head { padding: 8rpx 32rpx 20rpx; display: flex; flex-direction: column; gap: 6rpx; }
+.disc__list { padding: 0 28rpx 40rpx; display: flex; flex-direction: column; gap: 16rpx; }
+.disc__comment { padding: 26rpx; }
+.disc__meta { gap: 16rpx; }
+.disc__avatar { width: 64rpx; height: 64rpx; border-radius: 50%; background: #fdf0e7; }
+.disc__name { font-size: 27rpx; font-weight: 600; }
+.disc__target { display: block; margin-top: 12rpx; color: #b98a3e; }
+.disc__text { display: block; margin-top: 12rpx; font-size: 30rpx; line-height: 1.6; word-break: break-word; }
+.disc__images { display: flex; gap: 10rpx; margin-top: 14rpx; }
+.disc__image { width: 150rpx; height: 150rpx; border-radius: 18rpx; background: #f1ebe0; }
+.disc__actions { display: flex; gap: 34rpx; margin-top: 18rpx; }
+.disc__action { display: flex; align-items: center; gap: 8rpx; font-size: 25rpx; color: #79767d; }
+.disc__action-icon { width: 30rpx; height: 30rpx; opacity: 0.65; }
+.disc__replies { margin-top: 18rpx; padding: 18rpx; border-radius: 20rpx; background: #fcf8f1; }
+.disc__reply { padding: 12rpx 0; border-bottom: 2rpx solid #f1ebe0; }
+.disc__reply:last-child { border-bottom: none; }
+.disc__reply-bar { display: flex; align-items: center; gap: 16rpx; padding: 0 12rpx 12rpx; }
+.disc__input { flex: 1; height: 88rpx; padding: 0 26rpx; border-radius: 44rpx; background: #fffdf8; border: 2rpx solid #ece5d8; font-size: 28rpx; }
+.disc__send { width: 96rpx; height: 96rpx; border-radius: 50%; background: #2b2724; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.disc__send .btn__icon { width: 40rpx; height: 40rpx; }

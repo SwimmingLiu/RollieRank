@@ -1,0 +1,78 @@
+<view class="screen screen--plain">
+  <rr-nav title="做题计时" />
+
+  <view wx:if="{{loading}}" class="loading">正在准备计时…</view>
+  <view wx:elif="{{error}}" class="empty">
+    <text>{{error}}</text>
+    <view class="chip" bindtap="load">重新读取</view>
+  </view>
+
+  <block wx:else>
+    <view class="timer__clock card {{running ? 'timer__clock--on' : ''}}">
+      <text class="num timer__time">{{elapsed}}</text>
+      <text class="text-xs">{{running ? (paused ? '已暂停' : '计时中') : '未开始'}}</text>
+    </view>
+
+    <block wx:if="{{!running}}">
+      <view class="timer__block">
+        <text class="timer__label">套卷</text>
+        <view class="card press timer__paper" bindtap="choosePaper">
+          <text class="grow ellipsis">{{selected ? selected.label + ' · ' + selected.title : '选择一套卷'}}</text>
+          <image class="timer__chev" src="{{assetBase}}/assets/ui/chevron-down.svg" mode="aspectFit" />
+        </view>
+        <view class="row row--gap timer__papers">
+          <view wx:for="{{papers}}" wx:key="name" class="chip {{activeProject === index ? 'chip--on' : ''}}" data-index="{{index}}" bindtap="openSection">{{item.name}}</view>
+        </view>
+      </view>
+
+      <view class="timer__block">
+        <view class="row row--between">
+          <text class="timer__label">时间安排</text>
+          <view class="tabs timer__modes">
+            <view class="tabs__item {{mode === 'whole' ? 'tabs__item--on' : ''}}" data-mode="whole" bindtap="setMode">整卷</view>
+            <view class="tabs__item {{mode === 'modules' ? 'tabs__item--on' : ''}}" data-mode="modules" bindtap="setMode">模块计划</view>
+          </view>
+        </view>
+
+        <view wx:if="{{mode === 'whole'}}" class="card timer__stepper">
+          <view class="timer__step" data-delta="-5" bindtap="stepWhole">−</view>
+          <input class="timer__input num" type="number" value="{{wholeMinutes}}" bindinput="onWholeInput" bindblur="save" />
+          <text class="text-sm">分钟</text>
+          <view class="timer__step" data-delta="5" bindtap="stepWhole">+</view>
+        </view>
+
+        <view wx:else class="card timer__modules">
+          <view wx:for="{{sections}}" wx:key="key" class="timer__module">
+            <view class="stack grow">
+              <text class="text-md">{{item.type}}</text>
+              <text class="text-xs">{{item.count}} 题</text>
+            </view>
+            <view class="timer__module-step" data-index="{{index}}" data-delta="-1" bindtap="stepModule">−</view>
+            <text class="num timer__module-min">{{item.minutes}}</text>
+            <view class="timer__module-step" data-index="{{index}}" data-delta="1" bindtap="stepModule">+</view>
+          </view>
+          <view class="row row--between timer__total">
+            <text class="text-sm">模块合计</text>
+            <text class="num text-md">{{planTotal}} 分钟</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="footer-bar">
+        <view class="footer-bar__inner">
+          <view class="btn btn--primary" bindtap="start">
+            <image class="btn__icon" src="{{assetBase}}/assets/ui/play.svg" mode="aspectFit" />
+            开始计时
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <view wx:else class="footer-bar">
+      <view class="footer-bar__inner">
+        <view class="btn btn--ghost timer__wide" bindtap="pause">{{paused ? '继续' : '暂停'}}</view>
+        <view class="btn btn--primary" bindtap="finish">结束并录答案</view>
+      </view>
+    </view>
+  </block>
+</view>

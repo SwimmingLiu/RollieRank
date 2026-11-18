@@ -1,0 +1,96 @@
+<view class="screen">
+  <rr-nav title="练习估分" />
+
+  <view wx:if="{{loading}}" class="loading">正在核分…</view>
+  <view wx:elif="{{error}}" class="empty">
+    <text>{{error}}</text>
+    <view class="chip" bindtap="retry">重新读取</view>
+  </view>
+
+  <block wx:elif="{{summary}}">
+    <view class="report__hero card">
+      <view class="row row--between">
+        <view class="stack">
+          <text class="text-sm">总分</text>
+          <text class="num report__score">{{summary.score}}</text>
+          <text class="text-xs">/ {{summary.max}} 分</text>
+        </view>
+        <image class="report__stamp" src="{{assetBase}}/assets/ui/check.svg" mode="aspectFit" />
+      </view>
+      <view class="report__stats">
+        <view class="report__stat">
+          <text class="report__stat-icon report__stat-icon--ok">✓</text>
+          <text class="num report__stat-num">{{summary.correct}}</text>
+          <text class="text-sm">正确</text>
+        </view>
+        <view class="report__stat">
+          <text class="report__stat-icon report__stat-icon--no">✕</text>
+          <text class="num report__stat-num">{{summary.wrong}}</text>
+          <text class="text-sm">错误</text>
+        </view>
+      </view>
+      <view class="report__identity">
+        <text class="text-xs ellipsis">{{summary.identity}}{{publicView ? ' · ' + summary.name : ' · ' + summary.title}}</text>
+        <text class="text-xs">{{summary.createdAt}}</text>
+      </view>
+    </view>
+
+    <view class="report__actions">
+      <view wx:if="{{!publicView}}" class="card press report__action" bindtap="rank">
+        <image class="report__action-icon" src="{{assetBase}}/assets/ui/users.svg" mode="aspectFit" />
+        <text class="report__action-label">同卷榜</text>
+      </view>
+      <view class="card press report__action" bindtap="discuss">
+        <image class="report__action-icon" src="{{assetBase}}/assets/ui/comment.svg" mode="aspectFit" />
+        <text class="report__action-label">讨论</text>
+      </view>
+      <view class="card press report__action" bindtap="share">
+        <image class="report__action-icon" src="{{assetBase}}/assets/ui/share.svg" mode="aspectFit" />
+        <text class="report__action-label">分享</text>
+      </view>
+    </view>
+
+    <view class="card report__bands">
+      <view class="row row--between">
+        <text class="report__bands-title">能力概览</text>
+        <text class="text-xs">本卷得分率 {{summary.rate}}</text>
+      </view>
+      <view wx:for="{{bands}}" wx:key="name" class="report__band">
+        <view class="row row--between">
+          <text class="text-md">{{item.name}}</text>
+          <text class="num text-sm">{{item.pct}}%</text>
+        </view>
+        <view class="progress report__band-bar">
+          <view class="progress__fill" style="width: {{item.pct}}%;"></view>
+        </view>
+      </view>
+      <view wx:if="{{summary.weak.length}}" class="report__weak">
+        <text class="text-xs">最弱三项：</text>
+        <text class="text-xs" wx:for="{{summary.weak}}" wx:key="name">{{item.name}} {{item.rate}}{{index < summary.weak.length - 1 ? ' · ' : ''}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{!publicView}}" class="report__secondary">
+      <view class="card press report__link" bindtap="review">
+        <text>逐题对照</text>
+        <image class="report__link-icon" src="{{assetBase}}/assets/ui/chevron.svg" mode="aspectFit" />
+      </view>
+      <view class="card press report__link" bindtap="practiceAgain">
+        <text>再练一次</text>
+        <image class="report__link-icon" src="{{assetBase}}/assets/ui/refresh.svg" mode="aspectFit" />
+      </view>
+    </view>
+
+    <view wx:if="{{!publicView}}" class="footer-bar">
+      <view class="footer-bar__inner">
+        <view class="btn btn--primary" bindtap="review">
+          <image class="btn__icon" src="{{assetBase}}/assets/ui/book.svg" mode="aspectFit" />
+          复盘题目
+        </view>
+        <view class="btn btn--ghost" bindtap="discuss">
+          <image class="btn__icon" src="{{assetBase}}/assets/ui/comment.svg" mode="aspectFit" />
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

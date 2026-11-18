@@ -1,24 +1,44 @@
 {
   "pages": [
-    "pages/index/index"
+    "pages/home/home",
+    "pages/catalog/catalog",
+    "pages/practice/practice",
+    "pages/report/report",
+    "pages/review/review",
+    "pages/rank/rank",
+    "pages/records/records",
+    "pages/analytics/analytics",
+    "pages/share/share",
+    "pages/positions/positions",
+    "pages/discussion/discussion",
+    "pages/timer/timer",
+    "pages/settings/settings"
   ],
   "window": {
+    "navigationStyle": "custom",
     "navigationBarTextStyle": "black",
-    "navigationStyle": "custom"
+    "backgroundColor": "#FCF8F1",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#79767D",
+    "selectedColor": "#302B29",
+    "backgroundColor": "#FFFDF8",
+    "list": [
+      { "pagePath": "pages/home/home", "text": "首页" },
+      { "pagePath": "pages/records/records", "text": "练习记录" }
+    ]
   },
   "style": "v2",
-  "renderer": "skyline",
-  "rendererOptions": {
-    "skyline": {
-      "defaultDisplayBlock": true,
-      "defaultContentBox": true,
-      "tagNameStyleIsolation": "legacy",
-      "disableABTest": true,
-      "sdkVersionBegin": "3.0.0",
-      "sdkVersionEnd": "15.255.255"
-    }
-  },
+  "renderer": "webview",
   "componentFramework": "glass-easel",
   "sitemapLocation": "sitemap.json",
-  "lazyCodeLoading": "requiredComponents"
+  "lazyCodeLoading": "requiredComponents",
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于在练习记录中匹配报考岗位，可随时在设置中关闭"
+    }
+  },
+  "requiredPrivateInfos": []
 }

@@ -1,25 +1,30 @@
 {
+  "compileType": "miniprogram",
+  "appid": "wx7febd9298bcc5b9b",
+  "projectname": "rollierank",
+  "libVersion": "3.16.1",
   "setting": {
     "es6": true,
+    "enhance": true,
     "postcss": true,
     "minified": true,
+    "minifyWXML": true,
+    "urlCheck": true,
+    "checkSiteMap": true,
     "uglifyFileName": false,
-    "enhance": true,
-    "packNpmRelationList": [],
-    "babelSetting": {
-      "ignore": [],
-      "disablePlugins": [],
-      "outputPath": ""
-    },
-    "useCompilerPlugins": false,
-    "minifyWXML": true
+    "compileHotReLoad": true,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "useCompilerPlugins": false
   },
-  "compileType": "miniprogram",
-  "simulatorPluginLibVersion": {},
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      { "type": "folder", "value": "tools" }
+    ],
     "include": []
   },
-  "appid": "wx7febd9298bcc5b9b",
-  "editorSetting": {}
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  }
 }

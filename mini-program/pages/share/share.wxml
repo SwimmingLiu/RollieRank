@@ -1,0 +1,26 @@
+<view class="screen">
+  <rr-nav title="分享成绩" />
+
+  <view wx:if="{{loading}}" class="loading">正在准备分享图…</view>
+  <view wx:elif="{{error}}" class="empty"><text>{{error}}</text></view>
+
+  <block wx:else>
+    <view class="share__modes">
+      <view wx:for="{{modes}}" wx:key="key" class="chip {{mode === item.key ? 'chip--on' : ''}}" data-key="{{item.key}}" bindtap="setMode">{{item.label}}</view>
+    </view>
+
+    <!-- 预览区域与导出使用同一块画布，尺寸按屏幕宽度自动缩放。 -->
+    <view class="share__preview">
+      <canvas type="2d" id="shareCanvas" class="share__canvas" style="width: 100%; height: {{mode === 'full' ? 520 : 380}}px;"></canvas>
+    </view>
+
+    <view class="footer-bar">
+      <view class="footer-bar__inner">
+        <button class="btn btn--primary" open-type="share">发给好友</button>
+        <view class="btn btn--ghost" bindtap="save">
+          <image class="btn__icon" src="{{assetBase}}/assets/ui/image.svg" mode="aspectFit" />
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

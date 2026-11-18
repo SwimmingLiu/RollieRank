@@ -1,0 +1,22 @@
+.home__head { display: flex; align-items: center; gap: 16rpx; padding: 40rpx 36rpx 8rpx; }
+.home__logo { width: 64rpx; height: 64rpx; border-radius: 16rpx; }
+.home__brand { font-size: 40rpx; font-weight: 700; letter-spacing: 2rpx; }
+.home__section { margin: 32rpx 36rpx 20rpx; }
+.home__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20rpx; padding: 0 28rpx; }
+.home__inst { height: 132rpx; display: flex; align-items: center; gap: 16rpx; padding: 0 24rpx; }
+.home__inst-logo { width: 52rpx; height: 52rpx; flex-shrink: 0; }
+.home__inst-name { font-size: 32rpx; font-weight: 600; flex: 1; min-width: 0; }
+.home__inst-arrow { width: 32rpx; height: 32rpx; opacity: 0.45; flex-shrink: 0; }
+.home__timer { margin: 28rpx; height: 140rpx; display: flex; align-items: center; gap: 20rpx; padding: 0 28rpx; }
+.home__timer-icon { width: 76rpx; height: 76rpx; border-radius: 24rpx; background: #f4e3be; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.home__timer-clock { width: 40rpx; height: 40rpx; }
+.home__timer-title { display: block; font-size: 30rpx; font-weight: 600; }
+.home__timer-play { width: 72rpx; height: 72rpx; border-radius: 50%; background: #2b2724; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.home__timer-play image { width: 30rpx; height: 30rpx; margin-left: 4rpx; }
+.home__recent { display: flex; flex-direction: column; gap: 20rpx; padding: 0 28rpx; }
+.home__recent-card { padding: 28rpx; }
+.home__recent-title { font-size: 30rpx; font-weight: 600; margin-top: 6rpx; }
+.home__recent-score { font-size: 44rpx; font-weight: 600; margin-left: 20rpx; }
+.home__recent-meta { margin-top: 18rpx; padding-top: 18rpx; border-top: 2rpx solid #f1ebe0; }
+
+.home__recent-progress { font-size: 32rpx; color: #b98a3e; margin-left: 20rpx; }

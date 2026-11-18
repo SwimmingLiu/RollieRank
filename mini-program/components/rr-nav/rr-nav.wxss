@@ -1,0 +1,8 @@
+.nav { position: sticky; top: 0; z-index: 20; background: #fcf8f1; }
+.nav__bar { position: relative; display: flex; align-items: center; justify-content: center; }
+.nav__title { font-size: 34rpx; font-weight: 600; color: #302b29; letter-spacing: 1rpx; }
+.nav__back, .nav__action { position: absolute; top: 50%; transform: translateY(-50%); height: 88rpx; min-width: 88rpx; display: flex; align-items: center; justify-content: center; }
+.nav__back { left: 4rpx; }
+.nav__right { right: 4rpx; }
+.nav__icon { width: 44rpx; height: 44rpx; }
+.nav__text { font-size: 28rpx; color: #79767d; }

@@ -1,0 +1,17 @@
+.review__head { padding: 8rpx 28rpx 0; }
+.review__tabs { flex: 1; }
+.review__copy { margin-left: 18rpx; }
+.review__types { white-space: nowrap; padding: 20rpx 0 12rpx; }
+.review__type { margin-right: 12rpx; flex-shrink: 0; }
+.review__list { padding: 4rpx 28rpx 40rpx; display: flex; flex-direction: column; gap: 16rpx; }
+.review__row { padding: 24rpx 26rpx; }
+.review__no { font-size: 30rpx; font-weight: 600; width: 70rpx; }
+.review__status { font-size: 22rpx; padding: 4rpx 16rpx; border-radius: 16rpx; }
+.review__status--correct { background: #eaf5ee; color: #268458; }
+.review__status--wrong { background: #fdecea; color: #d54e4e; }
+.review__status--blank { background: #f1ebe0; color: #79767d; }
+.review__answers { display: flex; align-items: center; gap: 40rpx; margin-top: 18rpx; }
+.review__answer { display: flex; align-items: baseline; gap: 10rpx; font-size: 32rpx; }
+.review__a--ok { color: #268458; font-weight: 600; }
+.review__a--no { color: #d54e4e; font-weight: 600; }
+.review__a--ref { color: #302b29; font-weight: 600; }

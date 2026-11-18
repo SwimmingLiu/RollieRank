@@ -1,0 +1,18 @@
+.timer__clock { margin: 12rpx 28rpx 24rpx; padding: 48rpx 0; display: flex; flex-direction: column; align-items: center; gap: 8rpx; background: #f4e3be; }
+.timer__clock--on { background: #fdf0e7; }
+.timer__time { font-size: 104rpx; font-weight: 700; letter-spacing: 2rpx; }
+.timer__block { padding: 0 28rpx 24rpx; }
+.timer__label { display: block; font-size: 28rpx; font-weight: 600; margin-bottom: 16rpx; }
+.timer__paper { padding: 0 26rpx; height: 96rpx; display: flex; align-items: center; gap: 16rpx; }
+.timer__chev { width: 30rpx; height: 30rpx; opacity: 0.5; }
+.timer__papers { margin-top: 16rpx; flex-wrap: wrap; }
+.timer__modes { width: 320rpx; }
+.timer__stepper { margin-top: 18rpx; padding: 0 24rpx; height: 112rpx; display: flex; align-items: center; gap: 16rpx; }
+.timer__input { flex: 1; text-align: center; font-size: 44rpx; font-weight: 600; }
+.timer__step { width: 72rpx; height: 72rpx; border-radius: 50%; background: #f4e3be; display: flex; align-items: center; justify-content: center; font-size: 38rpx; }
+.timer__modules { margin-top: 18rpx; padding: 10rpx 24rpx 20rpx; }
+.timer__module { display: flex; align-items: center; gap: 16rpx; padding: 20rpx 0; border-bottom: 2rpx solid #f1ebe0; }
+.timer__module-step { width: 56rpx; height: 56rpx; border-radius: 50%; background: #fdf0e7; display: flex; align-items: center; justify-content: center; font-size: 30rpx; }
+.timer__module-min { width: 70rpx; text-align: center; font-size: 30rpx; font-weight: 600; }
+.timer__total { padding-top: 20rpx; }
+.timer__wide { width: 200rpx; flex: none; }

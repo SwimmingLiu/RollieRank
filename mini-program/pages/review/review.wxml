@@ -1,0 +1,44 @@
+<view class="screen">
+  <rr-nav title="逐题对照" />
+
+  <view wx:if="{{loading}}" class="loading">正在读取答卷…</view>
+  <view wx:elif="{{error}}" class="empty"><text>{{error}}</text></view>
+
+  <block wx:else>
+    <view class="review__head">
+      <view class="row row--between">
+        <view class="tabs review__tabs">
+          <view wx:for="{{filters}}" wx:key="key" class="tabs__item {{filter === item.key ? 'tabs__item--on' : ''}}" data-key="{{item.key}}" bindtap="setFilter">{{item.label}}</view>
+        </view>
+        <view class="chip review__copy {{wrongCount ? '' : 'btn--disabled'}}" bindtap="copyWrong">复制错题号</view>
+      </view>
+      <scroll-view class="review__types" scroll-x enable-flex>
+        <view wx:for="{{types}}" wx:key="key" class="chip review__type {{activeType === item.key ? 'chip--on' : ''}}" data-key="{{item.key}}" bindtap="setType">{{item.label}}</view>
+      </scroll-view>
+    </view>
+
+    <view class="review__list">
+      <view wx:for="{{rows}}" wx:key="n" class="card review__row">
+        <view class="row row--between">
+          <text class="num review__no">{{item.n}}</text>
+          <text class="text-xs">{{item.type}}</text>
+          <text class="review__status review__status--{{item.status}}">{{item.statusLabel}}</text>
+        </view>
+        <view class="review__answers">
+          <view class="review__answer">
+            <text class="text-xs">本人</text>
+            <text class="{{item.answer === item.ref ? 'review__a--ok' : 'review__a--no'}}">{{item.answer}}</text>
+          </view>
+          <view class="review__answer">
+            <text class="text-xs">参考</text>
+            <text class="review__a--ref">{{item.ref}}</text>
+          </view>
+          <text class="num text-sm">{{item.cents}} 分</text>
+        </view>
+      </view>
+      <view wx:if="{{!rows.length}}" class="empty">
+        <text>当前筛选没有题目</text>
+      </view>
+    </view>
+  </block>
+</view>

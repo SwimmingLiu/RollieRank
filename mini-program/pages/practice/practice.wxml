@@ -1,0 +1,51 @@
+<view class="screen screen--plain">
+  <rr-nav title="录答案" back="{{true}}" />
+
+  <view wx:if="{{loading}}" class="loading">正在打开答题卡…</view>
+  <view wx:elif="{{error}}" class="empty">
+    <text>{{error}}</text>
+    <view class="chip" bindtap="load">重新读取</view>
+  </view>
+
+  <block wx:else>
+    <view class="practice__head">
+      <view class="row row--between">
+        <text class="text-sm ellipsis grow">{{identity}} · {{title}}</text>
+        <text class="num practice__count">{{answered}} / {{version.questionCount}}</text>
+      </view>
+      <view class="row row--between practice__filters">
+        <view class="row row--gap" bindtap="openSheet">
+          <text class="practice__section">{{sections[activeSection].type}}</text>
+          <image class="practice__chev" src="{{assetBase}}/assets/ui/chevron-down.svg" mode="aspectFit" />
+        </view>
+        <view wx:if="{{uncertain}}" class="chip chip--coral">存疑 {{uncertain}}</view>
+      </view>
+    </view>
+
+    <view class="practice__list">
+      <view wx:for="{{questions}}" wx:key="number" class="practice__row">
+        <text class="num practice__no">{{item.number}}</text>
+        <view class="practice__choices">
+          <view wx:for="{{choices}}" wx:for-item="choice" wx:key="*this"
+                class="practice__choice {{item.answer === choice ? 'practice__choice--on' : ''}}"
+                data-number="{{item.number}}" data-choice="{{choice}}" bindtap="choose">{{choice}}</view>
+        </view>
+        <view class="practice__mark {{item.marked ? 'practice__mark--on' : ''}}" data-number="{{item.number}}" bindtap="toggleMark">
+          <image class="practice__mark-icon" src="{{assetBase}}/assets/ui/mark.svg" mode="aspectFit" />
+          <text class="practice__mark-label">存疑</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="footer-bar">
+      <view class="footer-bar__inner">
+        <view class="btn btn--ghost" bindtap="openSheet">
+          <image class="btn__icon" src="{{assetBase}}/assets/ui/grid.svg" mode="aspectFit" />
+        </view>
+        <view class="btn btn--primary {{submitting ? 'btn--disabled' : ''}}" bindtap="submit">
+          {{answered < version.questionCount ? '交卷 · 未答 ' + (version.questionCount - answered) : '交卷'}}
+        </view>
+      </view>
+    </view>
+  </block>
+</view>
