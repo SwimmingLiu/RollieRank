@@ -1,7 +1,7 @@
 const api = require("../../services/api");
 const storage = require("../../utils/storage");
 const format = require("../../utils/format");
-const { ASSET, ASSET_BASE } = require("../../config");
+const { ASSET } = require("../../config");
 
 const MODES = [
   { key: "full", label: "完整长报告" },
@@ -19,7 +19,7 @@ Page({
     bands: [],
     name: "卷友",
     asset: ASSET,
-    assetBase: ASSET_BASE,
+    uiBase: "/assets/ui",
     saving: false,
   },
 

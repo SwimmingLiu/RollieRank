@@ -1,7 +1,6 @@
 const api = require("../../services/api");
 const storage = require("../../utils/storage");
 const format = require("../../utils/format");
-const { ASSET_BASE } = require("../../config");
 
 const SCOPES = [
   { key: "national", label: "全国" },
@@ -20,7 +19,8 @@ Page({
     position: null,
     dimension: "total",
     dimensions: [{ key: "total", label: "总分" }],
-    assetBase: ASSET_BASE,
+    uiBase: "/assets/ui",
+    avatarBase: ASSET.avatars("rank-1").replace("/rank-1.svg", ""),
   },
 
   onLoad(query) {

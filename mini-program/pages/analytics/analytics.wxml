@@ -3,7 +3,7 @@
 
   <view wx:if="{{loading}}" class="loading">正在汇总记录…</view>
   <view wx:elif="{{!hasData}}" class="empty">
-    <image class="empty__icon" src="{{assetBase}}/assets/ui/trend.svg" mode="aspectFit" />
+    <image class="empty__icon" src="{{uiBase}}/trend.svg" mode="aspectFit" />
     <text>完成一次正式练习后，这里会出现趋势</text>
   </view>
 

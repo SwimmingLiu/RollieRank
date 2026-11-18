@@ -18,7 +18,7 @@ Page({
     replies: [],
     replyTarget: null,
     replyDraft: "",
-    assetBase: ASSET_BASE,
+    uiBase: "/assets/ui",
   },
 
   onLoad(query) {

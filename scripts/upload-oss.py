@@ -14,23 +14,37 @@ import qiniu
 
 ROOT = Path(__file__).resolve().parent.parent
 MINI = ROOT / "mini-program"
-DOMAIN = "https://rollie-rank-oss.swimmingliu.cn"
+# 七牛配置里实际绑定的加速域名；rollie-rank-oss.swimmingliu.cn 目前仍返回 404。
+LIVE_DOMAIN = "https://oss.swimmingliu.cn"
+DOMAIN = LIVE_DOMAIN
 PREFIX = "static/rollierank/"
 BUCKET = "swimmingliu"
 # Qiniu upload zone for the bucket that already serves oss.swimmingliu.cn (East China).
 UP_HOST = "https://up-z0.qiniup.com"
 
-SKIP = {"manifest.json", "sources.json"}
+# 只发布小程序运行时真正引用的资源，原始大图和提示词不进入 OSS。
+SKIP = {"sources.json", "plan.md", "beui-prompts.json"}
+INCLUDE = {
+    "assets/avatars/rank-",
+    "assets/brand/rollierank-logo-v4-256.png",
+    "assets/publishers/",
+    "assets/illustrations/score-keepsake-v1-640.png",
+    # 包内字体已删除并改由 OSS 提供，只上传三个 woff2。
+    "assets/fonts/FangYuanVariable.woff2",
+    "assets/fonts/NunitoVariable.woff2",
+    "assets/fonts/FrauncesVariable.woff2",
+}
 TYPES = {".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".jpg": "image/jpeg"}
 
+# 只上传包里没有、运行时按需下载的资源；包内的图标和标识不重复上传。
 SOURCES = [
-    MINI / "assets",
-    MINI / "images",
+    ROOT / "docs/ui-exploration/ios-v3/assets",
 ]
 
 
 def upload_key(path: Path) -> str:
-    rel = path.relative_to(MINI).as_posix()
+    # 与小程序 config.js 的 ASSET_BASE 对应：static/rollierank/<原资源目录>
+    rel = path.relative_to(ROOT / "docs/ui-exploration/ios-v3").as_posix()
     return PREFIX + rel
 
 
@@ -38,12 +52,13 @@ def local_manifest() -> list[dict]:
     items = []
     for root in SOURCES:
         for path in sorted(p for p in root.rglob("*") if p.is_file()):
-            if path.name in SKIP:
+            rel = path.relative_to(ROOT / "docs/ui-exploration/ios-v3").as_posix()
+            if path.name in SKIP or not any(rel.startswith(prefix) for prefix in INCLUDE):
                 continue
             data = path.read_bytes()
             items.append(
                 {
-                    "path": path.relative_to(MINI).as_posix(),
+                    "path": path.relative_to(ROOT).as_posix(),
                     "key": upload_key(path),
                     "url": DOMAIN + "/" + upload_key(path),
                     "bytes": len(data),
@@ -76,7 +91,7 @@ def main() -> int:
     failures = []
     for item in items:
         token = auth.upload_token(BUCKET, item["key"], 3600)
-        ret, info = qiniu.put_file(token, item["key"], str(MINI / item["path"]),
+        ret, info = qiniu.put_file(token, item["key"], str(ROOT / item["path"]),
                                   mime_type=TYPES.get(Path(item["path"]).suffix, "application/octet-stream"),
                                   regions=[region])
         ok = ret is not None and ret.get("key") == item["key"]
@@ -84,7 +99,8 @@ def main() -> int:
         if not ok:
             failures.append(item["key"])
     manifest = ROOT / "mini-program" / "assets-manifest.json"
-    manifest.write_text(json.dumps({"domain": DOMAIN, "prefix": PREFIX, "files": items},
+    # 以实际可访问的域名写入清单；新域名未生效时不要发布 404 链接。
+    manifest.write_text(json.dumps({"domain": LIVE_DOMAIN, "prefix": PREFIX, "files": items},
                                    ensure_ascii=False, indent=2) + "\n")
     print(f"manifest -> {manifest.relative_to(ROOT)}; {len(failures)} failures")
     return 1 if failures else 0

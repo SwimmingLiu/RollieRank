@@ -2,7 +2,7 @@
   <rr-nav title="报考岗位" />
 
   <view class="pos__search card">
-    <image class="pos__search-icon" src="{{assetBase}}/assets/ui/search.svg" mode="aspectFit" />
+    <image class="pos__search-icon" src="{{uiBase}}/search.svg" mode="aspectFit" />
     <input class="grow" value="{{keyword}}" placeholder="搜索部门、职位或地区" placeholder-class="text-sm" bindinput="onKeyword" confirm-type="search" bindconfirm="search" />
     <view class="chip" bindtap="search">搜索</view>
   </view>

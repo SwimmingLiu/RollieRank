@@ -16,7 +16,7 @@
       <view class="row row--between practice__filters">
         <view class="row row--gap" bindtap="openSheet">
           <text class="practice__section">{{sections[activeSection].type}}</text>
-          <image class="practice__chev" src="{{assetBase}}/assets/ui/chevron-down.svg" mode="aspectFit" />
+          <image class="practice__chev" src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
         </view>
         <view wx:if="{{uncertain}}" class="chip chip--coral">存疑 {{uncertain}}</view>
       </view>
@@ -31,7 +31,7 @@
                 data-number="{{item.number}}" data-choice="{{choice}}" bindtap="choose">{{choice}}</view>
         </view>
         <view class="practice__mark {{item.marked ? 'practice__mark--on' : ''}}" data-number="{{item.number}}" bindtap="toggleMark">
-          <image class="practice__mark-icon" src="{{assetBase}}/assets/ui/mark.svg" mode="aspectFit" />
+          <image class="practice__mark-icon" src="{{uiBase}}/mark.svg" mode="aspectFit" />
           <text class="practice__mark-label">存疑</text>
         </view>
       </view>
@@ -40,7 +40,7 @@
     <view class="footer-bar">
       <view class="footer-bar__inner">
         <view class="btn btn--ghost" bindtap="openSheet">
-          <image class="btn__icon" src="{{assetBase}}/assets/ui/grid.svg" mode="aspectFit" />
+          <image class="btn__icon" src="{{uiBase}}/grid.svg" mode="aspectFit" />
         </view>
         <view class="btn btn--primary {{submitting ? 'btn--disabled' : ''}}" bindtap="submit">
           {{answered < version.questionCount ? '交卷 · 未答 ' + (version.questionCount - answered) : '交卷'}}

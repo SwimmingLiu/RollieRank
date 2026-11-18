@@ -1,4 +1,4 @@
-const { ASSET_BASE } = require("../../config");
+const { ASSET } = require("../../config");
 
 Component({
   properties: { active: { type: String, value: "home" } },
@@ -7,7 +7,7 @@ Component({
       { key: "home", label: "首页", url: "/pages/home/home" },
       { key: "records", label: "练习记录", url: "/pages/records/records" },
     ],
-    base: ASSET_BASE,
+    base: "/assets",
   },
   methods: {
     go(event) {

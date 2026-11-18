@@ -1,6 +1,5 @@
 const api = require("../../services/api");
 const format = require("../../utils/format");
-const { ASSET_BASE } = require("../../config");
 
 const FILTERS = [
   { key: "all", label: "全部" },
@@ -18,7 +17,7 @@ Page({
     types: [],
     activeType: "",
     wrongCount: 0,
-    assetBase: ASSET_BASE,
+    uiBase: "/assets/ui",
   },
 
   onLoad(query) {

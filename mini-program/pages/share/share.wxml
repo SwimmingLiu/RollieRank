@@ -18,7 +18,7 @@
       <view class="footer-bar__inner">
         <button class="btn btn--primary" open-type="share">发给好友</button>
         <view class="btn btn--ghost" bindtap="save">
-          <image class="btn__icon" src="{{assetBase}}/assets/ui/image.svg" mode="aspectFit" />
+          <image class="btn__icon" src="{{uiBase}}/image.svg" mode="aspectFit" />
         </view>
       </view>
     </view>

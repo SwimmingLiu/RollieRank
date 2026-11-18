@@ -1,7 +1,6 @@
 const api = require("../../services/api");
 const storage = require("../../utils/storage");
 const catalogUtil = require("../../utils/catalog");
-const { ASSET_BASE } = require("../../config");
 
 const CHOICES = ["A", "B", "C", "D"];
 
@@ -35,7 +34,7 @@ Page({
     answered: 0,
     uncertain: 0,
     submitting: false,
-    assetBase: ASSET_BASE,
+    uiBase: "/assets/ui",
     choices: CHOICES,
   },
 

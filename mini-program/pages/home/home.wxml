@@ -16,20 +16,20 @@
       <view wx:for="{{institutions}}" wx:key="name" class="card press home__inst" data-name="{{item.name}}" bindtap="openInstitution">
         <image wx:if="{{item.logo}}" class="home__inst-logo" src="{{asset[item.logo]}}" mode="aspectFit" />
         <text class="home__inst-name">{{item.name}}</text>
-        <image class="home__inst-arrow" src="{{assetBase}}/assets/ui/chevron.svg" mode="aspectFit" />
+        <image class="home__inst-arrow" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
       </view>
     </view>
 
     <view class="card press home__timer" bindtap="openTimer">
       <view class="home__timer-icon">
-        <image class="home__timer-clock" src="{{assetBase}}/assets/ui/clock.svg" mode="aspectFit" />
+        <image class="home__timer-clock" src="{{uiBase}}/clock.svg" mode="aspectFit" />
       </view>
       <view class="grow stack">
         <text class="home__timer-title">做题计时</text>
         <text class="text-xs">整卷或模块计划 · 自定义</text>
       </view>
       <view class="home__timer-play">
-        <image src="{{assetBase}}/assets/ui/play.svg" mode="aspectFit" />
+        <image src="{{uiBase}}/play.svg" mode="aspectFit" />
       </view>
     </view>
 
@@ -58,7 +58,7 @@
     </block>
 
     <view wx:else class="empty">
-      <image class="empty__icon" src="{{assetBase}}/assets/ui/book.svg" mode="aspectFit" />
+      <image class="empty__icon" src="{{uiBase}}/book.svg" mode="aspectFit" />
       <text>还没有练习记录</text>
     </view>
   </block>

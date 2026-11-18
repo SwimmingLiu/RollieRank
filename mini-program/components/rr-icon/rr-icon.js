@@ -1,4 +1,4 @@
-const { ASSET_BASE } = require("../../config");
+const { ASSET } = require("../../config");
 
 Component({
   properties: {
@@ -9,13 +9,13 @@ Component({
   data: { src: "" },
   observers: {
     name(name) {
-      this.setData({ src: name ? `${ASSET_BASE}/assets/ui/${name}.svg` : "" });
+      this.setData({ src: name ? `/assets/ui/${name}.svg` : "" });
     },
   },
   lifetimes: {
     attached() {
       const { name } = this.data;
-      if (name) this.setData({ src: `${ASSET_BASE}/assets/ui/${name}.svg` });
+      if (name) this.setData({ src: `/assets/ui/${name}.svg` });
     },
   },
 });

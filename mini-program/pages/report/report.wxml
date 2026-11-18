@@ -15,7 +15,7 @@
           <text class="num report__score">{{summary.score}}</text>
           <text class="text-xs">/ {{summary.max}} 分</text>
         </view>
-        <image class="report__stamp" src="{{assetBase}}/assets/ui/check.svg" mode="aspectFit" />
+        <image class="report__stamp" src="{{uiBase}}/check.svg" mode="aspectFit" />
       </view>
       <view class="report__stats">
         <view class="report__stat">
@@ -37,15 +37,15 @@
 
     <view class="report__actions">
       <view wx:if="{{!publicView}}" class="card press report__action" bindtap="rank">
-        <image class="report__action-icon" src="{{assetBase}}/assets/ui/users.svg" mode="aspectFit" />
+        <image class="report__action-icon" src="{{uiBase}}/users.svg" mode="aspectFit" />
         <text class="report__action-label">同卷榜</text>
       </view>
       <view class="card press report__action" bindtap="discuss">
-        <image class="report__action-icon" src="{{assetBase}}/assets/ui/comment.svg" mode="aspectFit" />
+        <image class="report__action-icon" src="{{uiBase}}/comment.svg" mode="aspectFit" />
         <text class="report__action-label">讨论</text>
       </view>
       <view class="card press report__action" bindtap="share">
-        <image class="report__action-icon" src="{{assetBase}}/assets/ui/share.svg" mode="aspectFit" />
+        <image class="report__action-icon" src="{{uiBase}}/share.svg" mode="aspectFit" />
         <text class="report__action-label">分享</text>
       </view>
     </view>
@@ -73,22 +73,22 @@
     <view wx:if="{{!publicView}}" class="report__secondary">
       <view class="card press report__link" bindtap="review">
         <text>逐题对照</text>
-        <image class="report__link-icon" src="{{assetBase}}/assets/ui/chevron.svg" mode="aspectFit" />
+        <image class="report__link-icon" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
       </view>
       <view class="card press report__link" bindtap="practiceAgain">
         <text>再练一次</text>
-        <image class="report__link-icon" src="{{assetBase}}/assets/ui/refresh.svg" mode="aspectFit" />
+        <image class="report__link-icon" src="{{uiBase}}/refresh.svg" mode="aspectFit" />
       </view>
     </view>
 
     <view wx:if="{{!publicView}}" class="footer-bar">
       <view class="footer-bar__inner">
         <view class="btn btn--primary" bindtap="review">
-          <image class="btn__icon" src="{{assetBase}}/assets/ui/book.svg" mode="aspectFit" />
+          <image class="btn__icon" src="{{uiBase}}/book.svg" mode="aspectFit" />
           复盘题目
         </view>
         <view class="btn btn--ghost" bindtap="discuss">
-          <image class="btn__icon" src="{{assetBase}}/assets/ui/comment.svg" mode="aspectFit" />
+          <image class="btn__icon" src="{{uiBase}}/comment.svg" mode="aspectFit" />
         </view>
       </view>
     </view>

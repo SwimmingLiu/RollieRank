@@ -28,7 +28,7 @@
         </view>
         <view class="disc__actions">
           <view class="disc__action" data-id="{{item.id}}" data-liked="{{item.likedByMe}}" bindtap="toggleLike">
-            <image class="disc__action-icon" src="{{assetBase}}/assets/ui/like.svg" mode="aspectFit" />
+            <image class="disc__action-icon" src="{{uiBase}}/like.svg" mode="aspectFit" />
             <text>{{item.likeCount || 0}}</text>
           </view>
           <view class="disc__action" data-id="{{item.id}}" data-name="{{item.author.name}}" bindtap="startReply">回复</view>
@@ -46,7 +46,7 @@
       </view>
 
       <view wx:if="{{!comments.length}}" class="empty">
-        <image class="empty__icon" src="{{assetBase}}/assets/ui/comment.svg" mode="aspectFit" />
+        <image class="empty__icon" src="{{uiBase}}/comment.svg" mode="aspectFit" />
         <text>还没有人讨论这套卷</text>
       </view>
     </view>
@@ -59,7 +59,7 @@
       <view class="footer-bar__inner">
         <input class="disc__input" value="{{replyTarget ? replyDraft : draft}}" placeholder="{{replyTarget ? '写下回复…' : '说说这套卷…'}}" placeholder-class="text-sm" bindinput="{{replyTarget ? 'onReplyDraft' : 'onDraft'}}" confirm-type="send" bindconfirm="{{replyTarget ? 'sendReply' : 'send'}}" />
         <view class="btn disc__send" bindtap="{{replyTarget ? 'sendReply' : 'send'}}">
-          <image class="btn__icon" src="{{assetBase}}/assets/ui/send.svg" mode="aspectFit" />
+          <image class="btn__icon" src="{{uiBase}}/send.svg" mode="aspectFit" />
         </view>
       </view>
     </view>

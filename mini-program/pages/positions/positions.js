@@ -1,6 +1,5 @@
 const api = require("../../services/api");
 const storage = require("../../utils/storage");
-const { ASSET_BASE } = require("../../config");
 
 Page({
   data: {
@@ -15,7 +14,7 @@ Page({
     exam: "",
     region: "",
     current: null,
-    assetBase: ASSET_BASE,
+    uiBase: "/assets/ui",
   },
 
   onLoad(query) {

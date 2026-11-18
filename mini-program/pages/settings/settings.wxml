@@ -27,7 +27,7 @@
     </view>
     <view class="set__action" bindtap="restore">
       <text>从剪贴板恢复</text>
-      <image class="set__icon" src="{{assetBase}}/assets/ui/chevron.svg" mode="aspectFit" />
+      <image class="set__icon" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
     </view>
     <view class="set__action set__action--danger" bindtap="clearAll">
       <text>删除全部记录</text>
@@ -38,7 +38,7 @@
   <view class="card set__block" bindtap="about">
     <view class="set__action">
       <text>关于卷卷小榜</text>
-      <image class="set__icon" src="{{assetBase}}/assets/ui/chevron.svg" mode="aspectFit" />
+      <image class="set__icon" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
     </view>
   </view>
 </view>

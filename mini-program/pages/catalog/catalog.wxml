@@ -32,7 +32,7 @@
         </view>
         <view class="row row--between cat__paper-foot">
           <text class="cat__paper-action">{{item.action}}</text>
-          <image class="cat__paper-arrow" src="{{assetBase}}/assets/ui/chevron.svg" mode="aspectFit" />
+          <image class="cat__paper-arrow" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
         </view>
       </view>
     </view>

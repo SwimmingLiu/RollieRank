@@ -18,7 +18,7 @@
         <text class="timer__label">套卷</text>
         <view class="card press timer__paper" bindtap="choosePaper">
           <text class="grow ellipsis">{{selected ? selected.label + ' · ' + selected.title : '选择一套卷'}}</text>
-          <image class="timer__chev" src="{{assetBase}}/assets/ui/chevron-down.svg" mode="aspectFit" />
+          <image class="timer__chev" src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
         </view>
         <view class="row row--gap timer__papers">
           <view wx:for="{{papers}}" wx:key="name" class="chip {{activeProject === index ? 'chip--on' : ''}}" data-index="{{index}}" bindtap="openSection">{{item.name}}</view>
@@ -61,7 +61,7 @@
       <view class="footer-bar">
         <view class="footer-bar__inner">
           <view class="btn btn--primary" bindtap="start">
-            <image class="btn__icon" src="{{assetBase}}/assets/ui/play.svg" mode="aspectFit" />
+            <image class="btn__icon" src="{{uiBase}}/play.svg" mode="aspectFit" />
             开始计时
           </view>
         </view>

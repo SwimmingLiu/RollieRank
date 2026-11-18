@@ -1,6 +1,5 @@
 const storage = require("../../utils/storage");
 const api = require("../../services/api");
-const { ASSET_BASE } = require("../../config");
 
 Page({
   data: {
@@ -8,7 +7,7 @@ Page({
     guestId: "",
     count: 0,
     deleting: false,
-    assetBase: ASSET_BASE,
+    uiBase: "/assets/ui",
   },
 
   onShow() {

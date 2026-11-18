@@ -1,6 +1,5 @@
 const storage = require("../../utils/storage");
 const format = require("../../utils/format");
-const { ASSET_BASE } = require("../../config");
 
 // 成长只按真实历史汇总：每份成绩用自己的得分／满分，空记录不产生百分比。
 Page({
@@ -12,7 +11,7 @@ Page({
     trendUp: null,
     averageText: "--",
     subjects: [],
-    assetBase: ASSET_BASE,
+    uiBase: "/assets/ui",
   },
 
   onLoad() {

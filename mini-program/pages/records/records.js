@@ -1,7 +1,7 @@
 const api = require("../../services/api");
 const storage = require("../../utils/storage");
 const format = require("../../utils/format");
-const { ASSET, ASSET_BASE } = require("../../config");
+const { ASSET } = require("../../config");
 
 const TABS = [
   { key: "all", label: "全部" },
@@ -21,7 +21,7 @@ Page({
     loading: true,
     syncing: false,
     asset: ASSET,
-    assetBase: ASSET_BASE,
+    uiBase: "/assets/ui",
     keyword: "",
     searching: false,
     visible: [],

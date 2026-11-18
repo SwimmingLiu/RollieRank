@@ -25,7 +25,7 @@
     <view class="rank__podium">
       <view wx:for="{{rows}}" wx:key="publicId" wx:if="{{index < 3}}" class="card press rank__podium-card rank__podium-card--{{index + 1}}" bindtap="openResult" data-id="{{item.publicId}}">
         <text class="rank__podium-rank">{{index + 1}}</text>
-        <image class="rank__podium-avatar" src="{{assetBase}}/assets/avatars/rank-{{index + 1}}.svg" mode="aspectFit" />
+        <image class="rank__podium-avatar" src="{{avatarBase}}/rank-{{index + 1}}.svg" mode="aspectFit" />
         <text class="rank__podium-name ellipsis">{{item.name}}</text>
         <text class="num rank__podium-score">{{item.scoreText}}</text>
         <text class="text-xs">超越 {{item.surpassed}}</text>
@@ -39,7 +39,7 @@
         <text class="num rank__row-score">{{item.scoreText}}</text>
       </view>
       <view wx:if="{{!rows.length}}" class="empty">
-        <image class="empty__icon" src="{{assetBase}}/assets/ui/users.svg" mode="aspectFit" />
+        <image class="empty__icon" src="{{uiBase}}/users.svg" mode="aspectFit" />
         <text>这份卷还没有其他人参与</text>
       </view>
     </view>

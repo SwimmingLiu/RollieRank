@@ -1,7 +1,7 @@
 const api = require("../../services/api");
 const storage = require("../../utils/storage");
 const catalogUtil = require("../../utils/catalog");
-const { ASSET, ASSET_BASE } = require("../../config");
+const { ASSET } = require("../../config");
 
 Page({
   data: {
@@ -10,7 +10,7 @@ Page({
     institutions: [],
     recent: [],
     asset: ASSET,
-    assetBase: ASSET_BASE,
+    uiBase: "/assets/ui",
     name: "卷友",
   },
 

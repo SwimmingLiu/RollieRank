@@ -2,7 +2,6 @@ const api = require("../../services/api");
 const storage = require("../../utils/storage");
 const catalogUtil = require("../../utils/catalog");
 const format = require("../../utils/format");
-const { ASSET_BASE } = require("../../config");
 const timing = require("../../utils/timing");
 
 Page({
@@ -20,7 +19,7 @@ Page({
     running: false,
     paused: false,
     elapsed: "00:00",
-    assetBase: ASSET_BASE,
+    uiBase: "/assets/ui",
   },
 
   onLoad() {

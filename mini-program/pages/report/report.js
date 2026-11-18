@@ -1,7 +1,7 @@
 const api = require("../../services/api");
 const storage = require("../../utils/storage");
 const format = require("../../utils/format");
-const { ASSET, ASSET_BASE } = require("../../config");
+const { ASSET } = require("../../config");
 
 const SECTION_NAMES = ["政治理论", "常识判断", "言语理解", "数量关系", "判断推理", "资料分析"];
 
@@ -13,7 +13,7 @@ Page({
     publicView: false,
     bands: [],
     asset: ASSET,
-    assetBase: ASSET_BASE,
+    uiBase: "/assets/ui",
   },
 
   onLoad(query) {
