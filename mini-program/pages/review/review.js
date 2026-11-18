@@ -1,5 +1,5 @@
-const api = require("../../services/api");
-const format = require("../../utils/format");
+const api = require("../../services/api.js");
+const format = require("../../utils/format.js");
 
 const FILTERS = [
   { key: "all", label: "全部" },

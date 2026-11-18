@@ -1,7 +1,7 @@
-const api = require("../../services/api");
-const storage = require("../../utils/storage");
-const catalogUtil = require("../../utils/catalog");
-const { ASSET } = require("../../config");
+const api = require("../../services/api.js");
+const storage = require("../../utils/storage.js");
+const catalogUtil = require("../../utils/catalog.js");
+const { ASSET } = require("../../config.js");
 
 Page({
   data: {

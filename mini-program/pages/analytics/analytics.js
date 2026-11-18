@@ -1,5 +1,5 @@
-const storage = require("../../utils/storage");
-const format = require("../../utils/format");
+const storage = require("../../utils/storage.js");
+const format = require("../../utils/format.js");
 
 // 成长只按真实历史汇总：每份成绩用自己的得分／满分，空记录不产生百分比。
 Page({

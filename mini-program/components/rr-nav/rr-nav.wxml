@@ -1,12 +1,13 @@
+<!-- 自定义导航：顶部留出状态栏与胶囊高度，右侧内容避开系统胶囊。 -->
 <view class="nav" style="padding-top: {{statusBarHeight}}px;">
-  <view class="nav__bar" style="height: {{navHeight}}px;">
+  <view class="nav__bar" style="height: {{navHeight}}px; padding-right: {{rightInset}}px;">
     <view wx:if="{{back}}" class="nav__back" bindtap="goBack" hover-class="none">
       <image class="nav__icon" src="/assets/ui/back.svg" mode="aspectFit" />
     </view>
-    <text class="nav__title" style="line-height: {{titleHeight}}px;">{{title}}</text>
-    <view wx:if="{{actionIcon}}" class="nav__action nav__right" bindtap="onAction" hover-class="none">
+    <text class="nav__title">{{title}}</text>
+    <view wx:if="{{actionIcon}}" class="nav__action" bindtap="onAction" hover-class="none">
       <image class="nav__icon" src="/assets/ui/{{actionIcon}}.svg" mode="aspectFit" />
     </view>
-    <text wx:elif="{{action}}" class="nav__action nav__right nav__text" bindtap="onAction">{{action}}</text>
+    <text wx:elif="{{action}}" class="nav__action nav__text" bindtap="onAction">{{action}}</text>
   </view>
 </view>

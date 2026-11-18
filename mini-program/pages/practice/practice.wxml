@@ -8,23 +8,35 @@
   </view>
 
   <block wx:else>
+    <!-- 卷身份一行，右侧为真实录入进度。 -->
     <view class="practice__head">
-      <view class="row row--between">
-        <text class="text-sm ellipsis grow">{{identity}} · {{title}}</text>
-        <text class="num practice__count">{{answered}} / {{version.questionCount}}</text>
+      <image wx:if="{{logo}}" class="practice__logo" src="{{asset[logo]}}" mode="aspectFit" />
+      <text class="practice__identity ellipsis grow">{{identity}} · {{title}}</text>
+      <text class="practice__count">{{answered}} / {{version.questionCount}}</text>
+    </view>
+
+    <!-- 板块切换与「待检查」筛选，与设计稿同一行。 -->
+    <view class="practice__filters">
+      <view class="practice__section" bindtap="openSheet">
+        <text>{{activeSectionLabel}}</text>
+        <image class="practice__chev" src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
       </view>
-      <view class="row row--between practice__filters">
-        <view class="row row--gap" bindtap="openSheet">
-          <text class="practice__section">{{sections[activeSection].type}}</text>
-          <image class="practice__chev" src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
-        </view>
-        <view wx:if="{{uncertain}}" class="chip chip--coral">存疑 {{uncertain}}</view>
+      <view class="practice__toggle {{onlyUncertain ? 'practice__toggle--on' : ''}}" bindtap="toggleOnlyUncertain">
+        <image class="practice__toggle-icon" src="{{uiBase}}/filter.svg" mode="aspectFit" />
+        <text>待检查</text>
+        <view class="practice__box">{{onlyUncertain ? '✓' : ''}}</view>
       </view>
+    </view>
+
+    <!-- 当前板块的题号范围；板块名只在上方出现一次。 -->
+    <view class="practice__range">
+      <text class="practice__range-no">{{rangeLabel}}</text>
+      <text class="practice__range-hint">{{answeringHint}}</text>
     </view>
 
     <view class="practice__list">
       <view wx:for="{{questions}}" wx:key="number" class="practice__row">
-        <text class="num practice__no">{{item.number}}</text>
+        <text class="practice__no">{{item.number}}</text>
         <view class="practice__choices">
           <view wx:for="{{choices}}" wx:for-item="choice" wx:key="*this"
                 class="practice__choice {{item.answer === choice ? 'practice__choice--on' : ''}}"
@@ -34,6 +46,9 @@
           <image class="practice__mark-icon" src="{{uiBase}}/mark.svg" mode="aspectFit" />
           <text class="practice__mark-label">存疑</text>
         </view>
+      </view>
+      <view wx:if="{{!questions.length}}" class="empty">
+        <text>{{onlyUncertain ? '还没有存疑题目' : '这个板块没有题目'}}</text>
       </view>
     </view>
 

@@ -1,22 +1,21 @@
-.home__head { display: flex; align-items: center; gap: 16rpx; padding: 40rpx 36rpx 8rpx; }
-.home__logo { width: 64rpx; height: 64rpx; border-radius: 16rpx; }
-.home__brand { font-size: 40rpx; font-weight: 700; letter-spacing: 2rpx; }
-.home__section { margin: 32rpx 36rpx 20rpx; }
-.home__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20rpx; padding: 0 28rpx; }
-.home__inst { height: 132rpx; display: flex; align-items: center; gap: 16rpx; padding: 0 24rpx; }
-.home__inst-logo { width: 52rpx; height: 52rpx; flex-shrink: 0; }
-.home__inst-name { font-size: 32rpx; font-weight: 600; flex: 1; min-width: 0; }
-.home__inst-arrow { width: 32rpx; height: 32rpx; opacity: 0.45; flex-shrink: 0; }
-.home__timer { margin: 28rpx; height: 140rpx; display: flex; align-items: center; gap: 20rpx; padding: 0 28rpx; }
-.home__timer-icon { width: 76rpx; height: 76rpx; border-radius: 24rpx; background: #f4e3be; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.home__timer-clock { width: 40rpx; height: 40rpx; }
-.home__timer-title { display: block; font-size: 30rpx; font-weight: 600; }
-.home__timer-play { width: 72rpx; height: 72rpx; border-radius: 50%; background: #2b2724; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.home__timer-play image { width: 30rpx; height: 30rpx; margin-left: 4rpx; }
-.home__recent { display: flex; flex-direction: column; gap: 20rpx; padding: 0 28rpx; }
-.home__recent-card { padding: 28rpx; }
-.home__recent-title { font-size: 30rpx; font-weight: 600; margin-top: 6rpx; }
-.home__recent-score { font-size: 44rpx; font-weight: 600; margin-left: 20rpx; }
-.home__recent-meta { margin-top: 18rpx; padding-top: 18rpx; border-top: 2rpx solid #f1ebe0; }
-
-.home__recent-progress { font-size: 32rpx; color: #b98a3e; margin-left: 20rpx; }
+.home__head { display: flex; align-items: center; gap: 11px; padding: 26px 22px 4px; }
+.home__logo { width: 32px; height: 32px; }
+.home__brand { font-size: 20px; font-weight: 700; letter-spacing: 0.3px; color: #18181b; }
+.home__section { margin: 18px 22px 10px; font-size: 14px; }
+.home__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 22px; }
+.home__inst { height: 64px; display: flex; align-items: center; gap: 10px; padding: 0 14px; }
+.home__inst-logo { width: 30px; height: 30px; }
+.home__inst-name { font-size: 16px; font-weight: 600; flex: 1; min-width: 0; letter-spacing: 0.2px; }
+.home__inst-arrow { width: 16px; height: 16px; opacity: 0.55; flex-shrink: 0; }
+.home__timer { margin: 14px 22px; height: 70px; display: flex; align-items: center; gap: 11px; padding: 0 14px; background: #fffdf7; border-color: #e4d6bf; }
+.home__timer-icon { width: 38px; height: 38px; border-radius: 12px; background: #f4e3be; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.home__timer-clock { width: 20px; height: 20px; }
+.home__timer-title { display: block; font-size: 14px; font-weight: 600; }
+.home__timer-play { width: 36px; height: 36px; border-radius: 50%; background: #302b29; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.home__timer-play image { width: 15px; height: 15px; margin-left: 2px; }
+.home__recent { display: flex; flex-direction: column; gap: 10px; padding: 0 22px; }
+.home__recent-card { padding: 14px; }
+.home__recent-title { font-size: 15px; font-weight: 600; margin-top: 3px; }
+.home__recent-score { font-size: 22px; font-weight: 700; margin-left: 10px; }
+.home__recent-progress { font-size: 16px; color: var(--ochre); margin-left: 10px; }
+.home__recent-meta { margin-top: 9px; padding-top: 9px; border-top: 1px solid #f4f4f5; }

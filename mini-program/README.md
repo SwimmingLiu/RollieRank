@@ -35,7 +35,7 @@
    ```
 
 ## 资源
-图片与字体已上传到 `https://oss.swimmingliu.cn/static/rollierank/`（用户提供的 `rollie-rank-oss.swimmingliu.cn` 目前返回 404，上传后已确认老域名可用），清单见 `assets-manifest.json`；上传脚本为 `scripts/upload-oss.py`。图标和标签栏图标在 `assets/ui`、`assets/tab`、`assets/tab-active`。
+图片与字体已上传到 `https://rollie-rank-oss.swimmingliu.cn/static/rollierank/`（`rollie-rank` 空间的加速域名），清单见 `assets-manifest.json`；上传脚本为 `scripts/upload-oss.py`。图标和标签栏图标在 `assets/ui`、`assets/tab`、`assets/tab-active`。
 
 ## 尚未接入
 - 微信登录与云端身份（当前用本机随机身份，换机需要备份恢复）。

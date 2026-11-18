@@ -1,6 +1,7 @@
-const api = require("../../services/api");
-const storage = require("../../utils/storage");
-const catalogUtil = require("../../utils/catalog");
+const api = require("../../services/api.js");
+const storage = require("../../utils/storage.js");
+const catalogUtil = require("../../utils/catalog.js");
+const { ASSET, ASSET_BASE } = require("../../config.js");
 
 const CHOICES = ["A", "B", "C", "D"];
 
@@ -34,7 +35,13 @@ Page({
     answered: 0,
     uncertain: 0,
     submitting: false,
+    onlyUncertain: false,
+    activeSectionLabel: "",
+    rangeLabel: "",
+    answeringHint: "",
+    logo: null,
     uiBase: "/assets/ui",
+    asset: ASSET,
     choices: CHOICES,
   },
 
@@ -62,16 +69,20 @@ Page({
       });
       if (!this.attemptId) this.attemptId = storage.pendingId(version.id);
       this.version = version;
+      // 章节必须在生成题目行之前写入 data，否则第一屏会显示整卷。
+      const sections = sectionsOf(version);
       this.setData({
         loading: false,
         version: { id: version.id, questionCount: version.questionCount, invigilator: version.timeLimitMinutes || 0 },
         title: catalogUtil.versionTitle(version),
         identity: catalogUtil.identity(version),
-        sections: sectionsOf(version),
+        logo: catalogUtil.LOGO[version.institution] || null,
+        sections,
         answers,
         marks,
-        questions: this.rows(version, answers, marks, 0),
       });
+      this.updateSectionLabels();
+      this.setData({ questions: this.rows(version, answers, marks, 0) });
       this.updateCounts();
       if (draft.updatedAt) wx.showToast({ title: "已恢复上次录入", icon: "none" });
     } catch (error) {
@@ -81,14 +92,32 @@ Page({
 
   rows(version, answers, marks, activeSection) {
     const section = this.data.sections[activeSection];
+    // 章节来自逐题题型分段；仅当没有章节时才展示全部题目。
     return version.questions
-      .filter(question => !section || (question.number >= section.start && question.number <= section.end))
+      .filter(question => section ? question.number >= section.start && question.number <= section.end : true)
+      .filter(question => this.data.onlyUncertain ? marks[question.number - 1] : true)
       .map(question => ({
         number: question.number,
         type: question.type,
         answer: answers[question.number - 1] || "",
         marked: Boolean(marks[question.number - 1]),
       }));
+  },
+
+  updateSectionLabels() {
+    const section = this.data.sections[this.data.activeSection];
+    if (!section) return;
+    this.setData({
+      activeSectionLabel: section.type,
+      rangeLabel: section.start === section.end ? `${section.start}` : `${section.start}–${section.end}`,
+      answeringHint: `${section.count} 题`,
+    });
+  },
+
+  // 只看存疑题：与设计稿的「待检查」复选框一致。
+  toggleOnlyUncertain() {
+    this.setData({ onlyUncertain: !this.data.onlyUncertain });
+    this.reflect(this.data.answers, this.data.marks);
   },
 
   updateCounts(answers) {
@@ -129,6 +158,7 @@ Page({
   switchSection(event) {
     const index = Number(event.currentTarget.dataset.index);
     this.setData({ activeSection: index });
+    this.updateSectionLabels();
     this.reflect(this.data.answers, this.data.marks);
   },
 

@@ -1,8 +1,9 @@
 .nav { position: sticky; top: 0; z-index: 20; background: #fcf8f1; }
+/* 导航栏与胶囊垂直居中对齐，右侧预留胶囊宽度，内容不会被遮挡。 */
 .nav__bar { position: relative; display: flex; align-items: center; justify-content: center; }
-.nav__title { font-size: 34rpx; font-weight: 600; color: #302b29; letter-spacing: 1rpx; }
-.nav__back, .nav__action { position: absolute; top: 50%; transform: translateY(-50%); height: 88rpx; min-width: 88rpx; display: flex; align-items: center; justify-content: center; }
-.nav__back { left: 4rpx; }
-.nav__right { right: 4rpx; }
-.nav__icon { width: 44rpx; height: 44rpx; }
-.nav__text { font-size: 28rpx; color: #79767d; }
+.nav__title { font-size: 17px; font-weight: 600; color: #18181b; letter-spacing: 0.2px; }
+.nav__back, .nav__action { position: absolute; top: 0; bottom: 0; width: 44px; display: flex; align-items: center; justify-content: center; }
+.nav__back { left: 4px; }
+.nav__action { right: 4px; }
+.nav__icon { width: 22px; height: 22px; }
+.nav__text { font-size: 14px; color: #71717a; }

@@ -1,5 +1,5 @@
 <view class="screen">
-  <rr-nav title="{{institution}}套卷" />
+  <rr-nav title="{{displayName}}套卷" />
 
   <view wx:if="{{loading}}" class="loading">正在读取套卷…</view>
   <view wx:elif="{{error}}" class="empty">
@@ -8,14 +8,10 @@
   </view>
 
   <block wx:else>
-    <view class="cat__hero card">
-      <view class="row row--gap">
-        <image wx:if="{{logo}}" class="cat__logo" src="{{asset[logo]}}" mode="aspectFit" />
-        <view class="stack grow">
-          <text class="text-xs">{{projects[activeProject].label}}</text>
-          <text class="cat__hero-title">{{institution}} · {{projects[activeProject].versions.length}} 套</text>
-        </view>
-      </view>
+    <!-- 机构头部：杏色大卡，第一行是年份与项目，第二行是套卷数量。 -->
+    <view class="cat__hero">
+      <text class="cat__hero-meta">{{projects[activeProject].label}}</text>
+      <text class="cat__hero-title">{{displayName}}{{projects[activeProject].versions.length}}套卷</text>
     </view>
 
     <scroll-view wx:if="{{projects.length > 1}}" class="cat__tabs" scroll-x enable-flex>
@@ -26,14 +22,12 @@
 
     <view class="cat__grid">
       <view wx:for="{{projects[activeProject].versions}}" wx:key="id" class="card press cat__paper" data-id="{{item.id}}" data-action="{{item.actionType}}" bindtap="openPaper">
-        <view class="row row--between">
-          <text class="cat__paper-no">{{item.number}}套</text>
-          <text wx:if="{{item.submitted}}" class="num cat__paper-score">{{item.bestScore}}</text>
-        </view>
-        <view class="row row--between cat__paper-foot">
+        <text class="cat__paper-no">{{item.numberLabel}}</text>
+        <view class="cat__paper-foot">
           <text class="cat__paper-action">{{item.action}}</text>
           <image class="cat__paper-arrow" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
         </view>
+        <text wx:if="{{item.submitted}}" class="cat__paper-score">{{item.bestScore}}</text>
       </view>
     </view>
   </block>

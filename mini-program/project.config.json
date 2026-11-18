@@ -9,7 +9,7 @@
     "postcss": true,
     "minified": true,
     "minifyWXML": true,
-    "urlCheck": true,
+    "urlCheck": false,
     "checkSiteMap": true,
     "uglifyFileName": false,
     "compileHotReLoad": true,
@@ -19,12 +19,16 @@
   },
   "packOptions": {
     "ignore": [
-      { "type": "folder", "value": "tools" }
+      {
+        "type": "folder",
+        "value": "/minitest"
+      }
     ],
     "include": []
   },
   "editorSetting": {
     "tabIndent": "insertSpaces",
     "tabSize": 2
-  }
+  },
+  "testRoot": "minitest/"
 }

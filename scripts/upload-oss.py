@@ -14,11 +14,11 @@ import qiniu
 
 ROOT = Path(__file__).resolve().parent.parent
 MINI = ROOT / "mini-program"
-# 七牛配置里实际绑定的加速域名；rollie-rank-oss.swimmingliu.cn 目前仍返回 404。
-LIVE_DOMAIN = "https://oss.swimmingliu.cn"
+# 域名绑定在 rollie-rank 桶上，文件名前缀与小程序 config.js 的 ASSET_BASE 对应。
+LIVE_DOMAIN = "https://rollie-rank-oss.swimmingliu.cn"
 DOMAIN = LIVE_DOMAIN
 PREFIX = "static/rollierank/"
-BUCKET = "swimmingliu"
+BUCKET = "rollie-rank"
 # Qiniu upload zone for the bucket that already serves oss.swimmingliu.cn (East China).
 UP_HOST = "https://up-z0.qiniup.com"
 

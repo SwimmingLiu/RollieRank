@@ -1,8 +1,8 @@
-const api = require("../../services/api");
-const storage = require("../../utils/storage");
-const catalogUtil = require("../../utils/catalog");
-const format = require("../../utils/format");
-const timing = require("../../utils/timing");
+const api = require("../../services/api.js");
+const storage = require("../../utils/storage.js");
+const catalogUtil = require("../../utils/catalog.js");
+const format = require("../../utils/format.js");
+const timing = require("../../utils/timing.js");
 
 Page({
   data: {

@@ -1,7 +1,7 @@
-const api = require("../../services/api");
-const storage = require("../../utils/storage");
-const format = require("../../utils/format");
-const { ASSET_BASE } = require("../../config");
+const api = require("../../services/api.js");
+const storage = require("../../utils/storage.js");
+const format = require("../../utils/format.js");
+const { ASSET_BASE } = require("../../config.js");
 
 const AVATARS = ["rank-1", "rank-2", "rank-3", "rank-4", "rank-5", "rank-6", "rank-7", "rank-8"];
 

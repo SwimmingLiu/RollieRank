@@ -1,7 +1,7 @@
-const api = require("../../services/api");
-const storage = require("../../utils/storage");
-const format = require("../../utils/format");
-const { ASSET } = require("../../config");
+const api = require("../../services/api.js");
+const storage = require("../../utils/storage.js");
+const format = require("../../utils/format.js");
+const { ASSET } = require("../../config.js");
 
 const SECTION_NAMES = ["政治理论", "常识判断", "言语理解", "数量关系", "判断推理", "资料分析"];
 

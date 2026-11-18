@@ -1,11 +1,14 @@
 // 机构与套卷分组：全部来自服务端已发布目录，不在前端写死题量。
 const ORDER = ["四海", "超格", "粉笔", "上岸村"];
+// 展示名与内部标识分开：四海对外显示为「花生」，与设计稿一致。
+const DISPLAY_NAME = { 四海: "花生", 超格: "超格", 粉笔: "粉笔", 上岸村: "上岸村" };
 const LOGO = {
   四海: "sihai",
   超格: "chaoge",
   粉笔: "fenbi",
   上岸村: "shangancun",
 };
+const displayName = institution => DISPLAY_NAME[institution] || institution;
 
 // 与网页端一致：图形、定义、类比、逻辑判断都在用户维度合为「判断推理」。
 const JUDGMENT_NAMES = new Set(["判断推理", "逻辑判断", "类比推理", "图形推理", "定义判断"]);
@@ -21,7 +24,7 @@ function groupByInstitution(versions) {
   for (const version of versions) {
     if (version.status === "draft") continue;
     const key = institutionKey(version);
-    if (!map.has(key)) map.set(key, { name: key, logo: LOGO[key] || null, projects: [], versions: [] });
+    if (!map.has(key)) map.set(key, { name: key, label: displayName(key), logo: LOGO[key] || null, projects: [], versions: [] });
     map.get(key).versions.push(version);
   }
   const list = [...map.values()];
@@ -64,4 +67,4 @@ function identity(version) {
   return [version.institution, version.period, version.variant].filter(Boolean).join(" · ");
 }
 
-module.exports = { groupByInstitution, versionTitle, identity, LOGO, subjectName, subjectId };
+module.exports = { groupByInstitution, versionTitle, identity, LOGO, displayName, subjectName, subjectId };

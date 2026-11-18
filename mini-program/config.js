@@ -1,7 +1,7 @@
 // 接口域名与资源地址集中在这里；切换环境只改这一处。
 const API_BASE = "https://rollie-rank.swimmingliu.cn";
-// 用户提供的新域名 rollie-rank-oss.swimmingliu.cn 对同一文件返回 404，先使用已在用的七牛域名。
-const ASSET_BASE = "https://oss.swimmingliu.cn/static/rollierank";
+// 七牛 rollie-rank 空间的加速域名。
+const ASSET_BASE = "https://rollie-rank-oss.swimmingliu.cn/static/rollierank";
 // 包内资源（图标、机构标识、产品标识）随小程序发布，不依赖网络。
 const LOCAL = "/assets";
 
@@ -9,7 +9,7 @@ module.exports = {
   API_BASE,
   ASSET_BASE,
   ASSET: {
-    logo: `${LOCAL}/rollierank-logo-v4-256.png`,
+    logo: `${LOCAL}/rollierank-logo.png`,
     profile: `${LOCAL}/profile-default.svg`,
     sihai: `${LOCAL}/sihai-peanut.svg`,
     chaoge: `${LOCAL}/chaoge-study.svg`,

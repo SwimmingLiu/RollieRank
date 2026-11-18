@@ -1,11 +1,12 @@
-const api = require("../../services/api");
-const storage = require("../../utils/storage");
-const catalogUtil = require("../../utils/catalog");
-const { ASSET } = require("../../config");
+const api = require("../../services/api.js");
+const storage = require("../../utils/storage.js");
+const catalogUtil = require("../../utils/catalog.js");
+const { ASSET } = require("../../config.js");
 
 Page({
   data: {
     institution: "",
+    displayName: "",
     loading: true,
     error: "",
     logo: "",
@@ -17,7 +18,7 @@ Page({
 
   onLoad(query) {
     const institution = decodeURIComponent(query.institution || "");
-    this.setData({ institution });
+    this.setData({ institution, displayName: catalogUtil.displayName(institution) });
     this.load();
   },
 
@@ -45,6 +46,8 @@ Page({
           return {
             id: version.id,
             number: version.number,
+            numberLabel: version.number ? `${String(version.number).padStart(2, "0")}套` : "",
+            logo: catalogUtil.LOGO[version.institution] || null,
             title: catalogUtil.versionTitle(version),
             questionCount: version.questionCount,
             draftAnswered: answered,

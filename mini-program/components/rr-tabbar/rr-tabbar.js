@@ -1,4 +1,4 @@
-const { ASSET } = require("../../config");
+const { ASSET } = require("../../config.js");
 
 Component({
   properties: { active: { type: String, value: "home" } },

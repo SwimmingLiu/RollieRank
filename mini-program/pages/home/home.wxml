@@ -1,4 +1,4 @@
-<view class="screen screen--tab">
+<view class="screen screen--tab safe-top">
   <view class="home__head">
     <image class="home__logo" src="{{asset.logo}}" mode="aspectFit" />
     <text class="home__brand">卷卷小榜</text>
@@ -15,7 +15,7 @@
     <view class="home__grid">
       <view wx:for="{{institutions}}" wx:key="name" class="card press home__inst" data-name="{{item.name}}" bindtap="openInstitution">
         <image wx:if="{{item.logo}}" class="home__inst-logo" src="{{asset[item.logo]}}" mode="aspectFit" />
-        <text class="home__inst-name">{{item.name}}</text>
+        <text class="home__inst-name">{{item.label || item.name}}</text>
         <image class="home__inst-arrow" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
       </view>
     </view>

@@ -1,6 +1,6 @@
-const api = require("../../services/api");
-const storage = require("../../utils/storage");
-const format = require("../../utils/format");
+const api = require("../../services/api.js");
+const storage = require("../../utils/storage.js");
+const format = require("../../utils/format.js");
 
 const SCOPES = [
   { key: "national", label: "全国" },

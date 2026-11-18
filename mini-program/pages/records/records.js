@@ -1,7 +1,7 @@
-const api = require("../../services/api");
-const storage = require("../../utils/storage");
-const format = require("../../utils/format");
-const { ASSET } = require("../../config");
+const api = require("../../services/api.js");
+const storage = require("../../utils/storage.js");
+const format = require("../../utils/format.js");
+const { ASSET } = require("../../config.js");
 
 const TABS = [
   { key: "all", label: "全部" },
