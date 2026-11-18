@@ -1,9 +1,7 @@
-const api = require("../../services/api");
-const storage = require("../../utils/storage");
-const format = require("../../utils/format");
-const { ASSET } = require("../../config");
-
-const SECTION_NAMES = ["政治理论", "常识判断", "言语理解", "数量关系", "判断推理", "资料分析"];
+const api = require("../../services/api.js");
+const storage = require("../../utils/storage.js");
+const format = require("../../utils/format.js");
+const { reportBands } = require("../../utils/report.js");
 
 Page({
   data: {
@@ -12,7 +10,9 @@ Page({
     summary: null,
     publicView: false,
     bands: [],
-    asset: ASSET,
+    shownBands: [],
+    showBands: false,
+    standing: null,
     uiBase: "/assets/ui",
   },
 
@@ -46,13 +46,8 @@ Page({
           name: person.name,
           weak: [],
         },
-        bands: (person.subjects || []).map(subject => ({
-          name: subject.name,
-          earned: format.score(subject.centsEarned),
-          max: format.score(subject.maxCents),
-          pct: format.rate(subject.rate),
-        })),
       });
+      this.setBands(person.subjects || []);
     } catch (error) {
       this.setData({ loading: false, error: error.message });
     }
@@ -64,7 +59,7 @@ Page({
   },
 
   onPullDownRefresh() {
-    this.load().finally(() => wx.stopPullDownRefresh());
+    (this.publicId ? this.loadPublic() : this.load()).finally(() => wx.stopPullDownRefresh());
   },
 
   async load() {
@@ -75,6 +70,7 @@ Page({
       if (!attempt) throw new Error("这份成绩不在当前身份下，请回到练习记录查看。");
       storage.upsertAttempt(attempt);
       this.apply(attempt);
+      this.loadStanding(attempt.versionId);
     } catch (error) {
       const local = storage.getAttempt(this.attemptId);
       if (local) {
@@ -103,10 +99,6 @@ Page({
   apply(attempt) {
     this.attempt = attempt;
     const report = attempt.report;
-    const weak = report.breakdown
-      .map(type => ({ name: type.name, rate: type.maxCents ? type.centsEarned / type.maxCents : 0 }))
-      .sort((a, b) => a.rate - b.rate)
-      .slice(0, 3);
     this.setData({
       loading: false,
       error: "",
@@ -124,16 +116,28 @@ Page({
         createdAt: format.dateTime(attempt.createdAt),
         timing: attempt.timing && attempt.timing.solvingMs ? format.minutes(attempt.timing.solvingMs) : "",
         answerRevision: attempt.answerRevision || 0,
-        weak: weak.map(item => ({ name: item.name, rate: format.percent(item.rate) })),
       },
-      bands: report.breakdown.map(type => ({
-        name: type.name,
-        earned: (type.centsEarned / 100).toFixed(1),
-        max: (type.maxCents / 100).toFixed(1),
-        pct: format.rate(type.maxCents ? type.centsEarned / type.maxCents : 0),
-        label: SECTION_NAMES.includes(type.name) ? type.name : type.name,
-      })),
     });
+    this.setBands(report.breakdown);
+  },
+
+  setBands(parts) {
+    const bands = reportBands(parts);
+    this.setData({ bands, shownBands: this.data.showBands ? bands : bands.slice(0, 2) });
+  },
+
+  toggleBands() {
+    const showBands = !this.data.showBands;
+    this.setData({ showBands, shownBands: showBands ? this.data.bands : this.data.bands.slice(0, 2) });
+  },
+
+  async loadStanding(versionId) {
+    try {
+      const result = await api.request("positions/leaderboard?versionId=" + encodeURIComponent(versionId) + "&guestId=" + encodeURIComponent(storage.guestId()) + "&scope=nationwide");
+      this.setData({ standing: { rank: result.self?.rank, count: result.count } });
+    } catch {
+      this.setData({ standing: null });
+    }
   },
 
   applyLocal(record) {
@@ -144,13 +148,14 @@ Page({
       wrong: record.wrong,
       blank: record.blank,
       rate: record.rate,
-      breakdown: [],
+      breakdown: record.subjects || [],
     };
     this.apply({ ...record, report, paperTitle: record.title, answerRevision: 0 });
   },
 
   retry() {
-    this.load();
+    if (this.publicId) this.loadPublic();
+    else this.load();
   },
 
   review() {
@@ -158,7 +163,11 @@ Page({
       wx.showToast({ title: "他人的逐题答案不公开", icon: "none" });
       return;
     }
-    wx.navigateTo({ url: `/pages/review/review?attemptId=${this.attemptId}` });
+    wx.navigateTo({ url: "/pages/review/review?attemptId=" + this.attemptId + (this.data.summary?.wrong ? "&filter=wrong" : "") });
+  },
+
+  reviewBand(event) {
+    if (!this.data.publicView) wx.navigateTo({ url: "/pages/review/review?attemptId=" + this.attemptId + "&type=" + encodeURIComponent(event.currentTarget.dataset.type) });
   },
 
   rank() {
@@ -176,7 +185,7 @@ Page({
   },
 
   practiceAgain() {
-    if (!this.data.summary) return;
-    wx.redirectTo({ url: `/pages/practice/practice?versionId=${this.data.summary.versionId}` });
+    if (!this.data.summary || this.data.publicView) return;
+    wx.navigateTo({ url: `/pages/practice/practice?versionId=${this.data.summary.versionId}` });
   },
 });

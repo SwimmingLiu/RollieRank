@@ -1,47 +1,57 @@
-<view class="screen">
-  <rr-nav title="同卷榜" action-icon="help" bind:action="help" />
-
+<view class="screen screen--plain">
+  <rr-nav title="同卷榜" action-icon="help" action-label="排名口径" bind:action="help" />
   <view wx:if="{{loading}}" class="loading">正在读取榜单…</view>
   <view wx:elif="{{error}}" class="empty">
     <text>{{error}}</text>
-    <view class="chip" bindtap="load">重新读取</view>
+    <button class="chip" bindtap="load">重新读取</button>
   </view>
 
-  <block wx:else>
-    <view class="rank__scope">
-      <view class="tabs">
-        <view wx:for="{{scopes}}" wx:key="key" class="tabs__item {{scope === item.key ? 'tabs__item--on' : ''}}" data-key="{{item.key}}" bindtap="setScope">{{item.label}}</view>
-      </view>
-      <view class="chip rank__pick" bindtap="pickPosition">换岗</view>
+  <view wx:else class="rank">
+    <view class="rank__identity">
+      <image wx:if="{{logo}}" src="{{logo}}" mode="aspectFit" />
+      <text class="rank__publisher">{{publisher}}</text><text class="grow">{{identity}}</text>
     </view>
-    <view wx:if="{{position}}" class="rank__position text-sm ellipsis">{{position.label}}</view>
-
-    <scroll-view wx:if="{{dimensions.length > 1}}" class="rank__dimensions" scroll-x enable-flex>
-      <view wx:for="{{dimensions}}" wx:key="key" class="chip rank__dimension {{dimension === item.key ? 'chip--on' : ''}}" data-key="{{item.key}}" bindtap="setDimension">{{item.label}}</view>
-    </scroll-view>
-
-    <view class="rank__count">{{count}} 人参与 · 每人取最好一次</view>
-
-    <view class="rank__podium">
-      <view wx:for="{{rows}}" wx:key="publicId" wx:if="{{index < 3}}" class="card press rank__podium-card rank__podium-card--{{index + 1}}" bindtap="openResult" data-id="{{item.publicId}}">
-        <text class="rank__podium-rank">{{index + 1}}</text>
-        <image class="rank__podium-avatar" src="{{avatarBase}}/rank-{{index + 1}}.svg" mode="aspectFit" />
-        <text class="rank__podium-name ellipsis">{{item.name}}</text>
-        <text class="num rank__podium-score">{{item.scoreText}}</text>
-        <text class="text-xs">超越 {{item.surpassed}}</text>
+    <scroll-view class="rank__dimensions" scroll-x>
+      <view class="rank__dimension-row">
+        <button wx:for="{{dimensions}}" wx:key="key" class="rank__dimension {{dimension === item.key ? 'rank__dimension--on' : ''}}" data-key="{{item.key}}" bindtap="setDimension">{{item.label}}</button>
       </view>
+    </scroll-view>
+    <view class="rank__scope">
+      <button wx:for="{{scopes}}" wx:key="key" class="rank__scope-tab {{scope === item.key ? 'rank__scope-tab--on' : ''}}" data-key="{{item.key}}" bindtap="setScope">
+        <image src="{{uiBase}}/{{item.icon}}.svg" mode="aspectFit" />{{item.label}}
+      </button>
+      <button class="rank__scope-tab" bindtap="pickPosition"><image src="{{uiBase}}/search.svg" mode="aspectFit" />换岗</button>
+    </view>
+    <view class="rank__position">
+      <view class="rank__position-icon"><image src="{{uiBase}}/{{scope === 'national' ? 'globe' : 'map-pin'}}.svg" mode="aspectFit" /></view>
+      <view class="stack grow">
+        <text class="rank__position-title">{{scope === 'national' ? '全国考生' : position.label}}</text>
+        <text wx:if="{{scope === 'national'}}" class="rank__muted">不限报考岗位</text>
+      </view>
+      <view class="rank__count"><image src="{{uiBase}}/users.svg" mode="aspectFit" />{{count}}</view>
+    </view>
+
+    <view wx:if="{{winners.length}}" class="rank__podium">
+      <button wx:for="{{winners}}" wx:key="publicId" class="rank__podium-card rank__podium-card--{{index + 1}}" bindtap="openResult" data-id="{{item.publicId}}">
+        <view class="rank__card-top">
+          <text>{{item.rankText}}</text><image wx:if="{{index === 0}}" src="{{uiBase}}/trophy.svg" mode="aspectFit" />
+        </view>
+        <view class="rank__podium-avatar">{{item.initials}}</view>
+        <text class="rank__podium-name">{{item.name}}</text>
+        <text class="display-num rank__podium-score {{item.scoreText.length > 5 ? 'rank__podium-score--wide' : ''}}">{{item.scoreText}}</text>
+        <text class="rank__muted">分</text>
+        <text class="rank__muted">超越 {{item.surpassed}}</text>
+      </button>
     </view>
 
     <view class="rank__list">
-      <view wx:for="{{rows}}" wx:key="publicId" wx:if="{{index >= 3}}" class="card rank__row {{item.isMe ? 'rank__row--me' : ''}}" bindtap="openResult" data-id="{{item.publicId}}">
-        <text class="num rank__row-rank">{{item.rank}}</text>
-        <text class="rank__row-name ellipsis grow">{{item.name}}{{item.isMe ? '（我）' : ''}}</text>
-        <text class="num rank__row-score">{{item.scoreText}}</text>
-      </view>
-      <view wx:if="{{!rows.length}}" class="empty">
-        <image class="empty__icon" src="{{uiBase}}/users.svg" mode="aspectFit" />
-        <text>这份卷还没有其他人参与</text>
-      </view>
+      <button wx:for="{{otherRows}}" wx:key="publicId" class="rank__row" bindtap="openResult" data-id="{{item.publicId}}">
+        <text class="rank__row-rank">{{item.rankText}}</text>
+        <view class="rank__list-avatar">{{item.initials}}</view>
+        <text class="rank__row-name grow">{{item.name}}{{item.isMe ? '（我）' : ''}}</text>
+        <text class="rank__row-score">{{item.scoreText}}</text>
+      </button>
     </view>
-  </block>
+    <view wx:if="{{!winners.length}}" class="empty">这份卷还没有人参与</view>
+  </view>
 </view>

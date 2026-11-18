@@ -240,7 +240,9 @@ test("iOS correction refinement keeps entry in details and shows report status o
     if (configured === undefined) delete process.env.ROLLIERANK_REVIEW_TOKEN; else process.env.ROLLIERANK_REVIEW_TOKEN = configured; });
   const base = `http://127.0.0.1:${server.address().port}/`;
   const call = async (path, data) => {
-    const response = await fetch(base + "api/" + path, data ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) } : {});
+    const headers = { "Content-Type": "application/json" };
+    if (path.startsWith("admin/")) headers.Authorization = "Bearer " + credential;
+    const response = await fetch(base + "api/" + path, data ? { method: "POST", headers, body: JSON.stringify(data) } : {});
     const result = await response.json(); assert.equal(response.status, 200, result.error); return result;
   };
   const version = await call("admin/import", { title: "iOS 四题核对卷", institution: "专项", project: "iOS", period: "一期", variant: "通用",

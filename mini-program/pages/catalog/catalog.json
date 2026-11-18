@@ -1,5 +1,8 @@
 {
-  "usingComponents": { "rr-nav": "/components/rr-nav/rr-nav", "rr-tabbar": "/components/rr-tabbar/rr-tabbar" },
+  "usingComponents": {
+    "rr-tabbar": "/components/rr-tabbar/rr-tabbar",
+    "rr-nav": "/components/rr-nav/rr-nav"
+  },
   "navigationStyle": "custom",
   "enablePullDownRefresh": true
 }

@@ -1,21 +1,32 @@
-const storage = require("../../utils/storage");
-const format = require("../../utils/format");
+const storage = require("../../utils/storage.js");
+const format = require("../../utils/format.js");
+const catalog = require("../../utils/catalog.js");
+const { ASSET } = require("../../config.js");
 
-// 成长只按真实历史汇总：每份成绩用自己的得分／满分，空记录不产生百分比。
+const CATEGORIES = [
+  { key: "all", label: "行测整体" },
+  { key: "city", label: "地市级" },
+  { key: "provincial", label: "副省级" },
+  { key: "custom", label: "其他卷型" },
+];
+const METRICS = [{ key: "rate", label: "得分率" }, { key: "score", label: "得分" }, { key: "accuracy", label: "正确率" }];
+
+function categoryOf(record) {
+  const known = /国考|公考|公务员|联考/.test([record.project, record.title].join(" "));
+  if (known && record.questionCount === 130) return "city";
+  if (known && record.questionCount === 135) return "provincial";
+  return "custom";
+}
+
 Page({
   data: {
-    loading: true,
-    hasData: false,
+    category: 0,
+    categories: CATEGORIES,
+    metric: "rate",
+    metricLabel: METRICS[0].label,
+    metrics: METRICS,
     points: [],
-    trendText: "",
-    trendUp: null,
-    averageText: "--",
-    subjects: [],
     uiBase: "/assets/ui",
-  },
-
-  onLoad() {
-    this.build();
   },
 
   onShow() {
@@ -23,57 +34,86 @@ Page({
   },
 
   build() {
-    const records = storage.history()
-      .slice()
-      .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-    if (!records.length) {
-      this.setData({ loading: false, hasData: false });
-      return;
-    }
-    const points = records.map(record => ({
-      id: record.id,
-      dateText: format.dateTime(record.createdAt).slice(5),
-      label: record.title,
-      score: format.score(record.totalCents),
-      rate: record.maxCents ? record.totalCents / record.maxCents : 0,
-      pct: format.rate(record.maxCents ? record.totalCents / record.maxCents : 0),
-    }));
-    // 前后两次都用得分率比较，跨机构、跨题量也能一致。
-    const last = points[points.length - 1];
-    const previous = points.length > 1 ? points[points.length - 2] : null;
-    const delta = previous ? Math.round((last.rate - previous.rate) * 1000) / 10 : null;
-    const average = points.reduce((sum, point) => sum + point.rate, 0) / points.length;
+    const { category, metric } = this.data;
+    const key = CATEGORIES[category].key;
+    const points = storage.history().filter(record => key === "all" || categoryOf(record) === key)
+      .slice().sort((a, b) => b.createdAt - a.createdAt).map(record => {
+        const score = format.score(record.totalCents);
+        const rate = format.percent(record.maxCents ? record.totalCents / record.maxCents : null);
+        const accuracy = format.percent(record.questionCount ? record.correct / record.questionCount : null);
+        return {
+          id: record.id,
+          label: record.title,
+          logo: ASSET[catalog.LOGO[record.institution]] || "",
+          dateText: format.dateTime(record.createdAt).slice(0, 10),
+          score,
+          max: record.maxCents / 100,
+          rate,
+          accuracy,
+          value: { rate, score, accuracy }[metric],
+          trendValue: { rate: Number.parseFloat(rate), score: Number(score), accuracy: Number.parseFloat(accuracy) }[metric],
+          trendMax: metric === "score" ? record.maxCents / 100 : 100,
+        };
+      });
+    this.setData({ points }, () => this.drawTrend());
+  },
 
-    // 题型趋势：同一题型用各卷满分加权，避免不同板块满分不同时被平均失真。
-    const buckets = new Map();
-    for (const record of records) {
-      if (!Array.isArray(record.subjects)) continue;
-      for (const subject of record.subjects) {
-        if (!buckets.has(subject.name)) buckets.set(subject.name, { name: subject.name, earned: 0, max: 0, count: 0 });
-        const bucket = buckets.get(subject.name);
-        bucket.earned += subject.centsEarned || 0;
-        bucket.max += subject.maxCents || 0;
-        bucket.count += 1;
+  onResize() {
+    this.drawTrend();
+  },
+
+  drawTrend() {
+    const points = this.data.points.filter(point => Number.isFinite(point.trendValue)).slice().reverse();
+    if (points.length < 2) return;
+    this.createSelectorQuery().select("#trend").fields({ node: true, size: true }).exec(([size]) => {
+      if (!size?.node || !size.width || !size.height) return;
+      const { node, width, height } = size;
+      const dpr = wx.getWindowInfo().pixelRatio || 1;
+      node.width = Math.round(width * dpr);
+      node.height = Math.round(height * dpr);
+      const ctx = node.getContext("2d");
+      ctx.scale(dpr, dpr);
+      const padding = 11;
+      const max = Math.max(1, ...points.map(point => point.trendMax));
+      const map = points.map((point, index) => [
+        padding + (width - padding * 2) * index / (points.length - 1),
+        height - padding - (height - padding * 2) * point.trendValue / max,
+      ]);
+      ctx.strokeStyle = "#e9dfce";
+      for (const fraction of [0, .25, .5, .75, 1]) {
+        const y = padding + (height - padding * 2) * fraction;
+        ctx.beginPath();
+        ctx.moveTo(padding, y);
+        ctx.lineTo(width - padding, y);
+        ctx.stroke();
       }
-    }
-    const subjects = [...buckets.values()].map(bucket => ({
-      name: bucket.name,
-      pct: bucket.max ? format.rate(bucket.earned / bucket.max) : 0,
-      detail: bucket.max ? `${format.score(bucket.earned)} / ${format.score(bucket.max)}` : "--",
-    })).sort((a, b) => b.pct - a.pct);
-
-    this.setData({
-      loading: false,
-      hasData: true,
-      points,
-      trendText: delta === null ? "还没有可比的上一次" : `较上一次 ${delta >= 0 ? "+" : ""}${delta}%`,
-      trendUp: delta === null ? null : delta >= 0,
-      averageText: format.percent(average),
-      subjects,
+      ctx.strokeStyle = "#b6874a";
+      ctx.fillStyle = "#b6874a";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(...map[0]);
+      for (const point of map.slice(1)) ctx.lineTo(...point);
+      ctx.stroke();
+      for (const [x, y] of map) {
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
     });
   },
 
+  setMetric(event) {
+    const metric = event.currentTarget.dataset.key;
+    this.setData({ metric, metricLabel: METRICS.find(item => item.key === metric).label });
+    this.build();
+  },
+
+  selectCategory(event) {
+    this.setData({ category: Number(event.detail.value) });
+    this.build();
+  },
+
   openRecord(event) {
-    wx.navigateTo({ url: `/pages/report/report?attemptId=${event.currentTarget.dataset.id}` });
+    wx.navigateTo({ url: "/pages/report/report?attemptId=" + encodeURIComponent(event.currentTarget.dataset.id) });
   },
 });

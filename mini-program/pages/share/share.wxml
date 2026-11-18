@@ -1,26 +1,19 @@
-<view class="screen">
-  <rr-nav title="分享成绩" />
-
+<view class="screen screen--plain share">
+  <rr-nav title="成绩分享" />
   <view wx:if="{{loading}}" class="loading">正在准备分享图…</view>
-  <view wx:elif="{{error}}" class="empty"><text>{{error}}</text></view>
-
+  <view wx:elif="{{error}}" class="empty">{{error}}</view>
   <block wx:else>
     <view class="share__modes">
-      <view wx:for="{{modes}}" wx:key="key" class="chip {{mode === item.key ? 'chip--on' : ''}}" data-key="{{item.key}}" bindtap="setMode">{{item.label}}</view>
+      <button wx:for="{{modes}}" wx:key="key" class="share__mode {{mode === item.key ? 'share__mode--on' : ''}}" data-key="{{item.key}}" bindtap="setMode">{{item.label}}</button>
     </view>
-
-    <!-- 预览区域与导出使用同一块画布，尺寸按屏幕宽度自动缩放。 -->
-    <view class="share__preview">
-      <canvas type="2d" id="shareCanvas" class="share__canvas" style="width: 100%; height: {{mode === 'full' ? 520 : 380}}px;"></canvas>
-    </view>
-
-    <view class="footer-bar">
-      <view class="footer-bar__inner">
-        <button class="btn btn--primary" open-type="share">发给好友</button>
-        <view class="btn btn--ghost" bindtap="save">
-          <image class="btn__icon" src="{{uiBase}}/image.svg" mode="aspectFit" />
-        </view>
-      </view>
+    <scroll-view class="share__preview" scroll-y scroll-top="{{previewTop}}">
+      <canvas type="2d" id="shareCanvas" class="share__canvas" style="width: {{previewWidth}}px; height: {{previewHeight}}px;" />
+    </scroll-view>
+    <view class="share__actions">
+      <button class="btn btn--primary" bindtap="save" disabled="{{!ready || saving}}">
+        <image class="btn__icon" src="{{uiBase}}/download-light.svg" mode="aspectFit" />保存海报
+      </button>
+      <button class="btn share__invite" open-type="share"><image class="btn__icon" src="{{uiBase}}/share.svg" mode="aspectFit" />邀请好友</button>
     </view>
   </block>
 </view>

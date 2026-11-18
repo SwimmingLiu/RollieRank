@@ -1,5 +1,3 @@
-const { ASSET } = require("../../config");
-
 Component({
   properties: { active: { type: String, value: "home" } },
   data: {

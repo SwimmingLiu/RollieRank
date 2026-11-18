@@ -1,23 +1,33 @@
-const app = getApp();
-
 Component({
+  options: { virtualHost: true },
   properties: {
     title: { type: String, value: "" },
     back: { type: Boolean, value: true },
     action: { type: String, value: "" },
     actionIcon: { type: String, value: "" },
+    actionLabel: { type: String, value: "" },
+    logo: { type: String, value: "" },
   },
-  data: { statusBarHeight: 20, navHeight: 44, titleHeight: 32, base: "/assets" },
+  data: { statusBarHeight: 20, navHeight: 44, menuClearance: 104 },
   lifetimes: {
     attached() {
-      const m = app && app.navMetrics ? app.navMetrics() : { statusBarHeight: 20, navHeight: 44, titleHeight: 32 };
-      this.setData(m);
+      this.updateLayout();
+    },
+  },
+  pageLifetimes: {
+    show() {
+      this.updateLayout();
+    },
+    resize() {
+      this.updateLayout();
     },
   },
   methods: {
+    updateLayout() {
+      this.setData(getApp().navMetrics());
+    },
     goBack() {
-      const pages = getCurrentPages();
-      if (pages.length > 1) wx.navigateBack();
+      if (getCurrentPages().length > 1) wx.navigateBack();
       else wx.switchTab({ url: "/pages/home/home" });
     },
     onAction() {

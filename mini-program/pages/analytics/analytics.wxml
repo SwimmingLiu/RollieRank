@@ -1,46 +1,41 @@
 <view class="screen">
   <rr-nav title="成长分析" />
-
-  <view wx:if="{{loading}}" class="loading">正在汇总记录…</view>
-  <view wx:elif="{{!hasData}}" class="empty">
-    <image class="empty__icon" src="{{uiBase}}/trend.svg" mode="aspectFit" />
-    <text>完成一次正式练习后，这里会出现趋势</text>
-  </view>
-
-  <block wx:else>
-    <view class="card analytics__hero">
+  <view class="analytics">
+    <view class="analytics__tools">
+      <picker mode="selector" range="{{categories}}" range-key="label" value="{{category}}" bindchange="selectCategory">
+        <view class="analytics__category">{{categories[category].label}}<image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" /></view>
+      </picker>
+    </view>
+    <view class="analytics__tabs">
+      <button wx:for="{{metrics}}" wx:key="key" class="analytics__tab {{metric === item.key ? 'analytics__tab--on' : ''}}" data-key="{{item.key}}" bindtap="setMetric">{{item.label}}</button>
+    </view>
+    <view wx:if="{{points.length}}" class="analytics__hero">
+      <view class="stack grow">
+        <text class="analytics__caption">最近{{metricLabel}}</text>
+        <text class="display-num analytics__score">{{points[0].value}}</text>
+      </view>
+      <text>{{points.length}}<text class="analytics__caption"> 次</text></text>
+      <view class="analytics__activity"><image src="{{uiBase}}/trend.svg" mode="aspectFit" /></view>
+    </view>
+    <view wx:if="{{points.length > 1}}" class="analytics__records">
+      <text class="analytics__title">{{metricLabel}}走势</text>
+      <canvas id="trend" type="2d" class="analytics__trend" aria-label="{{metricLabel}}走势图" />
+    </view>
+    <view wx:if="{{points.length}}" class="analytics__records">
       <view class="row row--between">
-        <view class="stack">
-          <text class="text-xs">累计平均得分率</text>
-          <text class="num analytics__average">{{averageText}}</text>
-        </view>
-        <text class="chip {{trendUp === false ? 'chip--coral' : ''}}">{{trendText}}</text>
+        <text class="analytics__title">练习记录</text><text class="analytics__caption">{{points.length}} 次</text>
       </view>
-      <text class="text-xs analytics__note">{{points.length}} 次正式练习，按每份记录自己的得分与满分计算</text>
-    </view>
-
-    <view class="card analytics__chart">
-      <text class="analytics__title">得分率走势</text>
-      <view class="analytics__bars">
-        <view wx:for="{{points}}" wx:key="id" class="analytics__bar-col" data-id="{{item.id}}" bindtap="openRecord">
-          <text class="text-xs">{{item.pct}}%</text>
-          <view class="analytics__bar" style="height: {{item.pct * 2 + 6}}rpx;"></view>
-          <text class="analytics__bar-date">{{item.dateText}}</text>
+      <view class="analytics__row analytics__columns"><text>套卷</text><text>得分</text><text>{{metric === 'accuracy' ? '正确率' : '得分率'}}</text><text></text></view>
+      <button wx:for="{{points}}" wx:key="id" class="analytics__row analytics__record" data-id="{{item.id}}" bindtap="openRecord">
+        <view class="analytics__identity">
+          <image wx:if="{{item.logo}}" src="{{item.logo}}" mode="aspectFit" />
+          <view class="stack grow"><text class="ellipsis">{{item.label}}</text><text class="analytics__caption">{{item.dateText}}</text></view>
         </view>
-      </view>
+        <text>{{item.score}} / {{item.max}}</text><text>{{metric === 'accuracy' ? item.accuracy : item.rate}}</text>
+        <image class="analytics__chevron" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+      </button>
     </view>
-
-    <view wx:if="{{subjects.length}}" class="card analytics__subjects">
-      <text class="analytics__title">题型累计</text>
-      <view wx:for="{{subjects}}" wx:key="name" class="analytics__subject">
-        <view class="row row--between">
-          <text class="text-md">{{item.name}}</text>
-          <text class="num text-sm">{{item.pct}}%</text>
-        </view>
-        <view class="progress analytics__progress">
-          <view class="progress__fill" style="width: {{item.pct}}%;"></view>
-        </view>
-      </view>
-    </view>
-  </block>
+    <view wx:else class="empty">暂无对应练习记录</view>
+  </view>
+  <rr-tabbar active="records" />
 </view>

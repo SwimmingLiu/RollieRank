@@ -1,0 +1,1 @@
+<canvas type="2d" id="plot" class="radar" aria-label="各板块得分率雷达图" />

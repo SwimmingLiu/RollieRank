@@ -136,8 +136,15 @@ function pendingId(key) {
   return index[key];
 }
 
+function clearPendingId(versionId, attemptId) {
+  const index = wx.getStorageSync(KEYS.marksIndex) || {};
+  if (index[versionId] !== attemptId) return;
+  delete index[versionId];
+  wx.setStorageSync(KEYS.marksIndex, index);
+}
+
 module.exports = {
   uuid, guestId, name, setName, history, saveHistory, upsertAttempt, getAttempt,
-  saveDraft, loadDraft, dropDraft, position, setPosition, pendingId, KEYS,
+  saveDraft, loadDraft, dropDraft, position, setPosition, pendingId, clearPendingId, KEYS,
   draftIndex, setDraftEntry, bestAttempt,
 };

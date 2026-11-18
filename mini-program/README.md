@@ -8,13 +8,13 @@
 | --- | --- |
 | `pages/home` | 首页：机构入口、做题计时入口、最近练习 |
 | `pages/catalog` | 机构套卷：按期数分组，显示草稿／已提交状态 |
-| `pages/practice` | 录答案：按章节分组，A–D 录入、存疑标记、草稿恢复、交卷 |
-| `pages/report` | 成绩：总分、正误、题型得分率、最弱三项、讨论／榜单／分享入口 |
+| `pages/practice` | 录答案：列表和单题录入、存疑标记、草稿恢复、交卷 |
+| `pages/report` | 成绩：总分、正误、板块得分率和六维雷达、讨论／榜单／分享入口 |
 | `pages/review` | 逐题对照：按错误、未答和题型筛选，复制错题号 |
 | `pages/rank` | 同卷榜：全国或岗位范围、前三名纸卡、其余名次 |
 | `pages/records` | 练习记录：身份、岗位、成长分析、搜索与筛选 |
 | `pages/analytics` | 成长分析：得分率走势和题型累计 |
-| `pages/share` | 分享：三种画布模式，保存到相册或发给好友 |
+| `pages/share` | 分享：长图、成绩卡、题型、雷达四种 PNG，保存到相册或邀请同卷好友 |
 | `pages/positions` | 选岗：搜索、分页、选择或取消 |
 | `pages/discussion` | 试卷讨论：发表、点赞、回复、图片预览 |
 | `pages/timer` | 做题计时：整卷或模块计划、暂停、结束进入录答案 |
@@ -31,13 +31,20 @@
 2. 后端地址在 `config.js` 的 `API_BASE`。本地联调把该地址改为本机服务并关闭「不校验合法域名」。
 3. 本机校验：
    ```bash
-   for f in app.js config.js utils/*.js services/*.js components/*/*.js pages/*/*.js; do node --check "$f"; done
+   npm --prefix mini-program run check
+   npm run verify -- all
    ```
+
+用微信开发者工具 CLI 启动自动化和手机预览。以下命令从仓库根目录运行：
+
+```sh
+cli auto --project "$PWD/mini-program" --auto-port 9420
+cli preview --project "$PWD/mini-program" --qr-format image --qr-output /tmp/rollierank-preview.png
+```
 
 ## 资源
 图片与字体已上传到 `https://oss.swimmingliu.cn/static/rollierank/`（用户提供的 `rollie-rank-oss.swimmingliu.cn` 目前返回 404，上传后已确认老域名可用），清单见 `assets-manifest.json`；上传脚本为 `scripts/upload-oss.py`。图标和标签栏图标在 `assets/ui`、`assets/tab`、`assets/tab-active`。
 
 ## 尚未接入
 - 微信登录与云端身份（当前用本机随机身份，换机需要备份恢复）。
-- 讨论照片上传（服务端只接受 PNG，需先转换）。
 - 审核界面（维护者在网页版使用）。

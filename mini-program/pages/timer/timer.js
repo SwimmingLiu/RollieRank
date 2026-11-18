@@ -1,15 +1,17 @@
-const api = require("../../services/api");
-const storage = require("../../utils/storage");
-const catalogUtil = require("../../utils/catalog");
-const format = require("../../utils/format");
-const timing = require("../../utils/timing");
+const api = require("../../services/api.js");
+const storage = require("../../utils/storage.js");
+const catalogUtil = require("../../utils/catalog.js");
+const format = require("../../utils/format.js");
+const timing = require("../../utils/timing.js");
 
 Page({
   data: {
     loading: true,
     error: "",
     papers: [],
-    activeProject: 0,
+    activeProject: -1,
+    paperPicker: false,
+    source: "paper",
     selectedId: "",
     selected: null,
     mode: "whole",
@@ -38,7 +40,7 @@ Page({
       const groups = catalogUtil.groupByInstitution(versions);
       const papers = groups.map(group => ({
         name: group.name,
-        logo: group.logo,
+        label: catalogUtil.publisherName(group.name),
         versions: group.versions.map(version => ({
           id: version.id,
           label: `${version.number}套`,
@@ -49,10 +51,9 @@ Page({
         })),
       }));
       const saved = wx.getStorageSync("rr:timer") || {};
-      const selectedId = saved.selectedId || "";
-      this.setData({ loading: false, papers, selectedId });
-      if (selectedId) this.pick(selectedId, false);
-      this.setData({ wholeMinutes: saved.wholeMinutes || this.data.wholeMinutes });
+      this.plans = saved.plans || { paper: { ...saved } };
+      this.setData({ loading: false, papers });
+      this.applyPlan(saved.source || "paper", saved);
       this.restore(saved);
     } catch (error) {
       this.setData({ loading: false, error: error.message });
@@ -63,18 +64,48 @@ Page({
     this.setData({ activeProject: Number(event.currentTarget.dataset.index) });
   },
 
-  pick(id, resetWhole = true) {
-    const paper = this.data.papers.flatMap(group => group.versions).find(item => item.id === id);
-    if (!paper) return;
-    const sections = this.sectionsOf(paper.questions);
+  setSource(event) {
+    const next = event.currentTarget.dataset.source;
+    if (next === this.data.source) return;
+    this.rememberPlan();
+    this.applyPlan(next, this.plans[next] || {});
+    this.save();
+  },
+
+  applyPlan(source, saved) {
+    const paper = source === "paper" ? this.data.papers.flatMap(group => group.versions).find(item => item.id === saved.selectedId) : null;
     this.paper = paper;
+    const wholeMinutes = saved.wholeMinutes || paper?.defaultMinutes || 120;
+    this.setData({ source, wholeMinutes });
+    const sections = saved.sections?.length ? saved.sections : this.sectionsOf(paper?.questions || []);
     this.setData({
-      selectedId: id,
-      selected: { id, label: paper.label, title: paper.title, questionCount: paper.questionCount, defaultMinutes: paper.defaultMinutes },
+      selectedId: paper?.id || "",
+      selected: paper ? { id: paper.id, title: paper.title, questionCount: paper.questionCount, defaultMinutes: paper.defaultMinutes } : null,
+      mode: paper && saved.mode === "modules" ? "modules" : "whole",
       sections,
       planTotal: sections.reduce((sum, section) => sum + section.minutes, 0),
-      ...(resetWhole ? { wholeMinutes: paper.defaultMinutes } : {}),
     });
+  },
+
+  choosePaper() {
+    this.setData({ paperPicker: true, activeProject: -1 });
+  },
+
+  closePaperPicker() {
+    if (this.data.activeProject >= 0) this.setData({ activeProject: -1 });
+    else this.setData({ paperPicker: false });
+  },
+
+  pickPaper(event) {
+    const id = event.currentTarget.dataset.id;
+    this.setData({ paperPicker: false });
+    if (this.finished) {
+      const finished = this.finished;
+      this.finished = null;
+      this.openEntry(id, finished);
+      return;
+    }
+    this.applyPlan("paper", { selectedId: id, mode: this.data.mode });
     this.save();
   },
 
@@ -99,29 +130,18 @@ Page({
     });
   },
 
-  choosePaper() {
-    const groups = this.data.papers;
-    if (!groups.length) return;
-    const versions = groups[this.data.activeProject].versions.map(v => v.label + " · " + v.title);
-    wx.showActionSheet({
-      itemList: versions.slice(0, 6),
-      success: res => this.pick(groups[this.data.activeProject].versions[res.tapIndex].id),
-      fail: () => {},
-    });
-  },
-
   setMode(event) {
     const { mode } = event.currentTarget.dataset;
     this.setData({ mode });
-    if (mode === "modules") {
-      this.setData({ sections: this.sectionsOf(this.paper ? this.paper.questions : []), planTotal: this.data.wholeMinutes });
+    if (mode === "modules" && !this.data.sections.length) {
+      this.setData({ sections: this.sectionsOf(this.paper?.questions || []), planTotal: this.data.wholeMinutes });
     }
     this.save();
   },
 
   stepWhole(event) {
     const delta = Number(event.currentTarget.dataset.delta);
-    const wholeMinutes = Math.min(300, Math.max(5, this.data.wholeMinutes + delta));
+    const wholeMinutes = Math.min(300, Math.max(1, this.data.wholeMinutes + delta));
     this.setData({ wholeMinutes });
     this.save();
   },
@@ -140,11 +160,15 @@ Page({
   },
 
   start() {
-    if (!this.data.selectedId) {
+    if (this.data.mode === "modules" && this.data.planTotal !== this.data.wholeMinutes) {
+      wx.showToast({ title: "模块合计须等于整卷用时", icon: "none" });
+      return;
+    }
+    if (this.data.source === "paper" && !this.data.selectedId) {
       wx.showToast({ title: "先选一套卷", icon: "none" });
       return;
     }
-    this.run = { startedAt: 0, endedAt: 0 };
+    this.finished = null;
     const minutes = this.data.mode === "modules"
       ? this.data.sections.reduce((sum, s) => sum + s.minutes, 0)
       : this.data.wholeMinutes;
@@ -164,9 +188,11 @@ Page({
       this.setData({ paused: false });
       this.tick();
     } else {
+      this.ms += Date.now() - this.startedAt;
       this.stopTicker();
-      this.setData({ paused: true });
+      this.setData({ paused: true, elapsed: format.minutes(Math.max(1, this.ms)) });
     }
+    this.save();
   },
 
   tick() {
@@ -183,64 +209,67 @@ Page({
   },
 
   finish() {
+    if (!this.data.running) return;
     this.stopTicker();
     const total = this.ms + (this.data.paused ? 0 : Date.now() - this.startedAt);
-    this.ms = total;
-    const startedAt = this.run ? this.run.startedAt : 0;
-    const plannedMinutes = this.run ? this.run.plannedMinutes : this.data.wholeMinutes;
-    this.startedAt = 0;
-    // 结束时间取真实时钟，课程用时不会被暂停或页面切换改写。
-    const attemptId = storage.pendingId(this.data.selectedId);
-    const pending = timing.buildTiming({
-      attemptId,
-      versionId: this.data.selectedId,
-      startedAt,
-      endedAt: startedAt + total,
-      plannedMinutes,
+    const finished = {
+      startedAt: this.run.startedAt,
+      endedAt: this.run.startedAt + total,
+      plannedMinutes: this.run.plannedMinutes,
       sections: this.data.sections,
       mode: this.data.mode,
-    });
-    if (pending) wx.setStorageSync("rr:timing:pending", { attemptId, versionId: this.data.selectedId, ...pending });
-    this.setData({ running: false, paused: false, elapsed: format.minutes(total) });
-    wx.showModal({
-      title: "结束计时",
-      content: `本次做题 ${format.minutes(total)}，现在进入录答案？`,
-      confirmText: "去录入",
-      success: res => {
-        if (!res.confirm) return;
-        wx.navigateTo({ url: `/pages/practice/practice?versionId=${this.data.selectedId}&attemptId=${attemptId}` });
-      },
-    });
-  },
-
-  reset() {
-    this.stopTicker();
+    };
+    this.run = null;
+    this.startedAt = 0;
     this.ms = 0;
-    this.setData({ running: false, paused: false, elapsed: "00:00" });
+    this.setData({ running: false, paused: false, elapsed: format.minutes(total) });
+    this.save();
+    if (!this.data.selectedId) {
+      this.finished = finished;
+      this.choosePaper();
+      return;
+    }
+    this.openEntry(this.data.selectedId, finished);
   },
 
-  // 计时来源与已选套卷保存在本机，从录答案返回时仍保持同一选择。
+  openEntry(versionId, finished) {
+    const attemptId = storage.loadDraft(versionId)?.id || storage.pendingId(versionId);
+    const pending = timing.buildTiming({ ...finished, attemptId, versionId });
+    if (pending) wx.setStorageSync("rr:timing:pending", { attemptId, versionId, ...pending });
+    wx.navigateTo({ url: "/pages/practice/practice?versionId=" + encodeURIComponent(versionId) + "&attemptId=" + encodeURIComponent(attemptId) });
+  },
+
+  rememberPlan() {
+    const { source, selectedId, wholeMinutes, mode, sections } = this.data;
+    this.plans ||= {};
+    this.plans[source] = { selectedId, wholeMinutes, mode, sections };
+    return this.plans[source];
+  },
+
   save() {
+    const plan = this.rememberPlan();
     wx.setStorageSync("rr:timer", {
-      selectedId: this.data.selectedId,
-      wholeMinutes: this.data.wholeMinutes,
-      mode: this.data.mode,
+      ...plan,
+      plans: this.plans,
+      source: this.data.source,
       running: this.data.running,
-      startedAt: this.run ? this.run.startedAt : 0,
-      plannedMinutes: this.run ? this.run.plannedMinutes : this.data.wholeMinutes,
+      paused: this.data.paused,
+      elapsedMs: this.ms,
+      startedAt: this.run?.startedAt || 0,
+      segmentStartedAt: this.startedAt || 0,
+      plannedMinutes: this.run?.plannedMinutes || this.data.wholeMinutes,
     });
   },
 
   restore(saved) {
-    if (!saved || !saved.running || !saved.startedAt) return;
-    // 只恢复 6 小时内且仍在计时的记录，超时视为已结束，避免把隔夜时间算成做题。
-    const elapsed = Date.now() - saved.startedAt;
+    if (!saved.running || !saved.startedAt) return;
+    this.ms = saved.elapsedMs || 0;
+    this.startedAt = saved.segmentStartedAt || saved.startedAt;
+    const elapsed = this.ms + (saved.paused ? 0 : Date.now() - this.startedAt);
     if (elapsed > 6 * 60 * 60 * 1000 || elapsed < 0) return;
-    this.ms = 0;
-    this.startedAt = Date.now() - elapsed;
-    this.run = { startedAt: saved.startedAt, endedAt: 0, plannedMinutes: saved.plannedMinutes || this.data.wholeMinutes };
-    this.limitMs = (saved.plannedMinutes || this.data.wholeMinutes) * 60 * 1000;
-    this.setData({ running: true, paused: false, elapsed: format.minutes(elapsed) });
-    this.tick();
+    this.run = { startedAt: saved.startedAt, plannedMinutes: saved.plannedMinutes || this.data.wholeMinutes };
+    this.limitMs = this.run.plannedMinutes * 60 * 1000;
+    this.setData({ running: true, paused: Boolean(saved.paused), elapsed: format.minutes(elapsed) });
+    if (!saved.paused) this.tick();
   },
 });

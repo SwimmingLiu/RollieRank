@@ -1,42 +1,52 @@
 <view class="screen">
-  <rr-nav title="{{institution}}套卷" />
+  <rr-nav title="{{publisher}}套卷" />
 
   <view wx:if="{{loading}}" class="loading">正在读取套卷…</view>
   <view wx:elif="{{error}}" class="empty">
     <text>{{error}}</text>
-    <view class="chip" bindtap="retry">重新读取</view>
+    <button class="chip" bindtap="retry">重新读取</button>
   </view>
 
-  <block wx:else>
-    <view class="cat__hero card">
-      <view class="row row--gap">
-        <image wx:if="{{logo}}" class="cat__logo" src="{{asset[logo]}}" mode="aspectFit" />
-        <view class="stack grow">
-          <text class="text-xs">{{projects[activeProject].label}}</text>
-          <text class="cat__hero-title">{{institution}} · {{projects[activeProject].versions.length}} 套</text>
-        </view>
+  <block wx:elif="{{projects.length}}">
+    <view class="cat__library">
+      <view class="cat__selector">
+        <button wx:if="{{projects.length > 1}}" class="cat__hero {{institution === '超格' ? 'cat__hero--orange' : ''}}" bindtap="openProjects" hover-class="press">
+          <text>{{projects[activeProject].title}}</text>
+          <image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
+        </button>
+        <view wx:else class="cat__hero {{institution === '超格' ? 'cat__hero--orange' : ''}}">{{projects[activeProject].title}}</view>
       </view>
-    </view>
-
-    <scroll-view wx:if="{{projects.length > 1}}" class="cat__tabs" scroll-x enable-flex>
-      <view wx:for="{{projects}}" wx:key="key" class="chip cat__tab {{activeProject === index ? 'chip--on' : ''}}" data-index="{{index}}" bindtap="switchProject">
-        {{item.period || item.project}}
-      </view>
-    </scroll-view>
-
-    <view class="cat__grid">
-      <view wx:for="{{projects[activeProject].versions}}" wx:key="id" class="card press cat__paper" data-id="{{item.id}}" data-action="{{item.actionType}}" bindtap="openPaper">
-        <view class="row row--between">
-          <text class="cat__paper-no">{{item.number}}套</text>
-          <text wx:if="{{item.submitted}}" class="num cat__paper-score">{{item.bestScore}}</text>
-        </view>
-        <view class="row row--between cat__paper-foot">
-          <text class="cat__paper-action">{{item.action}}</text>
-          <image class="cat__paper-arrow" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
-        </view>
+      <view class="cat__grid">
+        <button wx:for="{{projects[activeProject].versions}}" wx:key="id" class="cat__paper cat__paper--{{item.state}}" data-id="{{item.id}}" data-action="{{item.actionType}}" bindtap="openPaper" hover-class="press">
+          <view class="cat__paper-head">
+            <view><text class="cat__paper-no">{{item.numberText}}</text><text wx:if="{{item.number}}" class="cat__paper-unit">套</text></view>
+            <image wx:if="{{item.submitted}}" src="{{uiBase}}/check.svg" mode="aspectFit" />
+          </view>
+          <view class="cat__paper-foot">
+            <view wx:if="{{item.submitted}}"><text class="display-num cat__paper-score">{{item.bestScore}}</text><text class="cat__paper-unit">分</text></view>
+            <view wx:elif="{{item.draftAnswered}}"><text class="cat__paper-count">{{item.draftAnswered}}</text><text class="cat__paper-unit"> / {{item.questionCount}}</text></view>
+            <text wx:else>开始</text>
+            <image src="{{uiBase}}/arrow-right.svg" mode="aspectFit" />
+          </view>
+          <view wx:if="{{item.state === 'draft'}}" class="cat__progress"><view style="width: {{item.progress}}%;"></view></view>
+        </button>
       </view>
     </view>
   </block>
 
   <rr-tabbar active="home" />
+
+  <view wx:if="{{projectsOpen}}" class="sheet-layer">
+    <view class="sheet-shade" catchtap="closeProjects"></view>
+    <view class="sheet-panel">
+      <view class="sheet-handle"></view>
+      <view class="sheet-head"><text>选择套卷</text><button class="sheet-close" bindtap="closeProjects" aria-label="关闭"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button></view>
+      <scroll-view scroll-y class="sheet-scroll">
+        <button wx:for="{{projects}}" wx:key="key" class="cat__option {{activeProject === index ? 'cat__option--on' : ''}}" data-index="{{index}}" bindtap="switchProject" hover-class="press">
+          <view class="stack grow"><text>{{item.title}}</text><text class="cat__option-detail">{{item.variant ? item.variant + ' · ' : ''}}{{item.versions.length}} 套</text></view>
+          <image src="{{uiBase}}/{{activeProject === index ? 'check' : 'chevron'}}.svg" mode="aspectFit" />
+        </button>
+      </scroll-view>
+    </view>
+  </view>
 </view>

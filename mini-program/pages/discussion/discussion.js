@@ -1,46 +1,64 @@
-const api = require("../../services/api");
-const storage = require("../../utils/storage");
-const format = require("../../utils/format");
-const { ASSET_BASE } = require("../../config");
+const api = require("../../services/api.js");
+const storage = require("../../utils/storage.js");
+const format = require("../../utils/format.js");
 
-const AVATARS = ["rank-1", "rank-2", "rank-3", "rank-4", "rank-5", "rank-6", "rank-7", "rank-8"];
+async function photoAsPng(tempFilePath) {
+  const canvas = wx.createOffscreenCanvas({ type: "2d", width: 1, height: 1 });
+  const image = canvas.createImage();
+  await new Promise((resolve, reject) => {
+    image.onload = resolve;
+    image.onerror = reject;
+    image.src = tempFilePath;
+  });
+  const scale = Math.min(1, 480 / Math.max(image.width, image.height));
+  canvas.width = Math.max(1, Math.round(image.width * scale));
+  canvas.height = Math.max(1, Math.round(image.height * scale));
+  canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+  return { path: tempFilePath, dataUri: canvas.toDataURL("image/png") };
+}
 
 Page({
   data: {
     loading: true,
     error: "",
-    title: "",
     comments: [],
     total: 0,
     draft: "",
-    draftKey: "",
     expanded: "",
     replies: [],
     replyTarget: null,
     replyDraft: "",
+    images: [],
+    sending: false,
+    keyboardHeight: 0,
+    initials: "",
     uiBase: "/assets/ui",
   },
 
   onLoad(query) {
     this.paperId = query.paperId || "";
     this.attemptId = query.attemptId || "";
-    const title = decodeURIComponent(query.title || "试卷讨论");
-    // 每张卷单独保存草稿，切换页面或返回不会串到别的讨论。
-    this.draftKey = `rr:discussion:${this.paperId}`;
-    this.setData({ title, draft: wx.getStorageSync(this.draftKey) || "" });
+    this.draftKey = "rr:discussion:" + this.paperId;
+    const saved = wx.getStorageSync(this.draftKey);
+    const draft = typeof saved === "string" ? saved : saved?.draft || "";
+    this.setData({
+      draft,
+      replyDraft: saved?.replyDraft || "",
+      replyTarget: saved?.replyTarget || null,
+      initials: Array.from(storage.name()).slice(0, 2).join(""),
+    });
     this.load();
   },
 
-  onUnload() {
-    this.saveDraft(this.data.draft);
+  query() {
+    return "paperId=" + encodeURIComponent(this.paperId) + "&guestId=" + encodeURIComponent(storage.guestId()) +
+      "&attemptId=" + encodeURIComponent(this.attemptId);
   },
 
-  async load(force) {
-    this.setData({ loading: !this.data.comments.length, error: "" });
+  async load() {
     try {
-      const query = `paperId=${encodeURIComponent(this.paperId)}&guestId=${encodeURIComponent(storage.guestId())}&attemptId=${encodeURIComponent(this.attemptId)}`;
-      const result = await api.request(`discussions?${query}`);
-      this.attemptId = this.attemptId || (result.attemptId || "");
+      const result = await api.request("discussions?" + this.query());
+      this.attemptId ||= result.attemptId || "";
       this.setData({
         loading: false,
         comments: (result.comments || []).map(comment => this.decorate(comment)),
@@ -52,134 +70,128 @@ Page({
   },
 
   decorate(comment) {
-    const seed = comment.author && comment.author.avatarSeed ? comment.author.avatarSeed : "";
-    const index = seed ? parseInt(seed.slice(0, 4), 16) % AVATARS.length : 0;
+    const seed = comment.author?.avatarSeed;
+    const index = (parseInt((seed || "").slice(0, 4), 16) || 0) % 8 + 1;
     return {
       ...comment,
-      avatar: `${ASSET_BASE}/assets/avatars/${AVATARS[index]}.svg`,
+      avatar: "/assets/avatars/rank-" + index + ".svg",
       timeText: format.dateTime(comment.createdAt),
-      target: comment.replyTo ? comment.replyTo.name : "",
+      target: comment.replyTo?.name || "",
       images: (comment.images || []).map(image => image.dataUri),
     };
   },
 
-  saveDraft(value) {
+  saveDraft() {
+    const { draft, replyDraft, replyTarget } = this.data;
+    if (draft || replyDraft) wx.setStorageSync(this.draftKey, { draft, replyDraft, replyTarget });
+    else wx.removeStorageSync(this.draftKey);
+  },
+
+  onComposerInput(event) {
+    const field = this.data.replyTarget ? "replyDraft" : "draft";
+    this.setData({ [field]: event.detail.value });
+    this.saveDraft();
+  },
+
+  keyboard(event) {
+    this.setData({ keyboardHeight: event.detail.height || 0 });
+  },
+
+  async pickImage() {
+    const count = 3 - this.data.images.length;
+    if (count <= 0) return;
     try {
-      if (value) wx.setStorageSync(this.draftKey, value);
-      else wx.removeStorageSync(this.draftKey);
-    } catch {
-      // 草稿写入失败不阻止继续浏览，用户仍可重新输入。
+      const batch = await wx.chooseMedia({ count, mediaType: ["image"], sourceType: ["album", "camera"] });
+      const images = await Promise.all(batch.tempFiles.map(file => photoAsPng(file.tempFilePath)));
+      this.setData({ images: [...this.data.images, ...images].slice(0, 3) });
+    } catch (error) {
+      if (!String(error.errMsg || "").includes("cancel")) wx.showToast({ title: "图片读取失败，请重试", icon: "none" });
     }
   },
 
-  onDraft(event) {
-    const draft = event.detail.value;
-    this.setData({ draft });
-    this.saveDraft(draft);
+  removeImage(event) {
+    this.setData({ images: this.data.images.filter((_, index) => index !== Number(event.currentTarget.dataset.index)) });
   },
 
-  async send() {
-    const text = this.data.draft.trim();
-    if (!text) {
-      wx.showToast({ title: "先写点内容", icon: "none" });
-      return;
+  async sendComposer() {
+    const { draft, replyDraft, replyTarget, images, sending } = this.data;
+    const text = (replyTarget ? replyDraft : draft).trim();
+    if (sending || (!text && !images.length)) return;
+    const links = [...new Set(text.match(/https?:\/\/[^\s<>"，。！？]+/g) || [])].slice(0, 3);
+    const identity = JSON.stringify([text, replyTarget?.id, images.map(image => image.path)]);
+    if (this.identity !== identity) {
+      this.clientId = storage.uuid();
+      this.identity = identity;
     }
-    wx.showLoading({ title: "正在发表", mask: true });
+    this.setData({ sending: true });
     try {
       const result = await api.request("discussions", {
         paperId: this.paperId,
         attemptId: this.attemptId,
         guestId: storage.guestId(),
-        clientId: storage.uuid(),
+        clientId: this.clientId,
         nickname: storage.name(),
         text,
+        links,
+        images: images.map(({ dataUri }) => ({ dataUri })),
+        ...(replyTarget ? { parentId: replyTarget.id } : {}),
       });
-      wx.hideLoading();
-      this.setData({ draft: "" });
-      this.saveDraft("");
-      if (result.comment) {
-        this.setData({ comments: [{ ...this.decorate(result.comment), fresh: true }, ...this.data.comments], total: this.data.total + 1 });
+      this.identity = null;
+      this.setData({ images: [], ...(replyTarget ? { replyDraft: "", replyTarget: null } : { draft: "" }) });
+      this.saveDraft();
+      wx.hideKeyboard();
+      if (replyTarget) {
+        await this.loadReplies(replyTarget.rootId || replyTarget.id);
+        await this.load();
+      } else if (result.comment) {
+        const comment = this.decorate(result.comment);
+        this.setData({ comments: [comment, ...this.data.comments.filter(existing => existing.id !== comment.id)], total: this.data.total + 1 });
       } else {
-        this.load(true);
+        await this.load();
       }
     } catch (error) {
-      wx.hideLoading();
+      wx.showToast({ title: error.message, icon: "none" });
+    } finally {
+      this.setData({ sending: false });
+    }
+  },
+
+  async loadReplies(id) {
+    try {
+      const result = await api.request("discussions/replies?" + this.query() + "&rootId=" + encodeURIComponent(id));
+      this.setData({ expanded: id, replies: (result.comments || []).map(comment => this.decorate(comment)) });
+    } catch (error) {
       wx.showToast({ title: error.message, icon: "none" });
     }
   },
 
-  // 回复沿用主评论的分页与点赞，展开时只拉取该条评论下的回复。
-  async toggleReplies(event) {
+  toggleReplies(event) {
     const { id } = event.currentTarget.dataset;
-    if (this.data.expanded === id) {
-      this.setData({ expanded: "", replies: [] });
-      return;
-    }
-    wx.showLoading({ title: "正在展开", mask: false });
-    try {
-      const query = `paperId=${encodeURIComponent(this.paperId)}&guestId=${encodeURIComponent(storage.guestId())}&attemptId=${encodeURIComponent(this.attemptId)}&rootId=${encodeURIComponent(id)}`;
-      const result = await api.request(`discussions/replies?${query}`);
-      wx.hideLoading();
-      this.setData({ expanded: id, replies: (result.comments || []).map(comment => this.decorate(comment)), replyTarget: { id, name: (result.rootComment || {}).name || "" } });
-    } catch (error) {
-      wx.hideLoading();
-      wx.showToast({ title: error.message, icon: "none" });
-    }
+    if (this.data.expanded === id) this.setData({ expanded: "", replies: [] });
+    else this.loadReplies(id);
   },
 
   startReply(event) {
-    const { id, name } = event.currentTarget.dataset;
-    this.setData({ replyTarget: { id, name } });
+    const { id, name, root } = event.currentTarget.dataset;
+    this.setData({ replyTarget: { id, name, rootId: root || id } });
+    this.saveDraft();
   },
 
   cancelReply() {
-    this.setData({ replyTarget: null, replyDraft: "" });
-  },
-
-  onReplyDraft(event) {
-    this.setData({ replyDraft: event.detail.value });
-  },
-
-  async sendReply() {
-    const target = this.data.replyTarget;
-    const text = this.data.replyDraft.trim();
-    if (!target || !text) return;
-    wx.showLoading({ title: "正在回复", mask: true });
-    try {
-      await api.request("discussions", {
-        paperId: this.paperId,
-        attemptId: this.attemptId,
-        guestId: storage.guestId(),
-        clientId: storage.uuid(),
-        nickname: storage.name(),
-        text,
-        parentId: target.id,
-      });
-      wx.hideLoading();
-      this.setData({ replyDraft: "" });
-      await this.toggleReplies({ currentTarget: { dataset: { id: "" } } });
-      this.setData({ expanded: target.id });
-      await this.load(true);
-    } catch (error) {
-      wx.hideLoading();
-      wx.showToast({ title: error.message, icon: "none" });
-    }
+    this.setData({ replyTarget: null, replyDraft: "", images: [] });
+    this.saveDraft();
   },
 
   async toggleLike(event) {
     const { id, liked } = event.currentTarget.dataset;
     try {
       const result = await api.request("discussions/like", {
-        paperId: this.paperId,
-        attemptId: this.attemptId,
-        guestId: storage.guestId(),
-        commentId: id,
-        liked: !liked,
+        paperId: this.paperId, attemptId: this.attemptId, guestId: storage.guestId(), commentId: id, liked: !liked,
       });
       if (result.comment) {
-        this.setData({
-          comments: this.data.comments.map(comment => comment.id === id ? this.decorate(result.comment) : comment),
-        });
+        const comment = this.decorate(result.comment);
+        const update = list => list.map(item => item.id === id ? comment : item);
+        this.setData({ comments: update(this.data.comments), replies: update(this.data.replies) });
       }
     } catch (error) {
       wx.showToast({ title: error.message, icon: "none" });
@@ -187,12 +199,10 @@ Page({
   },
 
   previewImage(event) {
-    wx.previewImage({ urls: this.data.comments.flatMap(comment => comment.images), current: event.currentTarget.dataset.src });
+    wx.previewImage({ urls: [...this.data.comments, ...this.data.replies].flatMap(item => item.images), current: event.currentTarget.dataset.src });
   },
 
-  copyLink() {
-    // 好友只拿到套卷身份，打开后进入自己的对应记录或空白答卷。
-    const path = `/pages/practice/practice?versionId=${encodeURIComponent(this.paperId)}`;
-    wx.setClipboardData({ data: path, success: () => wx.showToast({ title: "已复制套卷链接", icon: "none" }) });
+  copyExternalLink(event) {
+    wx.setClipboardData({ data: event.currentTarget.dataset.link });
   },
 });

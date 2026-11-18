@@ -98,6 +98,11 @@ def source_lock() -> dict:
         ROOT / "AGENTS.md",
         ROOT / "README.md",
         ROOT / "package.json",
+        ROOT / "test/miniprogram-layout.test.js",
+        ROOT / "mini-program/app.js",
+        ROOT / "mini-program/app.wxss",
+        ROOT / "mini-program/tools/check.mjs",
+        ROOT / "mini-program/utils/navigation.js",
         ROOT / "pyproject.toml",
         ROOT / "scripts/verify-rollierank.py",
         ROOT / "scripts/record-ios-preview.mjs",
@@ -402,6 +407,7 @@ def run_all(output: Path) -> dict:
         raise VerificationError("Doctor failed; run `npm run verify -- doctor` for exact setup steps.")
     build = [
         run_command(["npm", "run", "build"], output / "build.log", "browser-build"),
+        run_command(["npm", "--prefix", "mini-program", "run", "check"], output / "miniprogram-check.log", "miniprogram-check"),
         run_command(["npm", "--prefix", "docs/ui-exploration/ios-v3/ui", "run", "typecheck"], output / "typecheck.log", "mobile-types"),
         run_command(["npm", "--prefix", "docs/ui-exploration/ios-v3/ui", "run", "build"], output / "mobile-build.log", "mobile-components"),
         run_command(["npm", "--prefix", "docs/ui-exploration/ios-v3/ui", "run", "test:bridge"], output / "bridge.log", "mobile-bridge", require_test_summary=True),

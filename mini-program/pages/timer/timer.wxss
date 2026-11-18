@@ -1,18 +1,23 @@
-.timer__clock { margin: 12rpx 28rpx 24rpx; padding: 48rpx 0; display: flex; flex-direction: column; align-items: center; gap: 8rpx; background: #f4e3be; }
-.timer__clock--on { background: #fdf0e7; }
-.timer__time { font-size: 104rpx; font-weight: 700; letter-spacing: 2rpx; }
-.timer__block { padding: 0 28rpx 24rpx; }
-.timer__label { display: block; font-size: 28rpx; font-weight: 600; margin-bottom: 16rpx; }
-.timer__paper { padding: 0 26rpx; height: 96rpx; display: flex; align-items: center; gap: 16rpx; }
-.timer__chev { width: 30rpx; height: 30rpx; opacity: 0.5; }
-.timer__papers { margin-top: 16rpx; flex-wrap: wrap; }
-.timer__modes { width: 320rpx; }
-.timer__stepper { margin-top: 18rpx; padding: 0 24rpx; height: 112rpx; display: flex; align-items: center; gap: 16rpx; }
-.timer__input { flex: 1; text-align: center; font-size: 44rpx; font-weight: 600; }
-.timer__step { width: 72rpx; height: 72rpx; border-radius: 50%; background: #f4e3be; display: flex; align-items: center; justify-content: center; font-size: 38rpx; }
-.timer__modules { margin-top: 18rpx; padding: 10rpx 24rpx 20rpx; }
-.timer__module { display: flex; align-items: center; gap: 16rpx; padding: 20rpx 0; border-bottom: 2rpx solid #f1ebe0; }
-.timer__module-step { width: 56rpx; height: 56rpx; border-radius: 50%; background: #fdf0e7; display: flex; align-items: center; justify-content: center; font-size: 30rpx; }
-.timer__module-min { width: 70rpx; text-align: center; font-size: 30rpx; font-weight: 600; }
-.timer__total { padding-top: 20rpx; }
-.timer__wide { width: 200rpx; flex: none; }
+.timer { display: flex; flex-direction: column; gap: 12px; padding: 14px 20px 22px; }
+.timer__switch { display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: #ebe4d9; }
+.timer__switch-item { flex: 1; width: 0 !important; min-height: 42px; font-size: 14px; border-radius: 10px; color: #786955; }
+.timer__switch-item--on { background: #fffdf8; color: #34291e; font-weight: 650; }
+.timer__paper, .timer__plan, .timer__clock { min-height: 76px; border-radius: 20px; padding: 14px 16px; background: #fffdf8; border: 1px solid #e6ddce; }
+.timer__paper { display: flex; align-items: center; width: 100% !important; text-align: left; gap: 9px; }
+.timer__paper image, .timer__picker-row image { width: 16px; height: 16px; flex: none; opacity: .65; }
+.timer__label { font-size: 16px; font-weight: 650; color: #4c4134; }
+.timer__muted { font-size: 12px; color: #978164; }
+.timer__stepper { display: flex; align-items: center; gap: 12px; justify-content: space-between; padding: 11px 0 14px; }
+.timer__step { display: grid; place-items: center; width: 42px !important; min-height: 42px; border: 1px solid #e9dfce; border-radius: 12px; background: #f5ecdb; color: #776045; font-size: 21px; flex: none; }
+.timer__value { display: flex; align-items: baseline; gap: 3px; }
+.timer__input { width: 76px; padding: 7px 4px; background: #fcf8f1; border: 1px solid #e9dfce; border-radius: 10px; font-size: 22px; text-align: center; }
+.timer__modules { padding-top: 7px; }
+.timer__module, .timer__total { display: flex; align-items: center; gap: 8px; min-height: 50px; border-bottom: 1px solid #eee5d6; color: #665643; font-size: 13px; }
+.timer__module .timer__step { width: 33px !important; min-height: 33px; }
+.timer__module-min { min-width: 49px; text-align: center; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.timer__total { border: 0; }
+.timer__clock { min-height: 165px; display: grid; align-content: center; justify-items: center; background: #f4e3be; }
+.timer__time { font-size: min(14vw, 64px); line-height: 1.13; font-weight: 750; }
+.timer__pause { width: 88px !important; }
+.timer__picker-row { display: flex; width: 100% !important; gap: 10px; align-items: center; min-height: 54px; padding: 7px 10px; text-align: left; border-bottom: 1px solid #ebe2d3; border-radius: 0; font-size: 14px; }
+@media (max-width: 350px) { .timer { padding-inline: 16px; } }

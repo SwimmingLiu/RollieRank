@@ -1,96 +1,81 @@
 <view class="screen">
-  <rr-nav title="练习估分" />
+  <rr-nav title="{{publicView ? '公开成绩' : '练习估分'}}" action-icon="{{summary && !publicView ? 'refresh' : ''}}" action-label="重新练习本卷" bind:action="practiceAgain" />
 
   <view wx:if="{{loading}}" class="loading">正在核分…</view>
   <view wx:elif="{{error}}" class="empty">
     <text>{{error}}</text>
-    <view class="chip" bindtap="retry">重新读取</view>
+    <button class="chip" bindtap="retry">重新读取</button>
   </view>
 
-  <block wx:elif="{{summary}}">
-    <view class="report__hero card">
-      <view class="row row--between">
-        <view class="stack">
-          <text class="text-sm">总分</text>
-          <text class="num report__score">{{summary.score}}</text>
-          <text class="text-xs">/ {{summary.max}} 分</text>
-        </view>
-        <image class="report__stamp" src="{{uiBase}}/check.svg" mode="aspectFit" />
+  <view wx:elif="{{summary}}" class="report__body">
+    <view class="report__hero">
+      <view class="report__total">
+        <text class="report__score-label">{{publicView ? summary.name : '总分'}}</text>
+        <text class="display-num report__score {{summary.score.length > 5 ? 'report__score--wide' : ''}}">{{summary.score}}</text>
+        <text class="report__max">/ {{summary.max}} 分</text>
+        <image class="report__stamp" src="/assets/score-ribbon.svg" mode="aspectFit" />
       </view>
-      <view class="report__stats">
-        <view class="report__stat">
-          <text class="report__stat-icon report__stat-icon--ok">✓</text>
-          <text class="num report__stat-num">{{summary.correct}}</text>
-          <text class="text-sm">正确</text>
+
+      <view wx:if="{{!publicView}}" class="report__stats">
+        <view class="report__stat report__stat--ok">
+          <view class="report__stat-icon"><image src="{{uiBase}}/check.svg" mode="aspectFit" /></view>
+          <text class="num report__stat-num">{{summary.correct}}</text><text class="report__stat-label">正确</text>
         </view>
-        <view class="report__stat">
-          <text class="report__stat-icon report__stat-icon--no">✕</text>
-          <text class="num report__stat-num">{{summary.wrong}}</text>
-          <text class="text-sm">错误</text>
+        <view class="report__stat report__stat--no">
+          <view class="report__stat-icon"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></view>
+          <text class="num report__stat-num">{{summary.wrong}}</text><text class="report__stat-label">错误</text>
         </view>
       </view>
-      <view class="report__identity">
-        <text class="text-xs ellipsis">{{summary.identity}}{{publicView ? ' · ' + summary.name : ' · ' + summary.title}}</text>
-        <text class="text-xs">{{summary.createdAt}}</text>
-      </view>
+
+      <button wx:if="{{!publicView}}" class="report__rank" bindtap="rank">
+        <image src="{{uiBase}}/trophy.svg" mode="aspectFit" />
+        <text class="grow">同卷排名</text>
+        <block wx:if="{{standing && standing.rank}}">
+          <text class="report__rank-count">{{standing.rank}}</text><text class="report__rank-total">/ {{standing.count}}</text>
+        </block>
+        <image class="report__rank-arrow" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+      </button>
     </view>
 
-    <view class="report__actions">
-      <view wx:if="{{!publicView}}" class="card press report__action" bindtap="rank">
-        <image class="report__action-icon" src="{{uiBase}}/users.svg" mode="aspectFit" />
-        <text class="report__action-label">同卷榜</text>
+    <button wx:if="{{summary.timing}}" class="report__timing" bindtap="toggleBands">
+      <text>做题用时</text><text class="num">{{summary.timing}}</text>
+    </button>
+
+    <view wx:if="{{bands.length >= 3}}" class="report__radar">
+      <view class="report__radar-head">
+        <text class="report__heading">能力概览</text>
+        <text class="report__caption grow">本卷得分率</text>
+        <button class="report__icon-button" bindtap="toggleBands" aria-label="查看板块得分">
+          <image src="{{uiBase}}/chart.svg" mode="aspectFit" />
+        </button>
       </view>
-      <view class="card press report__action" bindtap="discuss">
-        <image class="report__action-icon" src="{{uiBase}}/comment.svg" mode="aspectFit" />
-        <text class="report__action-label">讨论</text>
-      </view>
-      <view class="card press report__action" bindtap="share">
-        <image class="report__action-icon" src="{{uiBase}}/share.svg" mode="aspectFit" />
-        <text class="report__action-label">分享</text>
-      </view>
+      <rr-radar bands="{{bands}}" />
     </view>
 
-    <view class="card report__bands">
-      <view class="row row--between">
-        <text class="report__bands-title">能力概览</text>
-        <text class="text-xs">本卷得分率 {{summary.rate}}</text>
+    <view wx:if="{{bands.length}}" class="report__bands">
+      <view class="report__bands-head">
+        <text class="report__heading">板块表现</text>
+        <button class="report__all" bindtap="toggleBands">{{showBands ? '收起' : '查看全部'}}</button>
       </view>
-      <view wx:for="{{bands}}" wx:key="name" class="report__band">
-        <view class="row row--between">
-          <text class="text-md">{{item.name}}</text>
-          <text class="num text-sm">{{item.pct}}%</text>
-        </view>
-        <view class="progress report__band-bar">
-          <view class="progress__fill" style="width: {{item.pct}}%;"></view>
-        </view>
-      </view>
-      <view wx:if="{{summary.weak.length}}" class="report__weak">
-        <text class="text-xs">最弱三项：</text>
-        <text class="text-xs" wx:for="{{summary.weak}}" wx:key="name">{{item.name}} {{item.rate}}{{index < summary.weak.length - 1 ? ' · ' : ''}}</text>
+      <view class="report__bands-grid">
+        <button wx:for="{{shownBands}}" wx:key="name" class="report__band" data-type="{{item.name}}" bindtap="reviewBand" disabled="{{publicView}}">
+          <view class="row row--between"><text>{{item.name}}</text><image src="{{uiBase}}/chevron.svg" mode="aspectFit" /></view>
+          <text class="display-num report__band-value">{{item.percent}}</text>
+          <text class="report__caption">{{item.earned}} / {{item.max}} 分</text>
+          <view class="report__band-progress"><view style="width: {{item.pct}}%;"></view></view>
+        </button>
       </view>
     </view>
+  </view>
 
-    <view wx:if="{{!publicView}}" class="report__secondary">
-      <view class="card press report__link" bindtap="review">
-        <text>逐题对照</text>
-        <image class="report__link-icon" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
-      </view>
-      <view class="card press report__link" bindtap="practiceAgain">
-        <text>再练一次</text>
-        <image class="report__link-icon" src="{{uiBase}}/refresh.svg" mode="aspectFit" />
-      </view>
+  <view wx:if="{{summary && !publicView}}" class="footer-bar">
+    <view class="footer-bar__inner">
+      <button class="btn btn--primary" bindtap="review">
+        <image class="btn__icon" src="/assets/tab-active/records.svg" mode="aspectFit" />
+        {{summary.wrong ? '复盘错题 ' + summary.wrong : '查看答卷'}}
+      </button>
+      <button class="btn btn--ghost" bindtap="discuss" aria-label="本卷交流"><image class="btn__icon" src="{{uiBase}}/comment.svg" mode="aspectFit" /></button>
+      <button class="btn btn--ghost" bindtap="share" aria-label="成绩分享"><image class="btn__icon" src="{{uiBase}}/share.svg" mode="aspectFit" /></button>
     </view>
-
-    <view wx:if="{{!publicView}}" class="footer-bar">
-      <view class="footer-bar__inner">
-        <view class="btn btn--primary" bindtap="review">
-          <image class="btn__icon" src="{{uiBase}}/book.svg" mode="aspectFit" />
-          复盘题目
-        </view>
-        <view class="btn btn--ghost" bindtap="discuss">
-          <image class="btn__icon" src="{{uiBase}}/comment.svg" mode="aspectFit" />
-        </view>
-      </view>
-    </view>
-  </block>
+  </view>
 </view>

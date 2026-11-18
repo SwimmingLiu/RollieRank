@@ -1,6 +1,6 @@
 // 服务端接口封装：统一超时、错误文案与凭证。
-const { API_BASE } = require("../config");
-const storage = require("./storage");
+const { API_BASE } = require("../config.js");
+const storage = require("../utils/storage.js");
 
 function request(path, payload, timeout = 15000) {
   return new Promise((resolve, reject) => {

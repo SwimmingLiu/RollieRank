@@ -1,5 +1,5 @@
 <view class="screen">
-  <rr-nav title="试卷讨论" back="{{true}}" />
+  <rr-nav title="本卷交流" back="{{true}}" />
 
   <view wx:if="{{loading}}" class="loading">正在读取讨论…</view>
   <view wx:elif="{{error}}" class="empty">
@@ -8,8 +8,8 @@
 
   <block wx:else>
     <view class="disc__head">
-      <text class="text-sm ellipsis">{{title}}</text>
-      <text class="text-xs">{{total}} 条评论</text>
+      <view class="disc__caption"><image src="{{uiBase}}/comment.svg" mode="aspectFit" />全部评论</view>
+      <text class="disc__count">{{total}}</text>
     </view>
 
     <view class="disc__list">
@@ -23,6 +23,9 @@
         </view>
         <text wx:if="{{item.target}}" class="text-xs disc__target">回复 {{item.target}}</text>
         <text wx:if="{{item.text}}" class="disc__text">{{item.text}}</text>
+        <view wx:if="{{item.links.length}}" class="disc__links">
+          <text wx:for="{{item.links}}" wx:for-item="link" wx:key="*this" data-link="{{link}}" bindtap="copyExternalLink">{{link}}</text>
+        </view>
         <view wx:if="{{item.images.length}}" class="disc__images">
           <image wx:for="{{item.images}}" wx:for-item="photo" wx:key="*this" class="disc__image" src="{{photo}}" mode="aspectFill" data-src="{{photo}}" bindtap="previewImage" />
         </view>
@@ -41,26 +44,45 @@
             <text class="disc__name">{{reply.author.name}}</text>
             <text wx:if="{{reply.target}}" class="text-xs disc__target">回复 {{reply.target}}</text>
             <text class="disc__text">{{reply.text}}</text>
+            <button class="disc__action" data-id="{{reply.id}}" data-root="{{item.id}}" data-name="{{reply.author.name}}" bindtap="startReply">回复</button>
+            <view wx:if="{{reply.links.length}}" class="disc__links"><text wx:for="{{reply.links}}" wx:for-item="link" wx:key="*this" data-link="{{link}}" bindtap="copyExternalLink">{{link}}</text></view>
+            <view wx:if="{{reply.images.length}}" class="disc__images"><image wx:for="{{reply.images}}" wx:for-item="photo" wx:key="*this" class="disc__image" src="{{photo}}" mode="aspectFill" data-src="{{photo}}" bindtap="previewImage" /></view>
           </view>
         </view>
       </view>
 
-      <view wx:if="{{!comments.length}}" class="empty">
-        <image class="empty__icon" src="{{uiBase}}/comment.svg" mode="aspectFit" />
-        <text>还没有人讨论这套卷</text>
+      <view wx:if="{{!comments.length}}" class="disc__empty">
+        <image class="disc__empty-icon" src="{{uiBase}}/comment.svg" mode="aspectFit" />
+        <text>还没有评论，来聊第一句</text>
       </view>
     </view>
 
-    <view class="footer-bar">
+
+    <view class="disc__footer" style="bottom: {{keyboardHeight}}px;">
       <view wx:if="{{replyTarget}}" class="disc__reply-bar">
-        <text class="text-xs grow ellipsis">回复 {{replyTarget.name}}</text>
-        <text class="text-xs" bindtap="cancelReply">取消</text>
+        <text class="grow ellipsis">回复 {{replyTarget.name}}</text>
+        <button bindtap="cancelReply">取消</button>
       </view>
-      <view class="footer-bar__inner">
-        <input class="disc__input" value="{{replyTarget ? replyDraft : draft}}" placeholder="{{replyTarget ? '写下回复…' : '说说这套卷…'}}" placeholder-class="text-sm" bindinput="{{replyTarget ? 'onReplyDraft' : 'onDraft'}}" confirm-type="send" bindconfirm="{{replyTarget ? 'sendReply' : 'send'}}" />
-        <view class="btn disc__send" bindtap="{{replyTarget ? 'sendReply' : 'send'}}">
-          <image class="btn__icon" src="{{uiBase}}/send.svg" mode="aspectFit" />
+      <view wx:if="{{images.length}}" class="disc__images disc__pending">
+        <view wx:for="{{images}}" wx:key="path" class="disc__attachment">
+          <image src="{{item.path}}" mode="aspectFill" />
+          <button class="disc__remove" data-index="{{index}}" bindtap="removeImage" aria-label="移除照片">×</button>
         </view>
+      </view>
+      <view class="disc__composer">
+        <text class="disc__badge">{{initials}}</text>
+        <textarea class="disc__input grow" auto-height maxlength="2000" value="{{replyTarget ? replyDraft : draft}}" placeholder="{{replyTarget ? '写下回复…' : '说点什么…'}}" placeholder-class="disc__placeholder" bindinput="onComposerInput" confirm-type="send" bindconfirm="sendComposer" adjust-position="{{false}}" bindkeyboardheightchange="keyboard"></textarea>
+        <button wx:if="{{!(replyTarget ? replyDraft : draft) && !images.length}}" class="disc__compose-icon" bindtap="pickImage" aria-label="添加照片">
+          <image src="{{uiBase}}/image.svg" mode="aspectFit" />
+        </button>
+        <block wx:else>
+          <button wx:if="{{images.length < 3}}" class="disc__compose-icon" bindtap="pickImage" aria-label="添加照片">
+            <image src="{{uiBase}}/image.svg" mode="aspectFit" />
+          </button>
+          <button class="disc__compose-icon disc__send" bindtap="sendComposer" disabled="{{sending}}" aria-label="发送">
+            <image src="{{uiBase}}/send-light.svg" mode="aspectFit" />
+          </button>
+        </block>
       </view>
     </view>
   </block>

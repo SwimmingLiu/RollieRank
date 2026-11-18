@@ -1,7 +1,8 @@
-const api = require("../../services/api");
-const storage = require("../../utils/storage");
-const catalogUtil = require("../../utils/catalog");
-const { ASSET } = require("../../config");
+const api = require("../../services/api.js");
+const storage = require("../../utils/storage.js");
+const catalogUtil = require("../../utils/catalog.js");
+const { minutes } = require("../../utils/format.js");
+const { ASSET } = require("../../config.js");
 
 Page({
   data: {
@@ -11,7 +12,10 @@ Page({
     recent: [],
     asset: ASSET,
     uiBase: "/assets/ui",
-    name: "卷友",
+    recentIndex: 0,
+    timerRunning: false,
+    timerPaused: false,
+    timerText: "",
   },
 
   onLoad() {
@@ -19,9 +23,18 @@ Page({
   },
 
   onShow() {
-    this.setData({ name: storage.name() });
+    this.refreshTimer();
+    this.timerTick = setInterval(() => this.refreshTimer(), 1000);
     // 从练习返回时刷新最近记录，不重新拉取目录缓存。
     this.refreshRecent();
+  },
+
+  onHide() {
+    clearInterval(this.timerTick);
+  },
+
+  onUnload() {
+    clearInterval(this.timerTick);
   },
 
   onPullDownRefresh() {
@@ -33,7 +46,12 @@ Page({
     try {
       const versions = await api.catalog(force);
       getApp().globalData.versions = versions;
-      this.setData({ institutions: catalogUtil.groupByInstitution(versions), loading: false });
+      const institutions = catalogUtil.groupByInstitution(versions).map(({ name, logo }) => ({
+        name,
+        logo,
+        label: catalogUtil.publisherName(name),
+      }));
+      this.setData({ institutions, loading: false });
       this.refreshRecent();
     } catch (error) {
       this.setData({ loading: false, error: error.message });
@@ -56,8 +74,8 @@ Page({
         draft: true,
         versionId,
         title: draft.title || "未完成练习",
-        detail: draft.identity || "",
-        progress: `${draft.answered || 0} / ${draft.questionCount || 0}`,
+        answered: draft.answered || 0,
+        questionCount: draft.questionCount || 0,
       });
       seen.add(versionId);
       if (recent.length === 3) break;
@@ -69,11 +87,31 @@ Page({
       recent.push({
         ...record,
         scoreText: (record.totalCents / 100).toFixed(2),
-        detail: [record.institution, record.period].filter(Boolean).join(" · "),
       });
       if (recent.length === 3) break;
     }
-    this.setData({ recent });
+
+    const versions = getApp().globalData.versions;
+    const activeId = this.data.recent[this.data.recentIndex]?.id;
+    const cards = recent.map(record => {
+      const version = versions.find(candidate => candidate.id === record.versionId) || record;
+      const institution = version.institution || "";
+      const edition = catalogUtil.periodLabel(version.period);
+      const number = String(version.number || "").padStart(2, "0");
+      const paperTitle = version.number && edition ? "行测 " + number + " 套" : record.title;
+      const year = String(version.project || record.title).match(/20\d{2}/)?.[0] || "";
+      return {
+        ...record,
+        institution,
+        edition,
+        paperTitle,
+        year,
+        logo: catalogUtil.LOGO[institution] || "",
+        publisher: catalogUtil.publisherName(institution),
+        progress: record.questionCount ? record.answered / record.questionCount * 100 : 0,
+      };
+    });
+    this.setData({ recent: cards, recentIndex: Math.max(0, cards.findIndex(card => card.id === activeId)) });
   },
 
   openInstitution(event) {
@@ -82,7 +120,7 @@ Page({
   },
 
   openRecent(event) {
-    const { id, draft, version } = event.currentTarget.dataset;
+    const { id, draft, versionId: version } = this.data.recent[event.currentTarget.dataset.index];
     if (draft) {
       wx.navigateTo({ url: `/pages/practice/practice?versionId=${version}&attemptId=${id}` });
       return;
@@ -90,11 +128,30 @@ Page({
     wx.navigateTo({ url: `/pages/report/report?attemptId=${id}` });
   },
 
-  openTimer() {
-    wx.navigateTo({ url: "/pages/timer/timer" });
+
+  refreshTimer() {
+    const timer = wx.getStorageSync("rr:timer") || {};
+    const runningMs = timer.startedAt ? (timer.elapsedMs || 0) + Date.now() - (timer.segmentStartedAt || timer.startedAt) : 0;
+    const timerRunning = Boolean(timer.running && !timer.paused && runningMs >= 0 && runningMs <= 6 * 60 * 60 * 1000);
+    const timerPaused = !timerRunning && Boolean(timer.paused);
+    const timerText = timerRunning ? minutes(runningMs) : timerPaused ? minutes(timer.elapsedMs || 0) : "";
+    if (timerText !== this.data.timerText || timerRunning !== this.data.timerRunning || timerPaused !== this.data.timerPaused) {
+      this.setData({ timerText, timerRunning, timerPaused });
+    }
   },
 
-  openRecords() {
-    wx.switchTab({ url: "/pages/records/records" });
+  startDeck(event) {
+    this.deckY = event.touches[0]?.clientY;
+  },
+
+  flipDeck(event) {
+    const offset = event.changedTouches[0]?.clientY - this.deckY;
+    const length = this.data.recent.length;
+    if (length < 2 || !Number.isFinite(offset) || Math.abs(offset) < 32) return;
+    this.setData({ recentIndex: (this.data.recentIndex + (offset < 0 ? 1 : -1) + length) % length });
+  },
+
+  openTimer() {
+    wx.navigateTo({ url: "/pages/timer/timer" });
   },
 });

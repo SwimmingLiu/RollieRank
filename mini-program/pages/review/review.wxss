@@ -1,17 +1,28 @@
-.review__head { padding: 8rpx 28rpx 0; }
-.review__tabs { flex: 1; }
-.review__copy { margin-left: 18rpx; }
-.review__types { white-space: nowrap; padding: 20rpx 0 12rpx; }
-.review__type { margin-right: 12rpx; flex-shrink: 0; }
-.review__list { padding: 4rpx 28rpx 40rpx; display: flex; flex-direction: column; gap: 16rpx; }
-.review__row { padding: 24rpx 26rpx; }
-.review__no { font-size: 30rpx; font-weight: 600; width: 70rpx; }
-.review__status { font-size: 22rpx; padding: 4rpx 16rpx; border-radius: 16rpx; }
-.review__status--correct { background: #eaf5ee; color: #268458; }
-.review__status--wrong { background: #fdecea; color: #d54e4e; }
-.review__status--blank { background: #f1ebe0; color: #79767d; }
-.review__answers { display: flex; align-items: center; gap: 40rpx; margin-top: 18rpx; }
-.review__answer { display: flex; align-items: baseline; gap: 10rpx; font-size: 32rpx; }
-.review__a--ok { color: #268458; font-weight: 600; }
-.review__a--no { color: #d54e4e; font-weight: 600; }
-.review__a--ref { color: #302b29; font-weight: 600; }
+.review { padding: 0 22px 10px; }
+.review__scope, .review__group-label { display: flex; align-items: center; gap: 8px; color: #856d50; min-height: 48px; padding: 0 10px; width: auto !important; font-size: 13px; }
+.review__scope { margin-left: -22px; }
+.review__scope image, .review__group-label image { width: 13px; height: 13px; opacity: .6; }
+.review__tabs { display: flex; gap: 4px; padding: 4px; margin: 8px 0 16px; border-radius: 12px; background: #f2f2f4; }
+.review__tab { min-height: 32px; flex: 1; width: 0 !important; color: #71717a; font-size: 13px; border-radius: 8px; white-space: nowrap; }
+.review__tab--on { background: #18181b; color: #fffdf8; }
+.review__columns { display: grid; grid-template-columns: 44px 1fr 1fr 42px minmax(64px, 1fr); align-items: center; text-align: center; gap: 3px; }
+.review__labels { min-height: 42px; color: #7e725e; background: #f3eee5; border-bottom: 1px solid #e6ddce; font-size: 12px; }
+.review__group-label { margin: 0; width: 100% !important; min-height: 56px; border-bottom: 1px solid #e7dece; border-radius: 0; }
+.review__row { min-height: 55px; border-bottom: 1px solid #e9e1d4; }
+.review__number { color: #71717a; font-size: 13px; }
+.review__answer, .review__reference { font-size: 18px; font-weight: 650; }
+.review__answer--wrong { color: #d54e4e; }
+.review__answer--blank { color: #aba08b; }
+.review__reference { color: #268458; }
+.review__result { width: 16px; height: 16px; justify-self: center; }
+.review__cohort { display: flex; flex-direction: column; color: #806851; font-size: 12px; }
+.review__same-wrong { color: #a76e56; font-size: 10px; white-space: nowrap; }
+.review__copy { width: 100% !important; min-height: 38px; }
+.review__copy[disabled] { opacity: .5; background: #d9cfbe; color: #625846; }
+.review__option { display: block; width: 100% !important; min-height: 44px; padding: 12px; border-radius: 12px; margin: 0 0 6px; background: #f7f1e5; color: #514b40; text-align: left; font-size: 14px; }
+.review__option--on { background: #f4e3be; }
+@media (max-width: 350px) {
+  .review { padding-inline: 16px; }
+  .review__scope { margin-left: -16px; }
+  .review__columns { grid-template-columns: 36px 1fr 1fr 36px minmax(54px, 1fr); }
+}

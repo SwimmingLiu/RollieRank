@@ -29,8 +29,10 @@ test("real API correction, future submission, restart and old-client synchroniza
     await once(server, "listening");
     servers.push(server);
     return async (path, input) => {
+      const headers = { "Content-Type": "application/json" };
+      if (path.startsWith("admin/")) headers.Authorization = "Bearer " + token;
       const response = await fetch(`http://127.0.0.1:${server.address().port}/api/${path}`,
-        input === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
+        input === undefined ? {} : { method: "POST", headers, body: JSON.stringify(input) });
       return { status: response.status, data: await response.json() };
     };
   };

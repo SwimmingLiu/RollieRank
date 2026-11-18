@@ -1,73 +1,59 @@
-<view class="screen screen--tab">
-  <view class="records__head row row--between">
-    <text class="records__title">练习记录</text>
-    <view class="records__settings" bindtap="openSettings">
-      <image class="records__settings-icon" src="{{uiBase}}/help.svg" mode="aspectFit" />
-    </view>
-  </view>
-
-  <view class="card records__profile">
-    <image class="records__avatar" src="{{asset.profile}}" mode="aspectFit" />
-    <view class="stack grow">
-      <text class="records__name" bindtap="openSettings">{{name}}</text>
-      <text class="text-xs">{{totals.count}} 份练习记录</text>
-    </view>
-    <view class="records__totals">
-      <text class="num records__total-num">{{totals.best}}</text>
-      <text class="text-xs">最好成绩</text>
-    </view>
-  </view>
-
-  <view class="records__grid">
-    <view class="card press records__cell" bindtap="openPosition">
-      <text class="text-xs">报考岗位</text>
-      <text class="records__cell-value ellipsis">{{position ? position.label : '未选岗'}}</text>
-      <image class="records__cell-icon" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
-    </view>
-    <view class="card press records__cell" bindtap="openAnalytics">
-      <text class="text-xs">成长分析</text>
-      <text class="records__cell-value">{{records.length > 1 ? '查看进步' : '累计记录'}}</text>
-      <image class="records__cell-icon" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
-    </view>
-  </view>
-
-  <view class="records__tabs">
-    <view class="tabs grow">
-      <view wx:for="{{tabs}}" wx:key="key" class="tabs__item {{tab === item.key ? 'tabs__item--on' : ''}}" data-key="{{item.key}}" bindtap="setTab">{{item.label}}</view>
-    </view>
-    <view class="records__search" bindtap="toggleSearch">
-      <image class="records__search-icon" src="{{uiBase}}/{{searching ? 'close' : 'search'}}.svg" mode="aspectFit" />
-    </view>
-  </view>
-  <view wx:if="{{searching}}" class="records__search-bar card">
-    <input value="{{keyword}}" placeholder="搜索套卷或机构" placeholder-class="text-xs" bindinput="onKeyword" focus="{{searching}}" />
-  </view>
-
-  <view class="records__list">
-    <view wx:for="{{visible}}" wx:key="id" class="card press records__row" data-id="{{item.id}}" bindtap="openRecord">
-      <view class="row row--between">
-        <text class="text-xs ellipsis grow">{{item.detail}}</text>
-        <text class="text-xs">{{item.dateText}}</text>
+<view class="screen">
+  <rr-nav title="练习记录" back="{{false}}" />
+  <view class="records">
+    <button class="records__profile" bindtap="openSettings" aria-label="身份与设置">
+      <image class="records__avatar" src="{{asset.profile}}" mode="aspectFit" />
+      <view class="stack grow">
+        <text class="records__name ellipsis">{{name}}</text>
+        <text class="records__profile-count">{{records.length + drafts.length}} 份练习</text>
       </view>
-      <view class="row row--between records__row-main">
-        <text class="records__row-title ellipsis grow">{{item.title}}</text>
-        <text class="num records__row-score">{{item.scoreText}}</text>
+      <image class="records__art" src="/assets/answer-paper.svg" mode="aspectFit" />
+    </button>
+
+    <view class="records__grid">
+      <button class="records__cell" bindtap="openPosition">
+        <view class="records__cell-label"><image src="{{uiBase}}/map-pin.svg" mode="aspectFit" />报考岗位</view>
+        <view class="records__cell-value"><text class="ellipsis grow">{{position ? position.label : '未选岗'}}</text><image src="{{uiBase}}/chevron.svg" mode="aspectFit" /></view>
+      </button>
+      <button class="records__cell" bindtap="openAnalytics">
+        <view class="records__cell-label"><image src="{{uiBase}}/trend.svg" mode="aspectFit" />成长分析</view>
+        <view class="records__cell-value"><text class="grow">{{records.length}}<text class="records__muted"> 次练习</text></text><image src="{{uiBase}}/chevron.svg" mode="aspectFit" /></view>
+      </button>
+    </view>
+
+    <view class="records__tools">
+      <view class="records__tabs grow">
+        <button wx:for="{{tabs}}" wx:key="key" class="records__tab {{tab === item.key ? 'records__tab--on' : ''}}" data-key="{{item.key}}" bindtap="setTab">{{item.label}}</button>
       </view>
-      <view class="row row--between records__row-meta">
-        <text class="text-xs">得分率 {{item.rateText}} · 正确 {{item.correct}} · 错误 {{item.wrong}}</text>
-        <text class="text-xs">看成绩</text>
+      <button class="records__search" bindtap="toggleSearch" aria-label="搜索套卷">
+        <image src="{{uiBase}}/{{searching ? 'close' : 'search'}}.svg" mode="aspectFit" />
+      </button>
+    </view>
+    <view wx:if="{{searching}}" class="records__search-bar">
+      <input value="{{keyword}}" placeholder="搜索套卷或机构" bindinput="onKeyword" focus="{{searching}}" />
+    </view>
+
+    <view class="records__grid">
+      <button wx:for="{{visible}}" wx:key="id" class="records__row {{item.draft ? '' : 'records__row--complete'}}" data-index="{{index}}" bindtap="openRecord">
+        <view class="records__publisher">
+          <image wx:if="{{item.logo}}" src="{{item.logo}}" mode="aspectFit" />
+          <text class="grow">{{item.publisher}}</text>
+          <image src="{{uiBase}}/{{item.draft ? 'grid' : 'check'}}.svg" mode="aspectFit" />
+        </view>
+        <text class="records__row-meta">{{item.edition}}</text>
+        <text class="records__row-meta">{{item.paper}}</text>
+        <view class="records__row-value">
+          <view wx:if="{{item.draft}}"><text class="records__count">{{item.answered}}</text><text class="records__unit"> / {{item.questionCount}} 题</text></view>
+          <view wx:else><text class="display-num records__score">{{item.scoreText}}</text><text class="records__unit">分</text></view>
+          <image src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+        </view>
+        <view wx:if="{{item.draft}}" class="records__progress"><view style="width: {{item.progress}}%;"></view></view>
+      </button>
+      <view wx:if="{{!visible.length}}" class="empty records__empty">
+        <text>{{records.length || drafts.length ? '没有符合条件的记录' : '还没有练习记录'}}</text>
+        <button wx:if="{{!records.length && !drafts.length}}" class="chip" bindtap="openHome">去选卷</button>
       </view>
     </view>
-
-    <view wx:if="{{!visible.length && !records.length}}" class="empty">
-      <image class="empty__icon" src="{{uiBase}}/book.svg" mode="aspectFit" />
-      <text>还没有练习记录</text>
-      <view class="chip" bindtap="openHome">去选卷</view>
-    </view>
-    <view wx:elif="{{!visible.length}}" class="empty">
-      <text>没有符合条件的记录</text>
-    </view>
   </view>
-
   <rr-tabbar active="records" />
 </view>

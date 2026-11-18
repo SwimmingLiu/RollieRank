@@ -26,8 +26,11 @@ TEST_REVIEW_TOKEN = "review-for-isolated-feature-verification"
 
 def api(base, path, data=None):
     body = json.dumps(data, ensure_ascii=False).encode() if data is not None else None
-    request = Request(base + "/api/" + path, data=body,
-                      headers={"Content-Type": "application/json"} if body else {})
+    headers = {"Content-Type": "application/json"} if body else {}
+    # Test fixture creation uses the same authenticated admin endpoint as the deployed app.
+    if path.startswith("admin/"):
+        headers["Authorization"] = f"Bearer {TEST_REVIEW_TOKEN}"
+    request = Request(base + "/api/" + path, data=body, headers=headers)
     try:
         with urlopen(request, timeout=30) as response:
             return response.status, json.load(response)
@@ -123,6 +126,9 @@ def run(base, output):
         browser = playwright.chromium.launch(headless=True, ignore_default_args=["--hide-scrollbars"])
         context = browser.new_context(viewport={"width": 1440, "height": 900}, reduced_motion="reduce")
         page = context.new_page()
+        # Authorize the isolated page's catalog management request. The correction form still verifies its own credential.
+        page.route(base + "/api/admin", lambda route: route.continue_(
+            headers={**route.request.headers, "Authorization": f"Bearer {TEST_REVIEW_TOKEN}"}))
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(base, wait_until="networkidle")
         expect(page.locator(".paper-card")).to_have_count(12)

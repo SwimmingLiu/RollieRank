@@ -1,12 +1,16 @@
-<view class="nav" style="padding-top: {{statusBarHeight}}px;">
-  <view class="nav__bar" style="height: {{navHeight}}px;">
-    <view wx:if="{{back}}" class="nav__back" bindtap="goBack" hover-class="none">
-      <image class="nav__icon" src="/assets/ui/back.svg" mode="aspectFit" />
+<view class="nav {{logo ? 'nav--brand' : ''}}" style="padding-top: {{statusBarHeight}}px; --menu-clearance: {{menuClearance}}px;">
+  <view class="nav__bar {{actionIcon || action ? 'nav__bar--action' : ''}}" style="height: {{navHeight}}px;">
+    <button wx:if="{{back}}" class="nav__back" bindtap="goBack" aria-label="返回" hover-class="nav__pressed">
+      <image class="nav__back-icon" src="/assets/ui/back.svg" mode="aspectFit" />
+    </button>
+    <view wx:if="{{logo}}" class="nav__brand">
+      <image class="nav__logo" src="{{logo}}" mode="aspectFit" />
+      <text class="nav__brand-title">{{title}}</text>
     </view>
-    <text class="nav__title" style="line-height: {{titleHeight}}px;">{{title}}</text>
-    <view wx:if="{{actionIcon}}" class="nav__action nav__right" bindtap="onAction" hover-class="none">
-      <image class="nav__icon" src="/assets/ui/{{actionIcon}}.svg" mode="aspectFit" />
-    </view>
-    <text wx:elif="{{action}}" class="nav__action nav__right nav__text" bindtap="onAction">{{action}}</text>
+    <text wx:else class="nav__title">{{title}}</text>
+    <button wx:if="{{actionIcon || action}}" class="nav__action" bindtap="onAction" aria-label="{{actionLabel || action}}" hover-class="nav__pressed">
+      <image wx:if="{{actionIcon}}" class="nav__icon" src="/assets/ui/{{actionIcon}}.svg" mode="aspectFit" />
+      <text wx:else>{{action}}</text>
+    </button>
   </view>
 </view>

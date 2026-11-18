@@ -64,4 +64,14 @@ function identity(version) {
   return [version.institution, version.period, version.variant].filter(Boolean).join(" · ");
 }
 
-module.exports = { groupByInstitution, versionTitle, identity, LOGO, subjectName, subjectId };
+function publisherName(name) {
+  return name === "四海" ? "花生" : name;
+}
+
+function periodLabel(period) {
+  const names = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+  const match = String(period || "").match(/^第?([一二三四五六七八九十])期$/);
+  return match ? "第" + (names.indexOf(match[1]) + 1) + "期" : period || "";
+}
+
+module.exports = { groupByInstitution, versionTitle, identity, publisherName, periodLabel, LOGO, subjectName, subjectId };

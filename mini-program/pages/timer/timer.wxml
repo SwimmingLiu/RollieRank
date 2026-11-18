@@ -1,78 +1,81 @@
-<view class="screen screen--plain">
+<view class="screen">
   <rr-nav title="做题计时" />
-
   <view wx:if="{{loading}}" class="loading">正在准备计时…</view>
-  <view wx:elif="{{error}}" class="empty">
-    <text>{{error}}</text>
-    <view class="chip" bindtap="load">重新读取</view>
-  </view>
+  <view wx:elif="{{error}}" class="empty"><text>{{error}}</text><button class="chip" bindtap="load">重新读取</button></view>
 
-  <block wx:else>
-    <view class="timer__clock card {{running ? 'timer__clock--on' : ''}}">
-      <text class="num timer__time">{{elapsed}}</text>
-      <text class="text-xs">{{running ? (paused ? '已暂停' : '计时中') : '未开始'}}</text>
+  <view wx:else class="timer">
+    <view wx:if="{{running}}" class="timer__clock">
+      <text class="display-num timer__time">{{elapsed}}</text>
+      <text class="timer__muted">{{paused ? '已暂停' : '计时中'}}</text>
     </view>
-
-    <block wx:if="{{!running}}">
-      <view class="timer__block">
-        <text class="timer__label">套卷</text>
-        <view class="card press timer__paper" bindtap="choosePaper">
-          <text class="grow ellipsis">{{selected ? selected.label + ' · ' + selected.title : '选择一套卷'}}</text>
-          <image class="timer__chev" src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
-        </view>
-        <view class="row row--gap timer__papers">
-          <view wx:for="{{papers}}" wx:key="name" class="chip {{activeProject === index ? 'chip--on' : ''}}" data-index="{{index}}" bindtap="openSection">{{item.name}}</view>
-        </view>
+    <block wx:else>
+      <view class="timer__switch">
+        <button class="timer__switch-item {{source === 'paper' ? 'timer__switch-item--on' : ''}}" data-source="paper" bindtap="setSource">套卷</button>
+        <button class="timer__switch-item {{source === 'custom' ? 'timer__switch-item--on' : ''}}" data-source="custom" bindtap="setSource">自定义</button>
       </view>
-
-      <view class="timer__block">
-        <view class="row row--between">
-          <text class="timer__label">时间安排</text>
-          <view class="tabs timer__modes">
-            <view class="tabs__item {{mode === 'whole' ? 'tabs__item--on' : ''}}" data-mode="whole" bindtap="setMode">整卷</view>
-            <view class="tabs__item {{mode === 'modules' ? 'tabs__item--on' : ''}}" data-mode="modules" bindtap="setMode">模块计划</view>
+      <button wx:if="{{source === 'paper'}}" class="timer__paper" bindtap="choosePaper">
+        <view class="stack grow">
+          <text class="timer__label">{{selected ? selected.title : '选择套卷'}}</text>
+          <text wx:if="{{selected}}" class="timer__muted">{{selected.questionCount}} 题 · {{selected.defaultMinutes}} 分钟</text>
+        </view>
+        <image src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+      </button>
+      <view class="timer__plan">
+        <text class="timer__label">计时计划</text>
+        <view class="timer__stepper">
+          <button class="timer__step" data-delta="-1" bindtap="stepWhole" aria-label="减少一分钟">−</button>
+          <view class="timer__value">
+            <input class="num timer__input" type="number" value="{{wholeMinutes}}" bindinput="onWholeInput" bindblur="save" />
+            <text class="timer__muted">分钟</text>
           </view>
+          <button class="timer__step" data-delta="1" bindtap="stepWhole" aria-label="增加一分钟">+</button>
         </view>
-
-        <view wx:if="{{mode === 'whole'}}" class="card timer__stepper">
-          <view class="timer__step" data-delta="-5" bindtap="stepWhole">−</view>
-          <input class="timer__input num" type="number" value="{{wholeMinutes}}" bindinput="onWholeInput" bindblur="save" />
-          <text class="text-sm">分钟</text>
-          <view class="timer__step" data-delta="5" bindtap="stepWhole">+</view>
+        <view wx:if="{{selected && source === 'paper'}}" class="timer__switch">
+          <button class="timer__switch-item {{mode === 'whole' ? 'timer__switch-item--on' : ''}}" data-mode="whole" bindtap="setMode">整卷</button>
+          <button class="timer__switch-item {{mode === 'modules' ? 'timer__switch-item--on' : ''}}" data-mode="modules" bindtap="setMode">模块计划</button>
         </view>
-
-        <view wx:else class="card timer__modules">
+        <view wx:if="{{mode === 'modules'}}" class="timer__modules">
           <view wx:for="{{sections}}" wx:key="key" class="timer__module">
-            <view class="stack grow">
-              <text class="text-md">{{item.type}}</text>
-              <text class="text-xs">{{item.count}} 题</text>
-            </view>
-            <view class="timer__module-step" data-index="{{index}}" data-delta="-1" bindtap="stepModule">−</view>
-            <text class="num timer__module-min">{{item.minutes}}</text>
-            <view class="timer__module-step" data-index="{{index}}" data-delta="1" bindtap="stepModule">+</view>
+            <text class="grow">{{item.type}}</text>
+            <button class="timer__step" data-index="{{index}}" data-delta="-1" bindtap="stepModule">−</button>
+            <text class="timer__module-min">{{item.minutes}} 分钟</text>
+            <button class="timer__step" data-index="{{index}}" data-delta="1" bindtap="stepModule">+</button>
           </view>
-          <view class="row row--between timer__total">
-            <text class="text-sm">模块合计</text>
-            <text class="num text-md">{{planTotal}} 分钟</text>
-          </view>
-        </view>
-      </view>
-
-      <view class="footer-bar">
-        <view class="footer-bar__inner">
-          <view class="btn btn--primary" bindtap="start">
-            <image class="btn__icon" src="{{uiBase}}/play.svg" mode="aspectFit" />
-            开始计时
-          </view>
+          <view class="row row--between timer__total"><text>模块合计</text><text>{{planTotal}} 分钟</text></view>
         </view>
       </view>
     </block>
-
-    <view wx:else class="footer-bar">
+    <view class="footer-bar">
       <view class="footer-bar__inner">
-        <view class="btn btn--ghost timer__wide" bindtap="pause">{{paused ? '继续' : '暂停'}}</view>
-        <view class="btn btn--primary" bindtap="finish">结束并录答案</view>
+        <button wx:if="{{running}}" class="btn btn--ghost timer__pause" bindtap="pause">{{paused ? '继续' : '暂停'}}</button>
+        <button wx:if="{{running}}" class="btn btn--primary" bindtap="finish">结束并录答案</button>
+        <button wx:else class="btn btn--primary" bindtap="start"><image class="btn__icon" src="{{uiBase}}/play-light.svg" mode="aspectFit" />开始计时</button>
       </view>
     </view>
-  </block>
+  </view>
+
+  <view wx:if="{{paperPicker}}" class="sheet-layer">
+    <view class="sheet-shade" catchtap="closePaperPicker"></view>
+    <view class="sheet-panel">
+      <view class="sheet-handle"></view>
+      <view class="sheet-head">
+        <button class="sheet-close" wx:if="{{activeProject >= 0}}" bindtap="closePaperPicker" aria-label="返回机构"><image src="{{uiBase}}/back.svg" mode="aspectFit" /></button>
+        <text class="grow">{{activeProject >= 0 ? papers[activeProject].label : '选择套卷'}}</text>
+        <button class="sheet-close" bindtap="closePaperPicker" aria-label="关闭"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button>
+      </view>
+      <scroll-view scroll-y class="sheet-scroll">
+        <block wx:if="{{activeProject < 0}}">
+          <button wx:for="{{papers}}" wx:key="name" class="timer__picker-row" data-index="{{index}}" bindtap="openSection">
+            <text class="grow">{{item.label}}</text><image src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+          </button>
+        </block>
+        <block wx:else>
+          <button wx:for="{{papers[activeProject].versions}}" wx:key="id" class="timer__picker-row" data-id="{{item.id}}" bindtap="pickPaper">
+            <view class="stack grow"><text>{{item.title}}</text><text class="timer__muted">{{item.questionCount}} 题 · {{item.defaultMinutes}} 分钟</text></view>
+            <image src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+          </button>
+        </block>
+      </scroll-view>
+    </view>
+  </view>
 </view>

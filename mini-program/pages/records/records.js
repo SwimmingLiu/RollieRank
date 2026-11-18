@@ -1,7 +1,8 @@
-const api = require("../../services/api");
-const storage = require("../../utils/storage");
-const format = require("../../utils/format");
-const { ASSET } = require("../../config");
+const api = require("../../services/api.js");
+const storage = require("../../utils/storage.js");
+const format = require("../../utils/format.js");
+const { publisherName, periodLabel, LOGO } = require("../../utils/catalog.js");
+const { ASSET } = require("../../config.js");
 
 const TABS = [
   { key: "all", label: "全部" },
@@ -17,7 +18,6 @@ Page({
     drafts: [],
     tab: "all",
     tabs: TABS,
-    totals: { count: 0, best: "--", average: "--" },
     loading: true,
     syncing: false,
     asset: ASSET,
@@ -43,35 +43,30 @@ Page({
   refresh() {
     const history = storage.history();
     const position = storage.position();
-    const draftIds = [];
-    const records = history.map(record => ({
-      ...record,
-      scoreText: format.score(record.totalCents),
-      dateText: format.dateTime(record.createdAt),
-      detail: [record.institution, record.period].filter(Boolean).join(" · "),
-      rateText: format.percent(record.rate),
-    }));
-    let draftCount = 0;
-    try {
-      draftCount = wx.getStorageInfoSync().keys.filter(key => key.startsWith("rr:draft:")).length;
-    } catch {
-      draftCount = 0;
-    }
-    const average = records.length
-      ? records.reduce((sum, record) => sum + (record.maxCents ? record.totalCents / record.maxCents : 0), 0) / records.length
-      : null;
-    const best = records.reduce((top, record) => (top && top.rate >= (record.rate || 0) ? top : record), null);
+    const versions = getApp().globalData.versions;
+    const withIdentity = record => {
+      const version = versions.find(item => item.id === record.versionId) || record;
+      const institution = version.institution || record.identity?.split(" · ")[0] || "";
+      const year = String(version.project || record.identity || "").match(/20\d{2}/)?.[0] || "";
+      const number = version.number || record.title?.match(/第\s*(\d+)\s*套/)?.[1];
+      return {
+        ...record,
+        publisher: publisherName(institution),
+        logo: ASSET[LOGO[institution === "花生" ? "四海" : institution]] || "",
+        edition: [year, periodLabel(version.period)].filter(Boolean).join(" · "),
+        paper: number ? String(number).padStart(2, "0") + "套" : record.title,
+        scoreText: format.score(record.totalCents),
+        progress: record.questionCount ? record.answered / record.questionCount * 100 : 0,
+      };
+    };
+    const records = history.map(withIdentity);
+    const drafts = Object.values(storage.draftIndex()).map(draft => withIdentity({ ...draft, draft: true }));
     this.setData({
       loading: false,
       name: storage.name(),
       position: position ? { id: position.id, label: position.label || position.title } : null,
       records,
-      drafts: draftCount ? [{ id: "drafts", count: draftCount }] : [],
-      totals: {
-        count: records.length,
-        best: best ? format.score(best.totalCents) : "--",
-        average: average === null ? "--" : format.percent(average),
-      },
+      drafts,
     });
     this.applyFilter();
   },
@@ -94,12 +89,10 @@ Page({
   applyFilter() {
     const { tab, keyword } = this.data;
     const key = String(keyword || "").trim().toLowerCase();
-    const records = this.data.records.filter(record => {
-      if (tab === "draft") return false;
-      if (key && !`${record.title} ${record.institution} ${record.period}`.toLowerCase().includes(key)) return false;
-      return true;
-    });
-    this.setData({ visible: records });
+    const { records, drafts } = this.data;
+    const items = tab === "draft" ? drafts : tab === "done" ? records : [...drafts, ...records];
+    const visible = items.filter(record => !key || [record.title, record.publisher, record.edition].join(" ").toLowerCase().includes(key));
+    this.setData({ visible });
   },
 
   setTab(event) {
@@ -119,8 +112,11 @@ Page({
   },
 
   openRecord(event) {
-    const { id } = event.currentTarget.dataset;
-    wx.navigateTo({ url: `/pages/report/report?attemptId=${id}` });
+    const record = this.data.visible[event.currentTarget.dataset.index];
+    const url = record.draft
+      ? "/pages/practice/practice?versionId=" + encodeURIComponent(record.versionId) + "&attemptId=" + encodeURIComponent(record.id)
+      : "/pages/report/report?attemptId=" + encodeURIComponent(record.id);
+    wx.navigateTo({ url });
   },
 
   openPosition() {

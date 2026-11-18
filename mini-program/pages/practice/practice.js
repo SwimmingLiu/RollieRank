@@ -1,6 +1,8 @@
-const api = require("../../services/api");
-const storage = require("../../utils/storage");
-const catalogUtil = require("../../utils/catalog");
+const api = require("../../services/api.js");
+const storage = require("../../utils/storage.js");
+const catalogUtil = require("../../utils/catalog.js");
+
+const { ASSET } = require("../../config.js");
 
 const CHOICES = ["A", "B", "C", "D"];
 
@@ -29,6 +31,15 @@ Page({
     sections: [],
     activeSection: 0,
     questions: [],
+    allQuestions: [],
+    currentQuestion: null,
+    current: 1,
+    single: false,
+    markOnly: false,
+    scrollTarget: "",
+    sheet: "",
+    progress: 0,
+    publisherLogo: "",
     answers: [],
     marks: [],
     answered: 0,
@@ -40,16 +51,18 @@ Page({
 
   onLoad(query) {
     this.attemptId = query.attemptId || "";
-    this.load(query.versionId);
+    this.versionId = decodeURIComponent(query.versionId || "");
+    this.retry();
   },
 
-  async load(versionId) {
+  async retry() {
     this.setData({ loading: true, error: "" });
     try {
       const versions = await api.catalog();
-      const version = versions.find(v => v.id === versionId);
+      const version = versions.find(v => v.id === this.versionId);
       if (!version) throw new Error("找不到这套卷，请回到选卷页重新选择。");
       const draft = storage.loadDraft(version.id) || {};
+      this.savedDraft = Boolean(draft.id);
       const answers = new Array(version.questionCount).fill("");
       if (Array.isArray(draft.answers)) {
         draft.answers.forEach((value, index) => {
@@ -60,42 +73,49 @@ Page({
       if (Array.isArray(draft.marks)) draft.marks.forEach((value, index) => {
         if (index < marks.length) marks[index] = Boolean(value);
       });
-      if (!this.attemptId) this.attemptId = storage.pendingId(version.id);
+      if (!this.attemptId) this.attemptId = draft.id || storage.pendingId(version.id);
       this.version = version;
       this.setData({
         loading: false,
         version: { id: version.id, questionCount: version.questionCount, invigilator: version.timeLimitMinutes || 0 },
         title: catalogUtil.versionTitle(version),
-        identity: catalogUtil.identity(version),
+        identity: [
+          catalogUtil.publisherName(version.institution),
+          String(version.project || "").split(" · ")[0],
+          catalogUtil.periodLabel(version.period),
+          version.number ? "行测" + String(version.number).padStart(2, "0") + "套" : version.title,
+        ].filter(Boolean).join(" · "),
+        publisherLogo: ASSET[catalogUtil.LOGO[version.institution]] || "",
+        current: Math.min(version.questionCount, Math.max(1, Number(draft.current) || 1)),
+        single: Boolean(draft.single),
         sections: sectionsOf(version),
         answers,
         marks,
-        questions: this.rows(version, answers, marks, 0),
       });
-      this.updateCounts();
-      if (draft.updatedAt) wx.showToast({ title: "已恢复上次录入", icon: "none" });
+      this.reflect();
+      if (this.data.current > 1) this.jump(this.data.current);
     } catch (error) {
       this.setData({ loading: false, error: error.message });
     }
   },
 
-  rows(version, answers, marks, activeSection) {
-    const section = this.data.sections[activeSection];
-    return version.questions
-      .filter(question => !section || (question.number >= section.start && question.number <= section.end))
-      .map(question => ({
-        number: question.number,
-        type: question.type,
-        answer: answers[question.number - 1] || "",
-        marked: Boolean(marks[question.number - 1]),
-      }));
-  },
 
-  updateCounts(answers) {
-    const list = answers || this.data.answers;
+  reflect() {
+    const { answers, marks, current, markOnly, sections } = this.data;
+    const allQuestions = this.version.questions.map(question => ({
+      number: question.number,
+      type: question.type,
+      answer: answers[question.number - 1] || "",
+      marked: Boolean(marks[question.number - 1]),
+    }));
+    const questions = markOnly ? allQuestions.filter(question => question.marked) : allQuestions;
+    const currentQuestion = questions.find(question => question.number === current) || questions[0] || null;
+    const activeSection = Math.max(0, sections.findIndex(section => current >= section.start && current <= section.end));
+    const answered = answers.filter(Boolean).length;
     this.setData({
-      answered: list.filter(Boolean).length,
-      uncertain: (this.data.marks || []).filter(Boolean).length,
+      allQuestions, questions, currentQuestion, activeSection, answered,
+      uncertain: marks.filter(Boolean).length,
+      progress: answered / this.version.questionCount * 100,
     });
   },
 
@@ -103,84 +123,105 @@ Page({
     const { number, choice } = event.currentTarget.dataset;
     const index = Number(number) - 1;
     const answers = this.data.answers.slice();
-    // 再次点同一选项即取消，避免误录后必须跳过。
     answers[index] = answers[index] === choice ? "" : choice;
-    this.setData({ answers });
-    this.reflect(answers, this.data.marks);
+    this.setData({ answers, current: Number(number) });
+    this.reflect();
+    if (answers[index] && this.data.single) this.moveQuestion(1);
     this.persist();
   },
 
   toggleMark(event) {
-    const index = Number(event.currentTarget.dataset.number) - 1;
+    const number = Number(event.currentTarget.dataset.number);
     const marks = this.data.marks.slice();
-    marks[index] = !marks[index];
-    this.setData({ marks });
-    this.reflect(this.data.answers, marks);
+    marks[number - 1] = !marks[number - 1];
+    this.setData({ marks, current: number });
+    this.reflect();
     this.persist();
   },
 
-  // 只在当前章节内重建行，避免整页重排导致键盘与滚动位置跳动。
-  reflect(answers, marks) {
-    const activeSection = this.data.activeSection;
-    this.setData({ questions: this.rows(this.version, answers, marks, activeSection) });
-    this.updateCounts(answers);
+  switchSection(event) {
+    const section = this.data.sections[Number(event.currentTarget.dataset.index)];
+    if (!section) return;
+    this.setData({ markOnly: false, sheet: "" });
+    this.jump(section.start);
   },
 
-  switchSection(event) {
-    const index = Number(event.currentTarget.dataset.index);
-    this.setData({ activeSection: index });
-    this.reflect(this.data.answers, this.data.marks);
+  goQuestion(event) {
+    this.setData({ markOnly: false, sheet: "" });
+    this.jump(Number(event.currentTarget.dataset.number));
+  },
+
+  jump(number) {
+    this.setData({ current: number, scrollTarget: "" });
+    this.reflect();
+    this.setData({ scrollTarget: "answer-" + number });
+    this.persist();
+  },
+
+  toggleMarkFilter() {
+    const markOnly = !this.data.markOnly;
+    const current = markOnly ? this.data.allQuestions.find(question => question.marked)?.number || this.data.current : this.data.current;
+    this.setData({ markOnly });
+    this.jump(current);
+  },
+
+  toggleMode() {
+    this.setData({ single: !this.data.single });
+    this.jump(this.data.current);
+  },
+
+  moveQuestion(direction) {
+    const { questions, currentQuestion } = this.data;
+    const position = questions.findIndex(question => question.number === currentQuestion?.number);
+    const next = questions[position + direction];
+    if (next) this.jump(next.number);
+  },
+
+  startSwipe(event) {
+    this.swipeStart = event.touches[0];
+  },
+
+  endSwipe(event) {
+    const start = this.swipeStart;
+    const end = event.changedTouches[0];
+    if (!start || !end) return;
+    const horizontal = end.clientX - start.clientX;
+    const vertical = end.clientY - start.clientY;
+    if (Math.abs(horizontal) >= 35 && Math.abs(horizontal) > Math.abs(vertical)) {
+      this.moveQuestion(horizontal < 0 ? 1 : -1);
+    }
   },
 
   persist() {
-    if (!this.version) return;
-    storage.saveDraft(this.version.id, {
-      id: this.attemptId,
-      versionId: this.version.id,
-      answers: this.data.answers.map(value => value || null),
-      marks: this.data.marks,
+    if (!this.version || !this.attemptId) return;
+    const { answers, marks, current, single, answered, title, identity } = this.data;
+    if (!answered && !marks.some(Boolean) && current === 1 && !single && !this.savedDraft) return;
+    const versionId = this.version.id;
+    storage.saveDraft(versionId, { id: this.attemptId, versionId, answers: answers.map(value => value || null), marks, current, single });
+    storage.setDraftEntry(versionId, {
+      id: this.attemptId, answered, title, identity, questionCount: this.version.questionCount, versionId,
     });
-    // 只有真正录过的卷才出现在续录入口，空白草稿不占目录。
-    const answered = this.data.answers.filter(Boolean).length;
-    storage.setDraftEntry(this.version.id, answered ? {
-      id: this.attemptId,
-      answered,
-      title: this.data.title,
-      identity: this.data.identity,
-      questionCount: this.version.questionCount,
-      versionId: this.version.id,
-    } : null);
+    this.savedDraft = true;
+  },
+
+  openSections() {
+    this.setData({ sheet: "sections" });
   },
 
   openSheet() {
-    // 答题卡按章节给出完成度，方便跳回漏答的板块。
-    const sections = this.data.sections.map(section => {
-      let done = 0;
-      for (let n = section.start; n <= section.end; n++) if (this.data.answers[n - 1]) done += 1;
-      return { ...section, done };
-    });
-    const labels = sections.map(s => `${s.type} ${s.done}/${s.count}`);
-    wx.showActionSheet({
-      itemList: labels.slice(0, 6),
-      success: res => this.switchSection({ currentTarget: { dataset: { index: res.tapIndex } } }),
-      fail: () => {},
-    });
+    this.setData({ sheet: "answers" });
+  },
+
+  closeSheet() {
+    this.setData({ sheet: "" });
   },
 
   submit() {
-    if (this.data.submitting) return;
-    const blank = this.data.answers.filter(value => !value).length;
-    wx.showModal({
-      title: blank ? `还有 ${blank} 题未答` : "确认交卷",
-      content: blank ? "留空的题目按 0 分计入本次成绩，仍要交卷吗？" : "交卷后按服务端答案核分，可随时重练。",
-      confirmText: "交卷",
-      success: res => {
-        if (res.confirm) this.doSubmit();
-      },
-    });
+    if (!this.data.submitting) this.setData({ sheet: "submit" });
   },
 
   async doSubmit() {
+    if (this.data.submitting) return;
     this.setData({ submitting: true });
     wx.showLoading({ title: "正在核分", mask: true });
     try {
@@ -194,7 +235,9 @@ Page({
       }
       const attempt = await api.submit({ version: this.version, answers, attemptId: this.attemptId, timing });
       storage.upsertAttempt(attempt);
+      wx.setStorageSync(storage.KEYS.marks(attempt.id), this.data.marks);
       storage.dropDraft(this.version.id);
+      storage.clearPendingId(this.version.id, this.attemptId);
       storage.setDraftEntry(this.version.id, null);
       wx.removeStorageSync("rr:timing:pending");
       this.attemptId = "";
@@ -202,7 +245,7 @@ Page({
       wx.redirectTo({ url: `/pages/report/report?attemptId=${attempt.id}` });
     } catch (error) {
       wx.hideLoading();
-      this.setData({ submitting: false });
+      if (this.attemptId) this.setData({ submitting: false });
       wx.showModal({ title: "交卷未完成", content: error.message, showCancel: false });
     }
   },

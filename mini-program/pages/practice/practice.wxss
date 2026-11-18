@@ -1,16 +1,54 @@
-.practice__head { padding: 8rpx 32rpx 0; }
-.practice__count { font-size: 28rpx; color: #79767d; margin-left: 20rpx; }
-.practice__filters { margin-top: 22rpx; padding-bottom: 20rpx; border-bottom: 2rpx solid #ece5d8; }
-.practice__section { font-size: 30rpx; font-weight: 600; }
-.practice__chev { width: 26rpx; height: 26rpx; opacity: 0.6; }
-.practice__list { padding: 0 24rpx 40rpx; }
-.practice__row { display: flex; align-items: center; gap: 16rpx; padding: 18rpx 4rpx; border-bottom: 2rpx solid #f4eee3; }
-.practice__no { width: 56rpx; text-align: center; font-size: 28rpx; color: #79767d; }
-.practice__choices { flex: 1; display: flex; gap: 14rpx; }
-.practice__choice { flex: 1; height: 84rpx; border-radius: 22rpx; background: #fffdf8; border: 2rpx solid #ece5d8; display: flex; align-items: center; justify-content: center; font-size: 32rpx; color: #4a443f; transition: transform 100ms ease, background 100ms ease; }
-.practice__choice:active { transform: scale(0.97); }
-.practice__choice--on { background: #2b2724; border-color: #2b2724; color: #fff8ee; font-weight: 600; }
-.practice__mark { width: 88rpx; display: flex; flex-direction: column; align-items: center; gap: 2rpx; color: #b7b1a7; }
-.practice__mark-icon { width: 34rpx; height: 34rpx; }
-.practice__mark-label { font-size: 20rpx; line-height: 1.2; }
-.practice__mark--on { color: #c2565c; }
+.practice { display: flex; flex-direction: column; height: 100vh; min-height: 0; padding-bottom: 0; overflow: hidden; }
+.practice__head { flex: none; padding: 0 22px 12px; border-bottom: 1px solid #f0e9dc; }
+.practice__identity { display: flex; align-items: center; gap: 7px; height: 48px; font-size: 11px; color: #79767d; }
+.practice__identity image { width: 16px; height: 16px; flex: none; }
+.practice__count { margin-left: 5px; white-space: nowrap; font-size: 16px; font-weight: 650; color: #302d26; }
+.practice__count text { color: #a0927c; font-size: 11px; font-weight: 450; }
+.practice__filters { display: flex; align-items: center; gap: 8px; }
+.practice__filter { display: flex; align-items: center; justify-content: flex-start; gap: 5px; padding: 0 6px; min-height: 44px; width: auto !important; color: #79654a; font-size: 12px; }
+.practice__filter image { width: 15px; height: 15px; flex: none; opacity: .64; }
+.practice__filter--icon { width: 32px !important; justify-content: center; }
+.practice__filter--on { color: #a36d52; background: #f3e6d6; border-radius: 9px; }
+.practice__progress { height: 3px; background: #eae2d5; border-radius: 2px; overflow: hidden; }
+.practice__progress view { height: 100%; background: #ba945e; }
+.practice__scroller { flex: 1; min-height: 0; height: 0; }
+.practice__list { padding: 13px 16px 14px; }
+.practice__row { position: relative; display: grid; grid-template-columns: 28px repeat(4, minmax(0, 1fr)) 46px; align-items: center; gap: 5px; min-height: 66px; border-bottom: 1px solid #ece3d4; }
+.practice__row--current { background: #fff8f3; border-radius: 14px; }
+.practice__row--current:before { content: ""; position: absolute; left: -6px; height: 22px; width: 3px; border-radius: 3px; background: #f27076; }
+.practice__row--marked { background: #f8efde; }
+.practice__no { padding-left: 6px; color: #a1a1aa; font-size: 14px; }
+.practice__row--current .practice__no { color: #18181b; }
+.practice__choice { display: grid; place-items: center; width: 100% !important; height: 44px; border: 1px solid #e7dece; border-radius: 13px; box-shadow: 0 2px 0 #e3d8c4; background: #fff; color: #71717a; font-size: 15px; }
+.practice__choice--on { border-color: #292a24; background: #292a24; color: #fffaf0; box-shadow: 0 2px 0 #1e211b; }
+.practice__mark { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 44px; width: 100% !important; color: #9c8565; font-size: 9px; }
+.practice__mark image { width: 12px; height: 12px; opacity: .6; }
+.practice__mark--on { color: #ad674e; }
+.practice__footer { flex: none; display: flex; align-items: flex-start; gap: 12px; padding: 12px 20px calc(16px + env(safe-area-inset-bottom)); }
+.practice__submit { min-height: 38px; font-weight: 550; }
+.practice__footer .btn--ghost { border-radius: 50%; background: transparent; }
+.practice__section-list { display: flex; flex-direction: column; gap: 8px; padding: 4px 0; }
+.practice__section-option { display: flex; align-items: center; justify-content: space-between; width: 100% !important; min-height: 44px; padding: 10px 14px; border-radius: 12px; background: #f4ecde; color: #655743; font-size: 14px; }
+.practice__sheet-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(42px, 1fr)); gap: 8px; padding: 6px 0; }
+.practice__sheet-cell { width: 100% !important; height: 46px; display: flex; align-items: center; justify-content: center; gap: 3px; border: 1px solid #ece2d0; border-radius: 9px; color: #87785c; background: #fcf8f1; font-size: 12px; }
+.practice__sheet-cell--done { background: #ece5d5; color: #302d24; }
+.practice__sheet-cell--marked { border-color: #d39868; }
+.practice__confirm-copy { font-size: 14px; color: #786c5c; }
+.practice__single { display: flex; padding: 16px 20px; align-items: flex-start; }
+.practice__single-card { width: 100% !important; padding: 18px; background: #fffdf8; border: 1px solid #e9e1d4; border-radius: 22px; }
+.practice__single-meta { display: flex; justify-content: space-between; font-size: 12px; color: #8a765b; }
+.practice__single-number { text-align: center; font-size: 46px; font-weight: 750; line-height: 1.2; margin: 10px 0 14px; }
+.practice__single-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.practice__single-choices .practice__choice { min-height: 52px; }
+.practice__single-mark { margin: 10px auto 0; }
+@media (max-width: 350px) {
+  .practice__head, .practice__footer, .practice__single { padding-inline: 16px; }
+  .practice__list { padding-inline: 12px; }
+  .practice__row { grid-template-columns: 22px repeat(4, minmax(0, 1fr)) 40px; }
+}
+@media (max-height: 650px) {
+  .practice__single { padding-top: 10px; }
+  .practice__single-card { padding: 12px; }
+  .practice__single-number { font-size: 32px; margin-block: 6px; }
+  .practice__single-choices .practice__choice { min-height: 44px; }
+}

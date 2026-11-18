@@ -2,6 +2,7 @@
 // 用法：node mini-program/tools/check.mjs
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 
@@ -9,6 +10,12 @@ const root = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const repo = path.resolve(root, "..");
 const require = createRequire(path.join(root, "package.json"));
 const problem = message => { console.log("✖ " + message); process.exitCode = 1; };
+
+for (const name of readdirSync(root, { recursive: true })) {
+  if (!/^(?:app\.js|config\.js|(?:components|pages|services|utils)\/.*\.js)$/.test(name)) continue;
+  const result = spawnSync(process.execPath, ["--check", path.join(root, name)], { encoding: "utf8" });
+  if (result.status !== 0) problem(result.stderr.trim() || name);
+}
 
 const app = JSON.parse(readFileSync(path.join(root, "app.json"), "utf8"));
 const pages = readdirSync(path.join(root, "pages"), { withFileTypes: true })
