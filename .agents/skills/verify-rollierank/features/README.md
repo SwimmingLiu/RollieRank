@@ -14,4 +14,4 @@
 
 - [群体分析与公开成绩](insights.md)
 - [做题计时与完整录答](timing-practice.md)
-- [微信小程序原生页面](miniprogram-ui.md)
+- [微信小程序原稿版](miniprogram-ui.md)

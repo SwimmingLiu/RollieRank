@@ -1,0 +1,6 @@
+<web-view wx:if="{{src}}" src="{{src}}" use-web-title="{{false}}" binderror="onWebError"></web-view>
+<view wx:else class="web-status">
+  <text>{{error || "正在打开卷卷小榜…"}}</text>
+  <button wx:if="{{error}}" class="btn btn--primary" bindtap="start">重试</button>
+  <button wx:if="{{error}}" class="btn btn--soft" bindtap="backToNative">打开本机练习</button>
+</view>

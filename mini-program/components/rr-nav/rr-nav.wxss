@@ -12,10 +12,10 @@
   letter-spacing: -.4px;
 }
 .nav__bar--action .nav__title {
-  --title-width: min(96px, calc(100% - var(--menu-clearance) - 96px));
+  --title-width: min(96px, calc(100% - var(--menu-clearance) - 112px));
   position: absolute;
   width: var(--title-width);
-  left: min(50%, calc(100% - var(--menu-clearance) - 44px - var(--title-width) / 2));
+  left: min(50%, calc(100% - var(--menu-clearance) - 52px - var(--title-width) / 2));
   transform: translateX(-50%);
   max-width: none;
   text-align: center;

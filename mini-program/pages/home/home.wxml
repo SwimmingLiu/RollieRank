@@ -1,4 +1,5 @@
-<view class="screen">
+<view wx:if="{{openingWeb}}" class="screen screen--plain"><view class="loading">正在打开卷卷小榜…</view></view>
+<view wx:else class="screen">
   <rr-nav title="卷卷小榜" logo="{{asset.logo}}" back="{{false}}" />
 
   <view class="home__body">

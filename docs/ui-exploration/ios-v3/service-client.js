@@ -35,7 +35,7 @@ export function iosScore(attempt) {
       earned: type.centsEarned, max: type.maxCents })) };
 }
 
-export function createIOSServiceClient({ storage, storageName, getUIState, persistUI, fetchImpl = globalThis.fetch }) {
+export function createIOSServiceClient({ storage, storageName, getUIState, persistUI, launchIdentity, fetchImpl = globalThis.fetch }) {
   const key = storageName + ":service:v1";
   const proxyStorage = { getItem: () => storage.getItem(key) };
   let versions = [], status = "loading", failure = "", rootState = initialState(), pending = {};
@@ -44,6 +44,16 @@ export function createIOSServiceClient({ storage, storageName, getUIState, persi
     pending = Object.fromEntries(Object.entries(prior?.iosPending ?? {}).filter(([, id]) => validId(id)));
     rootState = loadState(proxyStorage, []).state;
   } catch { /* Keep existing authored UI history intact when service metadata cannot be restored. */ }
+
+  if (validId(launchIdentity?.guestId)) {
+    if (rootState.guestId !== launchIdentity.guestId) {
+      rootState = { ...initialState(), guestId: launchIdentity.guestId };
+      pending = {};
+    }
+    if (!rootState.profile && launchIdentity.name) {
+      rootState.profile = { id: rootState.guestId, name: launchIdentity.name };
+    }
+  }
 
   const persist = () => {
     try { storage.setItem(key, JSON.stringify({ ...rootState, iosPending: pending })); }

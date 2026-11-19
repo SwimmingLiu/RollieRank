@@ -22,6 +22,7 @@ from urllib.request import Request, urlopen
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "test-results" / "verification"
 SCENARIOS = {
+    "miniprogram-ui": ("test/miniprogram-layout.test.js", "test/miniprogram-web.test.js"),
     "core": ("test/feature-integration.test.js",),
     "catalog-admin": ("test/imported-papers.test.js", "test/booklet-time-limits.test.js", "test/positions-import.test.js"),
     "practice-history": ("test/prototype-state.test.js", "test/model.test.js", "test/ios-entry.test.js", "test/ios-preview-cleanup.test.js", "test/preview-history-recovery.test.js"),
@@ -99,6 +100,12 @@ def source_lock() -> dict:
         ROOT / "README.md",
         ROOT / "package.json",
         ROOT / "test/miniprogram-layout.test.js",
+        ROOT / "test/miniprogram-web.test.js",
+        ROOT / "mini-program/tools/build-shared.mjs",
+        ROOT / "mini-program/pages/web/web.js",
+        ROOT / "mini-program/pages/web-action/web-action.js",
+        ROOT / "server/miniprogram-web.mjs",
+        ROOT / "docs/ui-exploration/ios-v3/wechat-webview.js",
         ROOT / "mini-program/app.js",
         ROOT / "mini-program/app.wxss",
         ROOT / "mini-program/tools/check.mjs",
@@ -381,6 +388,7 @@ def run_journeys(output: Path) -> dict:
         run_command([python, "scripts/verify-prototype.py", "--output", str(journeys / "prototype")], journeys / "prototype.log", "base-app-user-journey"),
         run_command([python, "scripts/verify-features.py", "--output", str(journeys / "features")], journeys / "features.log", "connected-feature-journey"),
         run_command([python, "scripts/verify-ios-features.py", "--output", str(journeys / "mobile")], journeys / "mobile.log", "mobile-user-journey"),
+        run_command([python, "scripts/verify-ios-features.py", "--wechat-host", "--output", str(journeys / "wechat")], journeys / "wechat.log", "wechat-hosted-ui-journey"),
     ]
     try:
         commands.append(run_command(["npm", "test"], journeys / "unit-and-service.log", "unit-and-service-suite", env, require_test_summary=True))
@@ -440,7 +448,8 @@ def run_unit(scenario: str, output: Path) -> dict:
     log = output / f"{scenario}.log"
     env = dict(os.environ, ROLLIERANK_BROWSER_PYTHON=sys.executable, ROLLIERANK_BROWSER_TEST="1", POSITIONS_PYTHON=os.environ.get("POSITIONS_PYTHON") or sys.executable)
     result = run_command(["node", "--test", *paths], log, scenario, env, require_test_summary=True)
-    live = run_command([sys.executable, "scripts/verify-ios-features.py", "--output", str(output / f"{scenario}-live")], output / f"{scenario}-live.log", f"{scenario}-live-user-journey", env)
+    web_host = ["--wechat-host"] if scenario == "miniprogram-ui" else []
+    live = run_command([sys.executable, "scripts/verify-ios-features.py", *web_host, "--output", str(output / f"{scenario}-live")], output / f"{scenario}-live.log", f"{scenario}-live-user-journey", env)
     commands = [result, live]
     # Catalog administration and backup/claim flows exist on the foundation surface too.
     if scenario in {"core", "catalog-admin", "practice-history", "sharing"}:
