@@ -11,6 +11,7 @@ Page({
     loading: true,
     error: "",
     projects: [],
+    projectOptions: [],
     activeProject: 0,
     uiBase: "/assets/ui",
   },
@@ -65,7 +66,7 @@ Page({
       const defaultProject = projects.findIndex(project => catalogUtil.periodLabel(project.period) === "第1期");
       const savedProject = projects.findIndex(project => project.key === savedKey);
       const activeProject = savedProject >= 0 ? savedProject : Math.max(0, defaultProject);
-      this.setData({ projects, loading: false, activeProject });
+      this.setData({ projects, projectOptions: projects.map(({ key, title }) => ({ key, label: title })), loading: false, activeProject });
     } catch (error) {
       this.setData({ loading: false, error: error.message });
     }
@@ -84,7 +85,7 @@ Page({
   },
 
   switchProject(event) {
-    const index = Number(event.currentTarget.dataset.index);
+    const index = this.data.projects.findIndex(project => project.key === event.detail.key);
     const selected = this.data.projects[index];
     if (!selected) return;
     const data = getApp().globalData;

@@ -18,6 +18,7 @@ export type RecordsProps = {
   records: PracticeRecord[];
   onOpen: (id: string) => void;
   user?: { name: string; avatarSrc: string };
+  onEditProfile?: () => void;
   viewState?: RecordsViewState;
   onViewStateChange?: (state: RecordsViewState) => void;
 };
@@ -63,7 +64,7 @@ function RecordLine({ record, onOpen }: { record: PracticeRecord; onOpen: Record
 }
 
 // 完整历史由宿主提供，独立于首页的三条近期练习；筛选始终以记录 id 打开原卷。
-export function Records({ records, onOpen, viewState, onViewStateChange, user = { name: "卷友", avatarSrc: "assets/avatars/rank-8.svg" } }: RecordsProps) {
+export function Records({ records, onOpen, viewState, onViewStateChange, onEditProfile, user = { name: "卷友", avatarSrc: "assets/avatars/rank-8.svg" } }: RecordsProps) {
   // 返回一张已浏览的历史列表时，恢复它的查询对象与位置；viewState只负责首次挂载种子。
   const initialView = useRef<RecordsViewState>(viewState ?? { query: "", filter: "all", scrollTop: 0 });
   const [query, setQuery] = useState(initialView.current.query);
@@ -107,6 +108,7 @@ export function Records({ records, onOpen, viewState, onViewStateChange, user = 
             <p><NumberTicker value={records.length} animated={false} /><span>份练习</span></p>
           </div>
           <img className="rr6-profile-art" src="assets/illustrations/answer-paper.svg" alt="" aria-hidden="true" />
+          {onEditProfile ? <Button variant="ghost" className="rr-card-hit" onClick={onEditProfile} aria-label="编辑个人资料" /> : null}
         </CardContent>
       </Card>
       {/* 学习工具沿用卷卡双列布局，由同一原生组件呈现岗位和分析入口。 */}

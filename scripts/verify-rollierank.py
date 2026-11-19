@@ -22,7 +22,7 @@ from urllib.request import Request, urlopen
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "test-results" / "verification"
 SCENARIOS = {
-    "miniprogram-ui": ("test/miniprogram-layout.test.js", "test/miniprogram-web.test.js"),
+    "miniprogram-ui": ("test/miniprogram-layout.test.js", "test/miniprogram-web.test.js", "test/wechat-profile.test.js"),
     "core": ("test/feature-integration.test.js",),
     "catalog-admin": ("test/imported-papers.test.js", "test/booklet-time-limits.test.js", "test/positions-import.test.js"),
     "practice-history": ("test/prototype-state.test.js", "test/model.test.js", "test/ios-entry.test.js", "test/ios-preview-cleanup.test.js", "test/preview-history-recovery.test.js"),
@@ -111,6 +111,13 @@ def source_lock() -> dict:
         ROOT / "mini-program/templates/startup-card.wxss",
         ROOT / "mini-program/pages/web-action/web-action.js",
         ROOT / "server/miniprogram-web.mjs",
+        ROOT / "server/wechat-profile.mjs",
+        ROOT / "test/wechat-profile.test.js",
+        ROOT / "mini-program/config.js",
+        ROOT / "mini-program/services/profile.js",
+        *sorted((ROOT / "mini-program/pages/profile").glob("profile.*")),
+        *sorted((ROOT / "mini-program/pages/settings").glob("settings.*")),
+        *sorted((ROOT / "mini-program/components/rr-option-sheet").glob("rr-option-sheet.*")),
         ROOT / "docs/ui-exploration/ios-v3/wechat-webview.js",
         ROOT / "mini-program/app.js",
         ROOT / "mini-program/app.wxss",

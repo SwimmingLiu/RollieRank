@@ -1,6 +1,7 @@
 const ACTIVE_GUEST = "rollierank:wechat:guest";
 const GUEST = /^[\w-]{10,80}$/;
 const ACTION_SENDER = "rollierank:wechat:sender";
+const ACTIVE_AVATAR = "rollierank:wechat:avatar";
 
 async function request(path, body) {
   const response = await fetch("/api/miniprogram-web/" + path, {
@@ -28,6 +29,7 @@ export async function openWechatWebView() {
     migration = await request("redeem", { ticket });
     sessionStorage.setItem(ACTIVE_GUEST, migration.guestId);
     sessionStorage.setItem(ACTION_SENDER, migration.sender);
+    sessionStorage.setItem(ACTIVE_AVATAR, migration.avatarId || "");
     url.hash = "";
     history.replaceState(history.state, "", url);
   }
@@ -46,7 +48,9 @@ export async function openWechatWebView() {
   };
   updateInset();
   window.addEventListener("resize", updateInset);
-  return { guestId, migration, height, bottom };
+  const avatarId = sessionStorage.getItem(ACTIVE_AVATAR) || "";
+  const avatarSrc = /^[a-f0-9]{48}$/.test(avatarId) ? "/api/miniprogram-profile/avatar?id=" + avatarId : "";
+  return { guestId, migration, height, bottom, avatarSrc };
 }
 
 function openNativeAction(action) {
@@ -79,6 +83,10 @@ export async function saveWechatPoster(blob) {
 
 export function inviteWechatFriend({ institution, period, paper }) {
   return openNativeAction({ kind: "invite", institution, period, paper });
+}
+
+export function openWechatProfile() {
+  return openNativeAction({ kind: "profile" });
 }
 
 export function migrateWechatDrafts({ ui, catalog, attempts, migration, scopeForVersion }) {

@@ -1,5 +1,6 @@
 """Drive the actual iOS gallery and its iframe, using an isolated real API."""
 import argparse
+import base64
 import json
 import os
 import re
@@ -88,6 +89,73 @@ def app_native_action(base, receiver):
         if action and action["kind"] != "title":
             return action
     raise AssertionError("The native action did not arrive")
+
+
+def check_choice_sheet(frame, title):
+    panel = frame.get_by_role("dialog", name=title, exact=True)
+    expect(panel).to_be_visible()
+    expect(panel.get_by_role("heading")).to_have_count(0)
+    expect(panel.locator("#sheet-close,[data-slot='sheet-handle'],small")).to_have_count(0)
+    expect(panel.locator("[aria-pressed='true']")).to_have_count(1)
+    body = panel.locator("[data-slot='bottom-sheet-body']")
+    assert body.evaluate("node => getComputedStyle(node).scrollbarWidth") == "none"
+    return panel, body
+
+
+def drag_sheet(page, panel, distance):
+    box = panel.locator(".rr-options-drag-target").bounding_box()
+    assert box is not None
+    x, y = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+    page.mouse.move(x, y)
+    page.mouse.down()
+    page.mouse.move(x, y + distance, steps=12)
+    page.mouse.up()
+
+
+def exercise_collection_picker(page, frame, output):
+    frame.get_by_role("button", name="花生，选择套卷", exact=True).click()
+    expect(frame.locator('.view[data-page="papers"]')).to_be_visible()
+    picker = frame.locator("#period-picker")
+    picker.click()
+    panel, _ = check_choice_sheet(frame, "选择套卷")
+    expect(panel.locator("[data-period]")).to_have_count(3)
+    capture_phone_sizes(page, frame, output, "collection-picker")
+    frame.get_by_role("button", name="关闭面板", exact=True).click(position={"x": 45, "y": 50})
+    expect(panel).to_be_hidden()
+    original = picker.get_attribute("aria-label")
+    picker.click()
+    panel.locator("[data-period][aria-pressed='false']").first.click()
+    expect(panel).to_be_hidden()
+    assert picker.get_attribute("aria-label") != original
+    picker.click()
+    panel.get_by_role("button", name=re.compile("第1期")).click()
+    expect(picker).to_have_attribute("aria-label", original)
+    frame.get_by_role("button", name="返回首页", exact=True).click()
+    expect(frame.locator(".rr-brand")).to_be_visible()
+
+
+def exercise_review_picker(page, frame, output):
+    page.locator("#size").select_option("320,568")
+    expect(frame.locator("body")).to_have_js_property("clientWidth", 320)
+    trigger = frame.get_by_role("button", name="选择复盘板块", exact=True)
+    trigger.click()
+    panel, list_body = check_choice_sheet(frame, "选择复盘板块")
+    expect(panel).to_have_attribute("data-expanded", "false")
+    assert list_body.evaluate("node => node.scrollHeight > node.clientHeight")
+    drag_sheet(page, panel, -105)
+    expect(panel).to_have_attribute("data-expanded", "true")
+    page.locator("#phone").screenshot(path=str(output / "review-picker-expanded-320.png"))
+    drag_sheet(page, panel, 96)
+    expect(panel).to_have_attribute("data-expanded", "false")
+    list_body.hover()
+    page.mouse.wheel(0, 350)
+    expect(list_body).not_to_have_js_property("scrollTop", 0)
+    panel.get_by_role("button").last.click()
+    expect(panel).to_be_hidden()
+    trigger.click()
+    panel.get_by_role("button", name="复盘全部板块", exact=True).click()
+    expect(panel).to_be_hidden()
+    page.locator("#size").select_option("390,844")
 
 
 def assert_visible_score(frame, attempt):
@@ -219,7 +287,10 @@ def run(base, output, token=None, check_only=False, wechat_host=False):
             # Release the real server's responses only after checking both startup phases.
             page.route("**/api/miniprogram-web/redeem", lambda route: initial_requests.update(redeem=route), times=1)
             page.route("**/api/catalog", lambda route: initial_requests.update(catalog=route), times=1)
-            identity = {"guestId": str(uuid4()), "name": "卷友", "drafts": [], "marks": []}
+            profile_token = api(base, "miniprogram-profile/session", {})["token"]
+            avatar = base64.b64encode((ROOT / "mini-program/assets/rollierank-logo.png").read_bytes()).decode()
+            profile = api(base, "miniprogram-profile/profile", {"token": profile_token, "name": "纸卡卷友", "avatar": avatar})["profile"]
+            identity = {"guestId": str(uuid4()), "name": profile["name"], "avatarId": profile["avatarId"], "drafts": [], "marks": []}
             native_launch = api(base, "miniprogram-web/bootstrap", identity)
             ticket = native_launch["ticket"]
             # Supply the real native launch URL. Chromium reads the same handoff as the native page.
@@ -256,6 +327,12 @@ def run(base, output, token=None, check_only=False, wechat_host=False):
         frame = open_view(page, "me")
         if wechat_host:
             assert_wechat_title(frame, "练习记录")
+            profile_card = frame.locator(".rr2-profile-identity")
+            expect(profile_card.get_by_role("heading", name=identity["name"], exact=True)).to_be_visible()
+            expect(profile_card.locator("img[src*='miniprogram-profile/avatar']")).to_be_visible()
+            profile_card.get_by_role("button", name="编辑个人资料", exact=True).click()
+            assert app_native_action(base, {"receiver": native_launch["receiver"]}) == {"kind": "profile"}
+            checks.append("records display the locally saved WeChat profile and open the native profile through the bridge")
         expect(frame.get_by_role("button", name="选择报考岗位", exact=True)).to_be_visible()
         expect(frame.get_by_text("成长分析", exact=True)).to_be_visible()
         expect(frame.locator(".rr-practice-tool")).to_have_count(2)
@@ -292,6 +369,9 @@ def run(base, output, token=None, check_only=False, wechat_host=False):
             page.locator("#size").select_option("390,844")
             checks.append("the original logo and title stay together directly below the WeChat capsule")
         capture(page, frame, output, "home")
+        if wechat_host:
+            exercise_collection_picker(page, frame, output)
+            checks.append("the compact paper picker dismisses from the backdrop and applies the selected collection")
 
         # Fresh candidate data starts blank; all receipts are created by real answer buttons.
         frame = open_view(page, "entry")
@@ -372,6 +452,8 @@ def run(base, output, token=None, check_only=False, wechat_host=False):
         expect(frame.locator(".detail-table")).to_be_visible()
         if wechat_host:
             assert_wechat_title_actions(page, frame, "逐题对照", "返回估分", "反馈参考答案")
+            exercise_review_picker(page, frame, output)
+            checks.append("a long option list expands, collapses and scrolls on a short screen with scrollbars hidden")
         capture(page, frame, output, "details")
         frame = open_view(page, "share")
         capture(page, frame, output, "share")

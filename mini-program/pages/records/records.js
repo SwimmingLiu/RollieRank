@@ -1,5 +1,6 @@
 const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
+const profile = require("../../services/profile.js");
 const format = require("../../utils/format.js");
 const { publisherName, periodLabel, LOGO } = require("../../utils/catalog.js");
 const { ASSET } = require("../../config.js");
@@ -13,6 +14,7 @@ const TABS = [
 Page({
   data: {
     name: "卷友",
+    avatar: "",
     position: null,
     records: [],
     drafts: [],
@@ -64,6 +66,7 @@ Page({
     this.setData({
       loading: false,
       name: storage.name(),
+      avatar: profile.avatarUrl(),
       position: position ? { id: position.id, label: position.label || position.title } : null,
       records,
       drafts,
@@ -127,8 +130,8 @@ Page({
     wx.navigateTo({ url: "/pages/analytics/analytics" });
   },
 
-  openSettings() {
-    wx.navigateTo({ url: "/pages/settings/settings" });
+  openProfile() {
+    wx.navigateTo({ url: "/pages/profile/profile" });
   },
 
   openHome() {

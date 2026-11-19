@@ -33,6 +33,17 @@ body.beui-island button { min-width:32px; min-height:32px; }
 body.beui-island .rr-sheet > [data-slot="bottom-sheet-body"] { padding:0 !important; }
 body.beui-island .rr-sheet .sheet-heading { padding-inline:20px; }
 body.beui-island .rr-sheet #sheet-content { padding-inline:20px; }
+/* Simple choices keep the same sheet and native scrolling without the visual controls. */
+.rr-options-shade { background: rgba(41, 33, 27, .34); }
+.rr-options-sheet.rr-sheet { background: #fffdf8 !important; border-color: #ede2d1 !important; }
+html[data-host=wechat] .rr-options-sheet.rr-sheet { margin-bottom: 0; padding-bottom: var(--wx-bottom-extra); }
+.rr-options-sheet[data-expanded=false] { max-height: 52svh !important; }
+.rr-options-drag-zone { flex: none; }
+.rr-options-drag-target { height: 18px; cursor: grab; }
+html body .rr-options-sheet [data-slot=bottom-sheet-body] { scrollbar-width: none; }
+html body .rr-options-sheet [data-slot=bottom-sheet-body]::-webkit-scrollbar { display: none; }
+.rr-options-sheet .rr5-collection-option { min-height: 62px; }
+.rr2-profile-identity { position: relative; }
 /* 原岗位模块的 dialog 宽度不能套到 BottomSheet 的内层内容，否则会挤出右侧操作。 */
 .ios-feature-sheet.positions-modal { width: 100%; max-width: 100%; }
 .ios-feature-sheet .modal-actions { display: flex; gap: 10px; justify-content: flex-end; padding-top: 16px; }

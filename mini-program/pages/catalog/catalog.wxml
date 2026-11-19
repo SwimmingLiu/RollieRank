@@ -36,17 +36,5 @@
 
   <rr-tabbar active="home" />
 
-  <view wx:if="{{projectsOpen}}" class="sheet-layer">
-    <view class="sheet-shade" catchtap="closeProjects"></view>
-    <view class="sheet-panel">
-      <view class="sheet-handle"></view>
-      <view class="sheet-head"><text>选择套卷</text><button class="sheet-close" bindtap="closeProjects" aria-label="关闭"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button></view>
-      <scroll-view scroll-y class="sheet-scroll">
-        <button wx:for="{{projects}}" wx:key="key" class="cat__option {{activeProject === index ? 'cat__option--on' : ''}}" data-index="{{index}}" bindtap="switchProject" hover-class="press">
-          <view class="stack grow"><text>{{item.title}}</text><text class="cat__option-detail">{{item.variant ? item.variant + ' · ' : ''}}{{item.versions.length}} 套</text></view>
-          <image src="{{uiBase}}/{{activeProject === index ? 'check' : 'chevron'}}.svg" mode="aspectFit" />
-        </button>
-      </scroll-view>
-    </view>
-  </view>
+  <rr-option-sheet wx:if="{{projectsOpen}}" items="{{projectOptions}}" selected="{{projects[activeProject].key}}" label="选择套卷" bindselect="switchProject" binddismiss="closeProjects" />
 </view>

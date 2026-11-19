@@ -123,7 +123,7 @@ Page({
   },
 
   setType(event) {
-    const activeType = event.currentTarget.dataset.key;
+    const activeType = event.detail.key;
     this.setData({ activeType, typeLabel: activeType || "全部板块", typesOpen: false });
     this.apply();
   },

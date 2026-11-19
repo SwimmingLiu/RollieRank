@@ -1,0 +1,11 @@
+<view class="options-layer">
+  <view class="options-shade" catchtap="dismiss" catchtouchmove="ignoreTouch"></view>
+  <view class="options-panel" aria-role="dialog" aria-label="{{label}}" bindtouchstart="startTouch" bindtouchend="endTouch" bindtouchcancel="cancelTouch">
+    <scroll-view class="options-scroll {{expanded ? 'options-scroll--expanded' : ''}}" scroll-y enhanced show-scrollbar="{{false}}" bindscroll="onScroll">
+      <button wx:for="{{items}}" wx:key="key" class="options-row {{selected === item.key ? 'options-row--selected' : ''}}" aria-pressed="{{selected === item.key}}" data-key="{{item.key}}" bindtap="select" hover-class="options-row--pressed">
+        <text>{{item.label}}</text>
+        <image wx:if="{{selected === item.key}}" src="/assets/ui/check.svg" mode="aspectFit" />
+      </button>
+    </scroll-view>
+  </view>
+</view>

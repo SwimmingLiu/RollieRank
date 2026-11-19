@@ -1,8 +1,8 @@
 <view class="screen">
   <rr-nav title="练习记录" back="{{false}}" />
   <view class="records">
-    <button class="records__profile" bindtap="openSettings" aria-label="身份与设置">
-      <image class="records__avatar" src="{{asset.profile}}" mode="aspectFit" />
+    <button class="records__profile" bindtap="openProfile" aria-label="编辑个人资料">
+      <image class="records__avatar" src="{{avatar || asset.profile}}" mode="aspectFill" />
       <view class="stack grow">
         <text class="records__name ellipsis">{{name}}</text>
         <text class="records__profile-count">{{records.length + drafts.length}} 份练习</text>

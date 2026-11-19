@@ -31,7 +31,7 @@ function localSession() {
       if (/^[\w-]{10,80}$/.test(id)) marks.push([id, markedNumbers(wx.getStorageSync(key))]);
     }
   }
-  return { guestId: storage.guestId(), name: storage.name(), drafts, marks };
+  return { guestId: storage.guestId(), name: storage.name(), avatarId: storage.avatarId(), drafts, marks };
 }
 
 Page({
@@ -49,16 +49,18 @@ Page({
     }
     this.setData({ src: "", error: "" });
     try {
-      const { ticket, receiver } = await api.request("miniprogram-web/bootstrap", localSession());
+      const session = localSession();
+      const { ticket, receiver } = await api.request("miniprogram-web/bootstrap", session);
       if (this.destroyed) return;
       this.receiver = receiver;
+      this.profile = session.name + ":" + session.avatarId;
       const window = wx.getWindowInfo();
       const screenBottom = window.screenTop + window.windowHeight;
       const nativeTop = Math.max(window.screenTop, (window.statusBarHeight || 0) + 44);
       const bottom = Math.max(0, screenBottom - (window.safeArea?.bottom ?? screenBottom));
       // WebView reserves the native title bar even when the app shell uses custom navigation.
       const query = "design=paper-cards-1114-v3&embed=wechat&wxHeight=" + (screenBottom - nativeTop) + "&wxBottom=" + bottom;
-      this.setData({ src: WEB_APP_ORIGIN + "/ios-v3/app.html?" + query + this.paper + "#rr=" + ticket });
+      this.setData({ src: WEB_APP_ORIGIN + "/ios-v3/app.html?" + query + (this.resumeRecords ? "&page=me" : this.paper) + "#rr=" + ticket });
       this.listen();
     } catch (error) {
       this.setData({ error: error.message });
@@ -71,6 +73,12 @@ Page({
 
   onShow() {
     this.visible = true;
+    if (this.data.src && this.profile !== storage.name() + ":" + storage.avatarId()) {
+      // Returning from native profile editing restores records under the same practice identity.
+      this.resumeRecords = true;
+      this.start();
+      return;
+    }
     this.listen();
   },
 
@@ -85,9 +93,9 @@ Page({
   },
 
   async listen() {
-    if (!this.visible || !this.receiver || this.listening) return;
+    if (!this.visible || !this.receiver || this.listeningReceiver === this.receiver) return;
     const receiver = this.receiver;
-    this.listening = true;
+    this.listeningReceiver = receiver;
     let delay = 0;
     try {
       while (this.visible && receiver === this.receiver) {
@@ -97,6 +105,8 @@ Page({
           await wx.navigateTo({ url: "/pages/web-action/web-action?kind=poster&ticket=" + action.ticket });
         } else if (action.kind === "invite") {
           await wx.navigateTo({ url: "/pages/web-action/web-action?kind=invite" + linkQuery(action) });
+        } else if (action.kind === "profile") {
+          await wx.navigateTo({ url: "/pages/profile/profile" });
         } else if (action.kind === "title") {
           wx.setNavigationBarTitle({ title: action.title });
         }
@@ -105,8 +115,8 @@ Page({
       if (error.statusCode === 410 && receiver === this.receiver) this.receiver = "";
       delay = 2000;
     } finally {
-      this.listening = false;
-      if (this.visible && this.receiver) this.listenRetry = setTimeout(() => this.listen(), delay);
+      if (this.listeningReceiver === receiver) this.listeningReceiver = "";
+      if (this.visible && this.receiver === receiver) this.listenRetry = setTimeout(() => this.listen(), delay);
     }
   },
 

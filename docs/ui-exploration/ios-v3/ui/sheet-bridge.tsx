@@ -7,13 +7,14 @@ import { mountRoot, type Cleanup } from "./root-registry";
 export type SheetProps = {
   open: boolean;
   title: string;
+  layout?: "options";
   /** Only locally authored interface markup belongs here; this is not a remote HTML boundary. */
   html: string;
   onClose: () => void;
   onContentReady?: (content: HTMLElement) => void;
 };
 
-function BusinessSheet({ open, title, html, onClose, onContentReady }: SheetProps) {
+function BusinessSheet({ open, title, html, layout, onClose, onContentReady }: SheetProps) {
   // Native business controls stay in the authored content; the official sheet owns drag, focus and Escape.
   const contentRevision = useRef(0);
   const contentReady = useCallback((element: HTMLDivElement | null) => {
@@ -25,20 +26,22 @@ function BusinessSheet({ open, title, html, onClose, onContentReady }: SheetProp
     });
   }, [html, onContentReady]);
 
+  const options = layout === "options";
   return (
     <BottomSheet
       open={open}
       onOpenChange={(nextOpen) => { if (!nextOpen) onClose(); }}
-      snapPoints={["auto"]}
-      className="beui-island rr-sheet"
+      snapPoints={options ? ["auto", 0.86] : ["auto"]}
+      optionList={options}
+      className={options ? "beui-island rr-sheet rr-options-sheet" : "beui-island rr-sheet"}
       labels={{ label: title, close: "关闭面板" }}
     >
-      <div className="sheet-heading">
+      {!options && <div className="sheet-heading">
         <h2 id="sheet-title">{title}</h2>
         <Button id="sheet-close" variant="ghost" size="icon" className="icon-button" aria-label="关闭面板" onClick={onClose}>
           <X size={18} aria-hidden="true" />
         </Button>
-      </div>
+      </div>}
       <div id="sheet-content" ref={contentReady} dangerouslySetInnerHTML={{ __html: html }} />
     </BottomSheet>
   );

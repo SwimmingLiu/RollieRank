@@ -1,0 +1,18 @@
+<view class="screen screen--plain">
+  <rr-nav title="个人资料" />
+  <view class="profile__card">
+    <button class="profile__row" open-type="chooseAvatar" bindchooseavatar="onAvatar" disabled="{{busy}}">
+      <image class="profile__avatar" src="{{avatar || defaultAvatar}}" mode="aspectFill" />
+      <text class="grow">更换头像</text>
+      <image class="profile__arrow" src="/assets/ui/chevron.svg" />
+    </button>
+    <button class="profile__row" bindtap="openSettings">
+      <text>昵称</text><text class="profile__value grow ellipsis">{{name}}</text>
+      <image class="profile__arrow" src="/assets/ui/chevron.svg" />
+    </button>
+    <button wx:if="{{phoneEnabled}}" class="profile__row" open-type="getPhoneNumber" bindgetphonenumber="onPhone" disabled="{{busy}}">
+      <text>手机号</text><text class="profile__value grow">{{phoneLast4 ? '尾号 ' + phoneLast4 : '授权绑定（选填）'}}</text>
+      <image class="profile__arrow" src="/assets/ui/chevron.svg" />
+    </button>
+  </view>
+</view>

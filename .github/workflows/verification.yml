@@ -44,7 +44,7 @@ jobs:
           uv run --frozen --group verify python scripts/verify-rollierank.py doctor
           --output test-results/verification
       # The CLI rejects zero-exit test runs containing skips and retains current interaction screenshots.
-      - name: Verify web journeys, preview assets and WeChat startup, navigation and bridge
+      - name: Verify web journeys, preview assets and WeChat startup, option sheets and profiles
         run: >-
           uv run --frozen --group verify python scripts/verify-rollierank.py all
           --output test-results/verification

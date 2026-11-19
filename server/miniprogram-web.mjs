@@ -53,7 +53,8 @@ function sessionData(input) {
     Number.isSafeInteger(draft.current) && Number.isSafeInteger(draft.updatedAt))) return null;
   if (!marks.every(pair => Array.isArray(pair) && pair.length === 2 && ID.test(pair[0]) &&
     Array.isArray(pair[1]) && pair[1].length <= 300 && pair[1].every(n => Number.isInteger(n) && n > 0 && n <= 300))) return null;
-  return { guestId: input.guestId, name, drafts, marks };
+  const avatarId = typeof input.avatarId === "string" && TICKET.test(input.avatarId) ? input.avatarId : "";
+  return { guestId: input.guestId, name, drafts, marks, ...(avatarId ? { avatarId } : {}) };
 }
 
 const INSTITUTIONS = new Set(["四海", "超格", "粉笔", "上岸村"]);
@@ -65,6 +66,7 @@ function nativeAction(input, posters) {
     return { kind: "title", title: input.title, revision: input.revision };
   }
   if (input.kind === "poster" && posters.get(input.ticket)) return { kind: "poster", ticket: input.ticket };
+  if (input.kind === "profile") return { kind: "profile" };
   if (input.kind === "invite" && INSTITUTIONS.has(input.institution) &&
     integerBetween(input.period, 1, 999) && integerBetween(input.paper, 1, 300)) {
     return { kind: "invite", institution: input.institution, period: input.period, paper: input.paper };

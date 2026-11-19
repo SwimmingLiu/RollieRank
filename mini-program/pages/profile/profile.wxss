@@ -1,0 +1,7 @@
+.profile__card { margin: 14px 22px; padding: 0 16px; border: 1px solid #e9dfce; border-radius: 20px; background: var(--card); box-shadow: 0 3px 0 #eae1d0; }
+.profile__row { display: flex; align-items: center; gap: 10px; width: 100% !important; min-height: 54px; padding: 10px 0; text-align: left; }
+.profile__row + .profile__row { border-top: 1px solid #e9dfce; }
+.profile__avatar { flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--cover-soft); }
+.profile__value { color: #77664f; font-size: 13px; text-align: right; }
+.profile__arrow { flex: none; width: 16px; height: 16px; }
+@media (max-width: 350px) { .profile__card { margin-inline: 16px; } }

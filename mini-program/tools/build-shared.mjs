@@ -33,8 +33,7 @@ await cp(source, target, {
 });
 const config = join(target, "config.js");
 const settings = await readFile(config, "utf8");
-await writeFile(config, settings.replace(/const API_BASE = ".*";/, "const API_BASE = " + JSON.stringify(origin.origin) + ";")
-  .replace('const WEB_APP_ORIGIN = "";', "const WEB_APP_ORIGIN = " + JSON.stringify(origin.origin) + ";"));
+await writeFile(config, settings.replace(/const API_BASE = ".*";/, "const API_BASE = " + JSON.stringify(origin.origin) + ";"));
 
 const project = join(target, "project.config.json");
 const projectConfig = JSON.parse(await readFile(project, "utf8"));

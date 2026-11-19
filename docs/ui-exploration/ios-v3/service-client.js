@@ -50,7 +50,7 @@ export function createIOSServiceClient({ storage, storageName, getUIState, persi
       rootState = { ...initialState(), guestId: launchIdentity.guestId };
       pending = {};
     }
-    if (!rootState.profile && launchIdentity.name) {
+    if (launchIdentity.name) {
       rootState.profile = { id: rootState.guestId, name: launchIdentity.name };
     }
   }

@@ -2,6 +2,7 @@
 const KEYS = {
   guest: "rr:guest",
   name: "rr:name",
+  avatar: "rr:avatar",
   history: "rr:history",
   draft: id => `rr:draft:${id}`,
   marks: id => `rr:marks:${id}`,
@@ -34,6 +35,15 @@ function setName(value) {
   const text = String(value || "").trim().slice(0, 12) || "卷友";
   wx.setStorageSync(KEYS.name, text);
   return text;
+}
+
+function avatarId() {
+  const id = wx.getStorageSync(KEYS.avatar);
+  return typeof id === "string" && /^[a-f0-9]{48}$/.test(id) ? id : "";
+}
+
+function setAvatarId(id) {
+  wx.setStorageSync(KEYS.avatar, id);
 }
 
 function history() {
@@ -144,7 +154,7 @@ function clearPendingId(versionId, attemptId) {
 }
 
 module.exports = {
-  uuid, guestId, name, setName, history, saveHistory, upsertAttempt, getAttempt,
+  uuid, guestId, name, setName, avatarId, setAvatarId, history, saveHistory, upsertAttempt, getAttempt,
   saveDraft, loadDraft, dropDraft, position, setPosition, pendingId, clearPendingId, KEYS,
   draftIndex, setDraftEntry, bestAttempt,
 };

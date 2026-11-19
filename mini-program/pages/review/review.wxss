@@ -19,8 +19,6 @@
 .review__same-wrong { color: #a76e56; font-size: 10px; white-space: nowrap; }
 .review__copy { width: 100% !important; min-height: 38px; }
 .review__copy[disabled] { opacity: .5; background: #d9cfbe; color: #625846; }
-.review__option { display: block; width: 100% !important; min-height: 44px; padding: 12px; border-radius: 12px; margin: 0 0 6px; background: #f7f1e5; color: #514b40; text-align: left; font-size: 14px; }
-.review__option--on { background: #f4e3be; }
 @media (max-width: 350px) {
   .review { padding-inline: 16px; }
   .review__scope { margin-left: -16px; }

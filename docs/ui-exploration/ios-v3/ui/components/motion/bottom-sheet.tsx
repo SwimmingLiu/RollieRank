@@ -8,7 +8,7 @@ import {
   useDragControls,
   useReducedMotion,
 } from "motion/react";
-import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { type ReactNode, type TouchEvent, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { EASE_DRAWER } from "@/lib/ease";
 import { useFocusTrap } from "@/lib/hooks/use-focus-trap";
@@ -40,6 +40,7 @@ export interface BottomSheetProps {
   description?: string;
   children?: ReactNode;
   className?: string;
+  optionList?: boolean;
   /** Min drag distance (px) past current snap to dismiss. */
   dismissThreshold?: number;
   /** Override any built-in string. */
@@ -55,6 +56,7 @@ export function BottomSheet({
   description,
   children,
   className,
+  optionList = false,
   dismissThreshold = 120,
   labels,
 }: BottomSheetProps) {
@@ -63,6 +65,8 @@ export function BottomSheet({
   const [mounted, setMounted] = useState(false);
   const dragControls = useDragControls();
   const sheetRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const listTouch = useRef<{ x: number; y: number; atTop: boolean } | null>(null);
   const reduce = useReducedMotion();
   const uid = useId();
   const titleId = `${uid}-title`;
@@ -117,6 +121,7 @@ export function BottomSheet({
   const onDragEnd = (_: unknown, info: PanInfo) => {
     const velocity = info.velocity.y;
     const offset = info.offset.y;
+    if (optionList && snap === 0 && offset < 0 && !listOverflows()) return;
 
     // Strong downward fling or large drag → dismiss.
     if (velocity > 600 || offset > dismissThreshold) {
@@ -142,6 +147,32 @@ export function BottomSheet({
       return current;
     });
   };
+
+  function listOverflows() {
+    const body = bodyRef.current;
+    return Boolean(body && body.scrollHeight > body.clientHeight + 1);
+  }
+
+  function startListTouch(event: TouchEvent<HTMLDivElement>) {
+    const touch = event.touches[0];
+    listTouch.current = event.touches.length === 1 && touch
+      ? { x: touch.clientX, y: touch.clientY, atTop: event.currentTarget.scrollTop <= 1 }
+      : null;
+  }
+
+  function endListTouch(event: TouchEvent<HTMLDivElement>) {
+    const start = listTouch.current;
+    listTouch.current = null;
+    const touch = event.changedTouches[0];
+    if (!start || !touch) return;
+    const travel = touch.clientY - start.y;
+    if (Math.abs(travel) < 38 || Math.abs(travel) < Math.abs(touch.clientX - start.x)) return;
+    if (travel < 0 && snap === 0 && listOverflows()) setSnap(1);
+    if (travel > 0 && start.atTop) {
+      if (snap > 0) setSnap(0);
+      else onOpenChange(false);
+    }
+  }
 
   const snapValue = snapPoints[snap];
   const heightStyle =
@@ -179,7 +210,7 @@ export function BottomSheet({
               // A dim scrim with a light blur. backdrop-blur is GPU-expensive and
               // re-rasterizes every frame the sheet drags over it; a small radius
               // plus more opacity keeps the glass look without the jank.
-              className="pointer-events-auto fixed inset-0 z-50 bg-background/40 backdrop-blur-sm"
+              className={cn("pointer-events-auto fixed inset-0 z-50", optionList ? "rr-options-shade" : "bg-background/40 backdrop-blur-sm")}
             />
           )}
         </PresenceGate>
@@ -213,20 +244,21 @@ export function BottomSheet({
               aria-labelledby={title ? titleId : undefined}
               aria-describedby={description ? descriptionId : undefined}
               aria-label={title ? undefined : t("label")}
+              data-expanded={optionList ? snap > 0 : undefined}
             >
-              <div className="flex flex-col items-center px-4 pb-2 pt-3">
-                {/* Drag only the pill so the title and description stay selectable. */}
+              <div className={optionList ? "rr-options-drag-zone" : "flex flex-col items-center px-4 pb-2 pt-3"}>
+                {/* Option lists keep a full-width gesture area without painting a drag marker. */}
                 <div
                   onPointerDown={(event) => dragControls.start(event)}
                   // A slow pull must not hand the gesture to iOS's callout,
                   // which would leave the sheet frozen mid-drag.
                   className={cn(
-                    "flex cursor-grab touch-none items-center justify-center py-1 active:cursor-grabbing",
+                    optionList ? "rr-options-drag-target touch-none" : "flex cursor-grab touch-none items-center justify-center py-1 active:cursor-grabbing",
                     TOUCH_GESTURE_CONTENT_CLASS,
                   )}
                 >
                   {/* Keep every sheet's grab marker quiet and consistent with the paper theme. */}
-                  <div data-slot="sheet-handle" style={{ height: 3, width: 26, borderRadius: 99, background: "#b9ad9d66" }} />
+                  {!optionList && <div data-slot="sheet-handle" style={{ height: 3, width: 26, borderRadius: 99, background: "#b9ad9d66" }} />}
                 </div>
                 {title || description ? (
                   <div className="mt-2 w-full">
@@ -250,7 +282,11 @@ export function BottomSheet({
                 ) : null}
               </div>
               {/* overscroll-contain stops boundary scrolls from chaining to the page. */}
-              <div data-slot="bottom-sheet-body" className="flex-1 overflow-y-auto overscroll-contain px-4 pb-6">{children}</div>
+              <div ref={bodyRef} data-slot="bottom-sheet-body" className="flex-1 overflow-y-auto overscroll-contain px-4 pb-6"
+                onTouchStart={optionList ? startListTouch : undefined}
+                onTouchEnd={optionList ? endListTouch : undefined}
+                onTouchCancel={optionList ? () => { listTouch.current = null; } : undefined}
+              >{children}</div>
             </motion.div>
           )}
         </PresenceGate>

@@ -1,7 +1,7 @@
 const $=(s)=>document.querySelector(s);
 // 手机所有页面和后续挂载的抽屉都使用同一原生短轨道。
 import "../../../src/scrollbars.js";
-import { openWechatWebView, saveWechatPoster, inviteWechatFriend, migrateWechatDrafts, setWechatViewTitle } from "./wechat-webview.js";
+import { openWechatWebView, saveWechatPoster, inviteWechatFriend, migrateWechatDrafts, setWechatViewTitle, openWechatProfile } from "./wechat-webview.js";
 import { prunePreviewHistory, recoverPreviewHistory } from "./preview-history.js";
 import { selectPreviousAttempt } from "../../../src/analytics.js";
 import { createPracticeTimer, createCustomPracticeTimer, bindPracticeTimer, setTimerMode, reorderTimerModules, balanceTimerModules, resolveTimerLimit, restorePracticeTimer, timerSectionsForQuestions, timerView, changeTimerPlan, startPracticeTimer, pausePracticeTimer, switchTimerModule, finishPracticeTimer, resumeEntryTimer, pauseEntryTimer, timingSummary, validateTimingSummary } from "../../../src/practice-timer.js";
@@ -115,7 +115,7 @@ let sheetState={open:false,title:'',html:''};
 const sheetCloseListeners=new Set();
 // Portal 内容在提交后才出现；业务组件在该次内容就绪时挂载，避免挂到已经关闭的弹层。
 function drawSheet(){window.RollieUI.mountSheet($('#sheet-host'),{...sheetState,onClose:()=>closeSheet('dismiss'),onContentReady:el=>{window.RollieUI.mountButtons(el);if(sheetState.open)sheetState.onReady?.(el)}})}
-function openSheet(title,body,onReady){const old=$('#sheet-content');if(old)window.RollieUI?.cleanup(old);sheetState={open:true,title,html:body,onReady};drawSheet()}
+function openSheet(title,body,onReady,layout){const old=$('#sheet-content');if(old)window.RollieUI?.cleanup(old);sheetState={open:true,title,html:body,onReady,layout};drawSheet()}
 // 关闭动作区分用户取消与业务完成，避免取消选岗后意外提交，并释放交流编辑器的录音。
 function closeSheet(reason='dismiss'){const wasOpen=sheetState.open,old=$('#sheet-content');if(old)window.RollieUI?.cleanup(old);sheetState={...sheetState,open:false};drawSheet();if(wasOpen)for(const listener of sheetCloseListeners)listener({reason});if(wasOpen&&state.page==='home'){mountHomeDashboard();requestAnimationFrame(()=>{if(state.page==='home')$('.rr-home-timer button')?.focus({preventScroll:true})})}}
 function toast(message){$('.toast')?.remove();const el=document.createElement('div');el.className='toast';el.setAttribute('role','status');el.textContent=message;$('#app').append(el);setTimeout(()=>el.remove(),1600)}
@@ -204,7 +204,7 @@ function details(){
 }
 function reviewSectionPicker(){
  const types=[{name:'全部板块',value:''},...viewTypes().map(type=>({name:type[0],value:type[0]}))];
- openSheet('选择复盘板块','<div class="rr-review-sections">'+types.map(type=>'<button type="button" class="rr-review-section '+((state.detailType||'')===type.value?'is-selected':'')+'" data-review-section="'+esc(type.value)+'" aria-label="复盘'+esc(type.name)+'"><span>'+esc(type.name)+'</span>'+I((state.detailType||'')===type.value?'check':'arrow')+'</button>').join('')+'</div>');
+ openSheet('选择复盘板块','<div class="rr-review-sections">'+types.map(type=>{const selected=(state.detailType||'')===type.value;return '<button type="button" class="rr-review-section '+(selected?'is-selected':'')+'" data-review-section="'+esc(type.value)+'" aria-label="复盘'+esc(type.name)+'" aria-pressed="'+selected+'"><span>'+esc(type.name)+'</span>'+(selected?I('check'):'')+'</button>'}).join('')+'</div>',undefined,'options');
 }
 // 按用户选定的榜单参考重组为领奖台和分值列表，3D高度只表达名次，准确分数始终以文字显示。
 // The complete ranking, dimension controls and podium are now one typed component root.
@@ -261,7 +261,7 @@ function mountInterfaces(root){
   const ui=window.RollieUI;if(!ui){const home=root.querySelector('#home-ui');if(home)home.innerHTML='<p class="empty">组件未能加载，请刷新页面</p>';return}
   const home=root.querySelector('#home-ui');if(home)mountHomeDashboard(home);
   const catalog=root.querySelector('#catalog-ui');if(catalog)ui.mountCatalog(catalog,{institution:state.institution,year:collectionFor(state.institution,state.period)?.year||2026,period:state.period,variant:state.variant,canSwitch:collectionsFor(state.institution).length>1,collectionTitle:(collectionFor(state.institution,state.period)?.displayPeriod?collectionFor(state.institution,state.period).meta:collectionFor(state.institution,state.period)?.title)||'行测套卷',collectionMeta:collectionFor(state.institution,state.period)?.displayPeriod?'':collectionFor(state.institution,state.period)?.meta||'',papers:paperViewModels(),onPeriods:()=>actions.periods(),onOpen:openPaper});
-  const records=root.querySelector('#records-ui');if(records)ui.mountRecords(records,{records:state.history.map(recordViewModel),onOpen:openHistory,viewState:state.recordsView,onViewStateChange:value=>{state.recordsView=value},user:{name:serviceClient?.state().profile?.name||'卷友',avatarSrc:'assets/avatars/rank-8.svg'}});
+  const records=root.querySelector('#records-ui');if(records)ui.mountRecords(records,{records:state.history.map(recordViewModel),onOpen:openHistory,viewState:state.recordsView,onViewStateChange:value=>{state.recordsView=value},user:{name:serviceClient?.state().profile?.name||'卷友',avatarSrc:wechatHost?.avatarSrc||'assets/avatars/rank-8.svg'},onEditProfile:wechatHost?()=>void openWechatProfile().catch(error=>toast(error.message)):undefined});
   const result=score(),standing=iosPositions?.standing?.()||{rank:null,count:0};const scoreHost=root.querySelector('#score-ui');if(scoreHost)ui.mountScore(scoreHost,{total:result.cents/100,maxScore:(result.maxCents||10000)/100,verification:scoreVerification(),correct:result.correct,wrong:result.wrong,blank:result.blank,rank:standing.rank,participants:standing.count,sections:result.types.map(t=>({name:t.name,earnedCents:t.earned,maxCents:t.max})),initialAll:state.allTypes,onAllChange:all=>{state.allTypes=all},onRank:()=>go('rank'),onReview:openReview});
   if(scoreHost){const timing=serviceClient?.currentAttempt()?.timing,card=scoreHost.querySelector('.rr3-report .rr3-score-card');if(timing&&card&&ui.mountTimingReport){const host=document.createElement('div');host.className='rr-session-report-host';card.after(host);ui.mountTimingReport(host,{timing});}}
   if(root.querySelector('#entry-tools-ui')){mountEntryTools();updateEntryVisibility();}
@@ -440,7 +440,7 @@ back(){if(state.page==='report'){go('home',{replace:true,root:true});return;}if(
 // 套卷信息使用公开版本规格，避免副省等不同题量继续显示固定130题。
 info(){const c=collectionFor(state.institution,state.period);openSheet('套卷信息',[['机构',publisherName(state.institution)],['套卷',c?.displayPeriod?c.meta:c?.title||'行测套卷'],['版本',c?.meta||'2026 第'+state.period+'期'],['试卷',c?.paperNames?.[state.paper]||'第'+n2(state.paper)+'套'],['题量 / 满分',questionCount()+'题 / '+((serviceClient?.currentVersion()?.maxCents||10000)/100)+'分']].map(([a,b])=>'<div class="meta-row"><span>'+a+'</span><span>'+esc(b)+'</span></div>').join(''))},
 // Real collection names replace the old fabricated 1–24 period keypad.
-periods(){openSheet('选择套卷','<div class="rr5-collection-options">'+collectionsFor(state.institution).map(c=>'<button type="button" class="rr5-collection-option '+(c.number===state.period?'selected':'')+'" data-period="'+c.number+'" aria-label="'+esc(c.displayPeriod?c.meta:c.title+'，'+c.meta)+'" aria-pressed="'+(c.number===state.period)+'"><span><strong>'+esc(c.displayPeriod?c.meta:c.title)+'</strong>'+(c.displayPeriod?'':'<small>'+esc(c.meta)+'</small>')+'</span>'+I(c.number===state.period?'check':'arrow')+'</button>').join('')+'</div>')},
+periods(){openSheet('选择套卷','<div class="rr5-collection-options">'+collectionsFor(state.institution).map(c=>{const selected=c.number===state.period;return '<button type="button" class="rr5-collection-option '+(selected?'selected':'')+'" data-period="'+c.number+'" aria-pressed="'+selected+'"><strong>'+esc(c.displayPeriod?c.meta:c.title)+'</strong>'+(selected?I('check'):'')+'</button>'}).join('')+'</div>',undefined,'options')},
 grid:displayGrid,
 // 漏答须由考生明确选择补答或留空，不能强迫把每题填满后才允许交卷。
 confirm(){if(['running','paused'].includes(currentTimer()?.status)){showPracticeTimer();return;}const missing=state.answers.filter(v=>!v).length;if(missing){openSheet(missing+' 题未答','<div class="sheet-actions rr-blank-actions">'+button('fill-missing','继续补答','secondary')+button('submit-blank','留空交卷','primary')+'</div>');return}actions.submit()},

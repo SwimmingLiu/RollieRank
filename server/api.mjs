@@ -4,6 +4,7 @@ import { PAPERS } from "../src/data/papers.js";
 import { IMPORTED_PAPERS } from "../src/data/imported-papers.js";
 import { DEFAULT_RULES } from "../src/scoring.js";
 import { createMiniprogramWebService } from "./miniprogram-web.mjs";
+import { createWechatProfileService } from "./wechat-profile.mjs";
 import { createDiscussionsService } from "./discussions.mjs";
 import { createCorrectionsService } from "./corrections.mjs";
 import { createPositionsService, includeSubmittedAttempt, initializeDefaultParticipation } from "./positions.mjs";
@@ -72,7 +73,7 @@ const builtins = () => [
 ];
 
 // 功能模块共用一个落盘事务，答案订正与成绩变化才能同时保存和回滚。
-export async function createApi({ dataDirectory, featureFactories = [createPositionsService, createDiscussionsService, createCorrectionsService, createMiniprogramWebService] }) {
+export async function createApi({ dataDirectory, featureFactories = [createPositionsService, createDiscussionsService, createCorrectionsService, createMiniprogramWebService, createWechatProfileService] }) {
   let saved;
   try {
     saved = JSON.parse(
@@ -103,7 +104,8 @@ export async function createApi({ dataDirectory, featureFactories = [createPosit
     const content = JSON.stringify({ versions, audit, receipts, features });
     await mkdir(dataDirectory, { recursive: true });
     const temp = new URL("catalog.tmp", dataDirectory);
-    await writeFile(temp, content);
+    // The database can also contain private WeChat profile records.
+    await writeFile(temp, content, { mode: 0o600 });
     await rename(temp, new URL("catalog.json", dataDirectory));
   };
   if (saved && (missing.length || timeMetadataUpdated)) await persist();

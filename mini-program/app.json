@@ -13,6 +13,7 @@
     "pages/discussion/discussion",
     "pages/timer/timer",
     "pages/settings/settings",
+    "pages/profile/profile",
     "pages/web/web",
     "pages/web-action/web-action"
   ],

@@ -29,14 +29,5 @@
     </view>
     <view class="footer-bar"><button class="btn btn--primary review__copy" bindtap="copyWrong" disabled="{{!copyCount}}">复制错题号</button></view>
   </view>
-  <view wx:if="{{typesOpen}}" class="sheet-layer">
-    <view class="sheet-shade" catchtap="closeTypes"></view>
-    <view class="sheet-panel">
-      <view class="sheet-handle"></view>
-      <view class="sheet-head"><text>选择板块</text><button class="sheet-close" bindtap="closeTypes" aria-label="关闭"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button></view>
-      <scroll-view scroll-y class="sheet-scroll">
-        <button wx:for="{{types}}" wx:key="key" class="review__option {{activeType === item.key ? 'review__option--on' : ''}}" data-key="{{item.key}}" bindtap="setType">{{item.label}}</button>
-      </scroll-view>
-    </view>
-  </view>
+  <rr-option-sheet wx:if="{{typesOpen}}" items="{{types}}" selected="{{activeType}}" label="选择板块" bindselect="setType" binddismiss="closeTypes" />
 </view>
