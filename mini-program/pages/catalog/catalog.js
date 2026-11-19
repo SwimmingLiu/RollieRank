@@ -1,6 +1,7 @@
 const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
 const catalogUtil = require("../../utils/catalog.js");
+const { score: formatScore } = require("../../utils/format.js");
 
 Page({
   data: {
@@ -56,7 +57,7 @@ Page({
             actionType: best ? "report" : "practice",
             bestId: best ? best.id : "",
             draftId: draft ? draft.id : "",
-            bestScore: best ? (best.totalCents / 100).toFixed(2) : "",
+            bestScore: best ? formatScore(best.totalCents) : "",
           };
         }),
       }));

@@ -85,4 +85,14 @@ function practiceIdentity(version) {
     periodLabel(version.period), paper].filter(Boolean).join(" · ");
 }
 
-module.exports = { groupByInstitution, versionTitle, identity, numberedPaper, practiceIdentity, publisherName, periodLabel, LOGO, subjectName, subjectId };
+// 答卷可能来自已下线或改名的套卷；优先用目录里的展示名，目录缺失时退回答卷自带字段。
+function attemptIdentity(version, attempt) {
+  if (version) return practiceIdentity(version);
+  return [publisherName(attempt.institution), String(attempt.project || "").split(" · ")[0],
+    periodLabel(attempt.period), attempt.paperTitle].filter(Boolean).join(" · ");
+}
+
+module.exports = {
+  groupByInstitution, versionTitle, identity, numberedPaper, practiceIdentity, attemptIdentity,
+  publisherName, periodLabel, LOGO, subjectName, subjectId,
+};

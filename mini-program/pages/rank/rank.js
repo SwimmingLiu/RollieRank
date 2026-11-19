@@ -3,7 +3,8 @@ const storage = require("../../utils/storage.js");
 const format = require("../../utils/format.js");
 
 const { ASSET } = require("../../config.js");
-const { practiceIdentity, publisherName, subjectName, subjectId, LOGO } = require("../../utils/catalog.js");
+const catalog = require("../../utils/catalog.js");
+const { publisherName, subjectName, subjectId, LOGO } = catalog;
 
 const SHORT_LABELS = { 政治理论: "政治", 常识判断: "常识", 言语理解: "言语", 数量关系: "数量", 资料分析: "资料" };
 
@@ -51,10 +52,17 @@ Page({
         const key = subjectId(type.id, type.name);
         subjects.set(key, { key, label: SHORT_LABELS[name] || name });
       }
+      // 身份行只写项目、期数和卷号；机构单独显示在左侧，不再重复。
+      let version = null;
+      try {
+        version = (await api.catalog()).find(item => item.id === attempt.versionId) || null;
+      } catch {
+        // 目录读不到时退回答卷自带的字段。
+      }
       this.setData({
         publisher: publisherName(attempt.institution),
         logo: ASSET[LOGO[attempt.institution]] || "",
-        identity: practiceIdentity({ ...attempt, title: attempt.paperTitle }).split(" · ").slice(1).join(" · "),
+        identity: catalog.attemptIdentity(version, attempt).split(" · ").slice(1).join(" · "),
         dimensions: [{ key: "total", label: "总分" }, ...subjects.values()],
       });
       const position = storage.position();

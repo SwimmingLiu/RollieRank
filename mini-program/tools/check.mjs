@@ -69,6 +69,8 @@ for (const mode of ["whole", "modules"]) {
 }
 
 if (format.score(2595) !== "25.95") problem("分数格式化不正确");
+if (format.score(10000) !== "100") problem(`满分应省略多余零：${format.score(10000)}`);
+if (format.score(2590) !== "25.9") problem(`一位小数应省略末尾零：${format.score(2590)}`);
 if (format.percent(0.2595) !== "26%") problem(`百分比格式化不正确：${format.percent(0.2595)}`);
 
 const groups = catalog.groupByInstitution(IMPORTED_PAPERS.map(item => ({ ...item, id: `${item.id}:v1`, status: "published", questionCount: item.answerKey.length })));

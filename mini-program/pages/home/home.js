@@ -1,7 +1,7 @@
 const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
 const catalogUtil = require("../../utils/catalog.js");
-const { minutes } = require("../../utils/format.js");
+const { minutes, score } = require("../../utils/format.js");
 const { ASSET } = require("../../config.js");
 
 Page({
@@ -82,7 +82,7 @@ Page({
       seen.add(record.versionId);
       recent.push({
         ...record,
-        scoreText: (record.totalCents / 100).toFixed(2),
+        scoreText: score(record.totalCents),
       });
       if (recent.length === 3) break;
     }

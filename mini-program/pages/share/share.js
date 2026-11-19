@@ -73,8 +73,7 @@ Page({
     this.publisher = ASSET[catalog.LOGO[attempt.institution]] || "";
     this.bands = reportBands(report.breakdown);
     this.summary = {
-      identity: [catalog.publisherName(attempt.institution), String(attempt.project || "").split(" · ")[0],
-        catalog.periodLabel(attempt.period), this.title].filter(Boolean).join(" · "),
+      identity: this.identity || catalog.attemptIdentity(null, attempt),
       score: format.score(report.totalCents),
       max: format.score(report.maxCents),
       correct: report.correct,

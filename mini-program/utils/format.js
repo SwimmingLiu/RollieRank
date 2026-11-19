@@ -1,7 +1,7 @@
-// 数字展示：分值为整数百分之一分，对外按两位小数展示并去掉多余的零。
+// 数字展示：分值为整数百分之一分；和网页端一致，去掉多余的零（25.95、25.9、100）。
 function score(cents) {
   if (cents === null || cents === undefined || Number.isNaN(Number(cents))) return "--";
-  return (Number(cents) / 100).toFixed(2);
+  return (Number(cents) / 100).toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
 }
 
 function rate(value) {
