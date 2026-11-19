@@ -119,6 +119,8 @@ def exercise_collection_picker(page, frame, output):
     picker.click()
     panel, _ = check_choice_sheet(frame, "选择套卷")
     expect(panel.locator("[data-period]")).to_have_count(3)
+    assert panel.evaluate("node => node.getBoundingClientRect().bottom <= innerHeight + 1")
+    assert panel.locator("[data-slot='bottom-sheet-body']").evaluate("node => { const r=node.getBoundingClientRect(); return r.height >= 100 && r.bottom <= innerHeight + 1; }")
     capture_phone_sizes(page, frame, output, "collection-picker")
     frame.get_by_role("button", name="关闭面板", exact=True).click(position={"x": 45, "y": 50})
     expect(panel).to_be_hidden()

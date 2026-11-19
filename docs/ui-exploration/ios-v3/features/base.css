@@ -36,8 +36,9 @@ body.beui-island .rr-sheet #sheet-content { padding-inline:20px; }
 /* Simple choices keep the same sheet and native scrolling without the visual controls. */
 .rr-options-shade { background: rgba(41, 33, 27, .34); }
 .rr-options-sheet.rr-sheet { background: #fffdf8 !important; border-color: #ede2d1 !important; }
-html[data-host=wechat] .rr-options-sheet.rr-sheet { margin-bottom: 0; padding-bottom: var(--wx-bottom-extra); }
-.rr-options-sheet[data-expanded=false] { max-height: 52svh !important; }
+html[data-host=wechat] .rr-options-sheet.rr-sheet { padding-bottom: var(--wx-bottom-extra); }
+.rr-options-sheet[data-expanded=false] { max-height: min(52svh, calc(100svh - var(--wx-bottom-extra, 0px) - 12px)) !important; }
+.rr-options-sheet[data-expanded=true] { max-height: min(86svh, calc(100svh - var(--wx-bottom-extra, 0px) - 12px)) !important; }
 .rr-options-drag-zone { flex: none; }
 .rr-options-drag-target { height: 18px; cursor: grab; }
 html body .rr-options-sheet [data-slot=bottom-sheet-body] { scrollbar-width: none; }

@@ -1,6 +1,6 @@
 # 卷卷小榜 · 页面与组件
 
-[体验原型](index.html?design=paper-cards-1114-v3&assets=2a026ef3e7d9) · [独立手机页面](app.html?design=paper-cards-1114-v3&fresh=1) · [交互 GIF](motion/interaction-current.gif?v=2a026ef3e7d9)
+[体验原型](index.html?design=paper-cards-1114-v3&assets=868d7ff210ea) · [独立手机页面](app.html?design=paper-cards-1114-v3&fresh=1) · [交互 GIF](motion/interaction-current.gif?v=868d7ff210ea)
 
 白色、深灰与局部浅珊瑚粉贯穿各页。首页卷卡使用花生的浅杏色、超格的浅橙色；估分与分享使用淡珊瑚色，机构入口与逐题对照保持白底。中文使用本地阿里妈妈方圆体VF，英文和数据使用Nunito，展示数字使用Fraunces。最近练习的上下邻卡带透视弯转，前卡保持平展；按钮保持成熟组件的表面与短促按压。
 
