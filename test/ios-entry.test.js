@@ -94,7 +94,9 @@ test("the actual iOS gallery iframe exposes the connected job and analysis contr
     if (!key) throw new Error('No actual saved practice history exists for the archive migration fixture');
     localStorage.setItem(key + ':preview-archive:v1', JSON.stringify([authored, demonstration]));
   });
-  await page.reload({ waitUntil: 'networkidle' });
+  // The gallery may still be loading preview images when the saved records are ready.
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await frame.locator('.view[data-components="ready"]').waitFor();
   await page.locator('.page-picker [data-page="me"]').click();
   await frame.locator('.rr6-record-card').nth(currentRecords).waitFor();
   assert.equal(await frame.locator('.rr6-record-card').count(), currentRecords + 1);
