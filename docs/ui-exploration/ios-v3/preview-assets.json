@@ -1,6 +1,6 @@
 {
   "revision": "paper-cards-1114-v3",
-  "key": "962e14c49929",
+  "key": "82ea91560310",
   "directory": "screens/ios-refinement-2",
   "gif": "motion/interaction-current.gif",
   "hashes": {
@@ -16,6 +16,6 @@
     "screens/ios-refinement-2/share-poster.png": "97b4b56688815bcc45eb7d35c56410b4cdcb1df187d3142e5c7314ba735232e6",
     "screens/ios-refinement-2/share.png": "3cb1058ae8e38932179396bbcfb9c804702c5582b7ac2e5fd55963f9353f622f",
     "screens/ios-refinement-2/stats.png": "d0150f4d72663fd5bb3aea7ed506e9d6d7f297d8314e401976ad29bd04e7efe6",
-    "motion/interaction-current.gif": "60c941487f21e0290faa54a6aeaf06023ed8712914935fce038a283112b27a5c"
+    "motion/interaction-current.gif": "ee2d61a0204978a2c14ed81a113a5acb66df68581028bbf09d2c84aa3b0c618d"
   }
 }
