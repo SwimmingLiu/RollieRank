@@ -12,7 +12,9 @@
     "pages/positions/positions",
     "pages/discussion/discussion",
     "pages/timer/timer",
-    "pages/settings/settings"
+    "pages/settings/settings",
+    "pages/web/web",
+    "pages/web-action/web-action"
   ],
   "window": {
     "navigationStyle": "custom",

@@ -2,11 +2,12 @@ const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
 const catalogUtil = require("../../utils/catalog.js");
 const { minutes, score } = require("../../utils/format.js");
-const { ASSET } = require("../../config.js");
+const { ASSET, WEB_APP_ORIGIN } = require("../../config.js");
 
 Page({
   data: {
     loading: true,
+    openingWeb: false,
     error: "",
     institutions: [],
     recent: [],
@@ -19,6 +20,15 @@ Page({
   },
 
   onLoad() {
+    if (WEB_APP_ORIGIN && !getApp().globalData.openNativeHome) {
+      // The native tab stays the launch page so existing WeChat versions can start the app normally.
+      this.setData({ openingWeb: true });
+      wx.reLaunch({
+        url: "/pages/web/web",
+        fail: () => { this.setData({ openingWeb: false }); this.load(); },
+      });
+      return;
+    }
     this.load();
   },
 

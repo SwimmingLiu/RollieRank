@@ -24,6 +24,13 @@ rsync -a --delete \
   --exclude 'node_modules' --exclude 'test-results' --exclude 'docs/ui-exploration/*/node_modules' \
   "$SRC_DIR/server" "$SRC_DIR/src" "$SRC_DIR/scripts" "$SRC_DIR/package.json" "$APP_DIR/"
 
+# 小程序 WebView 复用已经构建的手机页面。移除开发依赖和设计预览素材。
+MOBILE_DIR="$APP_DIR/docs/ui-exploration/ios-v3"
+mkdir -p "$MOBILE_DIR"
+rsync -a --delete \
+  --exclude 'node_modules' --exclude 'screens' --exclude 'motion' --exclude 'archives' \
+  "$SRC_DIR/docs/ui-exploration/ios-v3/" "$MOBILE_DIR/"
+
 # 岗位目录是公开数据，但要随服务一起部署，否则选岗和岗位榜会为空。
 mkdir -p "$APP_DIR/data"
 rsync -a --delete "$SRC_DIR/data/positions" "$APP_DIR/data/"

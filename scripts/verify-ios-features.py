@@ -44,6 +44,39 @@ def direct_view(page, name, **parameters):
     return frame
 
 
+def assert_wechat_title(frame, expected):
+    assert frame.locator("body").evaluate("element => element.ownerDocument.title") == expected
+    heading = frame.locator("#top h1")
+    if heading.count():
+        assert heading.evaluate("element => element.getBoundingClientRect().height") <= 1
+
+
+def assert_title_controls(page, frame, back_label, action_label):
+    back = frame.get_by_role("button", name=back_label, exact=True)
+    action = frame.get_by_role("button", name=action_label, exact=True)
+    for width, height in [(320, 568), (390, 844), (430, 932)]:
+        page.locator("#size").select_option(f"{width},{height}")
+        for button in (back, action):
+            assert button.evaluate("""node => {
+                const rect = node.getBoundingClientRect();
+                const target = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+                return rect.left >= 0 && rect.right <= innerWidth && rect.width >= 43.5 &&
+                    rect.height >= 43.5 && node.contains(target);
+            }"""), action_label
+        left, right = back.bounding_box(), action.bounding_box()
+        assert abs(left["y"] + left["height"] / 2 - right["y"] - right["height"] / 2) <= 1
+        assert left["x"] + left["width"] + 8 < right["x"]
+    page.locator("#size").select_option("390,844")
+
+
+def app_native_action(base, receiver):
+    for _ in range(4):
+        action = api(base, "miniprogram-web/listen", receiver)["action"]
+        if action and action["kind"] != "title":
+            return action
+    raise AssertionError("The native action did not arrive")
+
+
 def assert_visible_score(frame, attempt):
     expected = f'{attempt["report"]["totalCents"] / 100:.2f}'
     frame.locator("#score-ui").wait_for()
@@ -156,15 +189,30 @@ def select_hierarchy(page, frame, output, category_index=0):
     return job_id
 
 
-def run(base, output, token=None, check_only=False):
+def run(base, output, token=None, check_only=False, wechat_host=False):
     checks = []
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True, ignore_default_args=["--hide-scrollbars"])
         page = browser.new_page(viewport={"width": 1440, "height": 900}, reduced_motion="reduce")
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))
+        if wechat_host:
+            identity = {"guestId": str(uuid4()), "name": "卷友", "drafts": [], "marks": []}
+            native_launch = api(base, "miniprogram-web/bootstrap", identity)
+            ticket = native_launch["ticket"]
+            # Supply the real native launch URL. Chromium reads the same handoff as the native page.
+            page.add_init_script(script="(" + """({ticket}) => {
+                if (!location.pathname.endsWith('/ios-v3/app.html')) return;
+                const url = new URL(location.href);
+                url.searchParams.set('embed', 'wechat');
+                url.searchParams.set('wxBottom', '34');
+                if (!sessionStorage.getItem('rollierank:wechat:guest')) url.hash = 'rr=' + ticket;
+                history.replaceState(history.state, '', url);
+            }""" + ")(" + json.dumps({"ticket": ticket}) + ");")
         page.goto(base + "/ios-v3/?design=paper-cards-1114-v3", wait_until="networkidle")
         frame = open_view(page, "me")
+        if wechat_host:
+            assert_wechat_title(frame, "练习记录")
         expect(frame.get_by_role("button", name="选择报考岗位", exact=True)).to_be_visible()
         expect(frame.get_by_text("成长分析", exact=True)).to_be_visible()
         expect(frame.locator(".rr-practice-tool")).to_have_count(2)
@@ -204,6 +252,16 @@ def run(base, output, token=None, check_only=False):
         first = fill_and_submit(frame, "A", True)
         assert first["isSample"] is False and first["report"]["rows"]
         guest = snapshot(frame)["guestId"]
+        if wechat_host:
+            assert guest == identity["guestId"]
+            expect(frame.locator("html")).to_have_attribute("data-host", "wechat")
+            assert_wechat_title(frame, "练习估分")
+            assert_title_controls(page, frame, "返回", "重新练习本卷")
+            frame.get_by_role("button", name="重新练习本卷", exact=True).click()
+            expect(frame.get_by_role("dialog", name="再练一次", exact=True)).to_be_visible()
+            frame.get_by_role("button", name="取消", exact=True).click()
+            assert_visible_score(frame, first)
+            checks.append("back and retry stay level and tappable at 320, 390 and 430 pixels")
         assert api(base, "attempts/sync", {"guestId": guest})["attempts"][0]["id"] == first["id"]
         expect(frame.locator(".ios-service-notice")).to_have_count(0)
         expect(frame.locator(".rr-score-verification")).to_have_count(0)
@@ -255,14 +313,37 @@ def run(base, output, token=None, check_only=False):
 
         frame = open_view(page, "details")
         expect(frame.locator(".detail-table")).to_be_visible()
+        if wechat_host:
+            assert_title_controls(page, frame, "返回", "反馈参考答案")
         capture(page, frame, output, "details")
         frame = open_view(page, "share")
         capture(page, frame, output, "share")
-        with page.expect_download() as download:
-            frame.locator('[data-action="save-poster"]').click()
-        poster = output / "ios-score-poster.png"
-        download.value.save_as(poster)
-        assert poster.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
+        if wechat_host:
+            assert_wechat_title(frame, "成绩分享")
+            expect(frame.locator("#top").get_by_role("button", name="返回", exact=True)).to_be_visible()
+            receiver = {"receiver": native_launch["receiver"]}
+            for mode, label in (("report", "长图"), ("score", "成绩卡"), ("sections", "题型"), ("radar", "雷达")):
+                frame.get_by_role("tab", name=label, exact=True).click()
+                expect(frame.locator(".rr-share-studio")).to_have_attribute("data-share-mode", mode)
+                frame.locator('[data-action="save-poster"]').click()
+                action = app_native_action(base, receiver)
+                assert action and action["kind"] == "poster"
+                with urlopen(base + "/api/miniprogram-web/poster?" + urlencode({"ticket": action["ticket"]}), timeout=10) as image:
+                    png = image.read()
+                assert png.startswith(bytes.fromhex("89504e470d0a1a0a"))
+                assert int.from_bytes(png[16:20], byteorder="big") == 900
+                (output / f"wechat-{mode}.png").write_bytes(png)
+            frame.locator('[data-action="invite"]').click()
+            invite = app_native_action(base, receiver)
+            assert invite and invite["kind"] == "invite"
+            assert set(invite) == {"kind", "institution", "period", "paper"}
+            checks.append("four real PNG files and the same-paper invitation reach the native action boundary without private attempt data")
+        else:
+            with page.expect_download() as download:
+                frame.locator('[data-action="save-poster"]').click()
+            poster = output / "ios-score-poster.png"
+            download.value.save_as(poster)
+            assert poster.read_bytes().startswith(bytes.fromhex("89504e470d0a1a0a"))
         checks.append("the original details and share pages retain the actual result and export a real PNG")
 
         frame = open_view(page, "me")
@@ -341,6 +422,13 @@ def run(base, output, token=None, check_only=False):
         frame = direct_view(page, "report", attempt=first["id"])
         frame.locator('[data-action="restart"]').wait_for()
         frame.locator(".rr3-rank-link").click()
+        if wechat_host:
+            assert_wechat_title(frame, "同卷榜")
+            assert_title_controls(page, frame, "返回估分报告", "榜单规则")
+            frame.get_by_role("button", name="榜单规则", exact=True).click()
+            expect(frame.get_by_role("dialog", name="榜单规则", exact=True)).to_be_visible()
+            frame.get_by_role("button", name="知道了", exact=True).click()
+            expect(frame.get_by_role("dialog", name="榜单规则", exact=True)).to_have_count(0)
         expect(frame.get_by_role("button", name="上榜设置", exact=True)).to_have_count(0)
         frame.locator('[data-position-action="scope-nationwide"]').click()
         assert api(base, "positions/profile?guestId=" + guest)["participation"]["attemptIds"]
@@ -458,10 +546,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base")
     parser.add_argument("--check-only", action="store_true")
+    parser.add_argument("--wechat-host", action="store_true")
     parser.add_argument("--output", type=Path, default=ROOT / "test-results/ios-features")
     args = parser.parse_args(); output = args.output.resolve(); output.mkdir(parents=True, exist_ok=True)
     if args.base:
-        if not args.check_only:
+        if not args.check_only or args.wechat_host:
             raise ValueError("Existing services support read-only checks; full journeys use an isolated service")
         result = run(args.base.rstrip("/"), output, check_only=True)
     else:
@@ -479,7 +568,7 @@ def main():
                             api(base, "catalog"); break
                         except OSError: time.sleep(.1)
                     else: raise RuntimeError("iOS QA service did not start")
-                    result = run(base, output, token)
+                    result = run(base, output, token, wechat_host=args.wechat_host)
                 finally:
                     process.terminate(); process.wait(timeout=10)
     (output / "results.json").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")

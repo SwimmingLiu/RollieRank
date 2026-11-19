@@ -1,8 +1,24 @@
 # 卷卷小榜 · 微信小程序
 
-原生小程序（WXML / WXSS / JS），按 `paper-cards-1114-v3` 设计实现。
+原稿版直接加载 `paper-cards-1114-v3` 手机应用。当前目录也保留了原生备用版。
 
-## 页面
+## 原稿版
+
+原稿版复用全部手机页面、弹层和交互。微信负责顶部系统栏、相册保存和同卷转发。初次打开会接续已有身份、正式练习、录答草稿和存疑标记。
+
+开发者工具可以连接隔离的本机服务。真机需要微信已校验的 HTTPS 业务域名。源站先提供 `/ios-v3/app.html` 和 `/api/miniprogram-web/`，再从仓库根目录构建：
+
+```sh
+npm --prefix mini-program run build:shared -- https://rollie-rank.swimmingliu.cn test-results/wechat-shared
+/Applications/wechatwebdevtools.app/Contents/MacOS/cli preview \
+  --project "$PWD/test-results/wechat-shared" \
+  --qr-format image \
+  --qr-output /tmp/rollierank-preview.png
+```
+
+使用生成目录进行预览。直接打开本目录会继续运行原生备用版。
+
+## 原生备用版页面
 
 | 页面 | 说明 |
 | --- | --- |

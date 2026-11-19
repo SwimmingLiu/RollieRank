@@ -41,6 +41,12 @@ curl -s http://127.0.0.1:4173/api/catalog | head -c 200
 2. `config.js` 的 `API_BASE` 与上面的域名一致。
 3. 资源图片来自 `rollie-rank-oss.swimmingliu.cn`（七牛），需要把该域名也加入 request/download 合法域名，或在小程序里改用本地 `assets/`。
 
+## 微信原稿手机版
+
+安装脚本部署 `/ios-v3/` 页面及样式。使用仓库的 Nginx 站点配置代理 `/ios-v3/` 和公开的 `/src/` 模块。部署后检查 `/ios-v3/app.html` 正常打开，以及 `/src/data/` 下的答题数据返回 404。
+
+在微信公众平台为这个 AppID 验证页面源站的业务域名，并配置该源站为 request 和 downloadFile 合法域名。使用 [小程序原稿版构建](../mini-program/README.md) 生成微信预览，扫码检查真实顶部区域、相册和转发。
+
 ## 数据备份
 ```bash
 sudo tar -czf /root/rollierank-$(date +%F).tar.gz /var/lib/rollierank

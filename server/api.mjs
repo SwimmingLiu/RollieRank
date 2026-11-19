@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { PAPERS } from "../src/data/papers.js";
 import { IMPORTED_PAPERS } from "../src/data/imported-papers.js";
 import { DEFAULT_RULES } from "../src/scoring.js";
+import { createMiniprogramWebService } from "./miniprogram-web.mjs";
 import { createDiscussionsService } from "./discussions.mjs";
 import { createCorrectionsService } from "./corrections.mjs";
 import { createPositionsService, includeSubmittedAttempt, initializeDefaultParticipation } from "./positions.mjs";
@@ -71,7 +72,7 @@ const builtins = () => [
 ];
 
 // 功能模块共用一个落盘事务，答案订正与成绩变化才能同时保存和回滚。
-export async function createApi({ dataDirectory, featureFactories = [createPositionsService, createDiscussionsService, createCorrectionsService] }) {
+export async function createApi({ dataDirectory, featureFactories = [createPositionsService, createDiscussionsService, createCorrectionsService, createMiniprogramWebService] }) {
   let saved;
   try {
     saved = JSON.parse(
@@ -196,7 +197,7 @@ export async function createApi({ dataDirectory, featureFactories = [createPosit
       const chunks = [];
       let bodyBytes = 0;
       // 音频和图片需允许有界的媒体请求，其余接口继续保持原来的 1 MB 限额。
-      const bodyLimit = pathname.startsWith("/api/discussions")
+      const bodyLimit = (pathname.startsWith("/api/discussions") || pathname === "/api/miniprogram-web/poster")
         ? 8 * 1024 * 1024 : 1024 * 1024;
       for await (const chunk of request) {
         // 逐块转字符串会损坏跨块的中文字符；先按字节计数，完整接收后再解码。

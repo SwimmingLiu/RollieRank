@@ -1,6 +1,7 @@
 const $=(s)=>document.querySelector(s);
 // 手机所有页面和后续挂载的抽屉都使用同一原生短轨道。
 import "../../../src/scrollbars.js";
+import { openWechatWebView, saveWechatPoster, inviteWechatFriend, migrateWechatDrafts, setWechatViewTitle } from "./wechat-webview.js";
 import { prunePreviewHistory, recoverPreviewHistory } from "./preview-history.js";
 import { selectPreviousAttempt } from "../../../src/analytics.js";
 import { createPracticeTimer, createCustomPracticeTimer, bindPracticeTimer, setTimerMode, reorderTimerModules, balanceTimerModules, resolveTimerLimit, restorePracticeTimer, timerSectionsForQuestions, timerView, changeTimerPlan, startPracticeTimer, pausePracticeTimer, switchTimerModule, finishPracticeTimer, resumeEntryTimer, pauseEntryTimer, timingSummary, validateTimingSummary } from "../../../src/practice-timer.js";
@@ -21,10 +22,20 @@ const reference=Array.from({length:130},(_,i)=>'ABCD'[i%4]);
 const sample=reference.map((v,i)=>{const t=typeFor(i+1);return i+1-t[1]<t[4]?v:'ABCD'[('ABCD'.indexOf(v)+1)%4]});
 // 当前预览与已完成的服务共享真实答卷；旧版设计记录继续单独保留。
 let serviceClient=null,iosFeatures=[],iosPositions=null,iosAnalytics=null,iosDiscussions=null,iosCorrections=null,serviceError='',featureGeneration=0;
+let wechatHost;
+try {
+  wechatHost = await openWechatWebView();
+} catch (error) {
+  const message = document.createElement('p');
+  message.className = 'empty';
+  message.textContent = error.message || '微信连接失败，请重新打开小程序。';
+  document.querySelector('#stage').append(message);
+  throw error;
+}
 const testSession=new URLSearchParams(location.search).get('session');
 // 导航保留当前设计版本，避免刷新后沿用旧HTML外壳。
 const designRevision=new URLSearchParams(location.search).get('design');
-const storageName=['rollierank','ios','design','v3',testSession&&/^[a-z0-9-]{1,40}$/.test(testSession)?testSession:''].filter(Boolean).join(':');
+const storageName=['rollierank','ios','design','v3',testSession&&/^[a-z0-9-]{1,40}$/.test(testSession)?testSession:'',wechatHost?'wechat-'+wechatHost.guestId:''].filter(Boolean).join(':');
 const state={page:'home',paper:3,current:126,start:1,answers:Array(130).fill(''),drafts:{},history:[],institution:'四海',period:1,variant:'地市 / 执法',query:'',search:false,paperFilter:'all',recentIndex:0,report:[],detailFilter:'all',rankType:'总分',allTypes:false,saved:true,from:'home',saving:false,reportReturn:'papers',activeAttemptId:null,detailType:null,publisherPeriods:{},catalogPositions:{},recordsView:{query:'',filter:'all',scrollTop:0},entryMode:'list',reviewMarks:{},practiceTimers:{},submittedTiming:{},blankConsent:null,shareMode:'report'};
 // 预览入口可回到同一份预置草稿，避免前一次验收完成后无法再体验续录。
 const freshPreview=new URLSearchParams(location.search).has('fresh');
@@ -133,11 +144,14 @@ function top(){
   window.RollieUI?.cleanup($('#top'));window.RollieUI?.cleanup($('#bottom'));
   const deep=['papers','entry','report','details','share','stats','admin','discussion'].includes(state.page);
   const title={home:'',papers:publisherName(state.institution)+'套卷',entry:'录答案',report:'练习估分',details:state.detailFilter==='marked'?'待检查':state.detailFilter==='wrong'?'错题复盘':'逐题对照',rank:'',me:'练习记录',share:'成绩分享',stats:'成长分析',admin:'反馈审核',discussion:'本卷交流'}[state.page];
-  $('#top').classList.toggle('publisher-top',['home','rank'].includes(state.page));
-  // The review header is a single navigation row; its removed identity and info controls add no replacement strip.
-  $('#top').classList.remove('paper-top');
+  const topBar=$('#top');
+  const hasAction=state.page==='report'||state.page==='details';
+  topBar.classList.toggle('publisher-top',['home','rank'].includes(state.page)||Boolean(wechatHost&&!deep&&!hasAction));
+  topBar.classList.remove('paper-top');
+  // 微信在页面外绘制标题，正文仍保留原有的可访问标题和操作。
+  if(wechatHost) setWechatViewTitle(title||(state.page==='rank'?'同卷榜':' '));
   const heading=title?'<h1>'+title+'</h1>':'<span></span>';
-  $('#top').innerHTML=(deep?button('back',I('back'),'icon-button','返回'):'<span></span>')+heading+(state.page==='report'?button('restart',I('restart'),'icon-button','重新练习本卷'):state.page==='details'?button('answer-feedback','反馈','icon-button rr-detail-feedback','反馈参考答案',!serviceClient?.currentAttempt()):'<span></span>');
+  topBar.innerHTML=(deep?button('back',I('back'),'icon-button','返回'):'<span></span>')+heading+(state.page==='report'?button('restart',I('restart'),'icon-button','重新练习本卷'):state.page==='details'?button('answer-feedback','反馈','icon-button rr-detail-feedback','反馈参考答案',!serviceClient?.currentAttempt()):'<span></span>');
   // 未填满时主动作指向补录，填满后才表达估分；缺题弹层仍说明具体数量和位置。
   $('#bottom').style.display=['rank','discussion'].includes(state.page)?'none':'';
   $('#bottom').innerHTML=state.page==='entry'?'<div class="entry-footer">'+button('grid',I('grid'),'icon-button','答题卡')+button('confirm',count()<questionCount()?'交卷 · 未答 '+(questionCount()-count()):'提交估分','primary')+'</div>':state.page==='report'?'<div class="row-actions">'+button('details',I('review')+(score().wrong?'复盘错题 '+score().wrong:'查看答卷'),'primary')+'<span class="rr-report-comment-host">'+(iosDiscussions?.reportEntryView?.('compact')||'')+'</span>'+button('share',I('share'),'icon-button','分享成绩')+'</div>':state.page==='share'?'<div class="row-actions">'+button('save-poster',I('download')+'保存海报','primary')+button('invite',I('share')+'邀请好友','secondary','邀请同卷好友')+'</div>':state.page==='details'?'<div class="row-actions">'+button('copy-wrong','复制错题号','primary','',reviewRows().every(q=>q.status!=='wrong'))+'</div>':tabs();
@@ -203,7 +217,7 @@ let posterSaving=false;
 async function savePoster(){
   // Async rendering may finish after navigation; keep the filename tied to the captured answer sheet.
   if(posterSaving)return;posterSaving=true;const filenameLabel=paperLabel(),mode=state.shareMode,b=$('[data-action="save-poster"]');setActionButton(b,'生成中',true);
-  try{const blob=await posterBlob(mode);const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='卷卷小榜-'+filenameLabel.replace(/[· /]/g,'-')+'-'+mode+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('成绩海报已生成')}
+  try{const blob=await posterBlob(mode);if(wechatHost){await saveWechatPoster(blob);return;}const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='卷卷小榜-'+filenameLabel.replace(/[· /]/g,'-')+'-'+mode+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('成绩海报已生成')}
   catch(error){console.error('Score poster export failed',error);toast('海报生成失败，请重试')}
   finally{posterSaving=false;if(b&&!window.RollieUI.updateButton(b,{labelHtml:I('download')+'保存海报',disabled:false})){b.innerHTML=I('download')+'保存海报';b.disabled=false}}
 }
@@ -327,8 +341,15 @@ async function refreshFeatures(){
 async function initializeFeatures(){
   try{
     serviceBindings=await import('./service-client.js?v=ios-features-1');
-    serviceClient=serviceBindings.createIOSServiceClient({storage:localStorage,storageName,getUIState:()=>state,persistUI:persistServiceHistory});
+    serviceClient=serviceBindings.createIOSServiceClient({storage:localStorage,storageName,getUIState:()=>state,persistUI:persistServiceHistory,
+      launchIdentity:wechatHost && {guestId:wechatHost.guestId,name:wechatHost.migration?.name}});
     await serviceClient.initialize();
+    if (wechatHost?.migration) {
+      migrateWechatDrafts({ui:state,catalog:serviceClient.catalog(),attempts:serviceClient.state().attempts,
+        migration:wechatHost.migration,scopeForVersion:serviceBindings.scopeForVersion});
+      state.recents=recentAttempts(state.history);
+      writeStore();
+    }
     const ctx={state:serviceClient.state,catalog:serviceClient.catalog,attempt:featureAttempt,version:serviceClient.currentVersion,
       route:()=>({page:state.page==='entry'?'practice':state.page,id:['entry','rank'].includes(state.page)?serviceClient.currentVersion()?.id:state.activeAttemptId}),
       dimension:()=>state.rankDimension||'total',setDimension:id=>{state.rankDimension=id},uiState:()=>state,feedbackQuestion:question=>iosCorrections?.openFeedback?.(question),
@@ -355,7 +376,7 @@ function positionKey(){return state.page==='papers'?'papers|'+state.institution+
 function rememberPosition(){const y=$('.view')?.scrollTop||0;pageScrollPositions[positionKey()]=y;if(state.page==='papers'){state.catalogPositions[positionKey()]=y;writeStore()}}
 function restorePosition(value){const view=$('.view');if(view)view.scrollTop=value??pageScrollPositions[positionKey()]??state.catalogPositions[positionKey()]??0}
 function routeSnapshot(){return {page:state.page,institution:state.institution,period:state.period,paper:state.paper,attemptId:state.activeAttemptId,scroll:$('.view')?.scrollTop||0,detailFilter:state.detailFilter,detailType:state.detailType,rankType:state.rankType,statsVersionId:state.statsVersionId||null,focus:document.activeElement?.getAttribute('aria-label')}}
-function routeUrl(){const q=new URLSearchParams({page:state.page,institution:state.institution,period:String(state.period),paper:String(state.paper)});if(state.activeAttemptId)q.set('attempt',state.activeAttemptId);if(state.page==='stats'&&state.statsVersionId)q.set('version',state.statsVersionId);if(testSession)q.set('session',testSession);if(designRevision)q.set('design',designRevision);return location.pathname+'?'+q}
+function routeUrl(){const q=new URLSearchParams({page:state.page,institution:state.institution,period:String(state.period),paper:String(state.paper)});if(state.activeAttemptId)q.set('attempt',state.activeAttemptId);if(state.page==='stats'&&state.statsVersionId)q.set('version',state.statsVersionId);if(testSession)q.set('session',testSession);if(designRevision)q.set('design',designRevision);if(wechatHost){q.set('embed','wechat');q.set('wxHeight',wechatHost.height);q.set('wxBottom',wechatHost.bottom)}return location.pathname+'?'+q}
 function rememberRoute(){rememberPosition();history.replaceState({rollie:true,route:routeSnapshot(),trail:routeTrail},'',routeUrl())}
 function focusRoute(label){requestAnimationFrame(()=>{const candidates=[...document.querySelectorAll('button')];const previous=label&&candidates.find(el=>el.getAttribute('aria-label')===label);const target=previous||$('#top h1')||$('.view h1')||$('.view');if(target){if(!previous)target.tabIndex=-1;target.focus({preventScroll:true})}})}
 function go(page,options={}){if(state.page===page&&!options.refresh)return;if(state.page==='entry'&&page!=='entry')pauseCurrentEntry();if(sheetState.open)closeSheet('dismiss');rememberRoute();const before=routeSnapshot();routeTrail=options.root?[]:options.replace?routeTrail:[...routeTrail,before];state.page=page;if(page==='entry')resumeCurrentEntry();render(true);if(page==='entry')requestAnimationFrame(()=>scrollToQuestion(state.current,true));else restorePosition();history[options.replace?'replaceState':'pushState']({rollie:true,route:routeSnapshot(),trail:routeTrail},'',routeUrl());focusRoute();void refreshFeatures()}
@@ -381,7 +402,7 @@ const actions={
 'answer-feedback'(){iosCorrections?.openFeedback?.()},
 'review-sections':reviewSectionPicker,
 'save-poster':savePoster,
-async invite(){const url=new URL(location.href);url.search='?open=paper&institution='+encodeURIComponent(state.institution)+'&period='+state.period+'&paper='+state.paper;if(navigator.share){try{await navigator.share({title:'卷卷小榜 · '+paperLabel(),text:'同一套卷，看看你的分数',url:url.href})}catch{}}else{try{await navigator.clipboard.writeText(url.href);toast('同卷链接已复制')}catch{toast('请使用浏览器分享此页面')}}},
+async invite(){if(wechatHost){try{await inviteWechatFriend(state)}catch(error){toast(error.message)}return}const url=new URL(location.href);url.search='?open=paper&institution='+encodeURIComponent(state.institution)+'&period='+state.period+'&paper='+state.paper;if(navigator.share){try{await navigator.share({title:'卷卷小榜 · '+paperLabel(),text:'同一套卷，看看你的分数',url:url.href})}catch{}}else{try{await navigator.clipboard.writeText(url.href);toast('同卷链接已复制')}catch{toast('请使用浏览器分享此页面')}}},
 // 报告是本次练习的根结果，返回首页，不能把刚退回的榜单再次压栈。
 back(){if(state.page==='report'){go('home',{replace:true,root:true});return;}if(routeTrail.length){rememberRoute();history.back()}else go(['details','share','rank','discussion'].includes(state.page)?'report':'home',{replace:true,root:true})},
 
@@ -406,7 +427,7 @@ restart(){openSheet('再练一次','<div class="sheet-actions">'+button('continu
 };
 
 // Every origin opens the same attempt target; only an explicit redo can replace the editing context.
-function openRecord(r){if(!r)return;pauseCurrentEntry();state.activeAttemptId=r.id;state.institution=r.institution;state.period=r.period;state.paper=r.paper;state.answers=[...r.answers];if(!state.reviewMarks[r.id]&&Array.isArray(r.marks))state.reviewMarks[r.id]=[...r.marks];writeStore();if(attemptTarget(r).page==='report'){state.report=[...r.answers];resetResultPosition();go('report')}else{state.current=state.answers.findIndex(v=>!v)+1||Math.max(1,state.answers.length);go('entry')}}
+function openRecord(r){if(!r)return;pauseCurrentEntry();state.activeAttemptId=r.id;state.institution=r.institution;state.period=r.period;state.paper=r.paper;state.answers=[...r.answers];if(!state.reviewMarks[r.id]&&Array.isArray(r.marks))state.reviewMarks[r.id]=[...r.marks];writeStore();if(attemptTarget(r).page==='report'){state.report=[...r.answers];resetResultPosition();go('report')}else{state.current=Number.isInteger(r.current)&&r.current>=1&&r.current<=r.answers.length?r.current:state.answers.findIndex(v=>!v)+1||Math.max(1,state.answers.length);if(r.entryMode)state.entryMode=r.entryMode;go('entry')}}
 function openRecent(index){state.recentIndex=index;openRecord(state.recents[index])}
 function openHistory(id){openRecord(state.history.find(r=>r.id===id))}
 
