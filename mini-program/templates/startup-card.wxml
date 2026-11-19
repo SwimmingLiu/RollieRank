@@ -1,0 +1,15 @@
+<template name="startup-card">
+  <view wx:if="{{logo}}" class="rr-startup-brand">
+    <image src="{{logo}}" mode="aspectFit" />
+    <text>卷卷小榜</text>
+  </view>
+  <view class="rr-startup-heading">
+    <text>最近练习</text>
+    <text class="rr-startup-status" aria-role="status">正在读取</text>
+  </view>
+  <view class="rr-startup-card" aria-hidden="{{true}}">
+    <view class="rr-startup-meta"><view></view><view></view></view>
+    <view class="rr-startup-lines"><view></view><view></view><view></view></view>
+    <view class="rr-startup-foot"><view></view><view></view></view>
+  </view>
+</template>

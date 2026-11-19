@@ -1,3 +1,5 @@
+@import "../../templates/startup-card.wxss";
+
 .home__body { padding: 20px 22px 30px; display: flex; flex-direction: column; gap: 20px; }
 .home__section { margin-bottom: 17px; font-size: 17px; font-weight: 650; letter-spacing: -.5px; }
 .home__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }

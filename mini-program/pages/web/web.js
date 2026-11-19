@@ -1,4 +1,4 @@
-const { WEB_APP_ORIGIN } = require("../../config.js");
+const { ASSET, WEB_APP_ORIGIN } = require("../../config.js");
 const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
 const { linkQuery, validTicket } = require("../../utils/web-bridge.js");
@@ -35,7 +35,7 @@ function localSession() {
 }
 
 Page({
-  data: { src: "", error: "" },
+  data: { src: "", error: "", logo: ASSET.logo },
 
   onLoad(query) {
     this.paper = linkQuery(query);

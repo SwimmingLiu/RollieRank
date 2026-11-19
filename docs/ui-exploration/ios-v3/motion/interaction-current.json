@@ -16,17 +16,17 @@
   ],
   "errors": [],
   "gif": "motion/interaction-current.gif",
-  "gifSha256": "59a0c980d965fce82b7c3fb5f5215e3ca10b22ddc304de20abc78611bf2f4756",
+  "gifSha256": "1a04ad1d7d5fbf9147d3294d36e6cfc284e2fdc0c20aba2016736c1366fad630",
   "sources": {
     "scripts/record-ios-preview.mjs": "c27b23f8a0462a7dc449c0966c76698051a11414ca228781e6d7bf98c20d09d5",
-    "docs/ui-exploration/ios-v3/app.js": "a424c639d5429ffdc452805e0db540a9488db6c0a460667051b7723c661cb2b1",
-    "docs/ui-exploration/ios-v3/app.html": "1eebd110be34adb10b1b83ba3bc223eec87cdcd5a25047850b1c9b2864195db3",
-    "docs/ui-exploration/ios-v3/vendor/beui.js": "e102ccc4160b72b4d089c30c568d5c08d11f0b1c1f1e0f2879248f3551c2651b",
-    "docs/ui-exploration/ios-v3/features/base.css": "4f4aedb116f803515346e29476861c3935e85c342cf5ed5d3e0a5078f8cab247",
+    "docs/ui-exploration/ios-v3/app.js": "4cfa764174c864f9a9e5b6e86d56428d9d6debbdf387d2cea620aca35d589755",
+    "docs/ui-exploration/ios-v3/app.html": "58ca99fb9c49556dfac4d9e4d2e6d01c5e438c212e5f43735ad6ec53c6c8eeba",
+    "docs/ui-exploration/ios-v3/vendor/beui.js": "a150bebf66f590fc76a914fdc5aa69b85c567746085a00d0edddc27bdd3b2743",
+    "docs/ui-exploration/ios-v3/features/base.css": "2c3946c77ea23752af46e9aaf9e7596e3e577cb37acfe9fc409bf77b3cc5f1d6",
     "docs/ui-exploration/ios-v3/features/practice-session.css": "72e70af43fdb74796bf090894a6f0f609c5627a85a3e104aef921d01bed4f5da",
     "docs/ui-exploration/ios-v3/features/timer-configuration.css": "7aa94e9cdc9a8c4d0d63b07f485b475bab6dbd8197c093628a1adfa52edff9a1",
     "docs/ui-exploration/ios-v3/features/single-answer.css": "895cdba173cb53540d78a44b947e29f94dc96e8a9f8aa264be1da1e9817ca633",
     "docs/ui-exploration/ios-v3/assets/brand/rollierank-logo-transparent.png": "6bd654d51d8b0b1ce538ce83c65fd0c5e2e109e02839a4d0538fc638199a3020"
   },
-  "evidence": "/Users/swimmingliu/data/github-proj/RollieRank/test-results/parity-audit/motion-final-merged"
+  "evidence": "/Users/swimmingliu/data/github-proj/RollieRank/test-results/header-fix/startup-motion"
 }

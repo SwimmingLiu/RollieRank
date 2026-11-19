@@ -51,24 +51,34 @@ def assert_wechat_title(frame, expected):
         assert heading.evaluate("element => element.getBoundingClientRect().height") <= 1
 
 
-def assert_title_controls(page, frame, back_label, action_label):
+def assert_wechat_title_actions(page, frame, title, back_label, action_label=None):
+    assert_wechat_title(frame, title)
+    assert frame.locator("#top").evaluate("node => node.getBoundingClientRect().height") <= 1
     back = frame.get_by_role("button", name=back_label, exact=True)
-    action = frame.get_by_role("button", name=action_label, exact=True)
+    action = frame.get_by_role("button", name=action_label, exact=True) if action_label else None
     for width, height in [(320, 568), (390, 844), (430, 932)]:
         page.locator("#size").select_option(f"{width},{height}")
-        # The gallery selector can change before its iframe media query settles.
         expect(frame.locator("body")).to_have_js_property("clientWidth", width)
-        left, right = back.bounding_box(), action.bounding_box()
-        for button in (back, action):
-            assert button.evaluate("""node => {
+        expect(back).to_be_visible()
+        if action:
+            expect(action).to_be_visible()
+        boxes = []
+        buttons = [(back_label, back)] + ([(action_label, action)] if action else [])
+        for label, button in buttons:
+            box = button.evaluate("""node => {
                 const rect = node.getBoundingClientRect();
                 const target = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
-                return rect.left >= 0 && rect.right <= innerWidth && rect.width >= 43.5 &&
-                    rect.height >= 43.5 && node.contains(target);
-            }"""), action_label
-        assert abs(left["y"] + left["height"] / 2 - right["y"] - right["height"] / 2) <= 1
-        assert left["x"] + left["width"] + 8 < right["x"]
-        assert right["x"] + right["width"] > left["x"] + left["width"] + 100
+                return { x: rect.x, y: rect.y, width: rect.width, height: rect.height,
+                    tappable: node.contains(target) };
+            }""")
+            assert box["width"] >= 43.5 and box["height"] >= 43.5, (width, label, box)
+            assert box["x"] >= 0 and box["x"] + box["width"] <= width, (width, label, box)
+            assert box["tappable"], (width, label, box)
+            boxes.append(box)
+        if len(boxes) == 2:
+            left, right = boxes
+            assert abs(left["y"] + left["height"] / 2 - right["y"] - right["height"] / 2) <= 1
+            assert left["x"] + left["width"] + 8 < right["x"], (width, left, right)
     page.locator("#size").select_option("390,844")
 
 
@@ -108,18 +118,23 @@ def fill_and_submit(frame, option, prompt=False):
     return attempt
 
 
-def capture(page, frame, output, name):
-    # Keep the intrinsic phone pixels for UI review; desktop gallery scaling is checked separately below.
+def capture_phone_sizes(page, frame, output, name):
+    # Keep the intrinsic phone pixels for UI review.
     frame.locator(".toast").wait_for(state="hidden", timeout=5000)
     page.set_viewport_size({"width": 1440, "height": 1200})
     for width, height in [(390, 844), (320, 568), (430, 932)]:
         page.locator("#size").select_option(f"{width},{height}")
+        expect(frame.locator("body")).to_have_js_property("clientWidth", width)
         frame.locator("body").evaluate("() => document.querySelector('.view')?.scrollTo({top:0,behavior:'instant'})")
         assert frame.locator("body").evaluate("() => document.documentElement.scrollWidth <= innerWidth + 1"), name
         # Screenshotting the iframe preserves fixed sheet headers; cancelling presence animations can hide them.
         frame.locator("body").evaluate("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))")
         page.locator("#phone").screenshot(path=str(output / f"{name}-{width}.png"))
     page.locator("#size").select_option("390,844")
+
+
+def capture(page, frame, output, name):
+    capture_phone_sizes(page, frame, output, name)
     for width, height in [(1440, 900), (1280, 800)]:
         page.set_viewport_size({"width": width, "height": height})
         page.evaluate("window.scrollTo({top:0,behavior:'instant'})")
@@ -200,6 +215,10 @@ def run(base, output, token=None, check_only=False, wechat_host=False):
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))
         if wechat_host:
+            initial_requests = {}
+            # Release the real server's responses only after checking both startup phases.
+            page.route("**/api/miniprogram-web/redeem", lambda route: initial_requests.update(redeem=route), times=1)
+            page.route("**/api/catalog", lambda route: initial_requests.update(catalog=route), times=1)
             identity = {"guestId": str(uuid4()), "name": "卷友", "drafts": [], "marks": []}
             native_launch = api(base, "miniprogram-web/bootstrap", identity)
             ticket = native_launch["ticket"]
@@ -212,7 +231,28 @@ def run(base, output, token=None, check_only=False, wechat_host=False):
                 if (!sessionStorage.getItem('rollierank:wechat:guest')) url.hash = 'rr=' + ticket;
                 history.replaceState(history.state, '', url);
             }""" + ")(" + json.dumps({"ticket": ticket}) + ");")
-        page.goto(base + "/ios-v3/?design=paper-cards-1114-v3", wait_until="networkidle")
+        gallery = base + "/ios-v3/?design=paper-cards-1114-v3"
+        if wechat_host:
+            with page.expect_request("**/api/miniprogram-web/redeem"):
+                page.goto(gallery, wait_until="commit")
+            frame = page.frame_locator("#phone")
+            skeleton = frame.locator(".rr-home-loading")
+            expect(skeleton).to_be_visible(timeout=5000)
+            expect(skeleton.locator(".rr-paper-skeleton")).to_have_count(1)
+            expect(frame.locator(".rr-publishers")).to_have_count(0)
+            expect(frame.locator(".rr-home-timer")).to_have_count(0)
+            expect(frame.locator(".rr-brand-mark")).to_have_js_property("complete", True)
+            with page.expect_request("**/api/catalog"):
+                initial_requests["redeem"].continue_()
+            expect(skeleton).to_be_visible()
+            capture_phone_sizes(page, frame, output, "startup")
+            initial_requests["catalog"].continue_()
+            expect(skeleton).to_have_count(0)
+            expect(frame.locator(".rr-publishers")).to_be_visible()
+            expect(frame.locator(".rr-deck")).to_have_count(0)
+            checks.append("the home paper card is visible during WeChat connection and catalog loading, then gives way to real paper selection")
+        else:
+            page.goto(gallery, wait_until="networkidle")
         frame = open_view(page, "me")
         if wechat_host:
             assert_wechat_title(frame, "练习记录")
@@ -236,6 +276,21 @@ def run(base, output, token=None, check_only=False, wechat_host=False):
             return {"checks": checks, "errors": errors, "base": base}
 
         frame = open_view(page, "home")
+        if wechat_host:
+            assert frame.locator("body").evaluate("element => element.ownerDocument.title.trim()") == ""
+            assert frame.locator("#top").evaluate("node => node.getBoundingClientRect().height") <= 1
+            brand = frame.locator(".rr-brand")
+            expect(brand).to_be_visible()
+            expect(brand.locator(".rr-brand-title")).to_have_text("卷卷小榜")
+            expect(brand.locator(".rr-brand-mark")).to_be_visible()
+            for width, height in [(320, 568), (390, 844), (430, 932)]:
+                page.locator("#size").select_option(f"{width},{height}")
+                expect(frame.locator("body")).to_have_js_property("clientWidth", width)
+                box = brand.evaluate("node => { const r=node.getBoundingClientRect(); return {x:r.x,y:r.y,width:r.width,height:r.height}; }")
+                assert box["x"] >= 0 and box["x"] + box["width"] <= width
+                assert box["y"] >= 0 and box["y"] + box["height"] <= 60
+            page.locator("#size").select_option("390,844")
+            checks.append("the original logo and title stay together directly below the WeChat capsule")
         capture(page, frame, output, "home")
 
         # Fresh candidate data starts blank; all receipts are created by real answer buttons.
@@ -258,8 +313,7 @@ def run(base, output, token=None, check_only=False, wechat_host=False):
         if wechat_host:
             assert guest == identity["guestId"]
             expect(frame.locator("html")).to_have_attribute("data-host", "wechat")
-            assert_wechat_title(frame, "练习估分")
-            assert_title_controls(page, frame, "返回", "重新练习本卷")
+            assert_wechat_title_actions(page, frame, "练习估分", "返回首页", "重新练习本卷")
             frame.get_by_role("button", name="重新练习本卷", exact=True).click()
             expect(frame.get_by_role("dialog", name="再练一次", exact=True)).to_be_visible()
             frame.get_by_role("button", name="取消", exact=True).click()
@@ -309,7 +363,7 @@ def run(base, output, token=None, check_only=False, wechat_host=False):
         root.locator(".rr-discussion-thread-toggle").click()
         expect(root.locator(".rr-discussion-reply")).to_have_count(1)
         capture(page, frame, output, "discussion")
-        frame.get_by_role("button", name="返回", exact=True).click()
+        frame.get_by_role("button", name="返回估分" if wechat_host else "返回", exact=True).click()
         expect(frame.locator(".rr-discussion-entry")).to_contain_text("2 条讨论")
         expect(frame.locator("form,textarea")).to_have_count(0)
         checks.append("mobile comments retain drafts/photos/auto-links, persist likes and expand or collapse real threaded replies")
@@ -317,13 +371,12 @@ def run(base, output, token=None, check_only=False, wechat_host=False):
         frame = open_view(page, "details")
         expect(frame.locator(".detail-table")).to_be_visible()
         if wechat_host:
-            assert_title_controls(page, frame, "返回", "反馈参考答案")
+            assert_wechat_title_actions(page, frame, "逐题对照", "返回估分", "反馈参考答案")
         capture(page, frame, output, "details")
         frame = open_view(page, "share")
         capture(page, frame, output, "share")
         if wechat_host:
-            assert_wechat_title(frame, "成绩分享")
-            expect(frame.locator("#top").get_by_role("button", name="返回", exact=True)).to_be_visible()
+            assert_wechat_title_actions(page, frame, "成绩分享", "返回估分")
             receiver = {"receiver": native_launch["receiver"]}
             for mode, label in (("report", "长图"), ("score", "成绩卡"), ("sections", "题型"), ("radar", "雷达")):
                 frame.get_by_role("tab", name=label, exact=True).click()
@@ -426,8 +479,7 @@ def run(base, output, token=None, check_only=False, wechat_host=False):
         frame.locator('[data-action="restart"]').wait_for()
         frame.locator(".rr3-rank-link").click()
         if wechat_host:
-            assert_wechat_title(frame, "同卷榜")
-            assert_title_controls(page, frame, "返回估分报告", "榜单规则")
+            assert_wechat_title_actions(page, frame, "同卷榜", "返回估分", "榜单规则")
             frame.get_by_role("button", name="榜单规则", exact=True).click()
             expect(frame.get_by_role("dialog", name="榜单规则", exact=True)).to_be_visible()
             frame.get_by_role("button", name="知道了", exact=True).click()
@@ -464,8 +516,10 @@ def run(base, output, token=None, check_only=False, wechat_host=False):
         checks.append("the existing podium and paper ranking render actual voluntary scores and nationwide scope")
 
         frame = direct_view(page, "report", attempt=first["id"])
+        assert_visible_score(frame, first)
         frame.locator('[data-action="details"]').click()
         frame.get_by_role("button", name="反馈参考答案", exact=True).click()
+        expect(frame.get_by_role("dialog", name="选择反馈题目", exact=True)).to_be_visible()
         changed = [row for row in first["report"]["rows"] if row["answer"] != row["correctAnswer"]][:2]
         assert len(changed) == 2
         for index, question in enumerate(changed):

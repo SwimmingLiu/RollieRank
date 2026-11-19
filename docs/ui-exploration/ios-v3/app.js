@@ -26,6 +26,7 @@ let wechatHost;
 try {
   wechatHost = await openWechatWebView();
 } catch (error) {
+  $('#startup')?.remove();
   const message = document.createElement('p');
   message.className = 'empty';
   message.textContent = error.message || '微信连接失败，请重新打开小程序。';
@@ -140,18 +141,27 @@ function mountSharePreview(host){window.RollieUI.mountShareStudio(host,{...share
 
 function track(value){return '<div class="track"><i style="width:'+Math.max(0,Math.min(100,value*100))+'%"></i></div>'}
 function tabs(){return '<nav class="tabbar" aria-label="底部导航">'+[['home','papers','首页'],['me','review','练习记录']].map(([p,i,label])=>'<button data-root="'+p+'" class="'+((state.page===p||(p==='home'&&state.page==='papers')||(p==='me'&&['stats','admin'].includes(state.page)))?'selected':'')+'" aria-current="'+((state.page===p||(p==='home'&&state.page==='papers')||(p==='me'&&['stats','admin'].includes(state.page)))?'page':'false')+'">'+I(i)+label+'</button>').join('')+'</nav>'}
+function wechatActions(items){
+  if(!wechatHost)return '';
+  return '<div class="rr-wechat-content-actions" aria-label="页面操作">'+items.map((item,index)=>button(item.action,I(item.icon)+'<span>'+esc(item.label)+'</span>','rr-wechat-action'+(index?' rr-wechat-action--right':''),item.name||item.label,item.disabled)).join('')+'</div>';
+}
 function top(){
   window.RollieUI?.cleanup($('#top'));window.RollieUI?.cleanup($('#bottom'));
   const deep=['papers','entry','report','details','share','stats','admin','discussion'].includes(state.page);
   const title={home:'',papers:publisherName(state.institution)+'套卷',entry:'录答案',report:'练习估分',details:state.detailFilter==='marked'?'待检查':state.detailFilter==='wrong'?'错题复盘':'逐题对照',rank:'',me:'练习记录',share:'成绩分享',stats:'成长分析',admin:'反馈审核',discussion:'本卷交流'}[state.page];
   const topBar=$('#top');
-  const hasAction=state.page==='report'||state.page==='details';
-  topBar.classList.toggle('publisher-top',['home','rank'].includes(state.page)||Boolean(wechatHost&&!deep&&!hasAction));
-  topBar.classList.remove('paper-top');
-  // 微信在页面外绘制标题，正文仍保留原有的可访问标题和操作。
-  if(wechatHost) setWechatViewTitle(title||(state.page==='rank'?'同卷榜':' '));
-  const heading=title?'<h1>'+title+'</h1>':'<span></span>';
-  topBar.innerHTML=(deep?button('back',I('back'),'icon-button','返回'):'<span></span>')+heading+(state.page==='report'?button('restart',I('restart'),'icon-button','重新练习本卷'):state.page==='details'?button('answer-feedback','反馈','icon-button rr-detail-feedback','反馈参考答案',!serviceClient?.currentAttempt()):'<span></span>');
+  const nativeTitle=title||(state.page==='rank'?'同卷榜':' ');
+  if(wechatHost){
+    setWechatViewTitle(nativeTitle);
+    // Web-view already has the WeChat title row. Never paint a second header in the page body.
+    topBar.classList.add('publisher-top');
+    topBar.innerHTML='';
+  }else{
+    topBar.classList.toggle('publisher-top',['home','rank'].includes(state.page));
+    topBar.classList.remove('paper-top');
+    const heading=title?'<h1>'+title+'</h1>':'<span></span>';
+    topBar.innerHTML=(deep?button('back',I('back'),'icon-button','返回'):'<span></span>')+heading+(state.page==='report'?button('restart',I('restart'),'icon-button','重新练习本卷'):state.page==='details'?button('answer-feedback','反馈','icon-button rr-detail-feedback','反馈参考答案',!serviceClient?.currentAttempt()):'<span></span>');
+  }
   // 未填满时主动作指向补录，填满后才表达估分；缺题弹层仍说明具体数量和位置。
   $('#bottom').style.display=['rank','discussion'].includes(state.page)?'none':'';
   $('#bottom').innerHTML=state.page==='entry'?'<div class="entry-footer">'+button('grid',I('grid'),'icon-button','答题卡')+button('confirm',count()<questionCount()?'交卷 · 未答 '+(questionCount()-count()):'提交估分','primary')+'</div>':state.page==='report'?'<div class="row-actions">'+button('details',I('review')+(score().wrong?'复盘错题 '+score().wrong:'查看答卷'),'primary')+'<span class="rr-report-comment-host">'+(iosDiscussions?.reportEntryView?.('compact')||'')+'</span>'+button('share',I('share'),'icon-button','分享成绩')+'</div>':state.page==='share'?'<div class="row-actions">'+button('save-poster',I('download')+'保存海报','primary')+button('invite',I('share')+'邀请好友','secondary','邀请同卷好友')+'</div>':state.page==='details'?'<div class="row-actions">'+button('copy-wrong','复制错题号','primary','',reviewRows().every(q=>q.status!=='wrong'))+'</div>':tabs();
@@ -226,13 +236,34 @@ async function savePoster(){
 function setActionButton(b,label,disabled){if(!b)return;if(window.RollieUI?.updateButton(b,{labelHtml:esc(label),...(disabled===undefined?{}:{disabled})}))return;b.innerHTML=esc(label);if(disabled!==undefined)b.disabled=disabled}
 // 领奖台仍由原 beUI 组件渲染，所有人数和分数改由真实服务提供。
 function updateRank(){iosPositions?.mountRank?.()}
+function wechatPageActionItems(){
+  if(state.page==='papers')return [{action:'back',label:'返回首页',icon:'back'}];
+  if(state.page==='entry')return [{action:'back',label:'返回套卷',icon:'back'}];
+  if(state.page==='report')return [{action:'back',label:'返回首页',icon:'back'},{action:'restart',label:'重新练习',icon:'restart',name:'重新练习本卷'}];
+  if(state.page==='details')return [{action:'back',label:'返回估分',icon:'back'},{action:'answer-feedback',label:'反馈答案',icon:'info',name:'反馈参考答案',disabled:!serviceClient?.currentAttempt()}];
+  if(state.page==='share')return [{action:'back',label:'返回估分',icon:'back'}];
+  if(state.page==='stats'||state.page==='admin')return [{action:'back',label:'返回记录',icon:'back'}];
+  if(state.page==='discussion')return [{action:'back',label:'返回估分',icon:'back'}];
+  return [];
+}
+function mountWechatPageActions(root){
+  if(!wechatHost)return;
+  const items=wechatPageActionItems();
+  if(!items.length)return;
+  const actionsHtml=wechatActions(items);
+  if(state.page==='report'){
+    root.querySelector('.rr3-report')?.insertAdjacentHTML('afterbegin',actionsHtml);
+  }else{
+    root.insertAdjacentHTML('afterbegin',actionsHtml);
+  }
+}
 function mountInterfaces(root){
   const ui=window.RollieUI;if(!ui){const home=root.querySelector('#home-ui');if(home)home.innerHTML='<p class="empty">组件未能加载，请刷新页面</p>';return}
   const home=root.querySelector('#home-ui');if(home)mountHomeDashboard(home);
   const catalog=root.querySelector('#catalog-ui');if(catalog)ui.mountCatalog(catalog,{institution:state.institution,year:collectionFor(state.institution,state.period)?.year||2026,period:state.period,variant:state.variant,canSwitch:collectionsFor(state.institution).length>1,collectionTitle:(collectionFor(state.institution,state.period)?.displayPeriod?collectionFor(state.institution,state.period).meta:collectionFor(state.institution,state.period)?.title)||'行测套卷',collectionMeta:collectionFor(state.institution,state.period)?.displayPeriod?'':collectionFor(state.institution,state.period)?.meta||'',papers:paperViewModels(),onPeriods:()=>actions.periods(),onOpen:openPaper});
   const records=root.querySelector('#records-ui');if(records)ui.mountRecords(records,{records:state.history.map(recordViewModel),onOpen:openHistory,viewState:state.recordsView,onViewStateChange:value=>{state.recordsView=value},user:{name:serviceClient?.state().profile?.name||'卷友',avatarSrc:'assets/avatars/rank-8.svg'}});
   const result=score(),standing=iosPositions?.standing?.()||{rank:null,count:0};const scoreHost=root.querySelector('#score-ui');if(scoreHost)ui.mountScore(scoreHost,{total:result.cents/100,maxScore:(result.maxCents||10000)/100,verification:scoreVerification(),correct:result.correct,wrong:result.wrong,blank:result.blank,rank:standing.rank,participants:standing.count,sections:result.types.map(t=>({name:t.name,earnedCents:t.earned,maxCents:t.max})),initialAll:state.allTypes,onAllChange:all=>{state.allTypes=all},onRank:()=>go('rank'),onReview:openReview});
-  if(scoreHost){const timing=serviceClient?.currentAttempt()?.timing,card=scoreHost.querySelector('.rr3-report > div');if(timing&&card&&ui.mountTimingReport){const host=document.createElement('div');host.className='rr-session-report-host';card.after(host);ui.mountTimingReport(host,{timing});}}
+  if(scoreHost){const timing=serviceClient?.currentAttempt()?.timing,card=scoreHost.querySelector('.rr3-report .rr3-score-card');if(timing&&card&&ui.mountTimingReport){const host=document.createElement('div');host.className='rr-session-report-host';card.after(host);ui.mountTimingReport(host,{timing});}}
   if(root.querySelector('#entry-tools-ui')){mountEntryTools();updateEntryVisibility();}
   const shareHost=root.querySelector('#share-ui');if(shareHost)mountSharePreview(shareHost);
   const detail=root.querySelector('#detail-tabs');if(detail)ui.mountTabs(detail,{value:state.detailFilter,items:[{value:'wrong',label:'错题 '+reviewRows().filter(q=>q.status==='wrong').length},{value:'all',label:'全部 '+reviewRows().length},{value:'marked',label:'待检查 '+reviewRows().filter(q=>currentMarks().includes(q.n)).length}],variant:'segment',className:'rr-detail-tabs',indicatorClassName:'rr-tab-highlight',onChange:value=>{state.detailFilter=value;refreshReview()}});
@@ -365,7 +396,7 @@ const views={home,papers,entry,report,details,rank,me,share,stats,admin,discussi
 // 转场保持新页不透明，并先清理旧DOM；快速切换不能残留重复ID或叠印文字。
 function render(animate=false,reverse=false){
   $('#app').dataset.page=state.page;const stage=$('#stage');for(const old of stage.querySelectorAll('.view')){window.RollieUI?.cleanup(old);old.remove()}
-  const el=document.createElement('div');el.className='view';el.dataset.page=state.page;el.innerHTML=views[state.page]();stage.append(el);top();mountInterfaces(el);for(const feature of iosFeatures)feature.afterRender?.();mountPracticeTools();
+  const el=document.createElement('div');el.className='view';el.dataset.page=state.page;el.innerHTML=views[state.page]();stage.append(el);top();mountInterfaces(el);for(const feature of iosFeatures)feature.afterRender?.();mountWechatPageActions(el);const wechatActionsHost=el.querySelector('.rr-wechat-content-actions');if(wechatActionsHost)window.RollieUI?.mountButtons(wechatActionsHost);mountPracticeTools();
   if(animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches)el.animate([{transform:'translateX('+(reverse?-16:20)+'px)'},{transform:'translateX(0)'}],{duration:220,easing:'cubic-bezier(.2,.8,.2,1)'});
 }
 // Native navigation carries paper/attempt context and return positions, including browser back/forward.
@@ -438,6 +469,7 @@ if(params.get('open')==='paper'){const exact={institution:params.get('institutio
 // 同卷单题模式刷新应停在原题，不能被首个未答题重新覆盖。
 state.current=restoredQuestion&&restoredQuestion.attemptId===state.activeAttemptId&&restoredQuestion.key===paperKey(state)&&restoredQuestion.current<=state.answers.length?restoredQuestion.current:state.answers.findIndex(v=>!v)+1||Math.max(1,state.answers.length);
 if(params.has('empty'))writeStore();
+// 保留 HTML 占位直至业务模块就绪，避免子页面先出现点了无反应的操作。
 await initializeFeatures();
 if(state.page==='entry')resumeCurrentEntry();
 render();void refreshFeatures();if(state.page==='entry')requestAnimationFrame(()=>scrollToQuestion(state.current,true));else restorePosition();rememberRoute();

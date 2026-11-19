@@ -61,6 +61,7 @@ export function Ranking(props: RankingProps) {
     : props.myRank === null ? "未参与排名" : `我的同卷名次${props.myRank}，共${props.participants}人`;
   const hasRows = ready && props.people.length + props.rows.length > 0;
   const winnerIncludesMe = props.people.some(person => person.isMe);
+  const wechatHost = document.documentElement.dataset.host === "wechat";
   const scopePosition = props.scope?.position;
   const scopeTitle = props.scope?.value === "nationwide" ? "全国考生" : props.scope?.missingSelection ? "尚未选岗" : scopePosition?.department ?? "当前岗位";
   const scopeDetail = props.scope?.value === "nationwide" ? "不限报考岗位" : props.scope?.missingSelection ? "当前显示全国成绩" : scopePosition?.title ?? props.scope?.label ?? "";
@@ -72,6 +73,10 @@ export function Ranking(props: RankingProps) {
         <Button variant="ghost" size="icon" className="rr6-rank-help" data-position-action="rules" aria-label="榜单规则"><CircleHelp size={18} /></Button>
       </div>
     </header>
+    {wechatHost ? <div className="rr-wechat-content-actions" aria-label="页面操作">
+      <Button variant="ghost" className="rr-wechat-action" onClick={props.onBack}><ChevronLeft size={18} /><span>返回估分</span></Button>
+      <Button variant="ghost" className="rr-wechat-action rr-wechat-action--right" data-position-action="rules" aria-label="榜单规则"><CircleHelp size={18} /><span>榜单规则</span></Button>
+    </div> : null}
     {/* 用户需要一眼读完整卷身份；合并图标与标签的容器，让系列、卷类和套号在窄屏仍处于同一行。 */}
     <Card className="rr6-rank-context" aria-label={props.identityLabel}><CardContent><Avatar name={props.context.publisher} src={props.publisherLogoSrc} size="sm" /><span className="rr6-context-identity"><b>{props.context.publisher}</b><span>{props.context.year}</span><span>{props.context.collection}</span>{props.context.variant ? <span className="rr6-context-variant">{props.context.variant}</span> : null}<span className="rr6-context-paper">{props.context.paper}</span></span></CardContent></Card>
     <Tabs value={props.dimension} onValueChange={value => { if (dimensions.some(item => item.value === value)) props.onDimensionChange(value); }} variant="segment" className="rr2-rank-tabs"><TabsList className="rr2-rank-tab-list">{dimensions.map(dimension => <TabsTrigger key={dimension.value} value={dimension.value} aria-label={dimension.label} className="rr2-rank-tab" indicatorClassName="rr2-rank-tab-indicator">{shortLabels.get(dimension.label) ?? dimension.label}</TabsTrigger>)}</TabsList></Tabs>

@@ -1,4 +1,8 @@
-<view wx:if="{{openingWeb}}" class="screen screen--plain"><view class="loading">正在打开卷卷小榜…</view></view>
+<import src="../../templates/startup-card.wxml" />
+<view wx:if="{{openingWeb}}" class="screen screen--plain">
+  <rr-nav back="{{false}}" />
+  <view class="rr-startup-screen"><template is="startup-card" data="{{logo: asset.logo}}" /></view>
+</view>
 <view wx:else class="screen">
   <rr-nav title="卷卷小榜" logo="{{asset.logo}}" back="{{false}}" />
 
@@ -56,7 +60,9 @@
       </view>
     </view>
 
-    <view wx:if="{{loading}}" class="loading">正在准备套卷…</view>
+    <block wx:if="{{loading}}">
+      <template wx:if="{{!recent.length}}" is="startup-card" />
+    </block>
     <view wx:elif="{{error}}" class="empty">
       <text>{{error}}</text>
       <button class="chip" bindtap="retry">重新读取</button>
@@ -72,7 +78,7 @@
       </view>
     </view>
 
-    <button wx:if="{{!timerRunning && !timerPaused}}" class="home__timer" bindtap="openTimer" hover-class="press">
+    <button wx:if="{{!loading && !timerRunning && !timerPaused}}" class="home__timer" bindtap="openTimer" hover-class="press">
       <view class="home__timer-icon"><image src="{{uiBase}}/clock-ochre.svg" mode="aspectFit" /></view>
       <view class="grow stack">
         <text class="home__timer-title">做题计时</text>

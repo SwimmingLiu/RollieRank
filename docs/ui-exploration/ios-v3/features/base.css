@@ -71,18 +71,89 @@ html[data-host=wechat] { --wx-bottom-extra: max(0px, var(--wx-bottom, 0px) - env
 html[data-host=wechat] #app { height: calc(100svh - var(--wx-bottom-extra)); }
 html[data-host=wechat] .rr-sheet { margin-bottom: var(--wx-bottom-extra); }
 html[data-host=wechat] body { background: var(--paper); }
-/* The native capsule owns the system row. Page actions occupy one 44 px row directly below it. */
-html[data-host=wechat] #top:not(.publisher-top) { height: 44px; padding-inline: 12px; }
-html[data-host=wechat] #top h1,
-html[data-host=wechat] .rr6-rank-header h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-html[data-host=wechat] #top [data-action=back] { grid-area: 1 / 1; }
-html[data-host=wechat] #top [data-action=restart],
-html[data-host=wechat] #top [data-action=answer-feedback] { grid-area: 1 / 3; justify-self: end; }
+/* WeChat owns the title row. In-page actions never imitate a second navigation bar. */
+html[data-host=wechat] #top.publisher-top { height: 0; padding: 0; }
+html[data-host=wechat] .rr-home, #startup .rr-home { padding-top: 0; }
+html[data-host=wechat] .rr-brand, #startup .rr-brand { min-height: 44px; }
+html[data-host=wechat] .rr-wechat-content-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 0 4px;
+}
+html[data-host=wechat] .view > .rr-wechat-content-actions { margin-inline: 20px; }
+html[data-host=wechat] .rr-wechat-action {
+  width: auto !important;
+  min-width: 44px;
+  min-height: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 11px;
+  border: 1px solid #e8dfd1;
+  border-radius: 12px;
+  background: #fffdf8;
+  color: #6e604d;
+  font-size: 13px;
+  box-shadow: none;
+}
+html[data-host=wechat] .rr-wechat-action--right { margin-left: auto; }
+html[data-host=wechat] .rr-wechat-action .ico,
+html[data-host=wechat] .rr-wechat-action > svg { width: 18px; height: 18px; flex: none; }
+html[data-host=wechat] .rr-wechat-action:focus-visible { outline: 2px solid #8d7853; outline-offset: 2px; }
+html[data-host=wechat] .rr3-report { padding-top: 10px; }
+html[data-host=wechat] .rr-detail-toolbar { margin-top: 0; }
+/* The action strip shares the viewport with the fitted poster preview. */
+html[data-host=wechat] .view[data-page=share] { display: flex; flex-direction: column; }
+html[data-host=wechat] .view[data-page=share] #share-ui { flex: 1; height: auto; }
 
-html[data-host=wechat] .rr6-ranking { padding-top: 0; }
-html[data-host=wechat] .rr6-rank-header { height: 44px; margin-inline: -8px; justify-content: space-between; }
-html[data-host=wechat] .rr6-rank-header .rr6-rank-back { margin-left: 0; }
-html[data-host=wechat] .rr6-rank-tools { grid-area: 1 / 3; }
-html[data-host=wechat] .rr6-rank-tools button[data-position-action=rules] {
-  width: 44px !important; height: 44px !important; min-width: 44px !important; min-height: 44px !important;
+html[data-host=wechat] .rr6-ranking { padding-top: 12px; }
+html[data-host=wechat] .rr6-rank-header { display: none; }
+html[data-host=wechat] .rr6-ranking > .rr-wechat-content-actions { margin: 0 20px; }
+
+/* Initial identity and catalog reads keep the paper-card silhouette instead of an empty screen. */
+.rr-home-loading .rr-section-heading { justify-content: space-between; align-items: center; }
+.rr-loading-label { color: #796747; font-size: 12px; }
+.rr-paper-skeleton {
+  position: relative;
+  height: 250px;
+  padding: 19px 21px 16px;
+  overflow: hidden;
+  border-radius: 27px;
+  background: #f4e3be;
+  box-shadow: 0 14px 22px -23px #69564070;
+}
+.rr-paper-skeleton:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(100deg, transparent 20%, #fff8 50%, transparent 80%);
+  animation: rr-paper-loading 1.4s ease-in-out infinite;
+}
+.rr-paper-skeleton-meta, .rr-paper-skeleton-foot { display: flex; align-items: center; justify-content: space-between; }
+.rr-paper-skeleton-meta > span, .rr-paper-skeleton-copy > span, .rr-paper-skeleton-foot > span, .rr-paper-skeleton-foot > i {
+  display: block;
+  border-radius: 999px;
+  background: #ddc9a0;
+}
+.rr-paper-skeleton-meta > span:first-child { width: 84px; height: 26px; }
+.rr-paper-skeleton-meta > span:last-child { width: 34px; height: 11px; }
+.rr-paper-skeleton-copy { display: grid; gap: 10px; margin-top: 30px; width: 62%; }
+.rr-paper-skeleton-copy > span:first-child { width: 42%; height: 12px; }
+.rr-paper-skeleton-copy > span:nth-child(2) { width: 92%; height: 45px; border-radius: 10px; }
+.rr-paper-skeleton-copy > span:last-child { width: 78%; height: 12px; }
+.rr-paper-skeleton-foot { position: absolute; left: 21px; right: 21px; bottom: 18px; }
+.rr-paper-skeleton-foot > span { width: 88px; height: 12px; }
+.rr-paper-skeleton-foot > i { width: 44px; height: 44px; border-radius: 50%; background: #cbb58a; }
+@keyframes rr-paper-loading { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .rr-paper-skeleton:after { animation: none; } }
+@media (max-height: 650px) {
+  .rr-paper-skeleton { height: 192px; padding: 13px 17px; border-radius: 20px; }
+  .rr-paper-skeleton-copy { margin-top: 15px; }
+  .rr-paper-skeleton-foot { left: 17px; right: 17px; bottom: 12px; }
 }
