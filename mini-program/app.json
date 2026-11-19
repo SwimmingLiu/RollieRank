@@ -34,11 +34,5 @@
   "renderer": "webview",
   "componentFramework": "glass-easel",
   "sitemapLocation": "sitemap.json",
-  "lazyCodeLoading": "requiredComponents",
-  "permission": {
-    "scope.userLocation": {
-      "desc": "用于在练习记录中匹配报考岗位，可随时在设置中关闭"
-    }
-  },
-  "requiredPrivateInfos": []
+  "lazyCodeLoading": "requiredComponents"
 }
