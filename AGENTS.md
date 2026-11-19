@@ -1,8 +1,8 @@
 # RollieRank Engineering Rules
 
-## Reply style
+## 回复风格
 
-- When working on this repository, reply in simple English words. Avoid complex terms. Keep answers short, clear and direct.
+- 在本仓库工作时，用中文回复。用词简单，回答简短、清楚、直接。
 
 ## Verification gate
 
