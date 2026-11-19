@@ -56,6 +56,9 @@ def assert_title_controls(page, frame, back_label, action_label):
     action = frame.get_by_role("button", name=action_label, exact=True)
     for width, height in [(320, 568), (390, 844), (430, 932)]:
         page.locator("#size").select_option(f"{width},{height}")
+        # The gallery selector can change before its iframe media query settles.
+        expect(frame.locator("body")).to_have_js_property("clientWidth", width)
+        left, right = back.bounding_box(), action.bounding_box()
         for button in (back, action):
             assert button.evaluate("""node => {
                 const rect = node.getBoundingClientRect();
@@ -63,9 +66,9 @@ def assert_title_controls(page, frame, back_label, action_label):
                 return rect.left >= 0 && rect.right <= innerWidth && rect.width >= 43.5 &&
                     rect.height >= 43.5 && node.contains(target);
             }"""), action_label
-        left, right = back.bounding_box(), action.bounding_box()
         assert abs(left["y"] + left["height"] / 2 - right["y"] - right["height"] / 2) <= 1
         assert left["x"] + left["width"] + 8 < right["x"]
+        assert right["x"] + right["width"] > left["x"] + left["width"] + 100
     page.locator("#size").select_option("390,844")
 
 
