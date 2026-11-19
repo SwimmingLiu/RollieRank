@@ -264,7 +264,7 @@ if (cells[1]) {
   const analytics = await page.data();
   check("成长分析有数据", (analytics.points || []).length > 0, `${analytics.points?.length} 次`);
   await shot("14-analytics");
-  await waitBack("pages/report/report");
+  await waitBack("pages/records/records");
   page = await current();
 }
 const tabs = await page.$$(".records__tab");
@@ -285,7 +285,7 @@ if (cells[0]) {
   }
   check("岗位目录", positions.total > 1000, `total=${positions.total}`);
   await shot("16-positions");
-  await waitBack("pages/report/report");
+  await waitBack("pages/records/records");
   page = await current();
 }
 await mini.navigateTo("/pages/timer/timer");
