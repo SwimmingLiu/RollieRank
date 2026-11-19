@@ -309,6 +309,7 @@ def run(base, output, token=None, check_only=False, wechat_host=False):
             frame = page.frame_locator("#phone")
             skeleton = frame.locator(".rr-home-loading")
             expect(skeleton).to_be_visible(timeout=5000)
+            assert frame.locator("body").evaluate("element => element.ownerDocument.title.trim()") == ""
             expect(skeleton.locator(".rr-paper-skeleton")).to_have_count(1)
             expect(frame.locator(".rr-publishers")).to_have_count(0)
             expect(frame.locator(".rr-home-timer")).to_have_count(0)
