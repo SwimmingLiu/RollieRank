@@ -22,6 +22,18 @@
       {
         "type": "folder",
         "value": "/minitest"
+      },
+      {
+        "type": "folder",
+        "value": "/tools"
+      },
+      {
+        "type": "file",
+        "value": "/README.md"
+      },
+      {
+        "type": "file",
+        "value": "/assets-manifest.json"
       }
     ],
     "include": []
