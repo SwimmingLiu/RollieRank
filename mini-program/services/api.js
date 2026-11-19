@@ -2,6 +2,14 @@
 const { API_BASE } = require("../config.js");
 const storage = require("../utils/storage.js");
 
+function messageFor(error) {
+  const text = String((error && (error.errMsg || error.message)) || "");
+  // 真机上最常见的三类失败要分开说：域名没加入白名单、超时、网络不通。
+  if (/url not in domain list|domain list/i.test(text)) return "接口域名未加入小程序的合法域名，请在微信公众平台添加后重试。";
+  if (/timeout/i.test(text)) return "网络较慢，请求超时了，请稍后重试。";
+  return "练习服务暂时不可用，录入内容仍在本机，请稍后重试。";
+}
+
 function request(path, payload, timeout = 15000) {
   return new Promise((resolve, reject) => {
     wx.request({
@@ -15,8 +23,8 @@ function request(path, payload, timeout = 15000) {
         if (res.statusCode >= 200 && res.statusCode < 300 && data) resolve(data);
         else reject(Object.assign(new Error((data && data.error) || "操作未完成，请重试。"), { statusCode: res.statusCode }));
       },
-      fail() {
-        reject(new Error("练习服务暂时不可用，录入内容仍在本机，请稍后重试。"));
+      fail(error) {
+        reject(new Error(messageFor(error)));
       },
     });
   });
