@@ -34,8 +34,8 @@ button { max-width: none; min-width: 0; margin: 0; padding: 0; background: none;
 button::after { border: none; }
 input, textarea { width: 100%; background: none; border: none; font-size: inherit; color: inherit; }
 /* 原生滚动仍然可用，视觉滚动条在每台设备上都隐藏。 */
-scroll-view, .screen, .sheet-scroll, .practice__scroller { scrollbar-width: none !important; }
-scroll-view::-webkit-scrollbar, .screen::-webkit-scrollbar, .sheet-scroll::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+page, scroll-view, .screen, .sheet-scroll, .practice__scroller { scrollbar-width: none !important; }
+page::-webkit-scrollbar, scroll-view::-webkit-scrollbar, .screen::-webkit-scrollbar, .sheet-scroll::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
 
 /* Fixed controls have the same footprint as the approved footer at each width. */
 .screen { min-height: 100vh; padding-bottom: calc(88px + env(safe-area-inset-bottom)); background: var(--paper); }
@@ -102,10 +102,11 @@ scroll-view::-webkit-scrollbar, .screen::-webkit-scrollbar, .sheet-scroll::-webk
 
 .sheet-layer { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; }
 .sheet-shade { position: absolute; inset: 0; background: rgba(41, 33, 27, .34); }
+.sheet-shade--blur { background: rgba(249, 246, 239, .48); backdrop-filter: blur(9px); }
 .sheet-panel { width: 100%; max-height: 86vh; position: relative; background: #fffdf8; border-radius: 24px 24px 0 0; padding: 8px 20px calc(18px + env(safe-area-inset-bottom)); }
-.sheet-handle { width: 36px; height: 4px; border-radius: 4px; margin: 0 auto 4px; background: #e4dac9; }
-.sheet-head { display: flex; align-items: center; justify-content: space-between; min-height: 48px; font-size: 20px; font-weight: 700; }
-.sheet-close { display: grid; place-items: center; width: 44px !important; height: 44px; }
+.sheet-head { position: relative; display: flex; align-items: center; justify-content: space-between; min-height: 48px; font-size: 20px; font-weight: 700; }
+.sheet-head:has(.sheet-close) { padding-right: 44px; }
+.sheet-close { position: absolute; top: 50%; right: 0; transform: translateY(-50%); display: grid; place-items: center; width: 44px !important; height: 44px; }
 .sheet-close image { width: 16px; height: 16px; }
 .sheet-scroll { max-height: 62vh; }
 .sheet-actions { display: flex; gap: 12px; padding-top: 16px; }

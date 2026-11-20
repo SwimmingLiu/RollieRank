@@ -1,7 +1,7 @@
 const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
 const catalogUtil = require("../../utils/catalog.js");
-const { score: formatScore } = require("../../utils/format.js");
+const { scoreCard: formatScore } = require("../../utils/format.js");
 
 Page({
   data: {

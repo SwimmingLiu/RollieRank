@@ -1,7 +1,7 @@
 const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
 const catalogUtil = require("../../utils/catalog.js");
-const { score } = require("../../utils/format.js");
+const { scoreCard } = require("../../utils/format.js");
 const { homeTimerView } = require("../../utils/timing.js");
 const { formatElapsed } = require("../../vendor/practice-timer.js");
 const { ASSET, WEB_APP_ORIGIN } = require("../../config.js");
@@ -94,7 +94,7 @@ Page({
       seen.add(record.versionId);
       recent.push({
         ...record,
-        scoreText: score(record.totalCents),
+        scoreText: scoreCard(record.totalCents),
       });
       if (recent.length === 3) break;
     }

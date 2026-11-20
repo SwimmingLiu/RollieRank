@@ -9,8 +9,9 @@ const { publisherName, subjectName, subjectId, LOGO } = catalog;
 const SHORT_LABELS = { 政治理论: "政治", 常识判断: "常识", 言语理解: "言语", 数量关系: "数量", 资料分析: "资料" };
 
 const SCOPES = [
-  { key: "position", label: "岗位", icon: "map-pin" },
-  { key: "national", label: "全国", icon: "globe" },
+  { key: "selected", label: "岗位", name: "我的岗位", icon: "map-pin" },
+  { key: "nationwide", label: "全国", name: "全国", icon: "globe" },
+  { key: "position", label: "换岗", name: "其他岗位", icon: "search" },
 ];
 
 Page({
@@ -24,9 +25,11 @@ Page({
     logo: "",
     self: null,
     count: 0,
-    scope: "national",
+    scope: "nationwide",
     scopes: SCOPES,
-    position: null,
+    positionMode: "",
+    scopeLabel: "",
+    canLoadMore: false,
     dimension: "total",
     dimensions: [{ key: "total", label: "总分" }],
     uiBase: "/assets/ui",
@@ -44,7 +47,6 @@ Page({
       const attempt = attempts[0];
       if (!attempt) throw new Error("这份成绩不在当前身份下。");
       this.versionId = attempt.versionId;
-      this.paperId = attempt.versionId;
       const subjects = new Map();
       for (const type of attempt.report?.breakdown || []) {
         if (type.maxCents <= 0) continue;
@@ -65,11 +67,7 @@ Page({
         identity: catalog.attemptIdentity(version, attempt).split(" · ").slice(1).join(" · "),
         dimensions: [{ key: "total", label: "总分" }, ...subjects.values()],
       });
-      const position = storage.position();
-      this.setData({
-        position: position ? { id: position.id, label: position.label || position.title } : null,
-        scope: position ? "position" : "national",
-      });
+      this.setData({ scope: storage.position()?.id ? "selected" : "nationwide" });
       await this.fetchRanking();
     } catch (error) {
       this.setData({ loading: false, error: error.message });
@@ -77,45 +75,54 @@ Page({
   },
 
   // 榜单范围与题型维度都由服务端按同一答案版本计算，前端只做展示。
-  async fetchRanking() {
-    // 服务端按 versionId 选择范围：selected 跟随本人已选岗位，nationwide 为全国。
+  async fetchRanking(more = false) {
+    const request = (this.rankingRequest || 0) + 1;
+    this.rankingRequest = request;
+    const { scope, dimension } = this.data;
     const query = [
       `versionId=${encodeURIComponent(this.versionId)}`,
       `guestId=${encodeURIComponent(storage.guestId())}`,
-      `scope=${this.data.scope === "position" ? "selected" : "nationwide"}`,
-      `dimension=${encodeURIComponent(this.data.dimension)}`,
+      `scope=${scope}`,
+      `dimension=${encodeURIComponent(dimension)}`,
+      `page=${more ? this.rankPage + 1 : 1}`,
+      ...(scope === "position" ? ["positionId=" + encodeURIComponent(this.browsingPosition.id)] : []),
     ].join("&");
     try {
       const result = await api.request(`positions/leaderboard?${query}`);
+      if (request !== this.rankingRequest) return;
+      this.rankPage = result.page;
       const rows = (result.rows || []).map(row => ({
         ...row,
-        scoreText: format.score(row.value),
+        scoreText: format.scoreCard(row.value),
         rateText: format.percent(row.rate),
         surpassed: format.percent((row.surpassedPercent || 0) / 100),
         rankText: String(row.rank).padStart(2, "0"),
         initials: Array.from(row.name || "卷友").slice(0, 2).join(""),
       }));
-      const dimensionKey = result.dimension || this.data.dimension;
+      const position = result.position;
+      const winners = more ? this.data.winners : rows.slice(0, 3);
+      const others = (more ? rows : rows.slice(3)).filter(row => !row.isMe);
       this.setData({
         loading: false,
         error: "",
-        dimension: dimensionKey,
-        winners: rows.slice(0, 3),
-        otherRows: rows.slice(3),
-        self: result.self ? { ...result.self, scoreText: format.score(result.self.value) } : null,
+        scope: scope === "selected" && !position ? "nationwide" : scope,
+        dimension: result.dimension || dimension,
+        winners,
+        otherRows: more ? [...this.data.otherRows, ...others] : others,
+        self: result.self && !winners.some(row => row.isMe) ? { ...result.self, scoreText: format.scoreCard(result.self.value) } : null,
         count: result.count || 0,
-        position: result.position ? { id: result.position.id || "", label: result.position.label || result.position.title } : null,
+        scopeLabel: position ? position.label || [position.department, position.title].filter(Boolean).join(" · ") : "全国考生",
+        canLoadMore: result.page < result.pages,
       });
     } catch (error) {
-      this.setData({ loading: false, error: error.message });
+      if (request === this.rankingRequest) this.setData({ loading: false, error: error.message });
     }
   },
 
   setScope(event) {
     const { key } = event.currentTarget.dataset;
-    if (key === "position" && !this.data.position) {
-      wx.showToast({ title: "先选择报考岗位", icon: "none" });
-      wx.navigateTo({ url: "/pages/positions/positions?from=rank" });
+    if (key === "position" || (key === "selected" && !storage.position()?.id)) {
+      this.setData({ positionMode: key === "position" ? "browse" : "select" });
       return;
     }
     this.setData({ scope: key });
@@ -126,6 +133,22 @@ Page({
     const { key } = event.currentTarget.dataset;
     if (key === this.data.dimension) return;
     this.setData({ dimension: key });
+    this.fetchRanking();
+  },
+
+  loadMore() {
+    if (this.data.canLoadMore) this.fetchRanking(true);
+  },
+
+  closePosition() {
+    this.setData({ positionMode: "" });
+  },
+
+  selectPosition(event) {
+    const { position } = event.detail;
+    const browsing = this.data.positionMode === "browse";
+    if (browsing) this.browsingPosition = position;
+    this.setData({ positionMode: "", scope: !position ? "nationwide" : browsing ? "position" : "selected" });
     this.fetchRanking();
   },
 
@@ -141,27 +164,12 @@ Page({
     // 公开详情只显示昵称与分数，别人的答案不会公开。
     const { id } = event.currentTarget.dataset;
     if (!id) return;
-    wx.navigateTo({ url: `/pages/report/report?publicId=${id}&paperId=${this.paperId}` });
-  },
-
-  pickPosition() {
-    wx.navigateTo({ url: "/pages/positions/positions?from=rank" });
+    const { scope } = this.data;
+    const positionId = scope === "position" ? "&positionId=" + encodeURIComponent(this.browsingPosition.id) : "";
+    wx.navigateTo({ url: `/pages/report/report?publicId=${id}&paperId=${encodeURIComponent(this.versionId)}&scope=${scope}${positionId}` });
   },
 
   onShow() {
-    // 从选岗页返回时按新岗位刷新，保留当前成绩。
-    if (!this.versionId) return;
-    if (!this.ready) { this.ready = true; return; }
-    const position = storage.position();
-    const id = position ? position.id : "";
-    const current = this.data.position ? this.data.position.id : "";
-    if (id !== current && this.loaded !== false) {
-      this.setData({
-        position: position ? { id: position.id, label: position.label || position.title } : null,
-        scope: position ? "position" : "national",
-      });
-      this.fetchRanking();
-    }
-    this.loaded = true;
+    if (this.versionId) this.fetchRanking();
   },
 });

@@ -11,6 +11,18 @@ const repo = path.resolve(root, "..");
 const require = createRequire(path.join(root, "package.json"));
 const problem = message => { console.log("✖ " + message); process.exitCode = 1; };
 
+function checkMarkup(file, markup) {
+  if (/\bwx:(?:if|elif)="(?!\{\{)/.test(markup)) problem(`${file} 的 wx:if 和 wx:elif 必须绑定表达式`);
+  for (const [tag] of markup.matchAll(/<[a-z](?:[^"'<>]|"[^"]*"|'[^']*')*>/gi)) {
+    if (/\bwx:for=/.test(tag) && /\bwx:(?:else\b|elif=)/.test(tag)) {
+      problem(`${file} 的条件分支需用 block 包住 wx:for，以通过微信编译`);
+    }
+    if (tag.startsWith("<scroll-view") && !/show-scrollbar\s*=\s*"\{\{false\}\}"/.test(tag)) {
+      problem(`${file} 的 scroll-view 必须隐藏视觉滚动条`);
+    }
+  }
+}
+
 for (const name of readdirSync(root, { recursive: true })) {
   if (!/^(?:app\.js|config\.js|(?:components|pages|services|utils)\/.*\.js)$/.test(name)) continue;
   const result = spawnSync(process.execPath, ["--check", path.join(root, name)], { encoding: "utf8" });
@@ -34,9 +46,7 @@ for (const page of pages) {
   const wxml = readFileSync(path.join(root, `${page}.wxml`), "utf8");
   const js = readFileSync(path.join(root, `${page}.js`), "utf8");
   const config = JSON.parse(readFileSync(path.join(root, `${page}.json`), "utf8"));
-  for (const [tag] of wxml.matchAll(/<scroll-view\b[^>]*>/gs)) {
-    if (!/show-scrollbar\s*=\s*"\{\{false\}\}"/.test(tag)) problem(`${page}.wxml 的 scroll-view 必须隐藏视觉滚动条`);
-  }
+  checkMarkup(page + ".wxml", wxml);
   for (const match of wxml.matchAll(/bind:?(?:tap|input|confirm|blur|change|longpress)="([^"{}]*)"/g)) {
     const handler = match[1].split(":").pop();
     if (handler && !new RegExp(`\\b${handler}\\s*\\(`).test(js)) problem(`${page}.wxml 绑定的 ${handler} 在页面脚本中不存在`);
@@ -50,9 +60,7 @@ for (const page of pages) {
 for (const name of readdirSync(path.join(root, "components"), { recursive: true })) {
   if (!name.endsWith(".wxml")) continue;
   const wxml = readFileSync(path.join(root, "components", name), "utf8");
-  for (const [tag] of wxml.matchAll(/<scroll-view\b[^>]*>/gs)) {
-    if (!/show-scrollbar\s*=\s*"\{\{false\}\}"/.test(tag)) problem(`components/${name} 的 scroll-view 必须隐藏视觉滚动条`);
-  }
+  checkMarkup("components/" + name, wxml);
 }
 
 // 原生与网页端用同一份计时模型；直接打开小程序目录也能复现已提交的构建。
@@ -65,6 +73,7 @@ const { IMPORTED_PAPERS } = await import(path.join(repo, "src/data/imported-pape
 if (format.score(2595) !== "25.95") problem("分数格式化不正确");
 if (format.score(10000) !== "100") problem(`满分应省略多余零：${format.score(10000)}`);
 if (format.score(2590) !== "25.9") problem(`一位小数应省略末尾零：${format.score(2590)}`);
+if (format.scoreCard(50) !== "0.50") problem("成绩卡按设计稿固定显示两位小数");
 if (format.percent(0.2595) !== "26%") problem(`百分比格式化不正确：${format.percent(0.2595)}`);
 
 const groups = catalog.groupByInstitution(IMPORTED_PAPERS.map(item => ({ ...item, id: `${item.id}:v1`, status: "published", questionCount: item.answerKey.length })));

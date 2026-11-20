@@ -16,7 +16,7 @@
         <image class="report__stamp" src="/assets/score-ribbon.svg" mode="aspectFit" />
       </view>
 
-      <view wx:if="{{!publicView}}" class="report__stats">
+      <view wx:if="{{!publicView}}" class="report__stats {{summary.blank ? 'report__stats--three' : ''}}">
         <view class="report__stat report__stat--ok">
           <view class="report__stat-icon"><image src="{{uiBase}}/check.svg" mode="aspectFit" /></view>
           <text class="num report__stat-num">{{summary.correct}}</text><text class="report__stat-label">正确</text>
@@ -24,6 +24,10 @@
         <view class="report__stat report__stat--no">
           <view class="report__stat-icon"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></view>
           <text class="num report__stat-num">{{summary.wrong}}</text><text class="report__stat-label">错误</text>
+        </view>
+        <view wx:if="{{summary.blank}}" class="report__stat report__stat--blank">
+          <view class="report__stat-icon"></view>
+          <text class="num report__stat-num">{{summary.blank}}</text><text class="report__stat-label">未答</text>
         </view>
       </view>
 
@@ -35,11 +39,27 @@
         </block>
         <image class="report__rank-arrow" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
       </button>
+      <button wx:if="{{correctionNotice}}" class="report__correction" bindtap="showCorrectionNotice">
+        <image src="{{uiBase}}/check.svg" mode="aspectFit" />
+        <text class="grow">答案已订正</text>
+        <text>{{correctionNotice.beforeText}} → {{correctionNotice.afterText}}</text>
+        <image class="report__correction-arrow" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+      </button>
     </view>
 
-    <button wx:if="{{summary.timing}}" class="report__timing" bindtap="toggleBands">
-      <text>做题用时</text><text class="num">{{summary.timing}}</text>
-    </button>
+    <view wx:if="{{timing}}" class="report__timing">
+      <button class="report__timing-toggle" bindtap="toggleTiming" aria-expanded="{{timingOpen}}">
+        <image src="{{uiBase}}/clock.svg" mode="aspectFit" />
+        <view class="stack grow"><text>做题用时</text><text class="report__caption">{{timing.delta}}</text></view>
+        <text class="num report__timing-clock">{{timing.actual}}</text>
+        <image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
+      </button>
+      <view wx:if="{{timingOpen}}" class="report__timing-detail">
+        <view class="row row--between"><text>计划 {{timing.planned}} 分</text><text>录答 {{timing.entry}}</text></view>
+        <view class="report__timing-row"><text>模块</text><text>计划</text><text>实际</text><text>差值</text></view>
+        <view wx:for="{{timing.modules}}" wx:key="id" class="report__timing-row"><text>{{item.name}}</text><text>{{item.planned}} 分</text><text>{{item.actual}}</text><text>{{item.difference}}</text></view>
+      </view>
+    </view>
 
     <view wx:if="{{bands.length >= 3}}" class="report__radar">
       <view class="report__radar-head">
@@ -74,7 +94,10 @@
         <image class="btn__icon" src="{{uiBase}}/review-light.svg" mode="aspectFit" />
         {{summary.wrong ? '复盘错题 ' + summary.wrong : '查看答卷'}}
       </button>
-      <button class="btn btn--ghost" bindtap="discuss" aria-label="本卷交流"><image class="btn__icon" src="{{uiBase}}/comment.svg" mode="aspectFit" /></button>
+      <view class="report__comment">
+        <button class="btn btn--ghost" bindtap="discuss" aria-label="本卷交流"><image class="btn__icon" src="{{uiBase}}/comment.svg" mode="aspectFit" /></button>
+        <text wx:if="{{commentCount !== null}}" class="report__comment-count">{{commentCount > 99 ? '99+' : commentCount}}</text>
+      </view>
       <button class="btn btn--ghost" bindtap="share" aria-label="成绩分享"><image class="btn__icon" src="{{uiBase}}/share.svg" mode="aspectFit" /></button>
     </view>
   </view>

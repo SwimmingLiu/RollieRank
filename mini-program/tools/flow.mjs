@@ -8,6 +8,10 @@ import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 const out = resolve(process.env.MINIPROGRAM_FLOW_OUTPUT || resolve(here, "../../test-results/miniprogram/flow"));
 const apiBase = String(process.env.MINIPROGRAM_API_BASE || "").replace(/\/$/, "");
+const reviewToken = process.env.MINIPROGRAM_REVIEW_TOKEN;
+if (!apiBase || new URL(apiBase).hostname !== "127.0.0.1" || !reviewToken) {
+  throw new Error("原生流程需要隔离的本机接口和测试审核凭证。");
+}
 await mkdir(out, { recursive: true });
 
 const mini = await automator.connect({ wsEndpoint: "ws://127.0.0.1:" + (process.env.MINIPROGRAM_AUTOMATION_PORT || "9420") });
@@ -68,12 +72,27 @@ async function tap(page, selector, label) {
   return node;
 }
 
+async function readApi(path, payload) {
+  const response = await fetch(apiBase + "/api/" + path, payload === undefined ? {} : {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error(`读取本机接口失败 ${response.status} ${path.split("?")[0]}`);
+  return response.json();
+}
+
+let attemptId, guestId, failure;
+try {
 // 1. 首页与选卷
 await mini.reLaunch("/pages/home/home");
 await wait(2200);
 let page = await current();
 const institutions = await page.$$(".home__inst");
 check("首页机构入口", institutions.length === 4, `${institutions.length} 个`);
+const brand = await page.$('[aria-label="卷卷小榜"]');
+const chrome = await mini.evaluate(() => ({ menu: wx.getMenuButtonBoundingClientRect(), top: wx.getWindowInfo().screenTop || 0 }));
+const brandY = brand && (await brand.offset()).top + (await brand.size()).height / 2;
+check("首页品牌和微信胶囊居中对齐", Boolean(await brand?.$("image")) &&
+  Math.abs(brandY - (chrome.menu.top + chrome.menu.height / 2 - chrome.top)) <= 2);
 await shot("01-home");
 await institutions[0].tap();
 await wait(2000);
@@ -109,8 +128,11 @@ check("答题卡按题型分组", answerGroups.length >= 2, `${answerGroups.leng
 check("答题卡五列", firstGroupCells.length >= 5, `${firstGroupCells.length} 格`);
 if (firstGroupCells.length >= 5) {
   const positions = [];
-  for (const cell of firstGroupCells.slice(0, 5)) positions.push(await cell.offset());
-  check("答题卡首行对齐", Math.max(...positions.map(item => item.top)) - Math.min(...positions.map(item => item.top)) < 1);
+  const width = (await mini.systemInfo()).windowWidth;
+  const columns = width <= 350 ? 4 : 5;
+  for (const cell of firstGroupCells.slice(0, columns + 1)) positions.push(await cell.offset());
+  check("答题卡列数和首行对齐", positions.slice(0, columns).every(item => Math.abs(item.top - positions[0].top) < 1)
+    && positions[columns].top > positions[0].top, `${width}px / ${columns} 列`);
 }
 await shot("03b-answer-sheet");
 if (answerSheet) {
@@ -145,14 +167,23 @@ await tap(page, ".practice__submit", "打开交卷确认");
 await wait(800);
 await shot("06-submit-sheet");
 await tap(page, ".practice__confirm", "确认交卷");
+const skip = await waitForSelector(page, ".practice__skip", 1600);
+if (skip) {
+  await shot("06b-position-prompt");
+  await skip.tap();
+}
 page = await waitForPath("pages/report/report", 12000);
 check("进入成绩页", page.path === "pages/report/report", page.path);
 const report = await waitForData(page, data => data.summary && data.loading === false);
 check("成绩已核分", report.summary && report.summary.score !== undefined, JSON.stringify(report.summary || {}).slice(0, 120));
+check("纸卡主成绩保留两位小数", /^\d+\.\d{2}$/.test(report.summary.score));
+check("成绩卡显示未答题数", report.summary.blank > 0 && Boolean(await page.$(".report__stat--blank")));
 check("正确与错误", report.summary && report.summary.correct + report.summary.wrong > 0, `${report.summary?.correct}/${report.summary?.wrong}`);
 check("能力概览", Array.isArray(report.bands) && report.bands.length >= 3, `${report.bands?.length} 项`);
 await shot("07-report");
-const attemptId = report.summary?.id;
+attemptId = report.summary?.id;
+guestId = await mini.callWxMethod("getStorageSync", "rr:guest");
+const original = (await readApi("attempts/sync", { guestId, attemptIds: [attemptId] })).attempts[0];
 if (report.bands && report.bands[0]) {
   const band = await page.$$(".report__band");
   if (band[0]) {
@@ -188,6 +219,15 @@ if (dims[1]) {
   check("题型榜可取", true);
 }
 await shot("09-rank");
+const podium = await page.$(".rank__podium-card");
+if (podium) {
+  await podium.tap();
+  const publicPage = await waitForPath("pages/report/report", 6000);
+  const publicData = await waitForData(publicPage, data => !data.loading && (data.publicView || data.error));
+  check("同卷榜打开公开成绩", publicData.publicView && Boolean(publicData.summary?.score), publicData.error);
+  check("公开成绩没有逐题答案入口", !await publicPage.$(".footer-bar"));
+  page = await waitBack("pages/rank/rank");
+}
 const scopes = await page.$$(".rank__scope-tab");
 if (scopes[1]) {
   await scopes[1].tap();
@@ -208,31 +248,82 @@ if (filters[1]) {
   await filters[1].tap();
   await wait(800);
 }
-const feedbackEntry = await waitForSelector(page, ".review__feedback", 4000);
+const feedbackEntry = await waitForSelector(page, '[aria-label="反馈参考答案"]', 4000);
+let feedbackId;
 if (feedbackEntry) {
+  await shot("10-review");
   await feedbackEntry.tap();
   const feedbackSheet = await waitForSelector(page, ".review__feedback-sheet", 4000);
-  const suggestion = await page.$('.review__answer-option[data-answer="B"]');
+  const questionChoice = await page.$('.review__question-choice[data-number="2"]');
+  if (questionChoice) await questionChoice.tap();
+  const form = await waitForData(page, data => data.feedbackItems.length > 0);
+  const item = form.feedbackItems[0];
+  const suggested = item.reference === "A" ? "B" : "A";
+  const optionCard = await page.$(".review__feedback-card");
+  const cardLeft = (await optionCard.offset()).left;
+  const cardRight = cardLeft + (await optionCard.size()).width;
+  const options = await page.$$(".review__answer-option");
+  const bounds = [];
+  for (const option of options) {
+    const { left, top } = await option.offset();
+    bounds.push({ left, top, right: left + (await option.size()).width });
+  }
+  check("反馈的 A–D 选项在同一行且完整显示", bounds.length === 4 &&
+    bounds.every(bound => bound.left >= cardLeft && bound.right <= cardRight && bound.top === bounds[0].top));
+  const suggestion = await page.$('.review__answer-option[data-answer="' + suggested + '"]');
   const evidence = await page.$(".review__field textarea");
   if (suggestion) await suggestion.tap();
-  if (evidence) await evidence.input("自动化对照：核对官方参考答案后建议 B。");
+  if (evidence) await evidence.input("核对题本第 2 页的答案说明。");
+  await shot("10b-feedback");
   const submitFeedback = await page.$(".review__feedback-actions button:last-child");
   if (submitFeedback) await submitFeedback.tap();
-  await wait(900);
+  await waitForData(page, data => data.historyOpen && !data.historyLoading);
   check("逐题参考答案反馈", Boolean(feedbackSheet) && !(await page.data()).feedbackOpen);
-  if (apiBase && attemptId) {
-    const guestId = await mini.callWxMethod("getStorageSync", "rr:guest");
-    const response = await fetch(apiBase + "/api/corrections/list", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ guestId }),
-    });
-    const feedbacks = response.ok ? (await response.json()).feedbacks : [];
-    check("反馈已写入服务端", feedbacks.some(feedback => feedback.attemptId === attemptId));
-  }
+  const { feedbacks } = await readApi("corrections/list", { guestId });
+  feedbackId = feedbacks.find(feedback => feedback.attemptId === attemptId)?.id;
+  check("反馈已写入服务端", Boolean(feedbackId));
+  await tap(page, ".review__add-feedback", "试算反馈影响");
+  const preview = await waitForData(page, data => data.feedbackPreview || data.historyError);
+  check("试算不改变正式成绩", preview.feedbackPreview?.official === report.summary.score
+    && (await readApi("attempts/sync", { guestId, attemptIds: [attemptId] })).attempts[0]?.report.totalCents === original.report.totalCents);
+  await shot("10c-feedback-preview");
+  await tap(page, '.review__feedback-actions button:first-child', "打开反馈记录");
+  await tap(page, '.review__feedback-actions button:first-child', "从逐题对照进入审核");
+  page = await waitForPath("pages/admin/admin", 8000);
+  const admin = await waitForData(page, data => data.reviewEnabled && data.sources?.length);
+  check("审核页读取服务端队列摘要", page.path === "pages/admin/admin" && admin.pendingCount > 0 && admin.sources.length > 0);
+  await shot("10d-admin");
+  await tap(page, ".admin__action--outline", "打开维护者凭证");
+  const credential = await waitForSelector(page, ".admin__field input[password]");
+  await credential.input("invalid-local-review");
+  await tap(page, ".admin__sheet-actions .admin__primary", "提交错误凭证");
+  const rejected = await waitForData(page, data => !data.adminLoading && Boolean(data.error));
+  check("错误审核凭证被拒绝", !rejected.authorized && Boolean(rejected.error));
+  await credential.input(reviewToken);
+  await tap(page, ".admin__sheet-actions .admin__primary", "提交测试凭证");
+  await waitForData(page, data => data.authorized && data.feedbacks?.some(item => item.id === feedbackId));
+  await tap(page, `.admin__review-button[data-id="${feedbackId}"]`, "核对所提交的反馈");
+  const reason = await waitForSelector(page, ".admin__reason-field textarea");
+  await reason.input("本机回归 · 依据核对完成");
+  await tap(page, ".admin__prepare-review", "核对重算范围");
+  await waitForData(page, data => data.confirming);
+  const confirm = await waitForSelector(page, ".admin__confirm-review");
+  check("确认订正并重算", Boolean(confirm));
+  if (confirm) await confirm.tap();
+  const reviewed = await waitForData(page, data => (!data.adminLoading && !data.review) || data.reviewError, 10000);
+  if (reviewed.review) await shot("10d-admin-review-pending");
+  const corrected = (await readApi("attempts/sync", { guestId, attemptIds: [attemptId] })).attempts[0];
+  check("审核后重算原答卷", corrected.answerRevision === original.answerRevision + 1
+    && corrected.report.totalCents !== original.report.totalCents
+    && corrected.createdAt === original.createdAt && JSON.stringify(corrected.answers) === JSON.stringify(original.answers), reviewed.reviewError);
+  await waitBack("pages/review/review");
 }
-await shot("10-review");
+check("反馈位于逐题对照标题栏", Boolean(feedbackEntry));
 await waitBack("pages/report/report");
 page = await current();
+const correctedReport = await waitForData(page, data => data.correctionNotice);
+check("成绩页显示订正通知", correctedReport.correctionNotice?.attemptId === attemptId);
+await shot("10e-corrected-report");
 
 // 6. 讨论
 const ghosts = await page.$$(".btn--ghost");
@@ -260,13 +351,19 @@ if (ghosts[0]) {
   }
   const discussion = await page.data();
   check("发表评论", Array.isArray(discussion.comments) && discussion.comments.length > 0, `${discussion.comments?.length} 条`);
-  const likes = await page.$$(".disc__action");
-  if (likes[0]) {
-    await likes[0].tap();
-    await wait(1200);
-    check("点赞", true);
-  }
+  const like = await tap(page, ".disc__like", "点赞入口");
+  const liked = like && await waitForData(page, data => data.comments[0]?.likedByMe);
+  check("点赞已写入", liked?.comments[0]?.likedByMe === true);
   await shot("11-discussion");
+  await tap(page, ".disc__actions button:first-of-type", "打开评论回复");
+  const replyInput = await waitForSelector(page, ".disc__input");
+  const replyText = "下一次先做资料分析。";
+  await replyInput.input(replyText);
+  await waitForData(page, data => data.replyTarget && data.replyDraft.trim() === replyText);
+  await tap(page, ".disc__send", "发送本卷回复");
+  const replied = await waitForData(page, data => data.replies.some(reply => reply.text === replyText), 10000);
+  check("回复归入原评论", replied.replies.some(reply => reply.parentId === liked?.comments[0]?.id && reply.text === replyText));
+  await shot("11b-replies");
   await waitBack("pages/report/report");
   page = await current();
 }
@@ -281,9 +378,14 @@ if (shareEntry) {
   for (const [index, name] of [[0, "长图"], [1, "成绩卡"], [2, "题型"], [3, "雷达"]]) {
     if (!modes[index]) continue;
     await modes[index].tap();
-    await wait(1800);
-    const share = await page.data();
-    check(`分享图 ${name}`, share.ready === true, `ready=${share.ready}`);
+    const key = ["full", "score", "types", "radar"][index];
+    const share = await waitForData(page, data => data.mode === key && data.ready && data.previewSrc);
+    const image = await mini.evaluate(path => wx.getFileSystemManager().readFileSync(path, "base64"), share.previewSrc);
+    const png = Buffer.from(image, "base64");
+    const width = png.length > 24 && png.readUInt32BE(16);
+    const height = png.length > 24 && png.readUInt32BE(20);
+    check(`分享图 ${name}`, png.subarray(0, 8).toString("hex") === "89504e470d0a1a0a" && width === 900 && height >= 400, `${width}×${height}`);
+    await writeFile(resolve(out, "poster-" + key + ".png"), png);
     await shot(`12-share-${index + 1}`);
   }
   await waitBack("pages/report/report");
@@ -295,6 +397,12 @@ await wait(2200);
 page = await current();
 let records = await page.data();
 check("记录里有本次成绩", (records.records || []).length > 0, `${records.records?.length} 条`);
+const recordTools = await page.$(".records__tools");
+const recordGrid = await page.$(".records__grid");
+const toolsTop = recordTools && (await recordTools.offset()).top;
+const gridBottom = recordGrid && (await recordGrid.offset()).top + (await recordGrid.size()).height;
+check("有反馈的练习记录直接显示练习筛选", Boolean(feedbackId) && toolsTop - gridBottom >= 0 && toolsTop - gridBottom <= 16
+  && !await page.$(".records__corrections,.records__maintenance-wrap"));
 await shot("13-records");
 const cells = await page.$$(".records__cell");
 if (cells[1]) {
@@ -328,57 +436,78 @@ if (tabs[1]) {
 }
 if (cells[0]) {
   await cells[0].tap();
-  page = await waitForPath("pages/positions/positions", 9000);
-  check("进入选岗", page.path === "pages/positions/positions", page.path);
-  let positions = await page.data();
-  for (let attempt = 0; attempt < 3 && !positions.total; attempt += 1) {
-    await wait(1500);
-    positions = await page.data();
-  }
-  check("岗位目录", positions.total > 1000, `total=${positions.total}`);
+  const picker = await waitForSelector(page, "rr-position-picker");
+  check("记录页原地打开选岗", Boolean(picker) && (await current()).path === "pages/records/records");
+  await waitForData(picker, data => !data.loading);
+  await tap(picker, '.positions__exam[data-exam="shengkao"]', "切换省考来源");
+  const provincial = await waitForData(picker, data => !data.loading);
+  check("省考目录为空时显示空态", !provincial.options.length && provincial.emptyText === "暂无省考岗位目录");
+  await shot("16a-positions-provincial");
+  await tap(picker, '.positions__exam[data-exam="guokao"]', "切换国考来源");
+  let positions = await waitForData(picker, data => !data.loading && data.options.length);
+  check("从年度选择国考目录", positions.level === "source" && positions.options.length > 0);
   await shot("16-positions");
-  await waitBack("pages/records/records");
-  page = await current();
+  while (positions.level !== "position" && positions.breadcrumbs.length < 4) {
+    const previous = positions.level;
+    await tap(picker, ".positions__choice", "进入岗位目录下一层 " + previous);
+    positions = await waitForData(picker, data => !data.loading && data.level !== previous, 8000);
+    if (positions.level === previous) break;
+  }
+  check("岗位层级选择", positions.level === "position" && positions.breadcrumbs.length === 4);
+  await shot("16b-positions-choices");
+  await tap(picker, ".positions__choice", "查看具体岗位");
+  await waitForData(picker, data => data.detail);
+  await shot("16c-positions-detail");
+  await tap(picker, ".positions__confirm", "保存报考岗位");
+  const selected = await waitForData(page, data => !data.positionOpen && Boolean(data.position));
+  check("岗位选择已保存", Boolean(selected.position?.id) &&
+    (await readApi("positions/profile?guestId=" + encodeURIComponent(guestId))).positionId === selected.position.id);
+  await shot("16d-positions-selected");
 }
-await mini.switchTab("/pages/home/home");
-page = await waitForPath("pages/home/home", 8000);
+
+const bar = await page.$("rr-tabbar");
+await tap(bar, '.tabbar__item[data-key="home"]', "通过底栏返回首页");
+page = await waitForPath("pages/home/home", 10000);
+const recents = await waitForData(page, data => data.recent?.some(item => item.id === attemptId));
+check("首页显示本次最近练习", recents.recent?.some(item => item.id === attemptId), page.path);
+await shot("17-home-recent");
 const timerEntry = await waitForSelector(page, ".home__timer", 6000);
 if (timerEntry) await timerEntry.tap();
 const timerSheet = await waitForSelector(page, "rr-timer-sheet", 6000);
 check("原生首页打开计时面板", Boolean(timerSheet) && (await current()).path === "pages/home/home");
-await shot("17-timer");
+await shot("18-timer");
 if (timerSheet) await (await timerSheet.$(".timer__close")).tap();
+await tap(page, ".home__cover-face", "打开首页最近练习");
+page = await waitForPath("pages/report/report", 10000);
+check("最近练习打开本次答卷", page.path === "pages/report/report" && page.query.attemptId === attemptId);
+
 await mini.switchTab("/pages/records/records");
-await mini.navigateTo("/pages/settings/settings");
+page = await waitForPath("pages/records/records");
+await tap(page, ".records__profile", "从记录页进入个人资料");
+page = await waitForPath("pages/profile/profile");
+check("个人资料入口", page.path === "pages/profile/profile");
+await shot("19-profile");
+await tap(page, ".profile__row:nth-child(2)", "进入昵称设置");
 page = await waitForPath("pages/settings/settings", 8000);
-check("进入设置", page.path === "pages/settings/settings", page.path);
-await shot("18-settings");
-await mini.navigateBack();
-await wait(1000);
-
-// 9. 首页最近练习回到成绩
-await mini.reLaunch("/pages/home/home");
-await wait(2400);
-page = await current();
-const recent = await page.$$(".home__cover-face");
-check("首页最近练习", recent.length > 0, `${recent.length} 张`);
-if (recent[0]) {
-  await recent[0].tap();
-  await wait(2400);
+check("设置页仅有昵称", page.path === "pages/settings/settings" && (await page.$$("input")).length === 1);
+await shot("20-settings");
+} catch (error) {
+  failure = error.message;
+  await mini.screenshot({ path: resolve(out, "failure.png") }).catch(() => {});
+} finally {
+  const failed = checks.filter(item => !item.ok);
+  await writeFile(resolve(out, "result.json"), JSON.stringify({
+    checkedAt: new Date().toISOString(),
+    attemptId,
+    checks,
+    failed,
+    ...(failure ? { failure } : {}),
+    consoleErrors: [...new Set(errors)],
+  }, null, 2));
+  await mini.disconnect();
+  console.log(`自检 ${checks.length} 项，失败 ${failed.length} 项`);
+  for (const item of failed) console.log("✗", item.name, item.detail);
+  if (failure) console.log("运行失败", failure);
+  if (errors.length) console.log("控制台报错", [...new Set(errors)].slice(0, 6).join(" | "));
+  if (failed.length || failure || errors.length) process.exitCode = 1;
 }
-page = await current();
-check("最近练习可打开", page.path === "pages/report/report" || page.path === "pages/practice/practice", page.path);
-await shot("19-home-recent");
-
-const failed = checks.filter(item => !item.ok);
-await writeFile(resolve(out, "result.json"), JSON.stringify({
-  checkedAt: new Date().toISOString(),
-  attemptId,
-  checks,
-  failed,
-  consoleErrors: [...new Set(errors)],
-}, null, 2));
-await mini.disconnect();
-console.log(`自检 ${checks.length} 项，失败 ${failed.length} 项`);
-for (const item of failed) console.log("✗", item.name, item.detail);
-if (errors.length) console.log("控制台报错:", [...new Set(errors)].slice(0, 6).join(" | "));

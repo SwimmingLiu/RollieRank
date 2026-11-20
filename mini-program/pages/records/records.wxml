@@ -1,3 +1,4 @@
+<page-meta page-style="{{positionOpen ? 'overflow: hidden;' : ''}}" />
 <view class="screen">
   <rr-nav title="练习记录" back="{{false}}" />
   <view class="records">
@@ -41,7 +42,7 @@
           <image src="{{uiBase}}/{{item.draft ? 'grid' : 'check'}}.svg" mode="aspectFit" />
         </view>
         <text class="records__row-meta">{{item.edition}}</text>
-        <text class="records__row-meta">{{item.paper}}</text>
+        <text class="records__row-meta">{{item.paper}}{{item.attemptNumber ? ' · 第' + item.attemptNumber + '次' : ''}}</text>
         <view class="records__row-value">
           <view wx:if="{{item.draft}}"><text class="records__count">{{item.answered}}</text><text class="records__unit"> / {{item.questionCount}} 题</text></view>
           <view wx:else><text class="display-num records__score">{{item.scoreText}}</text><text class="records__unit">分</text></view>
@@ -55,5 +56,7 @@
       </view>
     </view>
   </view>
+
   <rr-tabbar active="records" />
+  <rr-position-picker wx:if="{{positionOpen}}" bind:dismiss="closePosition" bind:selection="selectPosition" />
 </view>

@@ -7,6 +7,7 @@ Component({
     actionIcon: { type: String, value: "" },
     actionLabel: { type: String, value: "" },
     logo: { type: String, value: "" },
+    leading: { type: Boolean, value: false },
   },
   data: { statusBarHeight: 20, navHeight: 44, menuClearance: 104 },
   lifetimes: {

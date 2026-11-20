@@ -1,7 +1,12 @@
-// 数字展示：分值为整数百分之一分；和网页端一致，去掉多余的零（25.95、25.9、100）。
+// 明细和满分保留简洁数字，成绩主数值与原稿一样固定两位。
 function score(cents) {
   if (cents === null || cents === undefined || Number.isNaN(Number(cents))) return "--";
   return (Number(cents) / 100).toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
+}
+
+function scoreCard(cents) {
+  if (cents === null || cents === undefined || !Number.isFinite(Number(cents))) return "--";
+  return (Number(cents) / 100).toFixed(2);
 }
 
 function rate(value) {
@@ -33,4 +38,4 @@ function dateTime(ts) {
 
 const STATUS_LABEL = { correct: "正确", wrong: "错误", blank: "未答" };
 
-module.exports = { score, rate, percent, minutes, dateTime, STATUS_LABEL };
+module.exports = { score, scoreCard, rate, percent, minutes, dateTime, STATUS_LABEL };

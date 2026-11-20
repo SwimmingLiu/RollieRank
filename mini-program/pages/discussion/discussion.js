@@ -22,6 +22,9 @@ Page({
     loading: true,
     error: "",
     comments: [],
+    nextCursor: "",
+    replyCursor: "",
+    loadingMore: false,
     total: 0,
     draft: "",
     expanded: "",
@@ -50,32 +53,42 @@ Page({
     this.load();
   },
 
+  onReachBottom() {
+    if (this.data.nextCursor && !this.data.loadingMore) this.load(true);
+  },
+
   query() {
     return "paperId=" + encodeURIComponent(this.paperId) + "&guestId=" + encodeURIComponent(storage.guestId()) +
       "&attemptId=" + encodeURIComponent(this.attemptId);
   },
 
-  async load() {
+  async load(more = false) {
+    if (this.data.loadingMore) return;
+    this.setData({ loadingMore: true });
     try {
-      const result = await api.request("discussions?" + this.query());
+      const cursor = more ? "&before=" + encodeURIComponent(this.data.nextCursor) : "";
+      const result = await api.request("discussions?" + this.query() + cursor);
       this.attemptId ||= result.attemptId || "";
+      const comments = result.comments.map(comment => this.decorate(comment));
       this.setData({
         loading: false,
-        comments: (result.comments || []).map(comment => this.decorate(comment)),
+        comments: more ? [...this.data.comments, ...comments.filter(comment => !this.data.comments.some(existing => existing.id === comment.id))] : comments,
+        nextCursor: result.nextCursor || "",
         total: result.total || 0,
       });
     } catch (error) {
-      this.setData({ loading: false, error: error.message });
+      if (more) wx.showToast({ title: error.message, icon: "none" });
+      else this.setData({ loading: false, error: error.message });
+    } finally {
+      this.setData({ loadingMore: false });
     }
   },
 
   decorate(comment) {
-    const seed = comment.author?.avatarSeed;
-    const index = (parseInt((seed || "").slice(0, 4), 16) || 0) % 8 + 1;
     return {
       ...comment,
-      avatar: "/assets/avatars/rank-" + index + ".svg",
-      timeText: format.dateTime(comment.createdAt),
+      initials: Array.from(comment.author?.name || "卷友").slice(0, 2).join(""),
+      timeText: format.dateTime(comment.createdAt).replace(/-/g, "/"),
       target: comment.replyTo?.name || "",
       images: (comment.images || []).map(image => image.dataUri),
     };
@@ -156,10 +169,14 @@ Page({
     }
   },
 
-  async loadReplies(id) {
+  async loadReplies(id, more = false) {
+    const request = this.replyRequest = (this.replyRequest || 0) + 1;
     try {
-      const result = await api.request("discussions/replies?" + this.query() + "&rootId=" + encodeURIComponent(id));
-      this.setData({ expanded: id, replies: (result.comments || []).map(comment => this.decorate(comment)) });
+      const cursor = more ? "&before=" + encodeURIComponent(this.data.replyCursor) : "";
+      const result = await api.request("discussions/replies?" + this.query() + "&rootId=" + encodeURIComponent(id) + cursor);
+      if (request !== this.replyRequest) return;
+      const replies = result.comments.map(comment => this.decorate(comment));
+      this.setData({ expanded: id, replies: more ? [...this.data.replies, ...replies] : replies, replyCursor: result.nextCursor || "" });
     } catch (error) {
       wx.showToast({ title: error.message, icon: "none" });
     }
@@ -167,8 +184,16 @@ Page({
 
   toggleReplies(event) {
     const { id } = event.currentTarget.dataset;
-    if (this.data.expanded === id) this.setData({ expanded: "", replies: [] });
-    else this.loadReplies(id);
+    if (this.data.expanded === id) {
+      this.replyRequest += 1;
+      this.setData({ expanded: "", replies: [], replyCursor: "" });
+    } else {
+      this.loadReplies(id);
+    }
+  },
+
+  moreReplies() {
+    if (this.data.expanded && this.data.replyCursor) this.loadReplies(this.data.expanded, true);
   },
 
   startReply(event) {

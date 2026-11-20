@@ -1,12 +1,11 @@
 <import src="../../templates/startup-card.wxml" />
 <page-meta page-style="{{timerOpen ? 'overflow: hidden;' : ''}}" />
 <view wx:if="{{openingWeb}}" class="screen screen--plain">
-  <rr-nav back="{{false}}" />
-  <view class="rr-startup-screen"><template is="startup-card" data="{{logo: asset.logo}}" /></view>
+  <rr-nav title="卷卷小榜" logo="{{asset.logo}}" back="{{false}}" />
+  <view class="rr-startup-screen"><template is="startup-card" /></view>
 </view>
 <view wx:else class="screen">
-  <rr-nav back="{{false}}" />
-  <view class="home__brand"><image src="{{asset.logo}}" mode="aspectFit" /><text>卷卷小榜</text></view>
+  <rr-nav title="卷卷小榜" logo="{{asset.logo}}" back="{{false}}" />
 
   <view class="home__body">
     <button wx:if="{{timerStatus !== 'ready'}}" class="home__timer" bindtap="openTimer" hover-class="press"
@@ -60,6 +59,16 @@
             <text>{{item.draft ? item.answered + ' / ' + item.questionCount : item.scoreText + ' 分'}}</text>
           </view>
         </view>
+      </view>
+    </view>
+    <view wx:if="{{!loading && !error && !recent.length}}" class="home__recent home__recent--empty">
+      <view class="home__section">最近练习</view>
+      <view class="home__empty-cover">
+        <view class="home__empty-copy">
+          <text class="home__empty-title">还没有练习</text>
+          <text class="home__empty-note">选一卷开始录答案</text>
+        </view>
+        <image class="home__empty-art" src="/assets/answer-paper.svg" mode="aspectFit" />
       </view>
     </view>
 

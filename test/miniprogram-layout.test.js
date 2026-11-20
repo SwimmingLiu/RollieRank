@@ -1,8 +1,25 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import navigation from "../mini-program/utils/navigation.js";
 
 const { navigationLayout } = navigation;
+const markup = path => readFileSync(new URL("../mini-program/" + path, import.meta.url), "utf8");
+
+test("native records keep the practice filters directly after the two tools", () => {
+  const view = markup("pages/records/records.wxml");
+  assert.equal((view.match(/class="records__cell"/g) || []).length, 2);
+  assert.match(view, /bindtap="openAnalytics"[\s\S]*?<\/button>\s*<\/view>\s*<view class="records__tools">/);
+  assert.doesNotMatch(view, /答案反馈|维护者审核|(?:correction|feedback)(?:__|Open|s\.)/i);
+  assert.match(markup("pages/review/review.wxml"), /反馈记录[\s\S]*?bindtap="openAdmin">维护者审核/);
+});
+
+test("the native homepage uses the capsule-aligned title row and includes a first-use card", () => {
+  const view = markup("pages/home/home.wxml");
+  assert.equal((view.match(/<rr-nav title="卷卷小榜" logo="{{asset\.logo}}"/g) || []).length, 2);
+  assert.match(view, /!loading && !error && !recent\.length}}".*?home__recent--empty/);
+  assert.doesNotMatch(view, /class="home__brand"/);
+});
 
 test("WeChat navigation centers the row on the capsule and clears its left edge", () => {
   for (const [windowWidth, statusBarHeight, menu] of [

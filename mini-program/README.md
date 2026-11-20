@@ -1,14 +1,12 @@
 # 卷卷小榜 · 微信小程序
 
-原稿版直接加载 `paper-cards-1114-v3` 手机应用。当前目录也保留了原生备用版。
-
-默认发布使用原生入口，适用于没有 web-view 业务域名能力的 AppID。取得企业主体的内嵌网页能力并完成业务域名校验后，再把 `WEB_APP_ORIGIN` 设为站点地址。
+当前项目默认运行原生小程序，界面以 `paper-cards-1114-v3` 为准。配置微信业务域名后，可以另行构建内嵌原稿版。
 
 ## 原稿版
 
 原稿版复用全部手机页面、弹层和交互。首页保留原稿 logo 与标题组合并紧接微信胶囊下方，其他页使用原生标题。返回和页面操作放在对应内容区。初始化时显示纸卡骨架。初次打开会接续已有身份、正式练习、录答草稿和存疑标记。
 
-默认从 `mini-program` 打开也会进入同一套原稿。套卷和复盘板块弹层使用单行选项，点遮罩关闭。长列表可以上拉展开、滚动和下滑收起。
+套卷和复盘板块弹层使用单行选项。点遮罩关闭，长列表可上拉展开、滚动和下滑收起。
 
 在「练习记录」点个人资料卡，可以选择头像或进入昵称设置。头像与已保存的昵称保存在服务端，并带回当前设备的练习记录页。
 
@@ -34,15 +32,16 @@ npm --prefix mini-program run build:shared -- https://rollie-rank.swimmingliu.cn
 | `pages/catalog` | 机构套卷：按期数分组，显示草稿／已提交状态 |
 | `pages/practice` | 录答案：列表和单题录入、存疑标记、草稿恢复、交卷 |
 | `pages/report` | 成绩：总分、正误、板块得分率和六维雷达、讨论／榜单／分享入口 |
-| `pages/review` | 逐题对照：按错题、待检查和板块筛选，复制错题号 |
+| `pages/review` | 逐题对照、错题筛选与复制、答案反馈和反馈记录 |
 | `pages/rank` | 同卷榜：全国或岗位范围、前三名纸卡、其余名次 |
 | `pages/records` | 练习记录：身份、岗位、成长分析、搜索与筛选 |
 | `pages/analytics` | 成长分析：按卷型查看得分率、得分和正确率走势 |
 | `pages/share` | 分享：长图、成绩卡、题型、雷达四种 PNG，保存到相册或邀请同卷好友 |
-| `pages/positions` | 选岗：搜索、分页、选择或取消 |
+| `pages/positions` | 选岗面板入口，支持国考、省考、分层搜索和岗位详情 |
+| `pages/admin` | 反馈记录中的维护者审核入口，支持凭证、审核重算和岗位目录 |
 | `pages/discussion` | 试卷讨论：发表、点赞、回复、图片预览 |
 | `pages/timer` | 做题计时：整卷或模块计划、暂停、结束进入录答案 |
-| `pages/settings` | 设置：昵称、本机身份、备份与恢复、删除记录 |
+| `pages/settings` | 昵称设置 |
 
 ## 与网页版的口径一致
 - 计分、参考答案、订正后的成绩只由服务端给出；小程序保存自己的草稿和正式记录，参考答案由服务端读取。
@@ -52,7 +51,7 @@ npm --prefix mini-program run build:shared -- https://rollie-rank.swimmingliu.cn
 
 ## 开发
 1. 用微信开发者工具打开 `mini-program/` 目录（AppID 已写入 `project.config.json`）。
-2. 后端地址在 `config.js` 的 `API_BASE`。本地联调把该地址改为本机服务并关闭「不校验合法域名」。
+2. 本地流程自检使用一份独立构建，将 `config.js` 的 `API_BASE` 指向隔离后端并设置 `urlCheck: false`。
 3. 本机校验：
    ```bash
    npm --prefix mini-program run check
@@ -62,8 +61,9 @@ npm --prefix mini-program run build:shared -- https://rollie-rank.swimmingliu.cn
 用微信开发者工具 CLI 启动自动化和手机预览。以下命令从仓库根目录运行：
 
 ```sh
-cli auto --project "$PWD/mini-program" --auto-port 9420
-MINIPROGRAM_AUTOMATION_PORT=9420 MINIPROGRAM_FLOW_OUTPUT="$PWD/test-results/miniprogram/flow" node mini-program/tools/flow.mjs
+cli auto --project "$PWD/test-results/wechat-local" --auto-port 9420
+MINIPROGRAM_AUTOMATION_PORT=9420 MINIPROGRAM_API_BASE=http://127.0.0.1:4173 \
+  MINIPROGRAM_REVIEW_TOKEN="$ROLLIERANK_LOCAL_REVIEW_TOKEN" node mini-program/tools/flow.mjs
 cli preview --project "$PWD/mini-program" --qr-format image --qr-output /tmp/rollierank-preview.png
 ```
 
@@ -72,4 +72,3 @@ cli preview --project "$PWD/mini-program" --qr-format image --qr-output /tmp/rol
 
 ## 尚未接入
 - 微信登录与云端身份（当前用本机随机身份，换机需要备份恢复）。
-- 审核界面（维护者在网页版使用）。

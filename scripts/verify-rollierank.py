@@ -26,10 +26,10 @@ SCENARIOS = {
     "core": ("test/feature-integration.test.js",),
     "catalog-admin": ("test/imported-papers.test.js", "test/booklet-time-limits.test.js", "test/positions-import.test.js"),
     "practice-history": ("test/prototype-state.test.js", "test/model.test.js", "test/ios-entry.test.js", "test/ios-preview-cleanup.test.js", "test/preview-history-recovery.test.js"),
-    "positions-rank": ("test/positions.test.js", "test/leaderboard.test.js", "test/positions-hierarchy.test.js", "test/ios-positions-browser.test.js", "test/positions-feature.test.js"),
+    "positions-rank": ("test/positions.test.js", "test/leaderboard.test.js", "test/positions-hierarchy.test.js", "test/ios-positions-browser.test.js", "test/positions-feature.test.js", "test/miniprogram-layout.test.js"),
     "discussion": ("test/discussions.test.js", "test/discussions-client.test.js", "test/discussions-interactions.test.js", "test/ios-discussions.test.js", "test/ios-discussions-interactions-browser.test.js", "test/ios-discussion-links.test.js"),
     "analytics": ("test/analytics.test.js", "test/ios-analytics.test.js", "test/ios-analytics-components.test.js", "test/ios-analytics-browser.test.js"),
-    "corrections": ("test/corrections-service.test.js", "test/corrections-api.test.js", "test/ios-corrections-browser.test.js", "test/ios-question-feedback-browser.test.js"),
+    "corrections": ("test/corrections-service.test.js", "test/corrections-api.test.js", "test/ios-corrections-browser.test.js", "test/ios-question-feedback-browser.test.js", "test/miniprogram-layout.test.js"),
     "sharing": ("test/ios-analytics-components.test.js", "test/ios-share-modes.test.js", "test/ios-sharing-browser.test.js"),
     "insights": ("test/positions-insights.test.js", "test/ios-insights-browser.test.js"),
     "timing-practice": ("test/practice-timer.test.js", "test/timer-paper-picker.test.js", "test/timer-configuration.test.js", "test/miniprogram-timer.test.js", "test/booklet-time-limits.test.js", "test/ios-timer-entry-feedback-browser.test.js", "test/ios-timer-latest-feedback-browser.test.js", "test/ios-practice-session-browser.test.js"),
@@ -231,6 +231,11 @@ def source_lock() -> dict:
     runtime_paths = []
     for directory in (ROOT / "src", ROOT / "server", ROOT / "test"):
         runtime_paths.extend(path for path in directory.rglob("*") if path.is_file() and path.suffix in {".js", ".mjs", ".ts", ".css"})
+    native = ROOT / "mini-program"
+    runtime_paths.append(native / "app.json")
+    for name in ("components", "pages"):
+        runtime_paths.extend(path for path in (native / name).rglob("*")
+                             if path.is_file() and path.suffix in {".js", ".json", ".wxml", ".wxss"})
     ios = ROOT / "docs/ui-exploration/ios-v3"
     runtime_paths.extend(path for path in ios.iterdir() if path.is_file() and path.suffix in {".js", ".css", ".html"})
     for directory in (ios / "features", ios / "ui"):

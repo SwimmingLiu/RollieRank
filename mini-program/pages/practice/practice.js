@@ -32,7 +32,7 @@ Page({
     identity: "",
     sections: [],
     sheetSections: [],
-    sheetScrollTarget: "",
+    sheetScrollTop: 0,
     activeSection: 0,
     questions: [],
     allQuestions: [],
@@ -129,8 +129,17 @@ Page({
     const currentQuestion = questions.find(question => question.number === current) || questions[0] || null;
     const activeSection = Math.max(0, sections.findIndex(section => current >= section.start && current <= section.end));
     const answered = answers.filter(Boolean).length;
+    const rows = questions.map((question, index) => {
+      const previous = questions[index - 1];
+      const section = sections.find(item => question.number >= item.start && question.number <= item.end);
+      return section && (!previous || previous.number < section.start)
+        ? { ...question, heading: section.type, range: `${section.start}–${section.end}` }
+        : question;
+    });
     this.setData({
-      allQuestions, questions, currentQuestion, activeSection, answered,
+      allQuestions, questions: rows, currentQuestion, activeSection, answered,
+      firstQuestion: questions[0]?.number || 0,
+      lastQuestion: questions[questions.length - 1]?.number || 0,
       uncertain: marks.filter(Boolean).length,
       progress: answered / this.version.questionCount * 100,
     });
@@ -140,10 +149,11 @@ Page({
     const { number, choice } = event.currentTarget.dataset;
     const index = Number(number) - 1;
     const answers = this.data.answers.slice();
+    const firstAnswer = !answers[index];
     answers[index] = answers[index] === choice ? "" : choice;
     this.setData({ answers, current: Number(number) });
     this.reflect();
-    if (answers[index] && this.data.single) this.moveQuestion(1);
+    if (answers[index] && (firstAnswer || this.data.single)) this.moveQuestion(1, true);
     this.persist();
   },
 
@@ -151,7 +161,7 @@ Page({
     const number = Number(event.currentTarget.dataset.number);
     const marks = this.data.marks.slice();
     marks[number - 1] = !marks[number - 1];
-    this.setData({ marks, current: number });
+    this.setData({ marks });
     this.reflect();
     this.persist();
   },
@@ -168,10 +178,22 @@ Page({
     this.jump(Number(event.currentTarget.dataset.number));
   },
 
-  jump(number) {
+  jump(number, keepVisible = false) {
     this.setData({ current: number, scrollTarget: "" });
     this.reflect();
-    this.setData({ scrollTarget: "answer-" + number });
+    const id = "answer-" + number;
+    if (!this.data.single && keepVisible) {
+      const query = this.createSelectorQuery();
+      query.select(".practice__scroller").boundingClientRect();
+      query.select("#" + id).boundingClientRect();
+      query.exec(([list, row]) => {
+        if (this.data.current === number && list && row && (row.bottom > list.bottom || row.top < list.top)) {
+          this.setData({ scrollTarget: id });
+        }
+      });
+    } else if (!this.data.single) {
+      this.setData({ scrollTarget: id });
+    }
     this.persist();
   },
 
@@ -187,12 +209,16 @@ Page({
     this.jump(this.data.current);
   },
 
-  moveQuestion(direction) {
+  moveQuestion(direction, keepVisible = false) {
     const { questions, currentQuestion } = this.data;
     const position = questions.findIndex(question => question.number === currentQuestion?.number);
     const next = questions[position + direction];
-    if (next) this.jump(next.number);
+    if (next) this.jump(next.number, keepVisible);
   },
+
+  previousQuestion() { this.moveQuestion(-1); },
+
+  nextQuestion() { this.moveQuestion(1); },
 
   startSwipe(event) {
     this.swipeStart = event.touches[0];
@@ -232,7 +258,17 @@ Page({
         .filter(question => question.number >= section.start && question.number <= section.end)
         .map(question => ({ ...question, current: question.number === this.data.current })),
     }));
-    this.setData({ sheet: "answers", sheetSections, sheetScrollTarget: "answer-sheet-" + this.data.current });
+    this.setData({ sheet: "answers", sheetSections, sheetScrollTop: 0 }, () => {
+      const query = this.createSelectorQuery();
+      query.select(".sheet-scroll").boundingClientRect();
+      query.select("#answer-sheet-" + this.data.current).boundingClientRect();
+      query.exec(([list, cell]) => {
+        // Leave room for the sticky section heading when jumping to a distant question.
+        if (this.data.sheet === "answers" && list && cell && cell.bottom > list.bottom) {
+          this.setData({ sheetScrollTop: Math.max(0, cell.top - list.top - 48) });
+        }
+      });
+    });
   },
 
   closeSheet() {
@@ -243,9 +279,23 @@ Page({
     if (!this.data.submitting) this.setData({ sheet: "submit" });
   },
 
+  confirmSubmission() {
+    if (storage.position()?.id) this.doSubmit();
+    else this.setData({ sheet: "position-prompt" });
+  },
+
+  openPosition() {
+    this.setData({ sheet: "position" });
+  },
+
+  submitAfterPosition(event) {
+    if (event.detail.position) this.doSubmit();
+    else this.closeSheet();
+  },
+
   async doSubmit() {
     if (this.data.submitting) return;
-    this.setData({ submitting: true });
+    this.setData({ submitting: true, sheet: "" });
     wx.showLoading({ title: "正在核分", mask: true });
     try {
       const answers = this.data.answers.map(value => (value ? value : null));
@@ -264,7 +314,7 @@ Page({
       wx.redirectTo({ url: `/pages/report/report?attemptId=${attempt.id}` });
     } catch (error) {
       wx.hideLoading();
-      if (this.attemptId) this.setData({ submitting: false });
+      if (this.attemptId) this.setData({ submitting: false, sheet: "submit" });
       wx.showModal({ title: "交卷未完成", content: error.message, showCancel: false });
     }
   },

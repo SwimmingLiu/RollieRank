@@ -29,8 +29,6 @@
   border-width: 1px 0 0;
   border-radius: 24px 24px 0 0;
 }
-.timer__grab { flex: none; display: flex; justify-content: center; align-items: center; height: 31px; }
-.timer__handle { width: 26px; height: 3px; border-radius: 99px; background: #e2dcd5; }
 .timer__heading { position: relative; display: flex; flex: none; min-height: 47px; align-items: center; justify-content: space-between; margin-bottom: 9px; }
 .timer__heading > text { font-size: 20px; font-weight: 600; }
 .timer__close { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: grid; place-items: center; flex: none; margin: 0 !important; width: 44px !important; height: 44px; }
@@ -123,7 +121,6 @@
   .timer__module-input { gap: 5px; }
 }
 @media (max-height: 650px) {
-  .timer__grab { height: 22px; }
   .timer__heading { margin-bottom: 5px; }
   .timer__plan-content { gap: 8px; }
 }

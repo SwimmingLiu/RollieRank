@@ -1,12 +1,12 @@
+<page-meta page-style="{{feedbackOpen || historyOpen || typesOpen ? 'overflow: hidden;' : ''}}" />
 <view class="screen">
-  <rr-nav title="逐题对照" />
+  <rr-nav title="{{filter === 'marked' ? '待检查' : filter === 'wrong' ? '错题复盘' : '逐题对照'}}" action="{{canFeedback ? '反馈' : ''}}" action-label="反馈参考答案" bind:action="openFeedback" />
   <view wx:if="{{loading}}" class="loading">正在读取答卷…</view>
   <view wx:elif="{{error}}" class="empty">{{error}}</view>
 
   <view wx:else class="review">
     <view class="review__scope-row">
       <button class="review__scope" bindtap="openTypes"><text>{{typeLabel}}</text><image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" /></button>
-      <button class="review__feedback" bindtap="openFeedback">反馈</button>
     </view>
     <view class="review__tabs">
       <button wx:for="{{filters}}" wx:key="key" class="review__tab {{filter === item.key ? 'review__tab--on' : ''}}" data-key="{{item.key}}" bindtap="setFilter">{{item.label}} {{counts[item.key]}}</button>
@@ -31,17 +31,64 @@
     <view class="footer-bar"><button class="btn btn--primary review__copy" bindtap="copyWrong" disabled="{{!copyCount}}">复制错题号</button></view>
   </view>
   <rr-option-sheet wx:if="{{typesOpen}}" items="{{types}}" selected="{{activeType}}" label="选择板块" bindselect="setType" binddismiss="closeTypes" />
-  <view wx:if="{{feedbackOpen}}" class="sheet-layer">
+  <view wx:if="{{feedbackOpen && !historyOpen}}" class="sheet-layer">
     <view class="sheet-shade" catchtap="closeFeedback"></view>
     <view class="sheet-panel review__feedback-sheet" aria-role="dialog" aria-label="反馈参考答案">
-      <view class="sheet-head"><text>反馈参考答案</text><button class="sheet-close" bindtap="closeFeedback" aria-label="关闭"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button></view>
+      <view class="sheet-head"><text>{{feedbackPicking ? '选择反馈题目' : '反馈参考答案'}}</text><button class="review__history-link" bindtap="openFeedbackHistory">反馈记录</button></view>
       <scroll-view scroll-y enhanced show-scrollbar="{{false}}" class="review__feedback-scroll">
-        <label class="review__field">题号<input type="number" value="{{feedbackQuestion}}" maxlength="3" placeholder="输入已作答的题号" bindinput="onFeedbackQuestion" /></label>
-        <view class="review__field"><text>建议答案</text><view class="review__answer-options"><button wx:for="{{feedbackChoices}}" wx:key="*this" class="review__answer-option {{feedbackSuggested === item ? 'review__answer-option--on' : ''}}" data-answer="{{item}}" bindtap="chooseSuggestion" aria-pressed="{{feedbackSuggested === item}}">{{item}}</button></view></view>
-        <label class="review__field">核对依据<textarea value="{{feedbackEvidence}}" maxlength="4000" placeholder="填写出处、页码或核对过程" bindinput="onFeedbackEvidence" /></label>
-        <text wx:if="{{feedbackError}}" class="review__feedback-error" aria-role="alert">{{feedbackError}}</text>
+        <view wx:if="{{feedbackPicking}}" class="review__question-picker">
+          <button wx:for="{{feedbackQuestions}}" wx:key="n" class="review__question-choice {{item.marked ? 'review__question-choice--marked' : ''}}" data-number="{{item.n}}" disabled="{{item.selected}}" bindtap="pickFeedbackQuestion" aria-label="反馈第 {{item.n}} 题">{{item.n}}</button>
+        </view>
+        <block wx:else>
+          <view wx:for="{{feedbackItems}}" wx:for-item="feedback" wx:for-index="feedbackIndex" wx:key="question" class="review__feedback-card">
+            <view class="row row--between review__feedback-card-head">
+              <text>第 {{feedback.question}} 题</text>
+              <button wx:if="{{feedbackItems.length > 1}}" data-index="{{feedbackIndex}}" bindtap="removeFeedbackQuestion">移除</button>
+            </view>
+            <text class="review__reference-line">我选 {{feedback.answer}} · 参考 {{feedback.reference}}</text>
+            <view class="review__field"><text>建议答案</text><view class="review__answer-options"><button wx:for="{{feedbackChoices}}" wx:key="*this" class="review__answer-option {{feedback.suggestedAnswer === item ? 'review__answer-option--on' : ''}}" data-index="{{feedbackIndex}}" data-answer="{{item}}" bindtap="chooseSuggestion" aria-pressed="{{feedback.suggestedAnswer === item}}" disabled="{{submittingFeedback}}">{{item}}</button></view></view>
+            <label class="review__field">反馈依据<textarea value="{{feedback.evidence}}" maxlength="4000" placeholder="出处、页码或核对过程" data-index="{{feedbackIndex}}" bindinput="onFeedbackEvidence" disabled="{{submittingFeedback}}" /></label>
+          </view>
+          <button class="review__add-feedback" bindtap="addFeedbackQuestion">再反馈一题</button>
+        </block>
       </scroll-view>
-      <view class="review__feedback-actions"><button bindtap="closeFeedback">取消</button><button bindtap="submitFeedback" loading="{{submittingFeedback}}" disabled="{{submittingFeedback}}">提交反馈</button></view>
+      <text wx:if="{{feedbackError}}" class="review__feedback-error" aria-role="alert">{{feedbackError}}</text>
+      <view wx:if="{{feedbackPicking}}" class="review__feedback-actions"><button bindtap="backFeedback">{{feedbackItems.length ? '返回反馈' : '取消'}}</button></view>
+      <view wx:else class="review__feedback-actions"><button bindtap="closeFeedback" disabled="{{submittingFeedback}}">取消</button><button bindtap="submitFeedback" loading="{{submittingFeedback}}" disabled="{{submittingFeedback}}">提交反馈</button></view>
+    </view>
+  </view>
+  <view wx:if="{{historyOpen}}" class="sheet-layer">
+    <view class="sheet-shade" catchtap="closeFeedbackHistory"></view>
+    <view class="sheet-panel review__feedback-sheet" aria-role="dialog" aria-label="反馈记录">
+      <view class="sheet-head"><text>{{feedbackDetail ? '反馈处理详情' : '反馈记录'}}</text><button class="sheet-close" bindtap="closeFeedbackHistory" aria-label="关闭"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button></view>
+      <scroll-view scroll-y enhanced show-scrollbar="{{false}}" class="review__feedback-scroll">
+        <block wx:if="{{feedbackDetail}}">
+          <view wx:for="{{feedbackDetail.items}}" wx:key="question" class="review__feedback-card">
+            <view class="row row--between review__feedback-card-head"><text>第 {{item.question}} 题</text><text class="review__feedback-status">{{item.statusLabel}}</text></view>
+            <text class="review__reference-line">参考 {{item.originalAnswer}} → 建议 {{item.suggestedAnswer}}</text>
+            <text class="review__feedback-evidence">{{item.evidence}}</text>
+            <text wx:if="{{item.reason}}" class="review__feedback-evidence">审核理由 · {{item.reason}}</text>
+          </view>
+          <view wx:if="{{feedbackPreview}}" class="review__preview">
+            <view><text>当前成绩</text><text>{{feedbackPreview.official}} 分</text></view>
+            <view><text>试算成绩</text><text>{{feedbackPreview.projected}} 分</text></view>
+            <view><text>分数变化</text><text>{{feedbackPreview.delta}} 分</text></view>
+          </view>
+          <button wx:elif="{{feedbackDetail.canPreview}}" class="review__add-feedback" bindtap="previewFeedback" loading="{{historyLoading}}">试算影响</button>
+        </block>
+        <block wx:else>
+          <button wx:for="{{feedbackHistory}}" wx:key="id" class="review__history-row" data-id="{{item.id}}" bindtap="openFeedbackDetail">
+            <text class="grow">{{item.items.length}} 道题</text><text>{{item.statusLabel}}</text><image src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+          </button>
+          <view wx:if="{{!feedbackHistory.length && !historyError}}" class="review__history-empty">{{historyLoading ? '正在读取…' : '这份答卷暂无反馈'}}</view>
+        </block>
+      </scroll-view>
+      <text wx:if="{{historyError}}" class="review__feedback-error" aria-role="alert">{{historyError}}</text>
+      <view class="review__feedback-actions">
+        <button wx:if="{{feedbackDetail}}" bindtap="backToFeedbackList">返回记录</button>
+        <button wx:else bindtap="openAdmin">维护者审核</button>
+        <button bindtap="closeFeedbackHistory">关闭</button>
+      </view>
     </view>
   </view>
 </view>

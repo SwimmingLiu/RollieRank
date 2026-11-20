@@ -9,10 +9,7 @@
   <view class="timer__shade" aria-role="button" aria-label="关闭计时面板" catchtap="dismissFromBackdrop"
     data-zone="backdrop" bindtouchstart="startGesture" catchtouchmove="blockScroll" bindtouchend="endGesture" bindtouchcancel="cancelGesture" />
   <view class="timer__sheet" aria-role="dialog" aria-label="{{heading}}">
-    <view class="timer__grab" data-zone="handle" bindtouchstart="startGesture" catchtouchmove="blockScroll" bindtouchend="endGesture" bindtouchcancel="cancelGesture">
-      <view class="timer__handle" aria-hidden="{{true}}" />
-    </view>
-    <view class="timer__heading">
+    <view class="timer__heading" data-zone="handle" bindtouchstart="startGesture" catchtouchmove="blockScroll" bindtouchend="endGesture" bindtouchcancel="cancelGesture">
       <text>{{heading}}</text>
       <button class="timer__close" aria-label="关闭面板" bindtap="dismiss"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button>
     </view>

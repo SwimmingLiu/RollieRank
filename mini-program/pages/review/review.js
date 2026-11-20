@@ -8,6 +8,7 @@ const FILTERS = [
   { key: "all", label: "全部" },
   { key: "marked", label: "待检查" },
 ];
+const STATUS = { pending: "待审核", partial: "部分已处理", approved: "已通过", rejected: "已拒绝", mixed: "已处理" };
 
 Page({
   data: {
@@ -22,12 +23,18 @@ Page({
     typeLabel: "全部板块",
     typesOpen: false,
     feedbackOpen: false,
-    feedbackQuestion: "",
-    feedbackSuggested: "",
-    feedbackEvidence: "",
+    feedbackPicking: false,
+    feedbackQuestions: [],
+    feedbackItems: [],
     feedbackError: "",
     feedbackChoices: ["A", "B", "C", "D"],
     submittingFeedback: false,
+    historyOpen: false,
+    historyLoading: false,
+    historyError: "",
+    feedbackHistory: [],
+    feedbackDetail: null,
+    feedbackPreview: null,
     copyCount: 0,
     uiBase: "/assets/ui",
   },
@@ -59,6 +66,7 @@ Page({
       this.setData({
         loading: false,
         error: "",
+        canFeedback: !attempt.isSample,
         activeType,
         typeLabel: activeType || "全部板块",
         types: [{ key: "", label: "全部板块" }, ...types.map(type => ({ key: type, label: type }))],
@@ -141,15 +149,43 @@ Page({
   },
 
   openFeedback() {
-    const marked = this.all.find(row => row.marked && row.answer !== row.ref) || this.all.find(row => row.answer !== row.ref);
+    if (!this.data.canFeedback || this.data.submittingFeedback) return;
+    const marked = this.all.filter(row => row.marked && (!this.data.activeType || row.type === this.data.activeType));
     this.feedbackId = storage.uuid();
     this.setData({
       feedbackOpen: true,
-      feedbackQuestion: marked ? String(marked.n) : "",
-      feedbackSuggested: "",
-      feedbackEvidence: "",
+      feedbackPicking: marked.length !== 1,
+      feedbackQuestions: this.feedbackOptions([]),
+      feedbackItems: marked.length === 1 ? [this.feedbackItem(marked[0])] : [],
       feedbackError: "",
     });
+  },
+
+  feedbackOptions(items) {
+    const selected = new Set(items.map(item => item.question));
+    return this.all.map(({ n, marked }) => ({ n, marked, selected: selected.has(n) }));
+  },
+
+  feedbackItem(row) {
+    return {
+      question: row.n,
+      answer: row.answer === "—" ? "留空" : row.answer,
+      reference: row.ref,
+      suggestedAnswer: "",
+      evidence: "",
+    };
+  },
+
+  pickFeedbackQuestion(event) {
+    const question = Number(event.currentTarget.dataset.number);
+    const row = this.all.find(item => item.n === question);
+    if (!row || this.data.submittingFeedback || this.data.feedbackItems.some(item => item.question === question)) return;
+    this.setData({ feedbackItems: [...this.data.feedbackItems, this.feedbackItem(row)], feedbackPicking: false, feedbackError: "" });
+  },
+
+  updateFeedbackItem(index, patch) {
+    const feedbackItems = this.data.feedbackItems.map((item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item);
+    this.setData({ feedbackItems, feedbackError: "" });
   },
 
   closeFeedback() {
@@ -157,55 +193,132 @@ Page({
     this.setData({ feedbackOpen: false });
   },
 
-  onFeedbackQuestion(event) {
-    this.setData({ feedbackQuestion: event.detail.value, feedbackError: "" });
+  backFeedback() {
+    if (this.data.feedbackItems.length) this.setData({ feedbackPicking: false });
+    else this.closeFeedback();
   },
 
   chooseSuggestion(event) {
-    this.setData({ feedbackSuggested: event.currentTarget.dataset.answer, feedbackError: "" });
+    this.updateFeedbackItem(Number(event.currentTarget.dataset.index), { suggestedAnswer: event.currentTarget.dataset.answer });
   },
 
   onFeedbackEvidence(event) {
-    this.setData({ feedbackEvidence: event.detail.value, feedbackError: "" });
+    this.updateFeedbackItem(Number(event.currentTarget.dataset.index), { evidence: event.detail.value });
+  },
+
+  addFeedbackQuestion() {
+    if (this.data.submittingFeedback || this.data.feedbackItems.length >= this.all.length) return;
+    this.setData({ feedbackPicking: true, feedbackQuestions: this.feedbackOptions(this.data.feedbackItems), feedbackError: "" });
+  },
+
+  removeFeedbackQuestion(event) {
+    if (this.data.submittingFeedback) return;
+    const index = Number(event.currentTarget.dataset.index);
+    const feedbackItems = this.data.feedbackItems.filter((_, itemIndex) => itemIndex !== index);
+    this.setData({ feedbackItems, feedbackError: "" });
   },
 
   async submitFeedback() {
     if (this.data.submittingFeedback) return;
-    const question = Number(this.data.feedbackQuestion);
-    const row = this.all.find(item => item.n === question);
-    const evidence = this.data.feedbackEvidence.trim();
-    const suggestedAnswer = this.data.feedbackSuggested;
-    if (!Number.isInteger(question) || question < 1 || question > this.all.length) {
-      this.setData({ feedbackError: "请输入本卷的有效题号" });
-      return;
-    }
-    if (!row || row.answer === "—") {
-      this.setData({ feedbackError: "只有已作答的题目可以反馈" });
-      return;
-    }
-    if (!["A", "B", "C", "D"].includes(suggestedAnswer)) {
-      this.setData({ feedbackError: "请选择建议答案" });
-      return;
-    }
-    if (!evidence) {
-      this.setData({ feedbackError: "请填写核对依据" });
-      return;
+    const items = this.data.feedbackItems.map(item => ({
+      question: Number(item.question),
+      suggestedAnswer: item.suggestedAnswer,
+      evidence: item.evidence.trim(),
+    }));
+    if (!items.length) return this.setData({ feedbackError: "请至少反馈一道题" });
+    for (const item of items) {
+      if (!this.data.feedbackChoices.includes(item.suggestedAnswer)) return this.setData({ feedbackError: `请选择第 ${item.question} 题的建议答案` });
+      if (item.suggestedAnswer === this.all[item.question - 1].ref) return this.setData({ feedbackError: `第 ${item.question} 题的建议答案与当前参考相同` });
+      if (!item.evidence) return this.setData({ feedbackError: `请填写第 ${item.question} 题的核对依据` });
     }
     this.setData({ submittingFeedback: true, feedbackError: "" });
     try {
-      await api.request("corrections/submit", {
+      const { feedback } = await api.request("corrections/submit", {
         guestId: storage.guestId(),
         attemptId: this.attemptId,
         feedbackId: this.feedbackId,
         baseRevision: this.attempt.answerRevision || 0,
-        changes: [{ question, suggestedAnswer, evidence }],
+        changes: items,
       });
-      this.setData({ feedbackOpen: false, feedbackSuggested: "", feedbackEvidence: "" });
+      this.setData({ feedbackOpen: false, feedbackItems: [] });
       wx.showToast({ title: "反馈已提交", icon: "success" });
+      this.openHistory(feedback);
     } catch (error) {
       this.setData({ feedbackError: error.message });
     } finally {
       this.setData({ submittingFeedback: false });
     }
+  },
+
+  openFeedbackHistory() {
+    if (!this.data.submittingFeedback) this.openHistory();
+  },
+
+  async openHistory(feedback) {
+    this.setData({
+      historyOpen: true,
+      historyLoading: true,
+      historyError: "",
+      feedbackDetail: feedback ? this.formatFeedback(feedback) : null,
+      feedbackPreview: null,
+    });
+    try {
+      const result = await api.request("corrections/list", { guestId: storage.guestId() });
+      const feedbackHistory = result.feedbacks.filter(item => item.attemptId === this.attemptId).map(item => this.formatFeedback(item));
+      this.setData({ feedbackHistory });
+    } catch (error) {
+      this.setData({ historyError: error.message });
+    } finally {
+      this.setData({ historyLoading: false });
+    }
+  },
+
+  formatFeedback(feedback) {
+    return {
+      ...feedback,
+      statusLabel: STATUS[feedback.status],
+      canPreview: feedback.items.some(item => item.status === "pending"),
+      items: feedback.items.map(item => ({ ...item, statusLabel: STATUS[item.status] })),
+    };
+  },
+
+  openFeedbackDetail(event) {
+    this.setData({
+      feedbackDetail: this.data.feedbackHistory.find(item => item.id === event.currentTarget.dataset.id),
+      feedbackPreview: null, historyError: "",
+    });
+  },
+
+  backToFeedbackList() {
+    this.setData({ feedbackDetail: null, feedbackPreview: null, historyError: "" });
+  },
+
+  closeFeedbackHistory() {
+    this.setData({ historyOpen: false });
+  },
+
+  async previewFeedback() {
+    const { feedbackDetail } = this.data;
+    if (!feedbackDetail?.canPreview || this.data.historyLoading) return;
+    this.setData({ historyLoading: true, historyError: "" });
+    try {
+      const preview = await api.request("corrections/preview", { guestId: storage.guestId(), feedbackId: feedbackDetail.id });
+      if (this.data.feedbackDetail?.id === feedbackDetail.id) this.setData({
+        feedbackPreview: {
+          official: format.scoreCard(preview.official.totalCents),
+          projected: format.scoreCard(preview.projected.totalCents),
+          delta: (preview.deltaCents > 0 ? "+" : "") + format.score(preview.deltaCents),
+        },
+      });
+    } catch (error) {
+      this.setData({ historyError: error.message });
+    } finally {
+      this.setData({ historyLoading: false });
+    }
+  },
+
+  openAdmin() {
+    this.setData({ historyOpen: false, feedbackOpen: false });
+    wx.navigateTo({ url: "/pages/admin/admin" });
   },
 });

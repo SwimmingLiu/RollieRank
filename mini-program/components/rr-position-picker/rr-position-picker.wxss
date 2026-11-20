@@ -1,0 +1,33 @@
+.positions__layer { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; }
+.positions__shade { position: absolute; inset: 0; background: rgba(249, 246, 239, .55); backdrop-filter: blur(9px); }
+.positions__panel { position: relative; display: flex; flex-direction: column; width: 100%; max-height: 78vh; padding: 14px 20px calc(16px + env(safe-area-inset-bottom)); border: 1px solid #ebe6de; border-bottom: 0; border-radius: 24px 24px 0 0; background: #fffefd; }
+.positions__heading { position: relative; display: flex; align-items: center; flex: none; min-height: 44px; margin-bottom: 6px; padding-right: 44px; color: #262626; font-size: 20px; font-weight: 650; }
+.positions__heading button { position: absolute; right: 0; top: 0; display: grid; place-items: center; width: 44px !important; height: 44px; }
+.positions__heading image { width: 17px; height: 17px; opacity: .65; }
+.positions__exam-tabs { display: grid; grid-template-columns: 1fr 1fr; flex: none; gap: 4px; margin-bottom: 10px; padding: 3px; border-radius: 12px; background: #f4efe6; }
+.positions__exam { display: grid; place-items: center; min-height: 44px; border-radius: 9px; color: #81725f; font-size: 13px; }
+.positions__exam--on { background: #fffdf8; color: #4c4234; font-weight: 650; box-shadow: 0 1px 3px #75654b12; }
+.positions__crumbs { display: flex; flex-direction: column; flex: 0 1 auto; min-height: 0; margin-bottom: 7px; }
+.positions__crumb { display: flex; align-items: center; gap: 10px; min-height: 36px; width: 100% !important; color: #514a3f; text-align: left; font-size: 13px; font-weight: 600; }
+.positions__crumb image, .positions__choice image { width: 16px; height: 16px; flex: none; opacity: .55; }
+.positions__path-dot { width: 7px; height: 7px; flex: none; border-radius: 50%; background: #ddc6b4; }
+.positions__search { display: flex; align-items: center; gap: 9px; flex: none; min-height: 44px; margin-bottom: 10px; padding: 0 12px; border: 1px solid #e9e0d2; border-radius: 13px; background: #fffdf8; }
+.positions__search input { width: 0; font-size: 13px; }
+.positions__search image { width: 16px; height: 16px; flex: none; opacity: .65; }
+.positions__search-clear { display: grid; place-items: center; width: 44px !important; height: 44px; margin-right: -10px; }
+.positions__list { display: block; flex: 0 1 auto; min-height: 0; max-height: 48vh; border-top: 1px solid #eee7dc; }
+.positions__row { display: flex; border-bottom: 1px solid #f0eae0; }
+.positions__choice { display: flex; align-items: center; gap: 13px; min-height: 52px; width: 100% !important; padding: 10px 3px; color: #3b372f; text-align: left; font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+.positions__code, .positions__detail-code { color: #938266; font-size: 12px; }
+.positions__state { display: flex; flex-direction: column; align-items: center; gap: 9px; padding: 25px 8px; color: #847767; text-align: center; font-size: 13px; }
+.positions__more, .positions__state button, .positions__clear, .positions__source, .positions__detail-back { display: flex; align-items: center; justify-content: center; gap: 5px; min-height: 44px; color: #886d50; font-size: 13px; }
+.positions__more { width: 100% !important; }
+.positions__detail-back { align-self: flex-start; }
+.positions__detail-back image { width: 16px; height: 16px; }
+.positions__detail-title { display: block; margin: 9px 0 4px; color: #39352e; font-size: 17px; line-height: 1.5; font-weight: 650; }
+.positions__detail-code { display: block; margin-bottom: 10px; }
+.positions__detail-fields view { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; padding: 12px 0; border-top: 1px solid #efe7db; color: #4c4337; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.positions__detail-fields view text:first-child { color: #8f7d65; }
+.positions__confirm { width: 100% !important; flex: none; min-height: 46px; margin-top: 8px; }
+@media (max-width: 350px) { .positions__panel { padding-inline: 16px; } }
+@media (max-height: 650px) { .positions__crumbs { gap: 0; } .positions__crumb { min-height: 28px; } }

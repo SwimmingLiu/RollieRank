@@ -13,7 +13,8 @@ module.exports = {
   ASSET_BASE,
   ASSET: {
     logo: `${LOCAL}/rollierank-logo.png`,
-    profile: `${LOCAL}/profile-default.svg`,
+    // 未授权真实头像前沿用原稿的纸卡人物头像，授权后立即替换为用户所选照片。
+    profile: `${LOCAL}/avatars/rank-1.svg`,
     sihai: `${LOCAL}/sihai-peanut.svg`,
     chaoge: `${LOCAL}/chaoge-study.svg`,
     fenbi: `${LOCAL}/fenbi-mark.svg`,

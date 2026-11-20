@@ -10,7 +10,6 @@ const TABS = [
   { key: "done", label: "已完成" },
   { key: "draft", label: "录入中" },
 ];
-
 Page({
   data: {
     name: "卷友",
@@ -27,10 +26,12 @@ Page({
     keyword: "",
     searching: false,
     visible: [],
+    positionOpen: false,
   },
 
   onShow() {
     this.refresh();
+    this.refreshProfile();
     if (!this.synced) {
       this.synced = true;
       this.sync();
@@ -57,12 +58,23 @@ Page({
         logo: ASSET[LOGO[institution === "花生" ? "四海" : institution]] || "",
         edition: [year, periodLabel(version.period)].filter(Boolean).join(" · "),
         paper: number ? String(number).padStart(2, "0") + "套" : record.title,
-        scoreText: format.score(record.totalCents),
+        scoreText: format.scoreCard(record.totalCents),
         progress: record.questionCount ? record.answered / record.questionCount * 100 : 0,
       };
     };
     const records = history.map(withIdentity);
     const drafts = Object.values(storage.draftIndex()).map(draft => withIdentity({ ...draft, draft: true }));
+    const attemptsByPaper = new Map();
+    for (const item of [...records, ...drafts]) {
+      const scope = item.paperId || versions.find(version => version.id === item.versionId)?.paperId || item.versionId;
+      if (!attemptsByPaper.has(scope)) attemptsByPaper.set(scope, []);
+      attemptsByPaper.get(scope).push(item);
+    }
+    for (const attempts of attemptsByPaper.values()) {
+      if (attempts.length < 2) continue;
+      attempts.sort((a, b) => (a.createdAt || a.updatedAt || 0) - (b.createdAt || b.updatedAt || 0));
+      attempts.forEach((item, index) => { item.attemptNumber = index + 1; });
+    }
     this.setData({
       loading: false,
       name: storage.name(),
@@ -86,6 +98,18 @@ Page({
       if (notify) wx.showToast({ title: error.message, icon: "none" });
     } finally {
       this.setData({ syncing: false });
+    }
+  },
+
+  async refreshProfile() {
+    try {
+      const saved = await profile.read();
+      if (!saved) return;
+      if (saved.name) storage.setName(saved.name);
+      storage.setAvatarId(saved.avatarId);
+      this.setData({ name: storage.name(), avatar: profile.avatarUrl(saved.avatarId) });
+    } catch {
+      // 本机已有昵称和头像时，网络失败不影响记录页。
     }
   },
 
@@ -123,7 +147,15 @@ Page({
   },
 
   openPosition() {
-    wx.navigateTo({ url: "/pages/positions/positions" });
+    this.setData({ positionOpen: true });
+  },
+
+  closePosition() {
+    this.setData({ positionOpen: false });
+  },
+
+  selectPosition(event) {
+    this.setData({ position: event.detail.position || null, positionOpen: false });
   },
 
   openAnalytics() {

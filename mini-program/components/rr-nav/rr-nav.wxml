@@ -1,9 +1,9 @@
 <view class="nav {{logo ? 'nav--brand' : ''}}" style="padding-top: {{statusBarHeight}}px; --menu-clearance: {{menuClearance}}px;">
-  <view class="nav__bar {{actionIcon || action ? 'nav__bar--action' : ''}}" style="height: {{navHeight}}px;">
+  <view class="nav__bar {{actionIcon || action ? 'nav__bar--action' : ''}} {{leading ? 'nav__bar--leading' : ''}}" style="height: {{navHeight}}px;">
     <button wx:if="{{back}}" class="nav__back" bindtap="goBack" aria-label="返回" hover-class="nav__pressed">
       <image class="nav__back-icon" src="/assets/ui/back.svg" mode="aspectFit" />
     </button>
-    <view wx:if="{{logo}}" class="nav__brand">
+    <view wx:if="{{logo}}" class="nav__brand" aria-label="{{title}}">
       <image class="nav__logo" src="{{logo}}" mode="aspectFit" />
       <text class="nav__brand-title">{{title}}</text>
     </view>

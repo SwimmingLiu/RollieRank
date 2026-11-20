@@ -72,9 +72,10 @@ Page({
     this.title = attempt.paperTitle || attempt.title;
     this.publisher = ASSET[catalog.LOGO[attempt.institution]] || "";
     this.bands = reportBands(report.breakdown);
+    const version = getApp().globalData.versions.find(item => item.id === attempt.versionId);
     this.summary = {
-      identity: this.identity || catalog.attemptIdentity(null, attempt),
-      score: format.score(report.totalCents),
+      identity: catalog.attemptIdentity(version, attempt),
+      score: format.scoreCard(report.totalCents),
       max: format.score(report.maxCents),
       correct: report.correct,
       wrong: report.wrong,

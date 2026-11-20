@@ -1,0 +1,132 @@
+<view class="screen admin">
+  <rr-nav title="反馈审核" />
+
+  <view class="admin__body">
+    <view class="admin__card card">
+      <view class="admin__heading">
+        <text>答案反馈审核</text>
+        <text class="admin__badge">{{pendingCount}} 待审核</text>
+      </view>
+      <view class="admin__actions">
+        <button class="admin__action" bindtap="refreshAdmin" disabled="{{adminLoading}}"><image src="{{uiBase}}/refresh.svg" mode="aspectFit" />{{adminLoading ? '读取中' : '刷新'}}</button>
+        <button wx:if="{{!authorized}}" class="admin__action admin__action--outline" bindtap="openCredential" disabled="{{!reviewEnabled || adminLoading}}"><image src="{{uiBase}}/lock.svg" mode="aspectFit" />维护者审核</button>
+        <button wx:else class="admin__action" bindtap="lock"><image src="{{uiBase}}/lock.svg" mode="aspectFit" />退出审核</button>
+      </view>
+      <text wx:if="{{loading}}" class="admin__status">正在读取反馈状态…</text>
+      <text wx:elif="{{error && !credentialOpen}}" class="admin__error" aria-role="alert">{{error}}</text>
+      <text wx:elif="{{!reviewEnabled}}" class="admin__status">审核尚未启用，请联系维护者配置审核凭证。</text>
+      <text wx:else class="admin__status">{{pendingQuestionCount}} 道题等待核对。审核通过后会订正标准答案，并更新该版本的全部答卷。</text>
+
+      <view wx:if="{{authorized && feedbacks.length}}" class="admin__queue">
+        <view wx:for="{{feedbacks}}" wx:key="id" class="admin__feedback">
+          <button class="admin__feedback-main" data-id="{{item.id}}" bindtap="openDetail">
+            <view class="admin__feedback-title"><text>{{item.paperTitle}}</text><text class="admin__state admin__state--{{item.status}}">{{item.statusText}}</text></view>
+            <text class="admin__feedback-meta">{{item.createdAtText}}</text>
+            <text class="admin__feedback-summary">{{item.summary}}</text>
+          </button>
+          <button wx:if="{{item.pendingCount}}" class="admin__review-button" data-id="{{item.id}}" bindtap="openReview">核对 {{item.pendingCount}} 题</button>
+        </view>
+      </view>
+      <view wx:elif="{{authorized}}" class="admin__empty">当前没有待审核反馈</view>
+    </view>
+
+    <view class="admin__card card admin__positions">
+      <view class="admin__heading"><text>岗位目录</text><button class="admin__text-button" bindtap="loadCatalog">刷新目录</button></view>
+      <text wx:if="{{catalogError}}" class="admin__error" aria-role="alert">{{catalogError}}</text>
+      <view wx:elif="{{sources.length}}" class="admin__sources">
+        <view wx:for="{{sources}}" wx:key="id" class="admin__source">
+          <button class="admin__source-link" data-url="{{item.sourcePage}}" bindtap="copySource">{{item.label}}</button>
+          <text>{{item.countText}} 个岗位 · {{item.year}} 年 · {{item.examLabel}} · {{item.region}}</text>
+          <text>{{item.originLabel}} · 获取于 {{item.retrievedAt}}</text>
+        </view>
+      </view>
+      <text wx:else class="admin__status">目录为空，请导入岗位表。</text>
+
+      <button class="admin__import-toggle" bindtap="toggleImport"><image src="{{uiBase}}/{{importOpen ? 'chevron-down' : 'chevron'}}.svg" mode="aspectFit" />导入 Excel 或岗位目录</button>
+      <view wx:if="{{importOpen}}" class="admin__import">
+        <button class="admin__file" bindtap="chooseImportFile"><image src="{{uiBase}}/book.svg" mode="aspectFit" /><text>{{importFile ? importFile.name : '选择 .xls、.xlsx 或 .json 文件'}}</text></button>
+        <view class="admin__field-grid">
+          <view class="admin__field"><text>考试</text><picker mode="selector" range="{{importExamOptions}}" value="{{importFields.exam === 'shengkao' ? 1 : 0}}" bindchange="onImportExam"><view>{{importFields.exam === 'shengkao' ? '省考' : '国考'}}</view></picker></view>
+          <label class="admin__field"><text>招考年度</text><input type="number" value="{{importFields.year}}" data-field="year" bindinput="onImportField" /></label>
+          <label class="admin__field"><text>地区</text><input value="{{importFields.region}}" data-field="region" bindinput="onImportField" /></label>
+          <label class="admin__field"><text>获取日期</text><picker mode="date" value="{{importFields.retrievedAt}}" bindchange="onImportDate"><view>{{importFields.retrievedAt}}</view></picker></label>
+        </view>
+        <label class="admin__field"><text>目录名称</text><input value="{{importFields.label}}" data-field="label" bindinput="onImportField" /></label>
+        <label class="admin__field"><text>来源机构</text><input value="{{importFields.publisher}}" data-field="publisher" bindinput="onImportField" /></label>
+        <label class="admin__field"><text>来源页面（选填）</text><input value="{{importFields.sourcePage}}" data-field="sourcePage" bindinput="onImportField" /></label>
+        <label class="admin__field"><text>文件下载地址（选填）</text><input value="{{importFields.downloadUrl}}" data-field="downloadUrl" bindinput="onImportField" /></label>
+        <text wx:if="{{importError}}" class="admin__error" aria-role="alert">{{importError}}</text>
+        <button class="admin__import-submit" bindtap="importPositions" loading="{{importing}}" disabled="{{importing || !importFile}}">{{importing ? '正在校验并导入…' : '校验并导入'}}</button>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{credentialOpen}}" class="sheet-layer">
+    <view class="sheet-shade" catchtap="closeCredential"></view>
+    <view class="sheet-panel admin__sheet" aria-role="dialog" aria-label="维护者审核">
+      <view class="sheet-head"><text>维护者审核</text></view>
+      <label class="admin__field">
+        <text>维护者凭证</text>
+        <input password maxlength="4096" bindinput="onToken" bindconfirm="unlock" disabled="{{adminLoading}}" />
+      </label>
+      <text wx:if="{{error}}" class="admin__error" aria-role="alert">{{error}}</text>
+      <view class="admin__sheet-actions"><button bindtap="closeCredential" disabled="{{adminLoading}}">取消</button><button class="admin__primary" bindtap="unlock" loading="{{adminLoading}}" disabled="{{!hasCredential || adminLoading}}">进入审核</button></view>
+    </view>
+  </view>
+
+  <view wx:if="{{detail}}" class="sheet-layer">
+    <view class="sheet-shade" catchtap="closeDetail"></view>
+    <view class="sheet-panel admin__sheet" aria-role="dialog" aria-label="反馈详情">
+      <view class="sheet-head"><text>反馈详情</text><button class="sheet-close" bindtap="closeDetail" aria-label="关闭"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button></view>
+      <scroll-view class="admin__sheet-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+        <text class="admin__sheet-identity">{{detail.paperTitle}}</text>
+        <view wx:for="{{detail.items}}" wx:key="question" class="admin__item">
+          <view class="admin__item-head"><text>第 {{item.question}} 题</text><text class="admin__state admin__state--{{item.status}}">{{item.status === 'approved' ? '已通过' : item.status === 'rejected' ? '已拒绝' : '待审核'}}</text></view>
+          <text class="admin__change">{{item.originalAnswer}} <text>→</text> {{item.suggestedAnswer}}</text>
+          <text class="admin__evidence">{{item.evidence}}</text>
+          <text wx:if="{{item.reason}}" class="admin__reason">审核理由：{{item.reason}}</text>
+          <text wx:if="{{item.stale}}" class="admin__error">参考答案已修订，只能拒绝旧反馈</text>
+        </view>
+      </scroll-view>
+      <view class="admin__sheet-actions"><button bindtap="closeDetail">关闭</button><button wx:if="{{detail.pendingCount}}" class="admin__primary" data-id="{{detail.id}}" bindtap="openReview">核对待审题</button></view>
+    </view>
+  </view>
+
+  <view wx:if="{{review}}" class="sheet-layer">
+    <view class="sheet-shade" catchtap="closeReview"></view>
+    <view class="sheet-panel admin__sheet" aria-role="dialog" aria-label="核对答案反馈">
+      <view class="sheet-head"><text>{{confirming ? '确认审核结论' : '核对答案反馈'}}</text><button class="sheet-close" bindtap="closeReview" aria-label="关闭"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button></view>
+      <scroll-view class="admin__sheet-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+        <text class="admin__sheet-identity">{{review.paperTitle}}</text>
+        <block wx:if="{{!confirming}}">
+          <checkbox-group class="admin__questions" bindchange="onQuestionSelection">
+            <label wx:for="{{review.pendingItems}}" wx:key="question" class="admin__question {{item.selected ? 'admin__question--on' : ''}} {{item.stale ? 'admin__question--stale' : ''}}">
+              <checkbox value="{{item.question}}" checked="{{item.selected}}" color="#b98a4d" />
+              <view class="stack grow"><text>第 {{item.question}} 题　{{item.originalAnswer}} → {{item.suggestedAnswer}}</text><text>{{item.evidence}}</text><text wx:if="{{item.stale}}" class="admin__error">参考答案已订正，可拒绝旧反馈</text></view>
+            </label>
+          </checkbox-group>
+          <view class="admin__decision">
+            <button class="{{review.decision === 'approve' ? 'admin__decision--on' : ''}}" data-decision="approve" bindtap="setDecision">通过并重算</button>
+            <button class="{{review.decision === 'reject' ? 'admin__decision--on' : ''}}" data-decision="reject" bindtap="setDecision">拒绝</button>
+          </view>
+          <label class="admin__reason-field"><text>审核理由</text><textarea value="{{review.reason}}" maxlength="2000" placeholder="说明依据和核对结论" placeholder-class="admin__placeholder" bindinput="onReason" /></label>
+        </block>
+        <view wx:else class="admin__confirm">
+          <text>{{review.paperTitle}}</text>
+          <view class="admin__selected-questions"><text wx:for="{{review.selectedQuestions}}" wx:key="*this">第 {{item}} 题</text></view>
+          <text>{{review.decision === 'approve' ? '订正后将重算 ' + review.affectedAttempts + ' 份答卷，保留原选项和交卷时间。' : '将拒绝所选反馈，并向反馈者显示审核理由。'}}</text>
+          <text class="admin__evidence">{{review.reason}}</text>
+        </view>
+        <text wx:if="{{reviewError}}" class="admin__error" aria-role="alert">{{reviewError}}</text>
+      </scroll-view>
+      <view class="admin__sheet-actions">
+        <button wx:if="{{!confirming}}" bindtap="closeReview">取消</button>
+        <button wx:else bindtap="backReview">返回核对</button>
+        <button wx:if="{{!confirming}}" class="admin__primary admin__prepare-review" bindtap="prepareReview">核对处理范围</button>
+        <button wx:else class="admin__primary admin__confirm-review" bindtap="submitReview" loading="{{adminLoading}}" disabled="{{adminLoading}}">{{review.decision === 'approve' ? '确认通过并重算' : '确认拒绝'}}</button>
+      </view>
+    </view>
+  </view>
+
+  <rr-tabbar active="records" />
+</view>

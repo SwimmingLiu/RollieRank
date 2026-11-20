@@ -14,39 +14,38 @@
 
     <view class="disc__list">
       <view wx:for="{{comments}}" wx:key="id" class="card disc__comment">
-        <view class="row disc__meta">
-          <image class="disc__avatar" src="{{item.avatar}}" mode="aspectFit" />
-          <view class="stack grow">
-            <text class="disc__name">{{item.author.name}}</text>
-            <text class="text-xs">{{item.timeText}}</text>
+        <text class="disc__badge">{{item.initials}}</text>
+        <view class="grow">
+          <text class="disc__name">{{item.author.name}}</text>
+          <text wx:if="{{item.target}}" class="text-xs disc__target">回复 {{item.target}}</text>
+          <text wx:if="{{item.text}}" class="disc__text">{{item.text}}</text>
+          <view wx:if="{{item.links.length}}" class="disc__links">
+            <text wx:for="{{item.links}}" wx:for-item="link" wx:key="*this" data-link="{{link}}" bindtap="copyExternalLink">{{link}}</text>
           </view>
-        </view>
-        <text wx:if="{{item.target}}" class="text-xs disc__target">回复 {{item.target}}</text>
-        <text wx:if="{{item.text}}" class="disc__text">{{item.text}}</text>
-        <view wx:if="{{item.links.length}}" class="disc__links">
-          <text wx:for="{{item.links}}" wx:for-item="link" wx:key="*this" data-link="{{link}}" bindtap="copyExternalLink">{{link}}</text>
-        </view>
-        <view wx:if="{{item.images.length}}" class="disc__images">
-          <image wx:for="{{item.images}}" wx:for-item="photo" wx:key="*this" class="disc__image" src="{{photo}}" mode="aspectFill" data-src="{{photo}}" bindtap="previewImage" />
-        </view>
-        <view class="disc__actions">
-          <view class="disc__action" data-id="{{item.id}}" data-liked="{{item.likedByMe}}" bindtap="toggleLike">
-            <image class="disc__action-icon" src="{{uiBase}}/like.svg" mode="aspectFit" />
-            <text>{{item.likeCount || 0}}</text>
+          <view wx:if="{{item.images.length}}" class="disc__images">
+            <image wx:for="{{item.images}}" wx:for-item="photo" wx:key="*this" class="disc__image" src="{{photo}}" mode="aspectFill" data-src="{{photo}}" bindtap="previewImage" />
           </view>
-          <view class="disc__action" data-id="{{item.id}}" data-name="{{item.author.name}}" bindtap="startReply">回复</view>
-          <view wx:if="{{item.replyCount}}" class="disc__action" data-id="{{item.id}}" bindtap="toggleReplies">
+          <view class="disc__actions">
+            <text class="disc__time">{{item.timeText}}</text>
+            <button class="disc__action" data-id="{{item.id}}" data-name="{{item.author.name}}" bindtap="startReply">回复</button>
+            <button class="disc__action disc__like {{item.likedByMe ? 'disc__like--on' : ''}}" data-id="{{item.id}}" data-liked="{{item.likedByMe}}" bindtap="toggleLike" aria-label="{{item.likedByMe ? '取消点赞' : '点赞'}}">
+              <image class="disc__action-icon" src="{{uiBase}}/like.svg" mode="aspectFit" />
+              <text>{{item.likeCount || 0}}</text>
+            </button>
+          </view>
+          <button wx:if="{{item.replyCount}}" class="disc__action" data-id="{{item.id}}" bindtap="toggleReplies">
             {{expanded === item.id ? '收起' : '展开 ' + item.replyCount + ' 条回复'}}
-          </view>
-        </view>
-        <view wx:if="{{expanded === item.id}}" class="disc__replies">
-          <view wx:for="{{replies}}" wx:for-item="reply" wx:key="id" class="disc__reply">
-            <text class="disc__name">{{reply.author.name}}</text>
-            <text wx:if="{{reply.target}}" class="text-xs disc__target">回复 {{reply.target}}</text>
-            <text class="disc__text">{{reply.text}}</text>
-            <button class="disc__action" data-id="{{reply.id}}" data-root="{{item.id}}" data-name="{{reply.author.name}}" bindtap="startReply">回复</button>
-            <view wx:if="{{reply.links.length}}" class="disc__links"><text wx:for="{{reply.links}}" wx:for-item="link" wx:key="*this" data-link="{{link}}" bindtap="copyExternalLink">{{link}}</text></view>
-            <view wx:if="{{reply.images.length}}" class="disc__images"><image wx:for="{{reply.images}}" wx:for-item="photo" wx:key="*this" class="disc__image" src="{{photo}}" mode="aspectFill" data-src="{{photo}}" bindtap="previewImage" /></view>
+          </button>
+          <view wx:if="{{expanded === item.id}}" class="disc__replies">
+            <view wx:for="{{replies}}" wx:for-item="reply" wx:key="id" class="disc__reply">
+              <text class="disc__name">{{reply.author.name}}</text>
+              <text wx:if="{{reply.target}}" class="text-xs disc__target">回复 {{reply.target}}</text>
+              <text class="disc__text">{{reply.text}}</text>
+              <button class="disc__action" data-id="{{reply.id}}" data-root="{{item.id}}" data-name="{{reply.author.name}}" bindtap="startReply">回复</button>
+              <view wx:if="{{reply.links.length}}" class="disc__links"><text wx:for="{{reply.links}}" wx:for-item="link" wx:key="*this" data-link="{{link}}" bindtap="copyExternalLink">{{link}}</text></view>
+              <view wx:if="{{reply.images.length}}" class="disc__images"><image wx:for="{{reply.images}}" wx:for-item="photo" wx:key="*this" class="disc__image" src="{{photo}}" mode="aspectFill" data-src="{{photo}}" bindtap="previewImage" /></view>
+            </view>
+            <button wx:if="{{replyCursor}}" class="disc__action" bindtap="moreReplies">更多回复</button>
           </view>
         </view>
       </view>
