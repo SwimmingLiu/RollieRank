@@ -29,7 +29,7 @@
       <view class="practice__progress"><view style="width: {{progress}}%;"></view></view>
     </view>
 
-    <scroll-view wx:if="{{!single}}" class="practice__scroller" scroll-y scroll-into-view="{{scrollTarget}}">
+    <scroll-view wx:if="{{!single}}" class="practice__scroller" scroll-y scroll-into-view="{{scrollTarget}}" enhanced show-scrollbar="{{false}}">
       <view class="practice__list">
         <view wx:for="{{questions}}" wx:key="number" id="answer-{{item.number}}" class="practice__row {{item.number === current ? 'practice__row--current' : ''}} {{item.marked ? 'practice__row--marked' : ''}}">
           <text class="num practice__no">{{item.number}}</text>
@@ -77,16 +77,25 @@
           <text>{{sheet === 'submit' ? (answered < version.questionCount ? '还有 ' + (version.questionCount - answered) + ' 题未答' : '确认交卷') : sheet === 'sections' ? '选择板块' : '答题卡'}}</text>
           <button class="sheet-close" bindtap="closeSheet" aria-label="关闭"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button>
         </view>
-        <scroll-view wx:if="{{sheet !== 'submit'}}" scroll-y class="sheet-scroll">
+        <scroll-view wx:if="{{sheet !== 'submit'}}" scroll-y class="sheet-scroll" scroll-into-view="{{sheetScrollTarget}}" enhanced show-scrollbar="{{false}}">
           <view wx:if="{{sheet === 'sections'}}" class="practice__section-list">
             <button wx:for="{{sections}}" wx:key="key" class="practice__section-option" data-index="{{index}}" bindtap="switchSection">
               <text>{{item.type}}</text><text>{{item.start}}–{{item.end}}</text>
             </button>
           </view>
-          <view wx:else class="practice__sheet-grid">
-            <button wx:for="{{allQuestions}}" wx:key="number" class="practice__sheet-cell {{item.answer ? 'practice__sheet-cell--done' : ''}} {{item.marked ? 'practice__sheet-cell--marked' : ''}}" data-number="{{item.number}}" bindtap="goQuestion">
-              <text>{{item.number}}</text><text wx:if="{{item.answer}}">{{item.answer}}</text>
-            </button>
+          <view wx:else class="practice__answer-sheet" aria-label="按题型选择题号">
+            <view class="practice__sheet-summary">已答 <text>{{answered}}</text><text> / {{version.questionCount}}</text></view>
+            <view wx:for="{{sheetSections}}" wx:for-item="group" wx:key="key" class="practice__sheet-group">
+              <view class="practice__sheet-group-title"><text>{{group.type}}</text><text>{{group.start}}–{{group.end}} 题</text></view>
+              <view class="practice__sheet-grid">
+                <button wx:for="{{group.questions}}" wx:for-item="question" wx:key="number"
+                  class="practice__sheet-cell {{question.answer ? 'practice__sheet-cell--done' : ''}} {{question.marked ? 'practice__sheet-cell--marked' : ''}} {{question.current ? 'practice__sheet-cell--current' : ''}}"
+                  id="answer-sheet-{{question.number}}" data-number="{{question.number}}" bindtap="goQuestion" aria-label="第 {{question.number}} 题，{{question.answer || '未答'}}">
+                  <text class="practice__sheet-number">{{question.number}}</text>
+                  <text class="practice__sheet-answer">{{question.answer || '·'}}</text>
+                </button>
+              </view>
+            </view>
           </view>
         </scroll-view>
         <block wx:else>

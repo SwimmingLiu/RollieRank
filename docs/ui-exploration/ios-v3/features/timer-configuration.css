@@ -87,7 +87,6 @@ body.beui-island .rr-timer-paper-list[data-picker-level=institution] { gap:8px; 
 body.beui-island .rr-timer-institution-option { display:flex; align-items:center; justify-content:flex-start; gap:11px; width:100%; min-height:66px; height:auto; padding:12px; border:1px solid #e8ddcb; border-radius:14px; background:#fffdf8; color:#69543a; box-shadow:none; }
 body.beui-island .rr-timer-institution-option > span:nth-child(2) { display:grid; gap:5px; min-width:0; flex:1; text-align:left; }
 body.beui-island .rr-timer-institution-option b { font-size:14px; font-weight:600; }
-body.beui-island .rr-timer-institution-option small { font-size:12px; color:#a08a69; }
 body.beui-island .rr-timer-collection-option { display:flex; align-items:center; justify-content:flex-start; gap:10px; width:100%; min-height:66px; height:auto; padding:12px 4px; border:0; border-bottom:1px solid #eee4d4; border-radius:0; background:transparent; box-shadow:none; color:#6b5436; }
 body.beui-island .rr-timer-collection-option > span { display:grid; gap:5px; flex:1; min-width:0; text-align:left; white-space:normal; }
 body.beui-island .rr-timer-collection-option b { font-size:14px; font-weight:550; }

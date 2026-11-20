@@ -6,7 +6,7 @@
     <view class="share__modes">
       <button wx:for="{{modes}}" wx:key="key" class="share__mode {{mode === item.key ? 'share__mode--on' : ''}}" data-key="{{item.key}}" bindtap="setMode">{{item.label}}</button>
     </view>
-    <scroll-view class="share__preview" scroll-y scroll-top="{{previewTop}}">
+    <scroll-view class="share__preview" scroll-y scroll-top="{{previewTop}}" enhanced show-scrollbar="{{false}}">
       <image wx:if="{{previewSrc}}" class="share__image" src="{{previewSrc}}" mode="aspectFit" style="width: {{previewWidth}}px; height: {{previewHeight}}px;" />
     </scroll-view>
     <canvas type="2d" id="shareCanvas" class="share__canvas" />

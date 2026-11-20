@@ -4,9 +4,10 @@
   <view wx:elif="{{error}}" class="empty">{{error}}</view>
 
   <view wx:else class="review">
-    <button class="review__scope" bindtap="openTypes">
-      <text>{{typeLabel}}</text><image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
-    </button>
+    <view class="review__scope-row">
+      <button class="review__scope" bindtap="openTypes"><text>{{typeLabel}}</text><image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" /></button>
+      <button class="review__feedback" bindtap="openFeedback">反馈</button>
+    </view>
     <view class="review__tabs">
       <button wx:for="{{filters}}" wx:key="key" class="review__tab {{filter === item.key ? 'review__tab--on' : ''}}" data-key="{{item.key}}" bindtap="setFilter">{{item.label}} {{counts[item.key]}}</button>
     </view>
@@ -30,4 +31,17 @@
     <view class="footer-bar"><button class="btn btn--primary review__copy" bindtap="copyWrong" disabled="{{!copyCount}}">复制错题号</button></view>
   </view>
   <rr-option-sheet wx:if="{{typesOpen}}" items="{{types}}" selected="{{activeType}}" label="选择板块" bindselect="setType" binddismiss="closeTypes" />
+  <view wx:if="{{feedbackOpen}}" class="sheet-layer">
+    <view class="sheet-shade" catchtap="closeFeedback"></view>
+    <view class="sheet-panel review__feedback-sheet" aria-role="dialog" aria-label="反馈参考答案">
+      <view class="sheet-head"><text>反馈参考答案</text><button class="sheet-close" bindtap="closeFeedback" aria-label="关闭"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button></view>
+      <scroll-view scroll-y enhanced show-scrollbar="{{false}}" class="review__feedback-scroll">
+        <label class="review__field">题号<input type="number" value="{{feedbackQuestion}}" maxlength="3" placeholder="输入已作答的题号" bindinput="onFeedbackQuestion" /></label>
+        <view class="review__field"><text>建议答案</text><view class="review__answer-options"><button wx:for="{{feedbackChoices}}" wx:key="*this" class="review__answer-option {{feedbackSuggested === item ? 'review__answer-option--on' : ''}}" data-answer="{{item}}" bindtap="chooseSuggestion" aria-pressed="{{feedbackSuggested === item}}">{{item}}</button></view></view>
+        <label class="review__field">核对依据<textarea value="{{feedbackEvidence}}" maxlength="4000" placeholder="填写出处、页码或核对过程" bindinput="onFeedbackEvidence" /></label>
+        <text wx:if="{{feedbackError}}" class="review__feedback-error" aria-role="alert">{{feedbackError}}</text>
+      </scroll-view>
+      <view class="review__feedback-actions"><button bindtap="closeFeedback">取消</button><button bindtap="submitFeedback" loading="{{submittingFeedback}}" disabled="{{submittingFeedback}}">提交反馈</button></view>
+    </view>
+  </view>
 </view>

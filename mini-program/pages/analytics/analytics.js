@@ -10,6 +10,7 @@ const CATEGORIES = [
   { key: "custom", label: "其他卷型" },
 ];
 const METRICS = [{ key: "rate", label: "得分率" }, { key: "score", label: "得分" }, { key: "accuracy", label: "正确率" }];
+const PAGE_SIZE = 8;
 
 function categoryOf(record) {
   const known = /国考|公考|公务员|联考/.test([record.project, record.title].join(" "));
@@ -26,6 +27,20 @@ Page({
     metricLabel: METRICS[0].label,
     metrics: METRICS,
     points: [],
+    pageRows: [],
+    sources: [{ key: "all", label: "全部来源" }],
+    source: "all",
+    from: "",
+    to: "",
+    draftSource: "all",
+    draftFrom: "",
+    draftTo: "",
+    filterOpen: false,
+    activeFilters: 0,
+    filterError: "",
+    page: 0,
+    pages: 1,
+    rangeText: "",
     uiBase: "/assets/ui",
   },
 
@@ -34,9 +49,18 @@ Page({
   },
 
   build() {
-    const { category, metric } = this.data;
+    const { category, metric, source, from, to } = this.data;
     const key = CATEGORIES[category].key;
-    const points = storage.history().filter(record => key === "all" || categoryOf(record) === key)
+    const history = storage.history();
+    const sources = [...new Map(history.map(record => {
+      const institution = record.institution || record.identity?.split(" · ")[0] || "";
+      return [institution, { key: institution, label: catalog.publisherName(institution) }];
+    }).filter(([key]) => key)).values()];
+    const start = from ? new Date(from + "T00:00:00").getTime() : -Infinity;
+    const end = to ? new Date(to + "T23:59:59.999").getTime() : Infinity;
+    const points = history.filter(record => key === "all" || categoryOf(record) === key)
+      .filter(record => source === "all" || (record.institution || record.identity?.split(" · ")[0]) === source)
+      .filter(record => record.createdAt >= start && record.createdAt <= end)
       .slice().sort((a, b) => b.createdAt - a.createdAt).map(record => {
         const score = format.score(record.totalCents);
         const rate = format.percent(record.maxCents ? record.totalCents / record.maxCents : null);
@@ -55,7 +79,16 @@ Page({
           trendMax: metric === "score" ? record.maxCents / 100 : 100,
         };
       });
-    this.setData({ points }, () => this.drawTrend());
+    const pages = Math.max(1, Math.ceil(points.length / PAGE_SIZE));
+    const page = Math.min(this.data.page, pages - 1);
+    const pageRows = points.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+    const first = points.length ? page * PAGE_SIZE + 1 : 0;
+    const last = Math.min(points.length, (page + 1) * PAGE_SIZE);
+    this.setData({
+      points, pageRows, pages, page, sources: [{ key: "all", label: "全部来源" }, ...sources],
+      activeFilters: Number(source !== "all") + Number(Boolean(from || to)),
+      rangeText: points.length > PAGE_SIZE ? first + "–" + last + " / " + points.length : points.length + " 次",
+    }, () => this.drawTrend());
   },
 
   onResize() {
@@ -109,8 +142,57 @@ Page({
   },
 
   selectCategory(event) {
-    this.setData({ category: Number(event.detail.value) });
+    this.setData({ category: Number(event.detail.value), page: 0 });
     this.build();
+  },
+
+  openFilters() {
+    this.setData({
+      filterOpen: true,
+      draftSource: this.data.source,
+      draftFrom: this.data.from,
+      draftTo: this.data.to,
+      filterError: "",
+    });
+  },
+
+  closeFilters() {
+    this.setData({ filterOpen: false });
+  },
+
+  setDraftSource(event) {
+    this.setData({ draftSource: event.currentTarget.dataset.source });
+  },
+
+  setDraftFrom(event) {
+    this.setData({ draftFrom: event.detail.value });
+  },
+
+  setDraftTo(event) {
+    this.setData({ draftTo: event.detail.value });
+  },
+
+  clearFilters() {
+    this.setData({ draftSource: "all", draftFrom: "", draftTo: "" });
+  },
+
+  applyFilters() {
+    const { draftSource, draftFrom, draftTo } = this.data;
+    if (draftFrom && draftTo && draftFrom > draftTo) {
+      this.setData({ filterError: "开始日期不能晚于结束日期" });
+      return;
+    }
+    this.setData({
+      source: draftSource, from: draftFrom, to: draftTo,
+      filterOpen: false, filterError: "", page: 0,
+    });
+    this.build();
+  },
+
+  changePage(event) {
+    const page = Math.min(this.data.pages - 1, Math.max(0, this.data.page + Number(event.currentTarget.dataset.delta)));
+    if (page === this.data.page) return;
+    this.setData({ page }, () => this.build());
   },
 
   openRecord(event) {

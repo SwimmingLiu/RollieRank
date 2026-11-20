@@ -22,7 +22,7 @@ from urllib.request import Request, urlopen
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "test-results" / "verification"
 SCENARIOS = {
-    "miniprogram-ui": ("test/miniprogram-layout.test.js", "test/miniprogram-web.test.js", "test/wechat-profile.test.js"),
+    "miniprogram-ui": ("test/miniprogram-layout.test.js", "test/miniprogram-web.test.js", "test/miniprogram-timer.test.js", "test/wechat-profile.test.js"),
     "core": ("test/feature-integration.test.js",),
     "catalog-admin": ("test/imported-papers.test.js", "test/booklet-time-limits.test.js", "test/positions-import.test.js"),
     "practice-history": ("test/prototype-state.test.js", "test/model.test.js", "test/ios-entry.test.js", "test/ios-preview-cleanup.test.js", "test/preview-history-recovery.test.js"),
@@ -32,7 +32,7 @@ SCENARIOS = {
     "corrections": ("test/corrections-service.test.js", "test/corrections-api.test.js", "test/ios-corrections-browser.test.js", "test/ios-question-feedback-browser.test.js"),
     "sharing": ("test/ios-analytics-components.test.js", "test/ios-share-modes.test.js", "test/ios-sharing-browser.test.js"),
     "insights": ("test/positions-insights.test.js", "test/ios-insights-browser.test.js"),
-    "timing-practice": ("test/practice-timer.test.js", "test/timer-paper-picker.test.js", "test/timer-configuration.test.js", "test/booklet-time-limits.test.js", "test/ios-timer-entry-feedback-browser.test.js", "test/ios-timer-latest-feedback-browser.test.js", "test/ios-practice-session-browser.test.js"),
+    "timing-practice": ("test/practice-timer.test.js", "test/timer-paper-picker.test.js", "test/timer-configuration.test.js", "test/miniprogram-timer.test.js", "test/booklet-time-limits.test.js", "test/ios-timer-entry-feedback-browser.test.js", "test/ios-timer-latest-feedback-browser.test.js", "test/ios-practice-session-browser.test.js"),
 }
 
 
@@ -100,6 +100,14 @@ def source_lock() -> dict:
         ROOT / "README.md",
         ROOT / "package.json",
         ROOT / "test/miniprogram-layout.test.js",
+        ROOT / "test/miniprogram-timer.test.js",
+        ROOT / "mini-program/tools/build-timer.mjs",
+        ROOT / "mini-program/tools/flow.mjs",
+        ROOT / "mini-program/vendor/practice-timer.js",
+        ROOT / "mini-program/utils/timing.js",
+        ROOT / "mini-program/pages/home/home.js",
+        ROOT / "mini-program/pages/practice/practice.js",
+        *sorted((ROOT / "mini-program/components/rr-timer-sheet").glob("rr-timer-sheet.*")),
         ROOT / "test/miniprogram-web.test.js",
         ROOT / "mini-program/tools/build-shared.mjs",
         ROOT / "mini-program/pages/web/web.js",
@@ -324,7 +332,7 @@ def visual_probe(base: str, output: Path) -> dict:
     pages = [("home", "home"), ("papers", "papers"), ("entry", "entry"), ("report", "report"), ("details", "details"), ("rank", "rank"), ("me", "me"), ("stats", "stats"), ("admin", "admin"), ("discussion", "discussion"), ("share", "share")]
     findings, captures, runtime_errors = [], [], []
     with sync_playwright() as playwright:
-        # Visible native scrollbars are part of the UI contract, even in headless evidence.
+        # Headless Chromium paints native scrollbars only when the page leaves them visible.
         browser = playwright.chromium.launch(headless=True, ignore_default_args=["--hide-scrollbars"])
         page = browser.new_page(viewport={"width": 1440, "height": 1200}, reduced_motion="reduce")
         page.on("pageerror", lambda error: runtime_errors.append(str(error)))
@@ -361,7 +369,8 @@ def visual_probe(base: str, output: Path) -> dict:
                   const clipped=el=>{for(let node=el.parentElement;node&&node!==document.body;node=node.parentElement){const s=getComputedStyle(node);if(['hidden','clip','auto','scroll'].includes(s.overflowX))return true}return false};
                   const overflow=[...document.querySelectorAll('#app *')].filter(el=>{const s=getComputedStyle(el),r=el.getBoundingClientRect();return s.display!=='none'&&s.visibility!=='hidden'&&r.width>0&&r.height>0&&el.scrollWidth>el.clientWidth+2&&s.overflowX==='visible'&&!clipped(el)}).slice(0,12).map(el=>({tag:el.tagName,className:String(el.className).slice(0,100)}));
                   const wrapping=[...document.querySelectorAll('.rr3-paper-score')].flatMap(el=>{const unit=el.querySelector('small');if(!unit||!el.firstChild)return [];const range=document.createRange();range.selectNode(el.firstChild);const number=range.getBoundingClientRect(),u=unit.getBoundingClientRect();return u.top>=number.bottom-1||u.left<number.right-1?[{kind:'score-unit-wrap',text:el.textContent}]:[]});
-                  return {innerWidth,scrollWidth:document.documentElement.scrollWidth,font:getComputedStyle(document.body).fontFamily,bodyColor:getComputedStyle(document.body).color,sheetScrollbar:getComputedStyle(document.body,'::-webkit-scrollbar').width,small,overflow,wrapping};
+                  const visualScrollbars=[...document.querySelectorAll('*')].filter(el=>{const s=getComputedStyle(el),r=el.getBoundingClientRect();return r.width>0&&r.height>0&&(el.scrollHeight>el.clientHeight+1||el.scrollWidth>el.clientWidth+1)&&[s.overflowY,s.overflowX].some(value=>['auto','scroll'].includes(value))}).map(el=>getComputedStyle(el).scrollbarWidth).filter(value=>value!=='none');
+                  return {innerWidth,scrollWidth:document.documentElement.scrollWidth,font:getComputedStyle(document.body).fontFamily,bodyColor:getComputedStyle(document.body).color,sheetScrollbar:getComputedStyle(document.body,'::-webkit-scrollbar').width,visualScrollbars,small,overflow,wrapping};
                 }""")
                 if geometry["scrollWidth"] > geometry["innerWidth"] + 1:
                     findings.append({"page": page_id, "viewport": width, "kind": "horizontal-overflow", "geometry": geometry})
@@ -371,6 +380,8 @@ def visual_probe(base: str, output: Path) -> dict:
                     findings.append({"page": page_id, "viewport": width, "kind": "score-unit-wrap", "controls": geometry["wrapping"]})
                 if geometry["overflow"]:
                     findings.append({"page": page_id, "viewport": width, "kind": "visible-overflowing-boxes", "elements": geometry["overflow"]})
+                if geometry["visualScrollbars"]:
+                    findings.append({"page": page_id, "viewport": width, "kind": "visible-scrollbar", "values": geometry["visualScrollbars"]})
                 image = shots / f"{label}-{width}.png"
                 if width > 430:
                     target.screenshot(path=str(image), full_page=True)
@@ -379,6 +390,7 @@ def visual_probe(base: str, output: Path) -> dict:
                     body.screenshot(path=str(image))
                 captures.append(str(image))
         theme = body.evaluate("""() => ({background:getComputedStyle(document.querySelector('#app')).backgroundColor,font:getComputedStyle(document.body).fontFamily,scrollbar:getComputedStyle(document.body,'::-webkit-scrollbar').width})""")
+        assert theme["scrollbar"] == "0px", theme
         browser.close()
     result = {"passed": not findings and not runtime_errors, "theme": theme, "findings": findings, "runtimeErrors": runtime_errors, "screenshots": captures}
     (output / "visual-results.json").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
@@ -389,7 +401,7 @@ def visual_probe(base: str, output: Path) -> dict:
 
 def run_visual(base: str, output: Path) -> dict:
     result = visual_probe(base, output)
-    return {"checks": ["real iOS pages at four viewports without overflow, undersized controls or runtime errors", "paper theme font and low-contrast scrollbar retained"], "visual": result}
+    return {"checks": ["real iOS pages at four viewports without overflow, undersized controls or runtime errors", "theme fonts remain and all visual scrollbars are hidden"], "visual": result}
 
 
 def run_journeys(output: Path) -> dict:

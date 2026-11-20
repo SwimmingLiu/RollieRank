@@ -1,7 +1,9 @@
 const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
 const catalogUtil = require("../../utils/catalog.js");
-const { minutes, score } = require("../../utils/format.js");
+const { score } = require("../../utils/format.js");
+const { homeTimerView } = require("../../utils/timing.js");
+const { formatElapsed } = require("../../vendor/practice-timer.js");
 const { ASSET, WEB_APP_ORIGIN } = require("../../config.js");
 
 Page({
@@ -14,8 +16,8 @@ Page({
     asset: ASSET,
     uiBase: "/assets/ui",
     recentIndex: 0,
-    timerRunning: false,
-    timerPaused: false,
+    timerOpen: false,
+    timerStatus: "ready",
     timerText: "",
   },
 
@@ -136,13 +138,10 @@ Page({
 
 
   refreshTimer() {
-    const timer = wx.getStorageSync("rr:timer") || {};
-    const runningMs = timer.startedAt ? (timer.elapsedMs || 0) + Date.now() - (timer.segmentStartedAt || timer.startedAt) : 0;
-    const timerRunning = Boolean(timer.running && !timer.paused && runningMs >= 0 && runningMs <= 6 * 60 * 60 * 1000);
-    const timerPaused = !timerRunning && Boolean(timer.paused);
-    const timerText = timerRunning ? minutes(runningMs) : timerPaused ? minutes(timer.elapsedMs || 0) : "";
-    if (timerText !== this.data.timerText || timerRunning !== this.data.timerRunning || timerPaused !== this.data.timerPaused) {
-      this.setData({ timerText, timerRunning, timerPaused });
+    const { status, actualMs } = homeTimerView();
+    const timerText = status === "ready" ? "" : formatElapsed(actualMs);
+    if (timerText !== this.data.timerText || status !== this.data.timerStatus) {
+      this.setData({ timerText, timerStatus: status });
     }
   },
 
@@ -158,6 +157,12 @@ Page({
   },
 
   openTimer() {
-    wx.navigateTo({ url: "/pages/timer/timer" });
+    // 原稿从首页打开计时抽屉，底下仍是当前练习卡片。
+    this.setData({ timerOpen: true });
+  },
+
+  closeTimer() {
+    this.setData({ timerOpen: false });
+    this.refreshTimer();
   },
 });

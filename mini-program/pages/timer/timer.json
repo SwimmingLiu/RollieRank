@@ -1,4 +1,4 @@
 {
-  "usingComponents": { "rr-nav": "/components/rr-nav/rr-nav" },
+  "usingComponents": { "rr-timer-sheet": "/components/rr-timer-sheet/rr-timer-sheet" },
   "navigationStyle": "custom"
 }

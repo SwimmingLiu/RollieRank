@@ -21,6 +21,13 @@ Page({
     activeType: "",
     typeLabel: "全部板块",
     typesOpen: false,
+    feedbackOpen: false,
+    feedbackQuestion: "",
+    feedbackSuggested: "",
+    feedbackEvidence: "",
+    feedbackError: "",
+    feedbackChoices: ["A", "B", "C", "D"],
+    submittingFeedback: false,
     copyCount: 0,
     uiBase: "/assets/ui",
   },
@@ -35,6 +42,7 @@ Page({
     try {
       const [attempt] = await api.sync([this.attemptId]);
       if (!attempt) throw new Error("这份成绩不在当前身份下。");
+      this.attempt = attempt;
       const marks = wx.getStorageSync(storage.KEYS.marks(this.attemptId)) || [];
       this.all = attempt.report.rows.map(row => ({
         n: row.question,
@@ -130,5 +138,74 @@ Page({
 
   copyWrong() {
     if (this.wrongNumbers.length) wx.setClipboardData({ data: this.wrongNumbers.join(",") });
+  },
+
+  openFeedback() {
+    const marked = this.all.find(row => row.marked && row.answer !== row.ref) || this.all.find(row => row.answer !== row.ref);
+    this.feedbackId = storage.uuid();
+    this.setData({
+      feedbackOpen: true,
+      feedbackQuestion: marked ? String(marked.n) : "",
+      feedbackSuggested: "",
+      feedbackEvidence: "",
+      feedbackError: "",
+    });
+  },
+
+  closeFeedback() {
+    if (this.data.submittingFeedback) return;
+    this.setData({ feedbackOpen: false });
+  },
+
+  onFeedbackQuestion(event) {
+    this.setData({ feedbackQuestion: event.detail.value, feedbackError: "" });
+  },
+
+  chooseSuggestion(event) {
+    this.setData({ feedbackSuggested: event.currentTarget.dataset.answer, feedbackError: "" });
+  },
+
+  onFeedbackEvidence(event) {
+    this.setData({ feedbackEvidence: event.detail.value, feedbackError: "" });
+  },
+
+  async submitFeedback() {
+    if (this.data.submittingFeedback) return;
+    const question = Number(this.data.feedbackQuestion);
+    const row = this.all.find(item => item.n === question);
+    const evidence = this.data.feedbackEvidence.trim();
+    const suggestedAnswer = this.data.feedbackSuggested;
+    if (!Number.isInteger(question) || question < 1 || question > this.all.length) {
+      this.setData({ feedbackError: "请输入本卷的有效题号" });
+      return;
+    }
+    if (!row || row.answer === "—") {
+      this.setData({ feedbackError: "只有已作答的题目可以反馈" });
+      return;
+    }
+    if (!["A", "B", "C", "D"].includes(suggestedAnswer)) {
+      this.setData({ feedbackError: "请选择建议答案" });
+      return;
+    }
+    if (!evidence) {
+      this.setData({ feedbackError: "请填写核对依据" });
+      return;
+    }
+    this.setData({ submittingFeedback: true, feedbackError: "" });
+    try {
+      await api.request("corrections/submit", {
+        guestId: storage.guestId(),
+        attemptId: this.attemptId,
+        feedbackId: this.feedbackId,
+        baseRevision: this.attempt.answerRevision || 0,
+        changes: [{ question, suggestedAnswer, evidence }],
+      });
+      this.setData({ feedbackOpen: false, feedbackSuggested: "", feedbackEvidence: "" });
+      wx.showToast({ title: "反馈已提交", icon: "success" });
+    } catch (error) {
+      this.setData({ feedbackError: error.message });
+    } finally {
+      this.setData({ submittingFeedback: false });
+    }
   },
 });

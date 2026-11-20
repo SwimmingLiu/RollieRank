@@ -33,6 +33,9 @@ view, text, scroll-view, input, textarea, button, image { box-sizing: border-box
 button { max-width: none; min-width: 0; margin: 0; padding: 0; background: none; border-radius: 0; line-height: 1.5; font-size: inherit; font-weight: inherit; color: inherit; }
 button::after { border: none; }
 input, textarea { width: 100%; background: none; border: none; font-size: inherit; color: inherit; }
+/* 原生滚动仍然可用，视觉滚动条在每台设备上都隐藏。 */
+scroll-view, .screen, .sheet-scroll, .practice__scroller { scrollbar-width: none !important; }
+scroll-view::-webkit-scrollbar, .screen::-webkit-scrollbar, .sheet-scroll::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
 
 /* Fixed controls have the same footprint as the approved footer at each width. */
 .screen { min-height: 100vh; padding-bottom: calc(88px + env(safe-area-inset-bottom)); background: var(--paper); }

@@ -24,7 +24,7 @@
 .ios-positions-sheet input,.ios-positions-sheet select,.ios-positions-region .positions-import-form input,.ios-positions-region .positions-import-form select{font-family:inherit;color:#18181b;background:#fff;border-color:#e4e4e7}
 .ios-positions-sheet .field-label{display:flex;flex-direction:column;gap:8px;font-size:13px}
 .ios-positions-sheet .field-label input{width:100%;min-height:44px;padding:10px 12px;border:1px solid #e4e4e7;border-radius:12px}
-.ios-positions-sheet .positions-picker-list{max-height:min(34dvh,360px);scrollbar-width:thin}
+.ios-positions-sheet .positions-picker-list{max-height:min(34dvh,360px);scrollbar-width:none}
 .ios-positions-sheet .positions-picker-row{align-items:center;padding:14px 2px;gap:10px}
 .ios-positions-sheet .positions-picker-row h3{font-size:14px;line-height:1.6}
 .ios-positions-sheet .positions-picker-row .button{flex:none;padding-inline:12px}

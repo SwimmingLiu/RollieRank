@@ -7,7 +7,7 @@
     <view class="chip" bindtap="search">搜索</view>
   </view>
 
-  <scroll-view wx:if="{{facets}}" class="pos__facets" scroll-x enable-flex>
+  <scroll-view wx:if="{{facets}}" class="pos__facets" scroll-x enable-flex enhanced show-scrollbar="{{false}}">
     <view wx:for="{{facets.exams}}" wx:key="*this" class="chip pos__facet {{exam === item ? 'chip--on' : ''}}" data-exam="{{item}}" bindtap="chooseExam">{{item === 'guokao' ? '国考' : item === 'shengkao' ? '省考' : item}}</view>
     <view wx:for="{{facets.regions}}" wx:key="*this" class="chip pos__facet {{region === item ? 'chip--on' : ''}}" data-region="{{item}}" bindtap="chooseRegion">{{item}}</view>
   </scroll-view>

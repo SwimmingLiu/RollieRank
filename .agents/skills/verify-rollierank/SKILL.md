@@ -47,7 +47,7 @@ Run `.agents/skills/verify-rollierank/scripts/verify.sh <scenario>` or `npm run 
 | Scenario | Surface and proof |
 | --- | --- |
 | `all` | Every project check below plus all browser journeys. |
-| `visual` | Real `/ios-v3/` pages at desktop, 430, 390 and 320 widths; screenshots, runtime errors, overflow, target sizes, theme font and scrollbar. |
+| `visual` | Real `/ios-v3/` pages at desktop, 430, 390 and 320 widths; screenshots, runtime errors, overflow, target sizes, theme font and hidden scrollbars. |
 | `journeys` | Base app, connected features, iOS user flows and the complete Node test suite. |
 | `feature <id>` | The matching feature id from the map. |
 | `core`, `catalog-admin`, `practice-history`, `positions-rank`, `discussion`, `analytics`, `corrections`, `sharing`, `insights`, `timing-practice` | Focused service, component and browser regressions. |
@@ -63,7 +63,7 @@ Default evidence is `test-results/verification/`:
 - `journeys/` contains the real browser result JSON, downloadable PNG/JSON artifacts, and stdout/stderr for every command.
 - `doctor.json`, `build.log`, typecheck/build logs and visual server logs support diagnosis.
 
-Every business journey checks visible state and the server or downloaded side effect. Inspect the new screenshots at the intrinsic phone size before claiming visual completion. Check the paper theme, hierarchy, spacing, text wrapping, type scale, redundant copy and controls, target sizes, icon clearance, scrollbars and overflow. The automated probe detects measurable defects; its pass is not an aesthetic review. Use the user's approved design references and the current project screenshots for the human judgment.
+Every business journey checks visible state and the server or downloaded side effect. Inspect the new screenshots at the intrinsic phone size before claiming visual completion. Check the paper theme, hierarchy, spacing, text wrapping, type scale, redundant copy and controls, target sizes, icon clearance, hidden scrollbars and overflow. The automated probe detects measurable defects; its pass is not an aesthetic review. Use the user's approved design references and the current project screenshots for the human judgment.
 
 A failed command exits non-zero. Preserve its evidence, diagnose with the feature map, and re-run after a fix. Never delete a failed run to make the next run appear clean.
 

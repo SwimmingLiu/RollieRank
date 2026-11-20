@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def check_width(page, width):
-    # Visible native scrollbars reserve a small gutter; content may be narrower, never wider than the viewport.
+    # Hidden native scrollbars reserve no gutter; content may be narrower, never wider than the viewport.
     if page.evaluate('document.documentElement.scrollWidth') > width:
         page.screenshot(path=str(ROOT / 'test-results' / f'overflow-{width}.png'), full_page=True)
         print(page.evaluate('''() => [...document.querySelectorAll('body *')].map(el => ({tag: el.tagName, class: el.className?.toString(), right: el.getBoundingClientRect().right, text: el.textContent.slice(0,70)})).filter(el => el.right > innerWidth + 1).slice(0,15)'''))
@@ -36,7 +36,7 @@ def run(base, output):
     checks = []
     errors = []
     with sync_playwright() as p:
-        # The global scrollbar design must be visible in real browser evidence.
+        # Keep browser scrollbars unmasked so the hidden contract is truthful.
         browser = p.chromium.launch(headless=True, ignore_default_args=["--hide-scrollbars"])
         context = browser.new_context(viewport={'width': 1440, 'height': 1024}, reduced_motion='reduce')
         page = context.new_page()

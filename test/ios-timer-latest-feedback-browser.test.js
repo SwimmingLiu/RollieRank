@@ -45,7 +45,10 @@ test("latest timer picker and scaled single-answer feedback", { timeout: 60000 }
   const level = async page => await page.locator('.rr-timer-paper-list').count() ? page.locator('.rr-timer-paper-list').getAttribute('data-picker-level') : "closed";
   await t.test("left swipe and explicit back each remove exactly one picker level", async () => {
     const page = await openPicker("back");
+    assert.deepEqual(await page.locator(".rr-timer-institution-option").allTextContents(), ["花生", "超格", "粉笔", "上岸村"]);
     await page.getByRole("button", { name: "选择花生计时套卷", exact: true }).click();
+    assert.ok((await page.locator(".rr-timer-collection-option").allTextContents()).every(text => !/\d+\s*套/.test(text)));
+    assert.ok((await page.locator(".rr-timer-collection-option").allTextContents()).every(text => !text.includes("行测")));
     await page.getByRole("button", { name: /选择花生一期/ }).click();
     const firstPaper = page.locator('.rr-timer-paper-option').first();
     await drag(page, firstPaper, 0, -75, true);

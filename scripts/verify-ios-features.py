@@ -224,30 +224,20 @@ def select_hierarchy(page, frame, output, category_index=0):
     group = frame.get_by_role("group", name="选择招录类别", exact=True)
     group.locator(".rr-position-option").first.wait_for()
     assert frame.locator(".rr-position-picker select").count() == 0
-    # Headless Chromium hides scrollbars by default; the real painted mark and native drag must be exercised.
+    # Headless Chromium hides native scrollbars, so inspect CSS and still drive the real scroll container.
     frame.locator("body").evaluate("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))")
     geometry = group.evaluate("""el => ({width:el.offsetWidth-el.clientWidth, height:el.clientHeight, outerHeight:el.offsetHeight,
       border:parseFloat(getComputedStyle(el).borderTopWidth), full:el.scrollHeight,
       inset:parseFloat(getComputedStyle(el).getPropertyValue('--rr-scroll-y-inset'))})""")
-    assert 0 < geometry["width"] <= 3, geometry
-    track = geometry["height"] - 2 * geometry["inset"]
-    assert 0 < track <= 56.5, geometry
+    assert geometry["width"] == 0, geometry
     group.hover()
     page.mouse.wheel(0, 1000)
     expect(group).to_have_js_property("scrollTop", geometry["full"] - geometry["height"])
-    rect = group.bounding_box()
-    thumb = max(18, track * geometry["height"] / geometry["full"])
-    # A short desktop preview scales the iframe; native pointer coordinates must use its painted bounds.
-    scale = rect["height"] / geometry["outerHeight"]
-    start = rect["y"] + (geometry["inset"] + geometry["border"]) * scale
-    edge = rect["x"] + rect["width"] - geometry["width"] * scale / 2
-    page.mouse.move(edge, start + (track - thumb / 2) * scale)
-    page.mouse.down()
-    page.mouse.move(edge, start + (thumb / 2 - 3) * scale, steps=8)
-    page.mouse.up()
+    assert group.evaluate("el => getComputedStyle(el).scrollbarWidth") == "none"
+    page.mouse.wheel(0, -2000)
     expect(group).to_have_js_property("scrollTop", 0)
-    (output / "native-scrollbar.json").write_text(json.dumps({"width": geometry["width"], "track": track,
-        "wheelReached": geometry["full"] - geometry["height"], "dragReturned": 0, "previewScale": scale}, indent=2) + "\n")
+    (output / "native-scrollbar.json").write_text(json.dumps({"width": geometry["width"],
+        "wheelReached": geometry["full"] - geometry["height"], "wheelReturned": 0}, indent=2) + "\n")
     group.locator(".rr-position-option").nth(category_index).click()
     frame.get_by_role("group", name="选择招录部门", exact=True).locator(".rr-position-option").first.wait_for()
     # Compare real text bounds with both icon slots; typing and clearing must retain the same search scope.

@@ -1,0 +1,160 @@
+<template name="paper-row">
+  <button class="timer__paper-option" data-id="{{paper.id}}" bindtap="selectPaper" hover-class="press">
+    <text>{{paper.text}}</text>
+    <image src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+  </button>
+</template>
+
+<view class="timer__layer" style="--timer-keyboard: {{keyboardHeight}}px;">
+  <view class="timer__shade" aria-role="button" aria-label="关闭计时面板" catchtap="dismissFromBackdrop"
+    data-zone="backdrop" bindtouchstart="startGesture" catchtouchmove="blockScroll" bindtouchend="endGesture" bindtouchcancel="cancelGesture" />
+  <view class="timer__sheet" aria-role="dialog" aria-label="{{heading}}">
+    <view class="timer__grab" data-zone="handle" bindtouchstart="startGesture" catchtouchmove="blockScroll" bindtouchend="endGesture" bindtouchcancel="cancelGesture">
+      <view class="timer__handle" aria-hidden="{{true}}" />
+    </view>
+    <view class="timer__heading">
+      <text>{{heading}}</text>
+      <button class="timer__close" aria-label="关闭面板" bindtap="dismiss"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button>
+    </view>
+
+    <view wx:if="{{loading}}" class="timer__notice" aria-role="status">正在读取套卷</view>
+    <view wx:elif="{{error}}" class="timer__notice">
+      <text>{{error}}</text>
+      <button class="timer__retry" bindtap="load">重试</button>
+    </view>
+    <block wx:else>
+      <view wx:if="{{!associating && (picking || plan.status === 'ready')}}" class="timer__switch" aria-role="tablist" aria-label="计时来源">
+        <button class="timer__switch-item {{source === 'paper' ? 'timer__switch-item--on' : ''}}" aria-pressed="{{source === 'paper'}}" data-source="paper" bindtap="selectSource">套卷</button>
+        <button class="timer__switch-item {{source === 'custom' ? 'timer__switch-item--on' : ''}}" aria-pressed="{{source === 'custom'}}" data-source="custom" bindtap="selectSource">自定义</button>
+      </view>
+
+      <block wx:if="{{picking}}">
+        <view wx:if="{{institutionLabel}}" class="timer__breadcrumb" aria-label="计时套卷路径">
+          <button class="timer__back" bindtap="backPicker" aria-label="返回上一级"><image src="{{uiBase}}/back.svg" mode="aspectFit" /></button>
+          <button bindtap="resetPicker">机构</button>
+          <image src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+          <button bindtap="showCollections">{{institutionLabel}}</button>
+          <block wx:if="{{collectionLabel}}"><image src="{{uiBase}}/chevron.svg" mode="aspectFit" /><text>{{collectionLabel}}</text></block>
+        </view>
+        <view class="timer__search">
+          <image src="{{uiBase}}/search.svg" mode="aspectFit" />
+          <input type="text" value="{{query}}" maxlength="80" placeholder="搜索套卷" placeholder-class="timer__placeholder" aria-label="搜索计时套卷"
+            confirm-type="search" adjust-position="{{false}}" bindinput="search" bindkeyboardheightchange="adjustKeyboard" />
+        </view>
+        <scroll-view wx:if="{{pickerLevel === 'institution'}}" class="timer__options timer__options--institutions" scroll-y enhanced show-scrollbar="{{false}}" bounces="{{false}}"
+          bindtouchstart="startGesture" bindtouchend="endGesture" bindtouchcancel="cancelGesture">
+          <button wx:for="{{publishers}}" wx:key="id" class="timer__publisher" data-id="{{item.id}}" bindtap="selectPublisher"
+            aria-label="选择{{item.label}}计时套卷" hover-class="press">
+            <image class="timer__publisher-icon" src="{{item.icon || uiBase + '/book.svg'}}" mode="aspectFit" />
+            <text class="timer__publisher-label">{{item.label}}</text>
+            <image class="timer__chevron" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+          </button>
+          <view wx:if="{{!publishers.length}}" class="timer__notice" aria-role="status">暂无可选套卷</view>
+        </scroll-view>
+        <scroll-view wx:else class="timer__options {{institutionLabel ? 'timer__options--with-path' : ''}}" scroll-y enhanced show-scrollbar="{{false}}" bounces="{{false}}"
+          bindtouchstart="startGesture" bindtouchend="endGesture" bindtouchcancel="cancelGesture">
+          <block wx:if="{{pickerLevel === 'collection'}}">
+            <button wx:for="{{collections}}" wx:key="id" class="timer__collection" data-id="{{item.id}}" bindtap="selectCollection" hover-class="press">
+              <text class="timer__publisher-label">{{item.label}}</text>
+              <image class="timer__chevron" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+            </button>
+          </block>
+          <block wx:elif="{{pickerLevel === 'search'}}">
+            <view wx:for="{{groups}}" wx:for-item="group" wx:key="id" class="timer__search-group">
+              <text>{{group.label}}</text>
+              <template wx:for="{{group.papers}}" wx:key="id" is="paper-row" data="{{paper: item, uiBase}}" />
+            </view>
+            <view wx:if="{{!groups.length}}" class="timer__notice" aria-role="status">没有找到套卷</view>
+          </block>
+          <block wx:else>
+            <template wx:for="{{papers}}" wx:key="id" is="paper-row" data="{{paper: item, uiBase}}" />
+            <view wx:if="{{!papers.length}}" class="timer__notice" aria-role="status">没有找到套卷</view>
+          </block>
+        </scroll-view>
+      </block>
+
+      <block wx:elif="{{plan}}">
+        <scroll-view class="timer__plan-scroll {{plan.status === 'ready' && plan.modulesMode ? 'timer__plan-scroll--allocated' : ''}}" scroll-y enhanced
+          show-scrollbar="{{false}}" bounces="{{false}}" scroll-into-view="{{scrollTarget}}">
+          <view id="timer-content-top" class="timer__plan-content">
+            <block wx:if="{{plan.status === 'ready'}}">
+              <block wx:if="{{source === 'paper'}}">
+                <button class="timer__selected" bindtap="choosePaper" aria-label="更换计时套卷">
+                  <image src="{{uiBase}}/book.svg" mode="aspectFit" /><text>{{plan.paperLabel}}</text><image src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+                </button>
+                <view class="timer__limit">
+                  <view><text>整卷</text><text>{{plan.limitLabel}}</text></view>
+                  <view class="timer__limit-value"><text class="timer__display-number">{{plan.minutes}}</text><text>分钟</text></view>
+                </view>
+              </block>
+              <view wx:else class="timer__duration {{plan.modulesMode ? 'timer__duration--compact' : ''}}">
+                <text class="timer__duration-label">总时长</text>
+                <view class="timer__stepper">
+                  <button class="timer__step" data-delta="-1" bindtap="stepMinutes" aria-label="减少一分钟" disabled="{{plan.minutes <= 1}}">−</button>
+                  <view class="timer__duration-value">
+                    <input class="timer__display-number timer__total-input" id="timer-minutes" type="number" value="{{plan.minutes}}" maxlength="3"
+                      aria-label="自定义总分钟" adjust-position="{{false}}" bindinput="editMinutes" bindfocus="focusMinutes" bindblur="blurMinutes" bindkeyboardheightchange="adjustKeyboard" />
+                    <text>分钟</text>
+                  </view>
+                  <button class="timer__step" data-delta="1" bindtap="stepMinutes" aria-label="增加一分钟" disabled="{{plan.minutes >= 720}}">+</button>
+                </view>
+              </view>
+              <view class="timer__module-tools">
+                <button class="timer__module-toggle" bindtap="toggleModules" aria-pressed="{{plan.modulesMode}}">
+                  <image src="{{uiBase}}/records.svg" mode="aspectFit" />
+                  <text>分模块<text wx:if="{{plan.modulesMode}}" class="timer__module-hint">建议</text></text>
+                  <image class="{{plan.modulesMode ? 'timer__flip' : ''}}" src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
+                </button>
+                <button wx:if="{{plan.modulesMode}}" class="timer__balance" bindtap="balance" aria-label="按建议重新分配分钟"><image src="{{uiBase}}/refresh.svg" mode="aspectFit" /></button>
+              </view>
+              <view wx:if="{{plan.modulesMode}}" class="timer__allocation">
+                <view wx:for="{{plan.modules}}" wx:key="id" class="timer__module-input">
+                  <view class="timer__module-grip" data-index="{{index}}" aria-label="拖动调整{{item.name}}顺序"
+                    bindtouchstart="beginReorder" catchtouchmove="blockScroll" bindtouchend="endReorder">
+                    <image src="{{uiBase}}/grip.svg" mode="aspectFit" />
+                  </view>
+                  <text>{{item.name}}</text>
+                  <input type="number" id="timer-module-{{index}}" value="{{item.minutes}}" data-module="{{item.id}}" maxlength="3" aria-label="{{item.name}}计划分钟"
+                    adjust-position="{{false}}" bindinput="editMinutes" bindfocus="focusMinutes" bindblur="blurMinutes" bindkeyboardheightchange="adjustKeyboard" />
+                  <text>分</text>
+                </view>
+              </view>
+            </block>
+            <block wx:else>
+              <view wx:if="{{plan.status === 'paused'}}" class="timer__paused">已暂停</view>
+              <view class="timer__clock" aria-label="做题已用时 {{plan.elapsed}}">
+                <text class="timer__display-number">{{plan.elapsed}}</text>
+                <text>整卷计划 {{plan.minutes}} 分钟</text>
+                <text wx:if="{{plan.activePlan}}" class="timer__active-plan">{{plan.activePlan}}</text>
+                <view class="timer__progress"><view style="width: {{plan.progress}}%;" /></view>
+              </view>
+              <view wx:if="{{plan.modulesMode}}" class="timer__clock-modules">
+                <button wx:for="{{plan.modules}}" wx:key="id" class="timer__clock-module {{item.active ? 'timer__clock-module--active' : ''}}"
+                  disabled="{{plan.status === 'finished'}}" aria-pressed="{{item.active}}" data-id="{{item.id}}" bindtap="switchModule">
+                  <image src="{{uiBase}}/{{item.active ? 'check' : 'dot'}}.svg" mode="aspectFit" />
+                  <text>{{item.name}}</text><text>{{item.elapsed}}</text><text>/ {{item.minutes}} 分</text>
+                </button>
+              </view>
+            </block>
+          </view>
+        </scroll-view>
+        <view class="timer__footer">
+          <view wx:if="{{plan.status === 'ready' && plan.modulesMode}}" class="timer__allocation-total" aria-role="status">
+            <text>合计 <text>{{plan.allocated}}</text> / {{plan.minutes}} 分</text>
+            <text wx:if="{{plan.mismatch}}" class="timer__mismatch">{{plan.mismatch}}</text>
+            <image wx:else src="{{uiBase}}/check.svg" mode="aspectFit" />
+          </view>
+          <view class="timer__actions">
+            <button wx:if="{{plan.status === 'ready'}}" class="timer__primary" bindtap="start" disabled="{{!plan.canStart || invalidInput}}"><image src="{{uiBase}}/play-light.svg" mode="aspectFit" />开始做题</button>
+            <button wx:elif="{{plan.status === 'finished'}}" class="timer__primary" bindtap="enterFinished" disabled="{{openingEntry}}">{{plan.paperLabel ? '继续录答' : '关联套卷录答'}}</button>
+            <block wx:else>
+              <button wx:if="{{plan.status === 'running'}}" class="timer__secondary" bindtap="pause">暂停</button>
+              <button wx:else class="timer__secondary" bindtap="start">继续</button>
+              <button class="timer__primary" bindtap="finish" disabled="{{openingEntry}}">{{source === 'custom' ? '结束计时' : '结束并录答'}}</button>
+            </block>
+          </view>
+        </view>
+      </block>
+    </block>
+  </view>
+</view>

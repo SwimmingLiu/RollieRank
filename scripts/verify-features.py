@@ -122,7 +122,7 @@ def run(base, output):
         "题号,题型,答案,分值\n1,言语理解,A,2\n2,言语理解,B,1\n3,资料分析,C,2\n4,资料分析,D,2")
     route_id = quote(paper["id"], safe="")
     with sync_playwright() as playwright:
-        # Keep native scrollbars visible so full-page captures prove their actual theme and dimensions.
+        # Keep browser scrollbars unmasked so captures prove they remain hidden.
         browser = playwright.chromium.launch(headless=True, ignore_default_args=["--hide-scrollbars"])
         context = browser.new_context(viewport={"width": 1440, "height": 900}, reduced_motion="reduce")
         page = context.new_page()

@@ -1,7 +1,7 @@
 .ios-answer-sheet { min-width: 0; color: var(--ink, #302e2b); font-family: var(--ui-font, inherit); }
 .ios-answer-sheet-summary { display: flex; align-items: baseline; gap: 4px; padding: 0 2px 9px; margin: 0; font-size: 12px; line-height: 1.5; color: #81766d; }
 .ios-answer-sheet-summary strong { font-size: 14px; color: #484039; font-weight: 650; }
-.ios-answer-sheet-list { max-height: min(52svh, 460px); min-height: 0; overflow: auto; overscroll-behavior: contain; overflow-anchor: none; scrollbar-width: thin; scrollbar-color: #ded5c9 transparent; padding: 0 3px 8px; }
+.ios-answer-sheet-list { max-height: min(52svh, 460px); min-height: 0; overflow: auto; overscroll-behavior: contain; overflow-anchor: none; scrollbar-width: none; scrollbar-color: transparent transparent; padding: 0 3px 8px; }
 .ios-answer-sheet-group { margin: 0 0 12px; min-width: 0; }
 .ios-answer-sheet-group:last-child { margin-bottom: 0; }
 .ios-answer-sheet-group-title { position: sticky; top: 0; z-index: 1; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 12px 1px 10px; margin: 0; background: #fff; color: #51483f; font-size: 13px; font-weight: 600; line-height: 1.5; }

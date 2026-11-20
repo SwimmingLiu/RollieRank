@@ -1,21 +1,24 @@
 <import src="../../templates/startup-card.wxml" />
+<page-meta page-style="{{timerOpen ? 'overflow: hidden;' : ''}}" />
 <view wx:if="{{openingWeb}}" class="screen screen--plain">
   <rr-nav back="{{false}}" />
   <view class="rr-startup-screen"><template is="startup-card" data="{{logo: asset.logo}}" /></view>
 </view>
 <view wx:else class="screen">
-  <rr-nav title="卷卷小榜" logo="{{asset.logo}}" back="{{false}}" />
+  <rr-nav back="{{false}}" />
+  <view class="home__brand"><image src="{{asset.logo}}" mode="aspectFit" /><text>卷卷小榜</text></view>
 
   <view class="home__body">
-    <view wx:if="{{timerRunning || timerPaused}}" class="home__timer" bindtap="openTimer" hover-class="press">
+    <button wx:if="{{timerStatus !== 'ready'}}" class="home__timer" bindtap="openTimer" hover-class="press"
+      aria-label="{{timerStatus === 'finished' ? '查看计时记录' : '继续做题计时'}}">
       <view class="home__timer-icon"><image src="{{uiBase}}/clock-ochre.svg" mode="aspectFit" /></view>
       <view class="grow stack">
         <text class="home__timer-title">做题计时</text>
-        <text class="home__timer-label">{{timerRunning ? '计时中' : '已暂停'}}</text>
+        <text class="home__timer-label">{{timerStatus === 'running' ? '计时中' : timerStatus === 'paused' ? '已暂停' : '已结束'}}</text>
       </view>
       <text class="display-num home__elapsed">{{timerText}}</text>
       <view class="home__timer-open"><image src="{{uiBase}}/arrow-light.svg" mode="aspectFit" /></view>
-    </view>
+    </button>
 
     <view wx:if="{{recent.length}}" class="home__recent">
       <view class="home__section">最近练习</view>
@@ -78,7 +81,7 @@
       </view>
     </view>
 
-    <button wx:if="{{!loading && !timerRunning && !timerPaused}}" class="home__timer" bindtap="openTimer" hover-class="press">
+    <button wx:if="{{!loading && timerStatus === 'ready'}}" class="home__timer" bindtap="openTimer" hover-class="press" aria-label="开始做题计时">
       <view class="home__timer-icon"><image src="{{uiBase}}/clock-ochre.svg" mode="aspectFit" /></view>
       <view class="grow stack">
         <text class="home__timer-title">做题计时</text>
@@ -89,3 +92,4 @@
   </view>
   <rr-tabbar active="home" />
 </view>
+<rr-timer-sheet wx:if="{{timerOpen}}" bind:change="refreshTimer" bind:dismiss="closeTimer" bind:entered="closeTimer" />

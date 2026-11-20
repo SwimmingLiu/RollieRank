@@ -1,4 +1,6 @@
 .review { padding: 0 22px 10px; }
+.review__scope-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.review__feedback { min-height: 44px; padding: 0 4px; color: #7d6b55; font-size: 13px; }
 .review__scope, .review__group-label { display: flex; align-items: center; gap: 8px; color: #856d50; min-height: 48px; padding: 0 10px; width: auto !important; font-size: 13px; }
 .review__scope { margin-left: -22px; }
 .review__scope image, .review__group-label image { width: 13px; height: 13px; opacity: .6; }
@@ -19,6 +21,18 @@
 .review__same-wrong { color: #a76e56; font-size: 10px; white-space: nowrap; }
 .review__copy { width: 100% !important; min-height: 38px; }
 .review__copy[disabled] { opacity: .5; background: #d9cfbe; color: #625846; }
+.review__feedback-sheet { padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+.review__feedback-scroll { max-height: 54vh; }
+.review__field { display: grid; gap: 7px; margin-bottom: 14px; color: #6f5c43; font-size: 13px; }
+.review__field input, .review__field textarea { width: 100%; min-height: 44px; padding: 10px 11px; border: 1px solid #e8ddcb; border-radius: 11px; background: #fffdf8; color: #332e2c; font-size: 14px; }
+.review__field textarea { min-height: 104px; resize: vertical; }
+.review__answer-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.review__answer-option { min-height: 44px; border: 1px solid #e8ddcb; border-radius: 11px; background: #fffdf8; color: #6f5c43; }
+.review__answer-option--on { border-color: #cf9b8e; background: #f7e5de; color: #6e4437; }
+.review__feedback-error { display: block; color: #aa5c45; font-size: 12px; }
+.review__feedback-actions { display: flex; gap: 10px; padding-top: 12px; }
+.review__feedback-actions button { flex: 1; min-height: 44px; border-radius: 12px; background: #f5ecdb; color: #6e5c43; font-size: 14px; }
+.review__feedback-actions button:last-child { background: #18181b; color: #fffdf8; }
 @media (max-width: 350px) {
   .review { padding-inline: 16px; }
   .review__scope { margin-left: -16px; }

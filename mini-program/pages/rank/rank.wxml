@@ -11,7 +11,7 @@
       <image wx:if="{{logo}}" src="{{logo}}" mode="aspectFit" />
       <text class="rank__publisher">{{publisher}}</text><text class="grow">{{identity}}</text>
     </view>
-    <scroll-view class="rank__dimensions" scroll-x>
+    <scroll-view class="rank__dimensions" scroll-x enhanced show-scrollbar="{{false}}">
       <view class="rank__dimension-row">
         <button wx:for="{{dimensions}}" wx:key="key" class="rank__dimension {{dimension === item.key ? 'rank__dimension--on' : ''}}" data-key="{{item.key}}" bindtap="setDimension">{{item.label}}</button>
       </view>

@@ -2,6 +2,8 @@
 
 原稿版直接加载 `paper-cards-1114-v3` 手机应用。当前目录也保留了原生备用版。
 
+默认发布使用原生入口，适用于没有 web-view 业务域名能力的 AppID。取得企业主体的内嵌网页能力并完成业务域名校验后，再把 `WEB_APP_ORIGIN` 设为站点地址。
+
 ## 原稿版
 
 原稿版复用全部手机页面、弹层和交互。首页保留原稿 logo 与标题组合并紧接微信胶囊下方，其他页使用原生标题。返回和页面操作放在对应内容区。初始化时显示纸卡骨架。初次打开会接续已有身份、正式练习、录答草稿和存疑标记。
@@ -61,6 +63,7 @@ npm --prefix mini-program run build:shared -- https://rollie-rank.swimmingliu.cn
 
 ```sh
 cli auto --project "$PWD/mini-program" --auto-port 9420
+MINIPROGRAM_AUTOMATION_PORT=9420 MINIPROGRAM_FLOW_OUTPUT="$PWD/test-results/miniprogram/flow" node mini-program/tools/flow.mjs
 cli preview --project "$PWD/mini-program" --qr-format image --qr-output /tmp/rollierank-preview.png
 ```
 

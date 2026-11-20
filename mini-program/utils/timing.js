@@ -1,57 +1,106 @@
-// 做题计时：只有明确开始、暂停、结束的时间才提交给服务端。
-// 服务端要求 schema 2 的完整结构，这里把本机的开始/结束时间整理成同一份记录。
-const MINUTE = 60000;
-const WHOLE = { id: "whole", name: "整卷" };
+const model = require("../vendor/practice-timer.js");
+const storage = require("./storage.js");
 
-function buildTiming({ attemptId, versionId, startedAt, endedAt, plannedMinutes, sections, mode }) {
-  if (!startedAt || !endedAt || endedAt < startedAt || endedAt - startedAt > 12 * 60 * MINUTE) return null;
-  if (!attemptId || !versionId || !Number.isInteger(plannedMinutes) || plannedMinutes < 1 || plannedMinutes > 720) return null;
-  const total = plannedMinutes * MINUTE;
-  // 模块计划按题量分配整数分钟；整卷只有一个模块。
-  const plannedWhole = [{ ...WHOLE, plannedMs: total, actualMs: 0 }];
-  const plannedModules = mode === "modules" && Array.isArray(sections) && sections.length ? allocate(total, sections) : null;
-  const elapsed = endedAt - startedAt;
-  // 真实用时分摊到各模块，合计严格等于整段用时；两种口径都保留。
-  const whole = distributeActual(plannedWhole, elapsed)[0];
-  const modules = plannedModules ? distributeActual(plannedModules, elapsed) : null;
-  const base = { schema: 2, origin: "custom", attemptId, versionId, startedAt, endedAt, plannedMs: total, actualMs: elapsed, entryMs: 0 };
-  return {
-    whole: { ...base, mode: "whole", modules: [whole] },
-    modules: modules ? { ...base, mode: "modules", modules } : null,
-  };
-}
+const TIMER_KEY = "rr:timer";
+const LEGACY_ENTRY_KEY = "rr:timing:pending";
+const entryKey = attemptId => `rr:timing:entry:${attemptId}`;
+const validMinutes = value => Number.isSafeInteger(value) && value >= 1 && value <= 720;
 
-function allocate(totalMs, sections) {
-  // 最大余数法：每段至少 1 分钟，合计精确等于计划总时长。
-  const totalMinutes = totalMs / MINUTE;
-  const weights = sections.map(section => (Number.isFinite(section.count) && section.count > 0 ? section.count : 1));
-  const sum = weights.reduce((a, b) => a + b, 0);
-  const quotas = weights.map(weight => (totalMinutes * weight) / sum);
-  const minutes = quotas.map(Math.floor);
-  let remainder = totalMinutes - minutes.reduce((a, b) => a + b, 0);
-  const order = quotas
-    .map((quota, index) => ({ index, fraction: quota - minutes[index] }))
-    .sort((a, b) => b.fraction - a.fraction || a.index - b.index);
-  for (let i = 0; i < remainder; i++) minutes[order[i].index] += 1;
-  return sections.map((section, index) => ({
-    id: section.id || `section-${index + 1}`,
-    name: section.name,
-    plannedMs: Math.max(1, minutes[index]) * MINUTE,
-    actualMs: 0,
-  }));
-}
-
-// 主计时结束后，把实际用时按题型顺序分配到各模块（保留真实总时长）。
-function distributeActual(modules, actualMs) {
-  const planned = modules.reduce((sum, module) => sum + module.plannedMs, 0) || 1;
-  let used = 0;
-  return modules.map((module, index) => {
-    const value = index === modules.length - 1
-      ? actualMs - used
-      : Math.round((actualMs * module.plannedMs) / planned);
-    used += value;
-    return { ...module, actualMs: value };
+function timerForPaper(version, attemptId) {
+  return model.createPracticeTimer({
+    versionId: version.id,
+    attemptId,
+    sections: model.timerSectionsForQuestions(version.questions),
+    limit: model.resolveTimerLimit(version),
   });
 }
 
-module.exports = { buildTiming, distributeActual };
+function attemptFor(versionId) {
+  return storage.loadDraft(versionId)?.id || storage.pendingId(versionId);
+}
+
+// 旧版只存整段用时。迁移保留已跑的总时长，分模块用时从新版实际切换后才开始记录。
+function restoreLegacyPlan(source, saved, versions, now) {
+  const plan = saved.plans?.[source] || (saved.source === source || !saved.source && source === "paper" ? saved : null);
+  if (!plan) return null;
+  const version = source === "paper" && versions.find(item => item.id === plan.selectedId);
+  if (source === "paper" && !version) return null;
+  const minutes = validMinutes(plan.wholeMinutes) ? plan.wholeMinutes : 120;
+  let timer = version ? timerForPaper(version, attemptFor(version.id)) : model.createCustomPracticeTimer({ sessionId: storage.uuid(), minutes });
+  const active = saved.source === source && saved.running && Number.isSafeInteger(saved.startedAt) && saved.startedAt > 0;
+  const since = saved.segmentStartedAt || saved.startedAt;
+  if (active && since >= saved.startedAt && since <= now && now - since <= 6 * 60 * 60000) {
+    const plannedMinutes = validMinutes(saved.plannedMinutes) ? saved.plannedMinutes : timer.plannedMs / 60000;
+    if (plannedMinutes * 60000 !== timer.plannedMs) {
+      timer = model.changeTimerPlan({ ...timer, origin: "custom" }, { minutes: plannedMinutes });
+    }
+    const elapsed = Number(saved.elapsedMs);
+    return {
+      ...timer,
+      status: saved.paused ? "paused" : "running",
+      startedAt: saved.startedAt,
+      activeSince: saved.paused ? null : since,
+      modules: [{ ...timer.modules[0], actualMs: Number.isSafeInteger(elapsed) ? Math.max(0, Math.min(elapsed, 12 * 60 * 60000)) : 0 }],
+    };
+  }
+  if (plan.mode !== "modules" || !Array.isArray(plan.sections)) return timer;
+  timer = model.setTimerMode(timer, "modules");
+  for (const module of timer.modules) {
+    const savedModule = plan.sections.find(section => section.name === module.name);
+    if (savedModule && (savedModule.minutes === 0 || validMinutes(savedModule.minutes))) {
+      timer = model.changeTimerPlan(timer, { minutes: savedModule.minutes, moduleId: module.id });
+    }
+  }
+  return timer;
+}
+
+function loadTimerRecord(versions, now = Date.now()) {
+  const saved = wx.getStorageSync(TIMER_KEY) || {};
+  const source = saved.source === "custom" ? "custom" : "paper";
+  const plans = {};
+  for (const key of ["paper", "custom"]) {
+    plans[key] = saved.format === 2
+      ? model.restorePracticeTimer(saved.plans?.[key])
+      : restoreLegacyPlan(key, saved, versions, now);
+  }
+  return { format: 2, source, plans };
+}
+
+function homeTimerView(now = Date.now()) {
+  const saved = wx.getStorageSync(TIMER_KEY) || {};
+  const timer = saved.plans?.[saved.source];
+  if (saved.format === 2 && Array.isArray(timer?.modules)) {
+    // Only the running module changes between home card ticks.
+    const actual = timer.modules.reduce((total, item) => total + item.actualMs, 0);
+    const elapsed = actual + (timer.status === "running" ? Math.max(0, now - timer.activeSince) : 0);
+    return { status: timer.status, actualMs: Math.min(elapsed, 12 * 60 * 60000) };
+  }
+  if (!saved.running || !saved.startedAt) return { status: "ready", actualMs: 0 };
+  const actualMs = (saved.elapsedMs || 0) + (saved.paused ? 0 : now - (saved.segmentStartedAt || saved.startedAt));
+  if (actualMs < 0 || actualMs > 6 * 60 * 60000) return { status: "ready", actualMs: 0 };
+  return { status: saved.paused ? "paused" : "running", actualMs };
+}
+
+function readTimedEntry(versionId, attemptId) {
+  const timer = model.restorePracticeTimer(wx.getStorageSync(entryKey(attemptId)));
+  return timer?.versionId === versionId && timer.attemptId === attemptId ? timer : null;
+}
+
+function setEntryTiming(timer) {
+  wx.setStorageSync(entryKey(timer.attemptId), timer);
+}
+
+function entrySummary(versionId, attemptId, now) {
+  const timer = readTimedEntry(versionId, attemptId);
+  if (timer) return model.timingSummary(timer, now);
+  const legacy = wx.getStorageSync(LEGACY_ENTRY_KEY);
+  return legacy?.versionId === versionId && legacy.attemptId === attemptId ? legacy.modules || legacy.whole || null : null;
+}
+
+function clearEntryTiming(versionId, attemptId) {
+  wx.removeStorageSync(entryKey(attemptId));
+  const legacy = wx.getStorageSync(LEGACY_ENTRY_KEY);
+  if (legacy?.versionId === versionId && legacy.attemptId === attemptId) wx.removeStorageSync(LEGACY_ENTRY_KEY);
+}
+
+module.exports = { TIMER_KEY, timerForPaper, attemptFor, loadTimerRecord, homeTimerView, readTimedEntry, setEntryTiming, entrySummary, clearEntryTiming };

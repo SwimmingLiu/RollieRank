@@ -1,7 +1,7 @@
 // 接口域名与资源地址集中在这里；切换环境只改这一处。
 const API_BASE = "https://rollie-rank.swimmingliu.cn";
-// 默认启动原稿。原生页面只作为连接失败后的备用入口。
-const WEB_APP_ORIGIN = API_BASE;
+// 当前 AppID 使用原生入口；取得企业主体内嵌网页能力后再填入站点地址。
+const WEB_APP_ORIGIN = "";
 // 七牛 rollie-rank 空间的加速域名。
 const ASSET_BASE = "https://rollie-rank-oss.swimmingliu.cn/static/rollierank";
 // 包内资源（图标、机构标识、产品标识）随小程序发布，不依赖网络。

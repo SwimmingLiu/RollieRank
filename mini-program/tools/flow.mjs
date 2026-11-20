@@ -6,10 +6,11 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const out = resolve(here, "../../test-results/miniprogram/flow");
+const out = resolve(process.env.MINIPROGRAM_FLOW_OUTPUT || resolve(here, "../../test-results/miniprogram/flow"));
+const apiBase = String(process.env.MINIPROGRAM_API_BASE || "").replace(/\/$/, "");
 await mkdir(out, { recursive: true });
 
-const mini = await automator.connect({ wsEndpoint: "ws://127.0.0.1:9420" });
+const mini = await automator.connect({ wsEndpoint: "ws://127.0.0.1:" + (process.env.MINIPROGRAM_AUTOMATION_PORT || "9420") });
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 const checks = [];
 const errors = [];
@@ -98,6 +99,23 @@ for (const index of [0, 4, 8, 12]) {
   if (!rows[index]) continue;
   await rows[index].tap();
   await wait(140);
+}
+// 答题卡按题型分组并保持五列；打开真实 BottomSheet，而不是只核对页面上的题号按钮。
+await tap(page, '.practice__footer [aria-label="答题卡"]', "打开答题卡");
+const answerSheet = await waitForSelector(page, ".practice__answer-sheet", 5000);
+const answerGroups = answerSheet ? await answerSheet.$$(".practice__sheet-group") : [];
+const firstGroupCells = answerGroups[0] ? await answerGroups[0].$$(".practice__sheet-cell") : [];
+check("答题卡按题型分组", answerGroups.length >= 2, `${answerGroups.length} 组`);
+check("答题卡五列", firstGroupCells.length >= 5, `${firstGroupCells.length} 格`);
+if (firstGroupCells.length >= 5) {
+  const positions = [];
+  for (const cell of firstGroupCells.slice(0, 5)) positions.push(await cell.offset());
+  check("答题卡首行对齐", Math.max(...positions.map(item => item.top)) - Math.min(...positions.map(item => item.top)) < 1);
+}
+await shot("03b-answer-sheet");
+if (answerSheet) {
+  const close = await page.$('.sheet-layer .sheet-close');
+  if (close) await close.tap();
 }
 const marks = await page.$$(".practice__mark");
 if (marks[1]) {
@@ -190,6 +208,28 @@ if (filters[1]) {
   await filters[1].tap();
   await wait(800);
 }
+const feedbackEntry = await waitForSelector(page, ".review__feedback", 4000);
+if (feedbackEntry) {
+  await feedbackEntry.tap();
+  const feedbackSheet = await waitForSelector(page, ".review__feedback-sheet", 4000);
+  const suggestion = await page.$('.review__answer-option[data-answer="B"]');
+  const evidence = await page.$(".review__field textarea");
+  if (suggestion) await suggestion.tap();
+  if (evidence) await evidence.input("自动化对照：核对官方参考答案后建议 B。");
+  const submitFeedback = await page.$(".review__feedback-actions button:last-child");
+  if (submitFeedback) await submitFeedback.tap();
+  await wait(900);
+  check("逐题参考答案反馈", Boolean(feedbackSheet) && !(await page.data()).feedbackOpen);
+  if (apiBase && attemptId) {
+    const guestId = await mini.callWxMethod("getStorageSync", "rr:guest");
+    const response = await fetch(apiBase + "/api/corrections/list", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ guestId }),
+    });
+    const feedbacks = response.ok ? (await response.json()).feedbacks : [];
+    check("反馈已写入服务端", feedbacks.some(feedback => feedback.attemptId === attemptId));
+  }
+}
 await shot("10-review");
 await waitBack("pages/report/report");
 page = await current();
@@ -262,6 +302,18 @@ if (cells[1]) {
   page = await waitForPath("pages/analytics/analytics", 8000);
   check("进入成长分析", page.path === "pages/analytics/analytics", page.path);
   const analytics = await page.data();
+  const filter = await page.$(".analytics__filter");
+  if (filter) {
+    await filter.tap();
+    const filterSheet = await waitForSelector(page, ".analytics__filter-sheet", 4000);
+    const sourceChips = await page.$$(".analytics__source-chip");
+    check("成长分析来源日期筛选", Boolean(filterSheet) && sourceChips.length >= 2);
+    const clear = await page.$(".analytics__filter-actions button");
+    if (clear) await clear.tap();
+    const apply = await page.$(".analytics__filter-actions button:last-child");
+    if (apply) await apply.tap();
+    await wait(500);
+  }
   check("成长分析有数据", (analytics.points || []).length > 0, `${analytics.points?.length} 次`);
   await shot("14-analytics");
   await waitBack("pages/records/records");
@@ -288,11 +340,15 @@ if (cells[0]) {
   await waitBack("pages/records/records");
   page = await current();
 }
-await mini.navigateTo("/pages/timer/timer");
-page = await waitForPath("pages/timer/timer", 8000);
-check("进入做题计时", page.path === "pages/timer/timer", page.path);
+await mini.switchTab("/pages/home/home");
+page = await waitForPath("pages/home/home", 8000);
+const timerEntry = await waitForSelector(page, ".home__timer", 6000);
+if (timerEntry) await timerEntry.tap();
+const timerSheet = await waitForSelector(page, "rr-timer-sheet", 6000);
+check("原生首页打开计时面板", Boolean(timerSheet) && (await current()).path === "pages/home/home");
 await shot("17-timer");
-await waitBack("pages/records/records");
+if (timerSheet) await (await timerSheet.$(".timer__close")).tap();
+await mini.switchTab("/pages/records/records");
 await mini.navigateTo("/pages/settings/settings");
 page = await waitForPath("pages/settings/settings", 8000);
 check("进入设置", page.path === "pages/settings/settings", page.path);

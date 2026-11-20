@@ -1,6 +1,8 @@
 const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
 const catalogUtil = require("../../utils/catalog.js");
+const timing = require("../../utils/timing.js");
+const { resumeEntryTimer, pauseEntryTimer } = require("../../vendor/practice-timer.js");
 
 const { ASSET } = require("../../config.js");
 
@@ -29,6 +31,8 @@ Page({
     title: "",
     identity: "",
     sections: [],
+    sheetSections: [],
+    sheetScrollTarget: "",
     activeSection: 0,
     questions: [],
     allQuestions: [],
@@ -53,6 +57,23 @@ Page({
     this.attemptId = query.attemptId || "";
     this.versionId = decodeURIComponent(query.versionId || "");
     this.retry();
+  },
+
+  onShow() {
+    this.entryVisible = true;
+    this.startEntryClock();
+  },
+
+  startEntryClock() {
+    if (!this.entryVisible || !this.attemptId || this.data.loading) return;
+    const current = timing.readTimedEntry(this.versionId, this.attemptId);
+    if (current) timing.setEntryTiming(resumeEntryTimer(current));
+  },
+
+  stopEntryClock() {
+    if (!this.attemptId) return;
+    const current = timing.readTimedEntry(this.versionId, this.attemptId);
+    if (current?.entrySince) timing.setEntryTiming(pauseEntryTimer(current));
   },
 
   async retry() {
@@ -88,6 +109,7 @@ Page({
         marks,
       });
       this.reflect();
+      this.startEntryClock();
       if (this.data.current > 1) this.jump(this.data.current);
     } catch (error) {
       this.setData({ loading: false, error: error.message });
@@ -204,7 +226,13 @@ Page({
   },
 
   openSheet() {
-    this.setData({ sheet: "answers" });
+    const sheetSections = this.data.sections.map(section => ({
+      ...section,
+      questions: this.data.allQuestions
+        .filter(question => question.number >= section.start && question.number <= section.end)
+        .map(question => ({ ...question, current: question.number === this.data.current })),
+    }));
+    this.setData({ sheet: "answers", sheetSections, sheetScrollTarget: "answer-sheet-" + this.data.current });
   },
 
   closeSheet() {
@@ -221,20 +249,16 @@ Page({
     wx.showLoading({ title: "正在核分", mask: true });
     try {
       const answers = this.data.answers.map(value => (value ? value : null));
-      // 计时记录必须属于本次答卷；来源不符时按未计时提交，不写入他人用时。
-      // 服务端按当前卷校验模块，模块口径不匹配时退回整卷记录。
-      const pending = wx.getStorageSync("rr:timing:pending");
-      let timing = null;
-      if (pending && pending.versionId === this.version.id && pending.attemptId === this.attemptId) {
-        timing = pending.modules || pending.whole || null;
-      }
-      const attempt = await api.submit({ version: this.version, answers, attemptId: this.attemptId, timing });
+      // 只提交当前答卷的计时。第一次提交时冻结用时，失败重试仍用同一份数据。
+      this.stopEntryClock();
+      this.timingReceipt ??= timing.entrySummary(this.version.id, this.attemptId);
+      const attempt = await api.submit({ version: this.version, answers, attemptId: this.attemptId, timing: this.timingReceipt });
       storage.upsertAttempt(attempt);
       wx.setStorageSync(storage.KEYS.marks(attempt.id), this.data.marks);
       storage.dropDraft(this.version.id);
       storage.clearPendingId(this.version.id, this.attemptId);
       storage.setDraftEntry(this.version.id, null);
-      wx.removeStorageSync("rr:timing:pending");
+      timing.clearEntryTiming(this.version.id, this.attemptId);
       this.attemptId = "";
       wx.hideLoading();
       wx.redirectTo({ url: `/pages/report/report?attemptId=${attempt.id}` });
@@ -246,10 +270,13 @@ Page({
   },
 
   onUnload() {
+    this.stopEntryClock();
     this.persist();
   },
 
   onHide() {
+    this.entryVisible = false;
+    this.stopEntryClock();
     this.persist();
   },
 });
