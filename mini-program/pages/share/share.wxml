@@ -2,19 +2,56 @@
   <rr-nav title="成绩分享" />
   <view wx:if="{{loading}}" class="loading">正在准备分享图…</view>
   <view wx:elif="{{error}}" class="empty">{{error}}</view>
-  <block wx:else>
+  <view wx:else class="share__studio">
     <view class="share__modes">
       <button wx:for="{{modes}}" wx:key="key" class="share__mode {{mode === item.key ? 'share__mode--on' : ''}}" data-key="{{item.key}}" bindtap="setMode">{{item.label}}</button>
     </view>
     <scroll-view class="share__preview" scroll-y scroll-top="{{previewTop}}" enhanced show-scrollbar="{{false}}">
-      <image wx:if="{{previewSrc}}" class="share__image" src="{{previewSrc}}" mode="aspectFit" style="width: {{previewWidth}}px; height: {{previewHeight}}px;" />
+      <view class="share__stage" style="width: {{previewWidth}}px; height: {{previewHeight}}px;">
+        <view class="share__artifact share__artifact--{{mode}}" style="transform: scale({{previewScale}});">
+          <view class="share__paper">
+            <view class="share__logo-slot"><image wx:if="{{publisherLogo}}" src="{{publisherLogo}}" mode="aspectFit" /></view>
+            <text class="share__identity">{{summary.identity}}</text>
+          </view>
+          <view wx:if="{{mode === 'full' || mode === 'score'}}" class="share__score">
+            <view class="share__score-copy"><text class="display-num">{{summary.score}}</text><text>/ {{summary.max}} 分</text></view>
+            <image src="/assets/score-ribbon.svg" mode="aspectFit" />
+          </view>
+          <view wx:if="{{mode === 'full' || mode === 'score'}}" class="share__outcomes">
+            <view aria-label="正确 {{summary.correct}} 题"><image src="{{uiBase}}/check.svg" mode="aspectFit" /><text class="num">{{summary.correct}}</text></view>
+            <view aria-label="错误 {{summary.wrong}} 题"><image src="{{uiBase}}/close.svg" mode="aspectFit" /><text class="num">{{summary.wrong}}</text></view>
+            <view aria-label="未答 {{summary.blank}} 题"><image src="{{uiBase}}/dot.svg" mode="aspectFit" /><text class="num">{{summary.blank}}</text></view>
+          </view>
+          <view wx:if="{{mode === 'full' || mode === 'score'}}" class="share__standing" aria-label="同卷排名 {{summary.rank || '暂无'}} / {{summary.count || 0}}">
+            <image src="{{uiBase}}/trophy.svg" mode="aspectFit" /><text>同卷排名</text><view class="grow"></view><text class="share__standing-rank">{{summary.rank || '—'}}</text><text class="share__standing-count">/ {{summary.count || 0}}</text>
+          </view>
+          <view wx:if="{{mode === 'full' || mode === 'radar'}}" class="share__section-card share__radar-card">
+            <text class="share__heading">能力概览</text>
+            <view class="share__radar-wrap"><image wx:if="{{radarSrc}}" class="share__radar" src="{{radarSrc}}" mode="aspectFit" aria-label="各板块得分率雷达图" /></view>
+          </view>
+          <view wx:if="{{mode === 'full' || mode === 'types'}}" class="share__section-card share__subjects">
+            <text class="share__heading">板块表现</text>
+            <view wx:for="{{sections}}" wx:key="name" class="share__subject">
+              <view class="share__subject-line"><text>{{item.name}}</text><text class="display-num">{{item.percentValue}}<text class="share__percent">%</text></text></view>
+              <view class="share__progress"><view style="width: {{item.pct}}%;"></view></view>
+            </view>
+          </view>
+          <view wx:if="{{mode === 'full' && timing}}" class="share__section-card share__timing">
+            <text class="share__heading">做题用时</text>
+            <view class="share__timing-summary"><text>计划 {{timing.planned}} 分</text><text>实际 {{timing.actual}}</text><text>{{timing.difference}}</text></view>
+            <view wx:for="{{timing.modules}}" wx:key="name" class="share__timing-row"><text>{{item.name}}</text><text>{{item.planned}} 分</text><text>{{item.actual}}</text></view>
+          </view>
+          <view class="share__watermark"><image src="{{asset.logo}}" mode="aspectFit" /><text>卷卷小榜</text></view>
+        </view>
+      </view>
     </scroll-view>
-    <canvas type="2d" id="shareCanvas" class="share__canvas" />
-    <view class="share__actions">
+  </view>
+  <canvas wx:if="{{!loading && !error}}" type="2d" id="radarCanvas" class="share__radar-canvas" />
+  <canvas wx:if="{{!loading && !error}}" type="2d" id="shareCanvas" class="share__canvas" />
+  <view wx:if="{{!loading && !error}}" class="share__actions">
       <button class="btn btn--primary" bindtap="save" disabled="{{!ready || saving}}">
         <image class="btn__icon" src="{{uiBase}}/download-light.svg" mode="aspectFit" />保存海报
       </button>
-      <button class="btn share__invite" open-type="share"><image class="btn__icon" src="{{uiBase}}/share.svg" mode="aspectFit" />邀请好友</button>
-    </view>
-  </block>
+      <button class="btn share__invite" open-type="share" aria-label="邀请同卷好友"><image class="btn__icon" src="{{uiBase}}/share-outline.svg" mode="aspectFit" />邀请好友</button>
+  </view>
 </view>

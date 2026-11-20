@@ -18,15 +18,14 @@
       </view>
     </scroll-view>
     <view class="rank__scope">
-      <button wx:for="{{scopes}}" wx:key="key" class="rank__scope-tab {{scope === item.key ? 'rank__scope-tab--on' : ''}}" data-key="{{item.key}}" bindtap="setScope" aria-label="{{item.name}}">
-        <image src="{{uiBase}}/{{item.icon}}.svg" mode="aspectFit" />{{item.label}}
+      <button wx:for="{{scopes}}" wx:key="key" class="rank__scope-tab {{scope === item.key ? 'rank__scope-tab--on' : ''}}" data-key="{{item.key}}" bindtap="setScope" aria-label="{{item.name}}" aria-pressed="{{scope === item.key}}">
+        <image src="{{uiBase}}/{{item.icon}}.svg" mode="aspectFit" />
       </button>
     </view>
     <view class="rank__position">
       <view class="rank__position-icon"><image src="{{uiBase}}/{{scope === 'nationwide' ? 'globe' : 'map-pin'}}.svg" mode="aspectFit" /></view>
       <view class="stack grow">
         <text class="rank__position-title">{{scopeLabel}}</text>
-        <text wx:if="{{scope === 'nationwide'}}" class="rank__muted">不限报考岗位</text>
       </view>
       <view class="rank__count"><image src="{{uiBase}}/users.svg" mode="aspectFit" />{{count}}</view>
     </view>
@@ -40,7 +39,7 @@
         <text class="rank__podium-name">{{item.name}}</text>
         <text class="display-num rank__podium-score {{item.scoreText.length > 5 ? 'rank__podium-score--wide' : ''}}">{{item.scoreText}}</text>
         <text class="rank__muted">分</text>
-        <text class="rank__muted">超越 {{item.surpassed}}</text>
+        <view class="rank__percentile" aria-label="超越 {{item.surpassed}} 的考生"><image src="{{uiBase}}/trend.svg" mode="aspectFit" /><text>{{item.surpassed}}</text></view>
       </button>
     </view>
 

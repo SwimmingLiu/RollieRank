@@ -3,7 +3,6 @@
 .rr-startup-brand image { width: 44px; height: 44px; flex: none; }
 .rr-startup-heading, .rr-startup-meta, .rr-startup-foot { display: flex; align-items: center; justify-content: space-between; }
 .rr-startup-heading { margin-bottom: 14px; font-size: 17px; font-weight: 650; }
-.rr-startup-status { color: #796747; font-size: 12px; font-weight: 400; }
 .rr-startup-card { position: relative; height: 250px; padding: 19px 21px 16px; overflow: hidden; border-radius: 27px; background: var(--cover); box-shadow: 0 14px 22px -23px #69564070; }
 .rr-startup-meta > view, .rr-startup-lines > view, .rr-startup-foot > view { border-radius: 999px; background: #ddc9a0; }
 .rr-startup-meta > view:first-child { width: 84px; height: 26px; }

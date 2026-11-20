@@ -1,16 +1,57 @@
 .share { height: 100vh; min-height: 0; display: flex; flex-direction: column; padding-bottom: 0; overflow: hidden; }
-.share__modes { display: flex; gap: 4px; flex: none; margin: 13px 18px 12px; padding: 3px; border-radius: 13px; background: #ebe4d9; }
-.share__mode { display: flex; align-items: center; justify-content: center; flex: 1; width: 0 !important; min-height: 38px; color: #71717a; border-radius: 8px; font-size: 13px; white-space: nowrap; }
-.share__mode--on { background: #fffdf8; color: #25221e; box-shadow: 0 1px 4px #a5998126; font-weight: 650; }
-.share__preview { flex: 1; min-height: 0; height: 0; }
+.share__studio { display: flex; flex: 1; min-height: 0; flex-direction: column; gap: 12px; padding: 12px 18px 0; }
+.share__modes { display: flex; gap: 4px; flex: none; padding: 3px; border-radius: 13px; background: #ebe5da; }
+.share__mode { display: flex; align-items: center; justify-content: center; flex: 1; width: 0 !important; min-height: 38px; border-radius: 9px; color: #77716a; font-size: 13px; white-space: nowrap; }
+.share__mode--on { background: #fffdf8; color: #332e2c; box-shadow: 0 2px 4px #5e4a3010; font-weight: 650; }
+.share__preview { flex: 1; min-height: 0; height: 0; width: 100%; overflow: hidden; }
+.share__stage { position: relative; overflow: hidden; }
+.share__artifact { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; width: 450px; padding: 24px; gap: 16px; overflow: hidden; transform-origin: top left; border: 1px solid #e5d8c2; border-radius: 22px; background: #fffaf1; color: #40382d; }
+.share__paper { display: grid; grid-template-columns: 32px minmax(0, 1fr); align-items: center; gap: 10px; min-width: 0; padding-bottom: 14px; border-bottom: 1px solid #eaddc6; }
+.share__logo-slot { display: grid; place-items: center; width: 32px; height: 32px; }
+.share__logo-slot image { width: 30px; height: 30px; border-radius: 7px; }
+.share__identity { color: #514636; font-size: 13px; font-weight: 600; line-height: 1.6; overflow-wrap: normal; }
+.share__score { position: relative; display: flex; align-items: center; min-height: 130px; padding: 21px 20px; overflow: hidden; border-radius: 18px; background: #f0dfb6; }
+.share__score-copy { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.share__score-copy .display-num { color: #332c24; font-size: 67px; line-height: 1.1; font-weight: 700; letter-spacing: -1px; }
+.share__score-copy text:last-child { color: #9b876c; font-size: 12px; }
+.share__score > image { position: absolute; right: 22px; top: 24px; width: 65px; height: 81px; }
+.share__outcomes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin-top: -3px; }
+.share__outcomes view { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 45px; border-radius: 11px; background: #f4ecdc; color: #6b8b5e; }
+.share__outcomes image { width: 15px; height: 15px; opacity: .78; }
+.share__outcomes view:nth-child(2) { color: #bf765a; }
+.share__outcomes view:nth-child(3) { color: #a28e70; }
+.share__outcomes text { font-size: 19px; font-weight: 650; }
+.share__standing { display: flex; align-items: center; gap: 7px; min-height: 28px; padding: 3px 0 5px; color: #897354; font-size: 13px; }
+.share__standing image { width: 15px; height: 15px; opacity: .7; }
+.share__standing-rank { font-size: 18px; font-weight: 600; }
+.share__standing-count { color: #9b876c; font-size: 12px; }
+.share__section-card { padding: 17px; border: 1px solid #e8dcc8; border-radius: 17px; background: #fffdf7; }
+.share__heading { display: block; margin: 0 0 19px; color: #3f372e; font-size: 16px; font-weight: 650; }
+.share__radar-card { padding-bottom: 9px; }
+.share__radar-wrap { width: 100%; height: 294px; margin-top: 4px; }
+.share__radar { display: block; width: 100%; height: 100%; }
+.share__subjects { display: flex; flex-direction: column; gap: 18px; }
+.share__subject { display: flex; flex-direction: column; gap: 7px; }
+.share__subject-line { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 14px; font-weight: 550; }
+.share__subject-line .display-num { font-size: 24px; font-weight: 650; line-height: 1.1; }
+.share__percent { padding-left: 3px; color: #9c886b; font-family: Nunito, FangYuan, sans-serif; font-size: 11px; font-weight: 400; }
+.share__progress { height: 7px; overflow: hidden; border-radius: 4px; background: #eee4d1; }
+.share__progress view { height: 100%; border-radius: inherit; background: #b68b54; }
+.share__timing { display: flex; flex-direction: column; gap: 8px; }
+.share__timing-summary, .share__timing-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-items: center; color: #75654f; font-size: 12px; }
+.share__timing-row { min-height: 32px; border-top: 1px solid #eee4d1; }
+.share__watermark { display: flex; align-items: center; justify-content: flex-end; gap: 5px; min-height: 19px; margin-top: 2px; color: #9b8e79; font-size: 10px; opacity: .7; }
+.share__watermark image { width: 18px; height: 18px; }
 .share__canvas { position: absolute; left: -9999px; top: 0; width: 1px; height: 1px; pointer-events: none; }
-.share__image { display: block; margin: 0 auto 4px; border-radius: 17px; background: #fcf8ef; }
-.share__actions { display: flex; flex: none; align-items: center; gap: 12px; padding: 12px 20px calc(16px + env(safe-area-inset-bottom)); }
-.share__actions .btn { min-height: 38px; }
+.share__radar-canvas { position: absolute; left: -9999px; top: 0; width: 350px; height: 294px; pointer-events: none; }
+.share__actions { display: flex; flex: none; align-items: center; gap: 12px; padding: 9px 20px calc(12px + env(safe-area-inset-bottom)); }
+.share__actions .btn { min-height: 44px; }
 .share__actions .btn[disabled] { opacity: .55; }
 .share__invite { width: auto !important; padding: 0 16px; border: 1px solid #e4e4e7; color: #18181b; background: #fff; white-space: nowrap; }
+.share__artifact--score { min-height: 446px; }
 @media (max-width: 350px) {
-  .share__modes { margin-inline: 16px; }
+  .share__studio { padding-inline: 16px; }
   .share__actions { padding-inline: 16px; gap: 9px; }
   .share__invite { padding-inline: 12px; }
+  .share__mode { font-size: 12px; }
 }

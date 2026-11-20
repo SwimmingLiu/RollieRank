@@ -3,10 +3,7 @@
     <image src="{{logo}}" mode="aspectFit" />
     <text>卷卷小榜</text>
   </view>
-  <view class="rr-startup-heading">
-    <text>最近练习</text>
-    <text class="rr-startup-status" aria-role="status">正在读取</text>
-  </view>
+  <view class="rr-startup-heading" aria-role="status" aria-label="正在读取最近练习">最近练习</view>
   <view class="rr-startup-card" aria-hidden="{{true}}">
     <view class="rr-startup-meta"><view></view><view></view></view>
     <view class="rr-startup-lines"><view></view><view></view><view></view></view>

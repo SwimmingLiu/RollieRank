@@ -10,24 +10,24 @@
   <view wx:elif="{{summary}}" class="report__body">
     <view class="report__hero">
       <view class="report__total">
-        <text class="report__score-label">{{publicView ? summary.name : '总分'}}</text>
-        <text class="display-num report__score {{summary.score.length > 5 ? 'report__score--wide' : ''}}">{{summary.score}}</text>
+        <text wx:if="{{publicView}}" class="report__score-label">{{summary.name}}</text>
+        <text class="display-num report__score {{summary.score.length > 5 ? 'report__score--wide' : ''}}" aria-label="总分 {{summary.score}}">{{summary.score}}</text>
         <text class="report__max">/ {{summary.max}} 分</text>
         <image class="report__stamp" src="/assets/score-ribbon.svg" mode="aspectFit" />
       </view>
 
       <view wx:if="{{!publicView}}" class="report__stats {{summary.blank ? 'report__stats--three' : ''}}">
-        <view class="report__stat report__stat--ok">
+        <view class="report__stat report__stat--ok" aria-label="正确 {{summary.correct}} 题">
           <view class="report__stat-icon"><image src="{{uiBase}}/check.svg" mode="aspectFit" /></view>
-          <text class="num report__stat-num">{{summary.correct}}</text><text class="report__stat-label">正确</text>
+          <text class="num report__stat-num">{{summary.correct}}</text>
         </view>
-        <view class="report__stat report__stat--no">
+        <view class="report__stat report__stat--no" aria-label="错误 {{summary.wrong}} 题">
           <view class="report__stat-icon"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></view>
-          <text class="num report__stat-num">{{summary.wrong}}</text><text class="report__stat-label">错误</text>
+          <text class="num report__stat-num">{{summary.wrong}}</text>
         </view>
-        <view wx:if="{{summary.blank}}" class="report__stat report__stat--blank">
+        <view wx:if="{{summary.blank}}" class="report__stat report__stat--blank" aria-label="未答 {{summary.blank}} 题">
           <view class="report__stat-icon"></view>
-          <text class="num report__stat-num">{{summary.blank}}</text><text class="report__stat-label">未答</text>
+          <text class="num report__stat-num">{{summary.blank}}</text>
         </view>
       </view>
 
@@ -39,10 +39,9 @@
         </block>
         <image class="report__rank-arrow" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
       </button>
-      <button wx:if="{{correctionNotice}}" class="report__correction" bindtap="showCorrectionNotice">
+      <button wx:if="{{correctionNotice}}" class="report__correction" bindtap="showCorrectionNotice" aria-label="答案已订正，成绩 {{correctionNotice.beforeText}} 调整为 {{correctionNotice.afterText}}">
         <image src="{{uiBase}}/check.svg" mode="aspectFit" />
-        <text class="grow">答案已订正</text>
-        <text>{{correctionNotice.beforeText}} → {{correctionNotice.afterText}}</text>
+        <text class="grow">{{correctionNotice.beforeText}} → {{correctionNotice.afterText}}</text>
         <image class="report__correction-arrow" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
       </button>
     </view>
@@ -50,7 +49,7 @@
     <view wx:if="{{timing}}" class="report__timing">
       <button class="report__timing-toggle" bindtap="toggleTiming" aria-expanded="{{timingOpen}}">
         <image src="{{uiBase}}/clock.svg" mode="aspectFit" />
-        <view class="stack grow"><text>做题用时</text><text class="report__caption">{{timing.delta}}</text></view>
+        <text class="grow">做题用时</text>
         <text class="num report__timing-clock">{{timing.actual}}</text>
         <image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
       </button>
@@ -64,10 +63,6 @@
     <view wx:if="{{bands.length >= 3}}" class="report__radar">
       <view class="report__radar-head">
         <text class="report__heading">能力概览</text>
-        <text class="report__caption grow">本卷得分率</text>
-        <button class="report__icon-button" bindtap="toggleBands" aria-label="查看板块得分">
-          <image src="{{uiBase}}/chart.svg" mode="aspectFit" />
-        </button>
       </view>
       <rr-radar bands="{{bands}}" />
     </view>
@@ -75,7 +70,7 @@
     <view wx:if="{{bands.length}}" class="report__bands">
       <view class="report__bands-head">
         <text class="report__heading">板块表现</text>
-        <button class="report__all" bindtap="toggleBands">{{showBands ? '收起' : '查看全部'}}</button>
+        <button class="icon-button {{showBands ? 'report__all--open' : ''}}" bindtap="toggleBands" aria-label="{{showBands ? '收起板块' : '查看全部板块'}}" aria-expanded="{{showBands}}"><image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" /></button>
       </view>
       <view class="report__bands-grid">
         <button wx:for="{{shownBands}}" wx:key="name" class="report__band" data-type="{{item.name}}" bindtap="reviewBand" disabled="{{publicView}}">

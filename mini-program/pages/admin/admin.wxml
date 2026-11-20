@@ -4,18 +4,17 @@
   <view class="admin__body">
     <view class="admin__card card">
       <view class="admin__heading">
-        <text>答案反馈审核</text>
-        <text class="admin__badge">{{pendingCount}} 待审核</text>
+        <text>待审核</text>
+        <text class="admin__badge" aria-label="{{pendingCount}} 份待审核">{{pendingCount}}</text>
       </view>
       <view class="admin__actions">
-        <button class="admin__action" bindtap="refreshAdmin" disabled="{{adminLoading}}"><image src="{{uiBase}}/refresh.svg" mode="aspectFit" />{{adminLoading ? '读取中' : '刷新'}}</button>
-        <button wx:if="{{!authorized}}" class="admin__action admin__action--outline" bindtap="openCredential" disabled="{{!reviewEnabled || adminLoading}}"><image src="{{uiBase}}/lock.svg" mode="aspectFit" />维护者审核</button>
-        <button wx:else class="admin__action" bindtap="lock"><image src="{{uiBase}}/lock.svg" mode="aspectFit" />退出审核</button>
+        <button class="icon-button admin__action" bindtap="refreshAdmin" disabled="{{adminLoading}}" aria-label="刷新反馈"><image src="{{uiBase}}/refresh.svg" mode="aspectFit" /></button>
+        <button wx:if="{{!authorized}}" class="icon-button admin__action admin__action--outline" bindtap="openCredential" disabled="{{!reviewEnabled || adminLoading}}" aria-label="维护者审核"><image src="{{uiBase}}/lock.svg" mode="aspectFit" /></button>
+        <button wx:else class="icon-button admin__action" bindtap="lock" aria-label="退出审核"><image src="{{uiBase}}/lock.svg" mode="aspectFit" /></button>
       </view>
-      <text wx:if="{{loading}}" class="admin__status">正在读取反馈状态…</text>
+      <text wx:if="{{loading}}" class="admin__status">读取中…</text>
       <text wx:elif="{{error && !credentialOpen}}" class="admin__error" aria-role="alert">{{error}}</text>
-      <text wx:elif="{{!reviewEnabled}}" class="admin__status">审核尚未启用，请联系维护者配置审核凭证。</text>
-      <text wx:else class="admin__status">{{pendingQuestionCount}} 道题等待核对。审核通过后会订正标准答案，并更新该版本的全部答卷。</text>
+      <text wx:elif="{{!reviewEnabled}}" class="admin__status">审核未启用</text>
 
       <view wx:if="{{authorized && feedbacks.length}}" class="admin__queue">
         <view wx:for="{{feedbacks}}" wx:key="id" class="admin__feedback">
@@ -31,16 +30,15 @@
     </view>
 
     <view class="admin__card card admin__positions">
-      <view class="admin__heading"><text>岗位目录</text><button class="admin__text-button" bindtap="loadCatalog">刷新目录</button></view>
+      <view class="admin__heading"><text class="grow">岗位目录</text><button class="icon-button" bindtap="loadCatalog" aria-label="刷新目录"><image src="{{uiBase}}/refresh.svg" mode="aspectFit" /></button></view>
       <text wx:if="{{catalogError}}" class="admin__error" aria-role="alert">{{catalogError}}</text>
       <view wx:elif="{{sources.length}}" class="admin__sources">
         <view wx:for="{{sources}}" wx:key="id" class="admin__source">
           <button class="admin__source-link" data-url="{{item.sourcePage}}" bindtap="copySource">{{item.label}}</button>
           <text>{{item.countText}} 个岗位 · {{item.year}} 年 · {{item.examLabel}} · {{item.region}}</text>
-          <text>{{item.originLabel}} · 获取于 {{item.retrievedAt}}</text>
         </view>
       </view>
-      <text wx:else class="admin__status">目录为空，请导入岗位表。</text>
+      <text wx:else class="admin__status">暂无岗位目录</text>
 
       <button class="admin__import-toggle" bindtap="toggleImport"><image src="{{uiBase}}/{{importOpen ? 'chevron-down' : 'chevron'}}.svg" mode="aspectFit" />导入 Excel 或岗位目录</button>
       <view wx:if="{{importOpen}}" class="admin__import">
@@ -109,12 +107,12 @@
             <button class="{{review.decision === 'approve' ? 'admin__decision--on' : ''}}" data-decision="approve" bindtap="setDecision">通过并重算</button>
             <button class="{{review.decision === 'reject' ? 'admin__decision--on' : ''}}" data-decision="reject" bindtap="setDecision">拒绝</button>
           </view>
-          <label class="admin__reason-field"><text>审核理由</text><textarea value="{{review.reason}}" maxlength="2000" placeholder="说明依据和核对结论" placeholder-class="admin__placeholder" bindinput="onReason" /></label>
+          <label class="admin__reason-field"><text>审核理由</text><textarea value="{{review.reason}}" maxlength="2000" bindinput="onReason" /></label>
         </block>
         <view wx:else class="admin__confirm">
           <text>{{review.paperTitle}}</text>
           <view class="admin__selected-questions"><text wx:for="{{review.selectedQuestions}}" wx:key="*this">第 {{item}} 题</text></view>
-          <text>{{review.decision === 'approve' ? '订正后将重算 ' + review.affectedAttempts + ' 份答卷，保留原选项和交卷时间。' : '将拒绝所选反馈，并向反馈者显示审核理由。'}}</text>
+          <text wx:if="{{review.decision === 'approve'}}">重算 {{review.affectedAttempts}} 份答卷</text>
           <text class="admin__evidence">{{review.reason}}</text>
         </view>
         <text wx:if="{{reviewError}}" class="admin__error" aria-role="alert">{{reviewError}}</text>

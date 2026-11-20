@@ -4,13 +4,12 @@
 .admin__heading { display: flex; align-items: center; gap: 7px; min-height: 25px; color: #2f2b26; font-size: 16px; font-weight: 700; }
 .admin__badge { padding: 3px 7px; border-radius: 9px; background: #f7e5e1; color: #924b42; font-size: 11px; font-weight: 500; }
 .admin__actions { display: flex; gap: 9px; margin: 8px 0 3px; }
-.admin__action { display: flex; align-items: center; justify-content: center; gap: 6px; width: auto !important; min-height: 44px; margin: 0 !important; padding: 0 3px; border-radius: 14px; color: #62594e; font-size: 13px; }
-.admin__action image { width: 16px; height: 16px; opacity: .64; }
-.admin__action--outline { padding-inline: 13px; border: 1px solid #b4aaa0; }
+.admin__action { border-radius: 14px; }
+.admin__action image { opacity: .7; }
+.admin__action--outline { border: 1px solid #e9dfce; }
 .admin__action[disabled] { opacity: .6; background: transparent; }
 .admin__status, .admin__error { display: block; margin-top: 11px; color: #8a7b68; font-size: 12px; line-height: 1.75; }
 .admin__error { color: #ae5b45; }
-.admin__placeholder { color: #aea18d; }
 .admin__queue { display: flex; flex-direction: column; gap: 9px; margin-top: 13px; }
 .admin__feedback { overflow: hidden; border: 1px solid #eadfce; border-radius: 16px; background: #fffdf9; }
 .admin__feedback-main { width: 100% !important; padding: 12px; text-align: left; }
@@ -23,7 +22,6 @@
 .admin__review-button { width: 100% !important; min-height: 43px; border-top: 1px solid #eee5d6; color: #8f6047; font-size: 12px; }
 .admin__empty { padding: 27px 0 13px; text-align: center; color: #94846e; font-size: 12px; }
 .admin__positions { padding-bottom: 12px; }
-.admin__text-button { display: grid; place-items: center; width: auto !important; min-height: 44px; margin: 0 0 0 auto !important; padding: 0 4px 0 10px; color: #8b7251; font-size: 12px; font-weight: 500; }
 .admin__sources { display: flex; flex-direction: column; margin-top: 13px; }
 .admin__source { display: flex; flex-direction: column; gap: 5px; padding: 13px 0; border-top: 1px solid #eee5d6; color: #8b7a63; font-size: 11px; line-height: 1.55; }
 .admin__source-link { width: 100% !important; min-height: 44px; color: #342e27; text-align: left; text-decoration: underline; text-underline-offset: 2px; font-size: 14px; line-height: 1.5; font-weight: 650; }

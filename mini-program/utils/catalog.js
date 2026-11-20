@@ -11,6 +11,28 @@ const LOGO = {
 const JUDGMENT_NAMES = new Set(["判断推理", "逻辑判断", "类比推理", "图形推理", "定义判断"]);
 const subjectName = name => (JUDGMENT_NAMES.has(name) ? "判断推理" : name);
 const subjectId = (id, name) => (JUDGMENT_NAMES.has(name) ? "judgment" : id);
+const periodDigits = "一二三四五六七八九";
+const compareNames = (a, b) => a.localeCompare(b, "zh", { numeric: true });
+
+function periodNumber(period) {
+  const value = String(period || "").replace(/\s+/g, "");
+  const digits = value.match(/^(?:第)?(\d+)期?$/);
+  if (digits) return Number(digits[1]);
+  const chinese = value.match(/^(?:第)?([一二三四五六七八九]|[一二三四五六七八九]?十[一二三四五六七八九]?)期$/);
+  if (!chinese) return null;
+  const [tens, units] = chinese[1].split("十");
+  if (units === undefined) return periodDigits.indexOf(tens) + 1;
+  return (tens ? periodDigits.indexOf(tens) + 1 : 1) * 10 + (units ? periodDigits.indexOf(units) + 1 : 0);
+}
+
+function compareProjects(a, b) {
+  const aPeriod = periodNumber(a.period) ?? Number.MAX_SAFE_INTEGER;
+  const bPeriod = periodNumber(b.period) ?? Number.MAX_SAFE_INTEGER;
+  // 按实际期数排序，同一期的副省级卷放在普通卷后。
+  return compareNames(a.project, b.project) || aPeriod - bPeriod ||
+    (aPeriod === Number.MAX_SAFE_INTEGER ? compareNames(a.period, b.period) : 0) ||
+    Number(a.variant === "副省级") - Number(b.variant === "副省级") || compareNames(a.variant, b.variant);
+}
 
 function institutionKey(version) {
   return version.institution || "其他";
@@ -45,9 +67,7 @@ function groupByInstitution(versions) {
       }
       projects.get(key).versions.push(version);
     }
-    group.projects = [...projects.values()].sort((a, b) =>
-      String(a.project).localeCompare(String(b.project), "zh") ||
-      String(a.period).localeCompare(String(b.period), "zh"));
+    group.projects = [...projects.values()].sort(compareProjects);
     for (const project of group.projects) {
       project.versions.sort((a, b) => Number(a.number) - Number(b.number));
     }
@@ -69,10 +89,8 @@ function publisherName(name) {
 }
 
 function periodLabel(period) {
-  const names = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
-  if (/^\d+$/.test(String(period || ""))) return "第" + period + "期";
-  const match = String(period || "").match(/^第?([一二三四五六七八九十])期$/);
-  return match ? "第" + (names.indexOf(match[1]) + 1) + "期" : period || "";
+  const number = periodNumber(period);
+  return number === null ? period || "" : `第${number}期`;
 }
 
 function numberedPaper(version) {

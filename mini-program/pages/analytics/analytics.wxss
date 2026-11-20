@@ -1,7 +1,7 @@
 .analytics { display: flex; flex-direction: column; gap: 13px; padding: 20px 18px 24px; }
 .analytics__tools { display: flex; align-items: center; justify-content: space-between; min-height: 44px; }
-.analytics__filter { display: flex; align-items: center; gap: 6px; width: auto !important; min-height: 44px; margin: 0 12px 0 auto !important; padding: 0 3px; color: #786850; font-size: 12px; }
-.analytics__filter image { width: 16px; height: 16px; opacity: .65; }
+.analytics__filter { display: flex; align-items: center; justify-content: center; gap: 5px; width: auto !important; min-width: 44px; min-height: 44px; margin: 0 0 0 auto !important; padding: 0 5px; }
+.analytics__filter image { width: 18px; height: 18px; opacity: .7; }
 .analytics__filter-count { display: grid; place-items: center; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: #eadbc4; color: #6e593d; font-size: 10px; }
 .analytics__category { display: flex; align-items: center; gap: 10px; min-height: 38px; padding: 0 18px; border: 1px solid #e4e4e7; border-radius: 20px; background: #fff; font-size: 13px; }
 .analytics__category image { width: 14px; height: 14px; }

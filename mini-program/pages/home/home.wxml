@@ -9,12 +9,11 @@
 
   <view class="home__body">
     <button wx:if="{{timerStatus !== 'ready'}}" class="home__timer" bindtap="openTimer" hover-class="press"
-      aria-label="{{timerStatus === 'finished' ? '查看计时记录' : '继续做题计时'}}">
+      aria-label="{{timerStatus === 'finished' ? '查看计时记录' : timerStatus === 'paused' ? '继续已暂停的计时' : '打开进行中的计时'}}">
       <view class="home__timer-icon"><image src="{{uiBase}}/clock-ochre.svg" mode="aspectFit" /></view>
-      <view class="grow stack">
-        <text class="home__timer-title">做题计时</text>
-        <text class="home__timer-label">{{timerStatus === 'running' ? '计时中' : timerStatus === 'paused' ? '已暂停' : '已结束'}}</text>
-      </view>
+      <text class="grow home__timer-title">做题计时</text>
+      <image wx:if="{{timerStatus === 'paused'}}" class="home__timer-state" src="{{uiBase}}/pause.svg" mode="aspectFit" />
+      <image wx:elif="{{timerStatus === 'finished'}}" class="home__timer-state" src="{{uiBase}}/check.svg" mode="aspectFit" />
       <text class="display-num home__elapsed">{{timerText}}</text>
       <view class="home__timer-open"><image src="{{uiBase}}/arrow-light.svg" mode="aspectFit" /></view>
     </button>
@@ -22,8 +21,9 @@
     <view wx:if="{{recent.length}}" class="home__recent">
       <view class="home__section">最近练习</view>
       <view class="home__deck {{recent.length > 1 ? 'home__deck--scroll' : ''}}" bindtouchstart="startDeck" bindtouchend="flipDeck">
-        <view wx:for="{{recent}}" wx:key="id" class="home__cover home__cover--depth{{(index - recentIndex + recent.length) % recent.length}} {{item.institution === '超格' ? 'home__cover--orange' : ''}}">
-          <view wx:if="{{index === recentIndex}}" class="home__cover-face" bindtap="openRecent" data-index="{{index}}" hover-class="press">
+        <block wx:for="{{recent}}" wx:key="id">
+        <view wx:if="{{index === recentIndex}}" class="home__cover home__cover--active {{item.institution === '超格' ? 'home__cover--orange' : ''}}">
+          <view class="home__cover-face" bindtap="openRecent" data-index="{{index}}" hover-class="press">
             <view class="home__cover-meta">
               <view class="home__cover-publisher">
                 <image wx:if="{{item.logo}}" class="home__cover-logo" src="{{asset[item.logo]}}" mode="aspectFit" />
@@ -47,18 +47,11 @@
                 <view><text class="home__coverage-count">{{item.answered}}</text> / {{item.questionCount}} 题</view>
                 <view class="home__progress"><view style="width: {{item.progress}}%;"></view></view>
               </view>
-              <view wx:else class="home__cover-status">
-                <image src="{{uiBase}}/check.svg" mode="aspectFit" />
-                <text>已估分</text>
-              </view>
               <view class="home__cover-open"><image src="{{uiBase}}/arrow-light.svg" mode="aspectFit" /></view>
             </view>
           </view>
-          <view wx:else class="home__peek">
-            <text class="ellipsis">{{item.publisher}} · {{item.paperTitle}}</text>
-            <text>{{item.draft ? item.answered + ' / ' + item.questionCount : item.scoreText + ' 分'}}</text>
-          </view>
         </view>
+        </block>
       </view>
     </view>
     <view wx:if="{{!loading && !error && !recent.length}}" class="home__recent home__recent--empty">
@@ -66,7 +59,6 @@
       <view class="home__empty-cover">
         <view class="home__empty-copy">
           <text class="home__empty-title">还没有练习</text>
-          <text class="home__empty-note">选一卷开始录答案</text>
         </view>
         <image class="home__empty-art" src="/assets/answer-paper.svg" mode="aspectFit" />
       </view>
@@ -92,10 +84,7 @@
 
     <button wx:if="{{!loading && timerStatus === 'ready'}}" class="home__timer" bindtap="openTimer" hover-class="press" aria-label="开始做题计时">
       <view class="home__timer-icon"><image src="{{uiBase}}/clock-ochre.svg" mode="aspectFit" /></view>
-      <view class="grow stack">
-        <text class="home__timer-title">做题计时</text>
-        <text class="home__timer-label">套卷 · 自定义</text>
-      </view>
+      <text class="grow home__timer-title">做题计时</text>
       <view class="home__timer-open"><image src="{{uiBase}}/play-light.svg" mode="aspectFit" /></view>
     </button>
   </view>

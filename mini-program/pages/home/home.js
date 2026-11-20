@@ -72,29 +72,25 @@ Page({
 
   // 最近练习取三份不同套卷的最好一次，避免同一张卷重复占据首页。
   refreshRecent() {
-    const seen = new Set();
-    const recent = [];
-    const drafts = storage.draftIndex();
-    // 未交卷的草稿优先出现，避免只能重新开始。
-    for (const [versionId, draft] of Object.entries(drafts)) {
-      recent.push({
+    const candidates = Object.entries(storage.draftIndex()).map(([versionId, draft]) => ({
         id: draft.id,
         draft: true,
         versionId,
         title: draft.title || "未完成练习",
         answered: draft.answered || 0,
         questionCount: draft.questionCount || 0,
-      });
-      seen.add(versionId);
-      if (recent.length === 3) break;
-    }
-    const list = storage.history().slice().sort((a, b) => b.totalCents - a.totalCents);
-    for (const record of list) {
+        updatedAt: draft.updatedAt || 0,
+    }));
+    candidates.push(...storage.history());
+    candidates.sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0));
+    const seen = new Set();
+    const recent = [];
+    for (const record of candidates) {
       if (seen.has(record.versionId)) continue;
       seen.add(record.versionId);
       recent.push({
         ...record,
-        scoreText: scoreCard(record.totalCents),
+        ...(record.draft ? {} : { scoreText: scoreCard(record.totalCents) }),
       });
       if (recent.length === 3) break;
     }

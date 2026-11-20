@@ -25,7 +25,6 @@ Page({
     error: "",
     reviewEnabled: false,
     pendingCount: 0,
-    pendingQuestionCount: 0,
     credentialOpen: false,
     hasCredential: false,
     authorized: false,
@@ -59,7 +58,6 @@ Page({
         loading: false,
         reviewEnabled: Boolean(summary.reviewEnabled),
         pendingCount: summary.pendingCount || 0,
-        pendingQuestionCount: summary.pendingQuestionCount || 0,
       });
     } catch (error) {
       this.setData({ loading: false, error: error.message });
@@ -93,7 +91,6 @@ Page({
         authorized: true,
         reviewEnabled: Boolean(admin.reviewEnabled),
         pendingCount: admin.pendingCount || 0,
-        pendingQuestionCount: admin.pendingQuestionCount || 0,
         feedbacks: (admin.feedbacks || []).map(feedback => this.decorateFeedback(feedback)),
         versions: admin.versions || [],
       });
@@ -128,7 +125,6 @@ Page({
       this.setData({
         adminLoading: false,
         pendingCount: admin.pendingCount || 0,
-        pendingQuestionCount: admin.pendingQuestionCount || 0,
         feedbacks: (admin.feedbacks || []).map(feedback => this.decorateFeedback(feedback)),
         versions: admin.versions || [],
       });
@@ -258,7 +254,6 @@ Page({
           ...source,
           countText: Number(source.count || 0).toLocaleString("zh-CN"),
           examLabel: source.exam === "shengkao" ? "省考" : "国考",
-          originLabel: source.origin === "bundled-official" ? "官方发布文件" : "用户导入文件",
         })),
       });
     } catch (error) {

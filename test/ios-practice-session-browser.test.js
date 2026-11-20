@@ -53,7 +53,7 @@ test("actual mobile timer, swipe answer card, marks and explicit blank submissio
   const timer = () => page.locator("#practice-timer-ui");
   const pickPeanut = async (number, associate = false) => {
     await picker().getByRole("button", { name: "选择花生计时套卷", exact: true }).click();
-    await picker().getByRole("button", { name: /选择花生一期/ }).click();
+    await picker().getByRole("button", { name: /选择花生第1期/ }).click();
     await picker().getByRole("button", { name: new RegExp(`花生，.*第 ${number} 套，${associate ? "关联录答" : "开始计时"}`) }).first().click();
   };
   const darkSourceTabs = async () => {
@@ -75,13 +75,13 @@ test("actual mobile timer, swipe answer card, marks and explicit blank submissio
   await picker().getByRole("textbox", { name: "搜索计时套卷", exact: true }).fill("");
   await picker().getByRole("button", { name: "选择花生计时套卷", exact: true }).click();
   assert.equal(await picker().locator('.rr-timer-paper-list').getAttribute('data-picker-level'), 'collection');
-  assert.equal(await picker().getByRole("button", { name: /选择花生一期/ }).count(), 1);
-  assert.equal(await picker().getByRole("button", { name: /选择花生二期.*地市/ }).count(), 1);
-  assert.equal(await picker().getByRole("button", { name: /选择花生二期.*副省/ }).count(), 1);
+  assert.equal(await picker().getByRole("button", { name: /选择花生第1期/ }).count(), 1);
+  assert.equal(await picker().getByRole("button", { name: /选择花生第2期.*地市/ }).count(), 1);
+  assert.equal(await picker().getByRole("button", { name: /选择花生第2期.*副省/ }).count(), 1);
   await capture("timer-publisher-series");
-  await picker().getByRole("button", { name: /选择花生一期/ }).click();
+  await picker().getByRole("button", { name: /选择花生第1期/ }).click();
   assert.equal(await picker().locator('.rr-timer-paper-option').count(), 12);
-  assert.match(await picker().locator('.rr-timer-breadcrumbs').innerText(), /一期/);
+  assert.match(await picker().locator('.rr-timer-breadcrumbs').innerText(), /第1期/);
   await capture("timer-paper-list");
   await picker().getByRole("button", { name: "返回花生系列选择", exact: true }).click();
   assert.equal(await picker().locator('.rr-timer-paper-list').getAttribute('data-picker-level'), 'collection');

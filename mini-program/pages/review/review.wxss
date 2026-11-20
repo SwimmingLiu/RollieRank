@@ -19,15 +19,16 @@
 .review__cohort { display: flex; flex-direction: column; color: #806851; font-size: 12px; }
 .review__same-wrong { color: #a76e56; font-size: 10px; white-space: nowrap; }
 .review__copy { width: 100% !important; min-height: 38px; }
+.review__copy image { filter: invert(1); }
 .review__copy[disabled] { opacity: .5; background: #d9cfbe; color: #625846; }
 .review__feedback-sheet { display: flex; flex-direction: column; max-height: 86vh; padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
 .review__feedback-sheet .sheet-head, .review__feedback-actions { flex: none; }
 .review__feedback-scroll { width: 100%; min-height: 0; max-height: 54vh; }
 .review__feedback-card { margin-bottom: 12px; padding: 12px; border: 1px solid #eadfce; border-radius: 15px; background: #fffdf9; }
 .review__feedback-card-head { min-height: 32px; color: #544534; font-size: 15px; font-weight: 650; }
-.review__feedback-card-head button { min-height: 38px; padding: 0 4px 0 10px; color: #a3654e; font-size: 11px; font-weight: 500; }
 .review__reference-line { display: block; margin: 0 0 12px; color: #906e51; font-size: 12px; }
 .review__add-feedback { display: grid; place-items: center; min-height: 44px; width: 100% !important; margin-bottom: 4px; border-radius: 12px; background: #f2e5d0; color: #765c3d; font-size: 13px; }
+.review__add-question { font-size: 21px; }
 .review__field { display: grid; gap: 7px; margin-bottom: 14px; color: #6f5c43; font-size: 13px; }
 .review__field input, .review__field textarea { width: 100%; min-height: 44px; padding: 10px 11px; border: 1px solid #e8ddcb; border-radius: 11px; background: #fffdf8; color: #332e2c; font-size: 14px; }
 .review__field textarea { height: 72px; min-height: 72px; }
@@ -40,7 +41,7 @@
 .review__feedback-actions button:last-child { background: #18181b; color: #fffdf8; }
 .review__question-picker { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
 .review__question-choice--marked { background: #f4e4c5; }
-.review__history-link { display: grid; place-items: center; width: auto !important; min-height: 44px; margin: 0 0 0 auto !important; padding: 0 8px; color: #795f45; font-size: 13px; font-weight: 500; }
+.review__history-link { margin-left: auto !important; }
 .review__history-row { display: flex; align-items: center; gap: 8px; width: 100% !important; min-height: 48px; border-bottom: 1px solid #ede3d4; color: #715b45; font-size: 13px; text-align: left; }
 .review__history-row image { width: 16px; height: 16px; flex: none; }
 .review__history-empty { padding: 28px 0; text-align: center; color: #7b6c59; font-size: 13px; }

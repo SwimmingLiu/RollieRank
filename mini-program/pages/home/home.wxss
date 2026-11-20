@@ -10,44 +10,36 @@
 .home__timer { width: 100% !important; display: flex; align-items: center; gap: 11px; padding: 16px; text-align: left; border: 1px solid #e4d6bf; border-radius: 20px; background: #fffdf7; box-shadow: 0 3px 0 #e9dfcc; }
 .home__timer-icon { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border: 1px solid #e3d0ad; border-radius: 13px; background: #f0e4cb; }
 .home__timer-icon image { width: 25px; height: 25px; }
-.home__timer-title { margin-bottom: 6px; font-size: 15px; line-height: 1.4; font-weight: 650; color: #463a2c; }
-.home__timer-label { color: #a08a6d; font-size: 11px; }
+.home__timer-title { font-size: 15px; line-height: 1.4; font-weight: 650; color: #463a2c; }
+.home__timer-state { width: 16px; height: 16px; flex: none; opacity: .72; }
 .home__timer-open { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; background: #302d26; }
 .home__timer-open image { width: 17px; height: 17px; }
 .home__elapsed { margin-left: auto; white-space: nowrap; font-size: 27px; color: #655033; }
-.home__deck { position: relative; height: 250px; perspective: 1000px; }
+.home__deck { position: relative; height: 220px; perspective: 1000px; }
 .home__recent--empty { min-height: 205px; }
 .home__empty-cover { position: relative; display: flex; align-items: center; min-height: 174px; padding: 24px 22px; overflow: hidden; border: 1px solid #e7d7b8; border-radius: 27px; background: #f4e3be; box-shadow: 0 12px 22px -18px #69564025; }
 .home__empty-copy { position: relative; z-index: 2; display: flex; flex-direction: column; max-width: 210px; }
 .home__empty-title { margin-top: 8px; color: #302b26; font-size: 23px; line-height: 1.35; font-weight: 750; letter-spacing: -.7px; }
-.home__empty-note { margin-top: 9px; color: #796a55; font-size: 11px; line-height: 1.55; }
 .home__empty-art { position: absolute; right: -3px; bottom: 8px; width: 112px; height: 112px; opacity: .92; }
-.home__deck--scroll { height: 294px; touch-action: pan-x; }
-.home__cover { position: absolute; top: 0; left: 0; right: 0; height: 250px; border-radius: 27px; background: #f4e3be; box-shadow: 0 14px 22px -17px #69564025; transition: transform .28s ease, background .28s ease; }
+.home__deck--scroll { height: 220px; touch-action: pan-x; }
+.home__cover { position: absolute; top: 0; left: 0; right: 0; height: 220px; border-radius: 27px; background: #f4e3be; box-shadow: 0 14px 22px -17px #69564025; transition: transform .28s ease, background .28s ease; }
 .home__cover--orange { background: #f9d2b8; }
-.home__cover--depth0 { z-index: 3; }
-.home__cover--depth1 { z-index: 2; transform: translateY(42px) scale(.95) rotateX(-24deg); }
-.home__cover--depth2 { z-index: 1; transform: translateY(-30px) scale(.95) rotateX(24deg); }
-.home__cover:not(.home__cover--depth0) { display: flex; border: 1px solid #e5d3ae; background: #f2e3c1; }
-.home__cover--orange:not(.home__cover--depth0) { background: #f8dcc8; border-color: #e8b997; }
-.home__cover--depth1 { align-items: flex-end; }
-.home__peek { display: flex; justify-content: space-between; gap: 8px; width: 100%; padding: 8px 18px; font-size: 11px; color: #756855; }
-.home__peek text:last-child { white-space: nowrap; }
-.home__cover-face { display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 16px 20px 30px; }
+.home__cover-face { display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 14px 18px 16px; }
+.home__cover-face .home__cover-foot { margin-top: 0; padding-top: 6px; }
 .home__cover-meta, .home__cover-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .home__cover-publisher, .home__cover-status { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 650; }
 .home__cover-logo { width: 29px; height: 29px; border: 2px solid #fffdf8; border-radius: 9px; }
 .home__year { font-size: 12px; color: #665b4c; letter-spacing: .05em; }
-.home__cover-main { position: relative; min-height: 110px; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
-.home__cover-art { position: absolute; width: 112px; height: 112px; right: -7px; top: calc(50% - 56px); }
+.home__cover-main { position: relative; min-height: 90px; display: flex; flex-direction: column; justify-content: center; gap: 5px; }
+.home__cover-art { position: absolute; width: 102px; height: 102px; right: -5px; top: calc(50% - 51px); }
 .home__period, .home__paper-title, .home__score-line { position: relative; z-index: 1; width: 68%; }
 .home__period { font-size: 12px; line-height: 1.6; color: #534b3c; }
 .home__paper-title { font-size: 25px; line-height: 1.25; letter-spacing: -.7px; font-weight: 700; }
 .home__score-line { display: flex; align-items: baseline; gap: 5px; color: #786750; font-size: 12px; }
-.home__score { font-weight: 750; font-size: clamp(42px, 14vw, 58px); line-height: 1.1; letter-spacing: -2px; color: var(--ink); }
+.home__score { font-weight: 750; font-size: clamp(40px, 13vw, 54px); line-height: 1.1; letter-spacing: -2px; color: var(--ink); }
 .home__cover-status { color: #596649; font-size: 12px; font-weight: 500; }
 .home__cover-status image { width: 14px; height: 14px; opacity: .6; }
-.home__cover-open { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 50%; background: #18181b; }
+.home__cover-open { display: grid; place-items: center; width: 44px; height: 44px; flex: none; margin-left: auto; border-radius: 50%; background: #18181b; }
 .home__cover-open image { width: 20px; height: 20px; }
 .home__coverage { width: 108px; font-size: 11px; color: #71654f; }
 .home__coverage-count { font-size: 16px; color: #322e26; font-weight: 650; }
@@ -68,13 +60,11 @@
   .home__body { padding-top: 12px; gap: 12px; }
   .home__section { font-size: 16px; margin-bottom: 10px; }
   .home__deck { height: 192px; }
-  .home__deck--scroll { height: 212px; }
-  .home__cover { height: 192px; border-radius: 20px; }
+  .home__deck, .home__deck--scroll { height: 184px; }
+  .home__cover { height: 184px; border-radius: 20px; }
   .home__empty-cover { min-height: 154px; padding-block: 18px; border-radius: 20px; }
-  .home__cover--depth1 { transform: translateY(23px) scale(.96) rotateX(-18deg); }
-  .home__cover--depth2 { transform: translateY(-20px) scale(.96) rotateX(18deg); }
   .home__cover-face { padding-block: 10px; }
-  .home__cover-main { min-height: 86px; }
+  .home__cover-main { min-height: 74px; }
   .home__cover-art { width: 88px; height: 88px; top: calc(50% - 44px); }
   .home__inst { height: 64px; }
 }

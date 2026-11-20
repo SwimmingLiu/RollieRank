@@ -25,6 +25,7 @@ test("latest timer picker and scaled single-answer feedback", { timeout: 60000 }
     page.setDefaultTimeout(5000);
     await page.goto(`${base}/ios-v3/app.html?page=home&empty=1&session=latest-${session}&design=paper-cards-1114-v3`, { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "开始做题计时", exact: true }).click();
+    await page.locator(".rr-timer-institution-option").first().waitFor();
     return page;
   };
   const drag = async (page, target, dx, dy = 0, touch = false) => {
@@ -49,7 +50,7 @@ test("latest timer picker and scaled single-answer feedback", { timeout: 60000 }
     await page.getByRole("button", { name: "选择花生计时套卷", exact: true }).click();
     assert.ok((await page.locator(".rr-timer-collection-option").allTextContents()).every(text => !/\d+\s*套/.test(text)));
     assert.ok((await page.locator(".rr-timer-collection-option").allTextContents()).every(text => !text.includes("行测")));
-    await page.getByRole("button", { name: /选择花生一期/ }).click();
+    await page.getByRole("button", { name: /选择花生第1期/ }).click();
     const firstPaper = page.locator('.rr-timer-paper-option').first();
     await drag(page, firstPaper, 0, -75, true);
     assert.equal(await level(page), "paper", "vertical scrolling must not navigate back");
@@ -82,7 +83,7 @@ test("latest timer picker and scaled single-answer feedback", { timeout: 60000 }
   await t.test("the actual backdrop supports mouse and native touch back without changing other sheets", async () => {
     const paperLevel = async page => {
       await page.getByRole("button", { name: "选择花生计时套卷", exact: true }).click();
-      await page.getByRole("button", { name: /选择花生一期/ }).click();
+      await page.getByRole("button", { name: /选择花生第1期/ }).click();
       assert.equal(await level(page), 'paper');
     };
     const gesture = async (page, dx, dy, touch) => {
@@ -105,7 +106,7 @@ test("latest timer picker and scaled single-answer feedback", { timeout: 60000 }
       await gesture(page, -140, 0, touch);
       await page.screenshot({ path: join(evidence, `backdrop-${name}-back.png`) });
       assert.equal(await level(page), 'collection', `${name} backdrop left swipe must pop one level rather than dismiss`);
-      await page.getByRole('button', { name: /选择花生一期/ }).click();
+      await page.getByRole('button', { name: /选择花生第1期/ }).click();
       await gesture(page, 0, 50, touch);
       assert.equal(await level(page), 'paper', `${name} vertical backdrop movement must not dismiss or navigate`);
       await gesture(page, -140, 0, touch); assert.equal(await level(page), 'collection');
@@ -135,7 +136,7 @@ test("latest timer picker and scaled single-answer feedback", { timeout: 60000 }
   await t.test("paper rows are one readable line and custom duration has no preset chips", async () => {
     const page = await openPicker("duration");
     await page.getByRole("button", { name: "选择花生计时套卷", exact: true }).click();
-    await page.getByRole("button", { name: /选择花生一期/ }).click();
+    await page.getByRole("button", { name: /选择花生第1期/ }).click();
     const first = page.locator('.rr-timer-paper-option').first();
     assert.match((await first.innerText()).replace(/\s+/g, ""), /^第01套·130题·120分钟$/);
     assert.equal(await first.locator('small').count(), 0, "paper metadata belongs in the readable primary line");
@@ -168,8 +169,8 @@ test("latest timer picker and scaled single-answer feedback", { timeout: 60000 }
     await page.getByRole("button", { name: "更换计时套卷", exact: true }).click();
     await page.getByRole("textbox", { name: "搜索计时套卷", exact: true }).fill("第 01 套");
     const matches = await page.locator('.rr-timer-search-group h3').allTextContents();
-    assert.ok(matches.some(text => text.includes("花生") && text.includes("一期")));
-    assert.ok(matches.some(text => text.includes("花生") && text.includes("二期")));
+    assert.ok(matches.some(text => text.includes("花生") && text.includes("第1期")));
+    assert.ok(matches.some(text => text.includes("花生") && text.includes("第2期")));
     await page.screenshot({ path: join(evidence, 'cross-collection-search.png') });
     await page.close();
   });

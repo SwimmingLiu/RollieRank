@@ -311,17 +311,34 @@ var publisherName = (institution) => publishers.find((item) => item.institution 
 // docs/ui-exploration/ios-v3/ui/timer-paper-model.ts
 var visible = (text, institution) => institution === "\u56DB\u6D77" ? text.replaceAll("\u56DB\u6D77", publisherName(institution)) : text;
 var compactVariant = (variant) => variant.replace(/地市级\s*\/\s*行政执法类/g, "\u5730\u5E02 / \u6267\u6CD5").replaceAll("\u526F\u7701\u7EA7", "\u526F\u7701");
+var natural = new Intl.Collator("zh-CN", { numeric: true, sensitivity: "base" });
+var issueNumber = (label) => {
+  const value = label.split(" \xB7 ")[0]?.replace(/\s+/g, "") ?? "";
+  const digits = value.match(/^(?:第)?(\d+)期$/);
+  if (digits) return Number(digits[1]);
+  const chinese = value.match(/^(?:第)?([一二三四五六七八九]|[一二三四五六七八九]?十[一二三四五六七八九]?)期$/);
+  if (!chinese) return Number.MAX_SAFE_INTEGER;
+  const source = "\u4E00\u4E8C\u4E09\u56DB\u4E94\u516D\u4E03\u516B\u4E5D";
+  const [tens, units] = chinese[1].split("\u5341");
+  if (units === void 0) return source.indexOf(tens) + 1;
+  return (tens ? source.indexOf(tens) + 1 : 1) * 10 + (units ? source.indexOf(units) + 1 : 0);
+};
+var issueLabel = (period) => {
+  const value = period.trim();
+  const number = issueNumber(value);
+  return number === Number.MAX_SAFE_INTEGER ? value : `\u7B2C${number}\u671F`;
+};
 function timerCollections(papers) {
   const groups = /* @__PURE__ */ new Map();
   for (const paper of papers) {
     const project = paper.project?.trim() ?? "", period = paper.period?.trim() ?? "", variant = paper.variant?.trim() ?? "";
     const id = JSON.stringify([paper.institution, project, period, variant]);
-    const label = visible([period, compactVariant(variant)].filter(Boolean).join(" \xB7 ") || project || "\u5957\u5377", paper.institution);
+    const label = visible([issueLabel(period), compactVariant(variant)].filter(Boolean).join(" \xB7 ") || project || "\u5957\u5377", paper.institution);
     const detail = visible(project && project !== label ? project : "", paper.institution);
     if (!groups.has(id)) groups.set(id, { id, label, detail, institution: paper.institution, papers: [] });
     groups.get(id)?.papers.push(paper);
   }
-  return [...groups.values()];
+  return [...groups.values()].sort((a, b) => natural.compare(a.detail || "", b.detail || "") || issueNumber(a.label) - issueNumber(b.label) || natural.compare(a.label, b.label) || natural.compare(a.id, b.id));
 }
 function timerPaperTitle(paper, compact = false) {
   const title = visible(paper.title, paper.institution);

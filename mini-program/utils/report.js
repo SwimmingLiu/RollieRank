@@ -12,7 +12,15 @@ function reportBands(parts) {
   }
   return [...groups.values()].map(({ name, cents, max }) => {
     const rate = max > 0 ? Math.max(0, Math.min(1, cents / max)) : 0;
-    return { name, rate, pct: rate * 100, percent: percent(rate), earned: cents / 100, max: max / 100 };
+    return {
+      name,
+      rate,
+      pct: rate * 100,
+      percentValue: Math.round(rate * 1000) / 10,
+      percent: percent(rate),
+      earned: cents / 100,
+      max: max / 100,
+    };
   });
 }
 

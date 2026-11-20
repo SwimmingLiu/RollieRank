@@ -28,7 +28,10 @@
   border: 1px solid #e7e4e1;
   border-width: 1px 0 0;
   border-radius: 24px 24px 0 0;
+  transition: max-height .2s ease;
 }
+.timer__sheet--collapsed { max-height: calc(72vh - var(--timer-keyboard)); }
+.timer__sheet--expanded { max-height: calc(94vh - var(--timer-keyboard)); }
 .timer__heading { position: relative; display: flex; flex: none; min-height: 47px; align-items: center; justify-content: space-between; margin-bottom: 9px; }
 .timer__heading > text { font-size: 20px; font-weight: 600; }
 .timer__close { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: grid; place-items: center; flex: none; margin: 0 !important; width: 44px !important; height: 44px; }
@@ -36,7 +39,7 @@
 .timer__switch { flex: none; display: flex; padding: 3px; border-radius: 12px; background: #eee6d8; margin-bottom: 12px; }
 .timer__switch-item { display: flex; align-items: center; justify-content: center; flex: 1; margin: 0; width: 0 !important; height: 38px; border-radius: 9px; color: #78654c; font-size: 13px; }
 .timer__switch-item--on { background: #fffdf8; color: #4e3b25; font-weight: 600; }
-.timer__breadcrumb { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 2px; margin-bottom: 10px; color: #776147; font-size: 12px; }
+.timer__breadcrumb { flex: none; display: flex; flex-wrap: nowrap; align-items: center; gap: 3px; min-height: 38px; margin-bottom: 6px; overflow: hidden; color: #776147; font-size: 12px; white-space: nowrap; }
 .timer__breadcrumb button { margin: 0; min-height: 32px; padding: 0 5px; color: #8b6f4a; font-size: 12px; }
 .timer__breadcrumb > image { width: 12px; height: 12px; opacity: .45; }
 .timer__back { display: grid; place-items: center; width: 34px !important; padding: 0 !important; }
@@ -48,6 +51,7 @@
 .timer__options, .timer__plan-scroll { width: 100%; min-height: 0; }
 .timer__options { max-height: max(44px, calc(var(--timer-room) - 201px)); }
 .timer__options--with-path { max-height: max(44px, calc(var(--timer-room) - 244px)); }
+.timer__options--expanded { max-height: max(44px, calc(var(--timer-room) - 92px)); }
 .timer__publisher, .timer__collection, .timer__paper-option { display: flex; align-items: center; gap: 11px; width: 100% !important; text-align: left; color: #69543a; }
 .timer__publisher { min-height: 66px; margin-bottom: 8px; padding: 10px 12px; border: 1px solid #e8ddcb; border-radius: 14px; background: #fffdf8; }
 .timer__publisher:last-child { margin-bottom: 0; }
@@ -70,8 +74,6 @@
 .timer__selected image, .timer__module-tools image { flex: none; width: 16px; height: 16px; opacity: .65; }
 .timer__limit, .timer__duration { border: 1px solid #e7d8bd; background: #f7edd8; color: #6c5433; }
 .timer__limit { display: flex; justify-content: space-between; align-items: center; gap: 10px; border-radius: 16px; padding: 13px 16px; }
-.timer__limit > view:first-child { display: flex; flex-direction: column; gap: 4px; font-weight: 600; font-size: 14px; }
-.timer__limit > view:first-child > text:last-child { font-size: 11px; font-weight: 400; color: #9b8566; }
 .timer__limit-value, .timer__duration-value { display: flex; align-items: baseline; gap: 5px; color: #9a8361; font-size: 12px; }
 .timer__display-number { font-family: Fraunces, Georgia, serif; font-weight: 650; line-height: 1.1; color: #6c5433; font-variant-numeric: tabular-nums; }
 .timer__limit-value > text:first-child { font-size: 31px; }
@@ -85,7 +87,6 @@
 .timer__duration--compact .timer__total-input { width: 70px; height: 38px; font-size: 30px; }
 .timer__module-tools { display: flex; align-items: center; gap: 5px; }
 .timer__module-toggle { flex: 1; margin: 0; min-height: 42px; padding: 0 4px; font-size: 13px; color: #897457; }
-.timer__module-hint { margin-left: 7px; font-size: 11px; color: #a58f73; }
 .timer__flip { transform: rotate(180deg); }
 .timer__balance { display: grid; place-items: center; flex: none; margin: 0; width: 44px !important; height: 42px; }
 .timer__allocation { margin-top: -8px; }
@@ -97,8 +98,8 @@
 .timer__clock { display: flex; flex-direction: column; align-items: center; padding: 8px 4px 5px; color: #917655; font-size: 12px; }
 .timer__clock > text:first-child { font-size: clamp(49px, 15vw, 68px); }
 .timer__clock > text + text { margin-top: 6px; }
-.timer__active-plan, .timer__paused { color: #7d674a; }
-.timer__paused { text-align: center; font-size: 12px; }
+.timer__paused { display: grid; place-items: center; }
+.timer__paused image { width: 18px; height: 18px; opacity: .7; }
 .timer__progress { height: 5px; margin-top: 12px; width: 100%; overflow: hidden; border-radius: 20px; background: #efe4d4; }
 .timer__progress view { height: 100%; border-radius: 20px; background: #b6864d; }
 .timer__clock-module { min-height: 44px; padding: 0 5px; border-bottom: 1px solid #efe4d4; color: #847054; font-size: 13px; }
@@ -115,7 +116,7 @@
 .timer__actions image { width: 16px; height: 16px; }
 .timer__primary { background: #18181b; color: #fffdf8; }
 .timer__primary[disabled] { opacity: .42; background: #18181b; color: #fffdf8; }
-.timer__secondary { border: 1px solid #e8ddcb; background: #fffdf8; color: #756047; }
+.timer__actions .timer__secondary { flex: none; width: 44px !important; border: 1px solid #e8ddcb; background: #fffdf8; }
 @media (max-width: 350px) {
   .timer__layer { --timer-gutter: 16px; }
   .timer__module-input { gap: 5px; }

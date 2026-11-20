@@ -26,7 +26,7 @@ test("timer and uncertainty controls remain usable on compact phones", { timeout
     await page.getByRole("button", { name: "开始做题计时", exact: true }).click();
     assert.equal(await page.locator('.rr-timer-paper-list').getAttribute('data-picker-level'), "institution");
     await page.getByRole("button", { name: "选择花生计时套卷", exact: true }).click();
-    await page.getByRole("button", { name: /选择花生一期/ }).click();
+    await page.getByRole("button", { name: /选择花生第1期/ }).click();
     await page.getByRole("button", { name: /花生，.*第 1 套，开始计时/ }).click();
     return page;
   };

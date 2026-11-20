@@ -3,7 +3,7 @@
   <form class="set__card" bindsubmit="saveName">
     <label class="set__label" for="name">昵称</label>
     <view class="set__row">
-      <input class="set__input" id="name" name="name" type="nickname" value="{{name}}" maxlength="12" bindinput="onName" placeholder="输入昵称" aria-label="昵称" />
+      <input class="set__input" id="name" name="name" type="nickname" value="{{name}}" maxlength="12" bindinput="onName" aria-label="昵称" />
       <button class="set__save" form-type="submit" loading="{{saving}}" disabled="{{saving}}">保存</button>
     </view>
   </form>

@@ -100,7 +100,7 @@ Component({
       this.setData({
         picking: true, associating, source: associating ? this.record.source : "paper",
         heading: associating ? "关联计时套卷" : "做题计时",
-        keyboardHeight: 0, scrollTarget: "",
+        keyboardHeight: 0, scrollTarget: "", expanded: false,
       });
       this.paintPicker();
       this.refreshClock();
@@ -133,15 +133,20 @@ Component({
     selectPublisher(event) {
       if (this.suppressTap) return;
       const institution = event.currentTarget.dataset.id;
-      const collections = timer.timerCollections(this.available.filter(paper => paper.institution === institution));
-      this.picker = { institution, collection: collections.length === 1 ? collections[0].id : "", query: "" };
+      this.picker = { institution, collection: "", query: "" };
+      this.pickerScrollTop = 0;
       this.paintPicker();
     },
 
     selectCollection(event) {
       if (this.suppressTap) return;
       this.picker = { ...this.picker, collection: event.currentTarget.dataset.id, query: "" };
+      this.pickerScrollTop = 0;
       this.paintPicker();
+    },
+
+    onPickerScroll(event) {
+      this.pickerScrollTop = event.detail.scrollTop || 0;
     },
 
     search(event) {
@@ -151,11 +156,13 @@ Component({
 
     resetPicker() {
       this.picker = emptyPicker();
+      this.pickerScrollTop = 0;
       this.paintPicker();
     },
 
     showCollections() {
       this.picker = { ...this.picker, collection: "", query: "" };
+      this.pickerScrollTop = 0;
       this.paintPicker();
     },
 
@@ -220,7 +227,6 @@ Component({
       if (this.data.picking || !state) return;
       const plan = timer.timerView(state);
       const version = this.versions.get(state.versionId);
-      const active = plan.modules.find(module => module.id === plan.activeId);
       this.setData({
         plan: {
           status: plan.status, modulesMode: plan.mode === "modules", canStart: plan.canStart,
@@ -228,7 +234,6 @@ Component({
           limitLabel: plan.limit.label, allocated: plan.allocatedMs / MINUTE,
           mismatch: plan.planDeltaMs ? `${plan.planDeltaMs > 0 ? "多" : "少"} ${Math.abs(plan.planDeltaMs) / MINUTE} 分钟` : "",
           elapsed: timer.formatElapsed(plan.actualMs), progress: Math.min(100, plan.actualMs / plan.plannedMs * 100),
-          activePlan: plan.mode === "modules" && active ? `${active.name} · 计划 ${active.plannedMs / MINUTE} 分钟` : "",
           modules: plan.modules.map((module, index) => ({
             id: module.id, name: module.name, minutes: module.plannedMs / MINUTE,
             elapsed: timer.formatElapsed(module.actualMs), active: module.id === plan.activeId, index,
@@ -373,7 +378,11 @@ Component({
 
     startGesture(event) {
       const point = event.touches.length === 1 && event.touches[0];
-      this.gesture = point ? { x: point.clientX, y: point.clientY, zone: event.currentTarget.dataset.zone } : null;
+      this.gesture = point ? {
+        x: point.clientX,
+        y: point.clientY,
+        zone: event.currentTarget?.dataset?.zone || "",
+      } : null;
       this.suppressTap = false;
     },
 
@@ -384,8 +393,20 @@ Component({
       if (!from || !to) return;
       const dx = to.clientX - from.x, dy = to.clientY - from.y;
       this.suppressTap = Math.hypot(dx, dy) >= 8;
-      if (from.zone === "handle" && dy > 52 && dy > Math.abs(dx)) this.dismiss();
+      if (from.zone === "handle" && dy < -38 && dy < -Math.abs(dx)) this.setData({ expanded: true });
+      else if (from.zone === "handle" && dy > 52 && dy > Math.abs(dx)) {
+        if (this.data.expanded) this.setData({ expanded: false });
+        else this.dismiss();
+      }
+      if (from.zone === "panel" && this.data.picking) {
+        if (dy < -38 && dy < -Math.abs(dx)) this.setData({ expanded: true });
+        else if (dy > 42 && dy > Math.abs(dx) && this.pickerScrollTop <= 1 && this.data.expanded) this.setData({ expanded: false });
+      }
       if (this.data.picking && dx < -Math.max(56, (wx.getWindowInfo?.().windowWidth || 390) * .18) && Math.abs(dx) > Math.abs(dy) * 1.5) this.backPicker();
+      if (this.suppressTap) {
+        clearTimeout(this.suppressTapTimer);
+        this.suppressTapTimer = setTimeout(() => { this.suppressTap = false; }, 0);
+      }
     },
 
     cancelGesture() {
@@ -399,6 +420,14 @@ Component({
     },
 
     blockScroll() {},
+
+    expandTimerPlan() {
+      this.setData({ expanded: true });
+    },
+
+    collapseTimerPlan() {
+      if (this.data.expanded) this.setData({ expanded: false });
+    },
 
     dismiss() {
       if (this.data.openingEntry) return;

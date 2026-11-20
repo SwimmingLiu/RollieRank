@@ -29,7 +29,7 @@ function storage(t, entries) {
 test("native timer groups and searches the original published paper identities", () => {
   const province = { ...version, id: "province", variant: "副省级", period: "二期" };
   const collections = nativeTimer.timerCollections([version, province]);
-  assert.deepEqual(collections.map(group => group.label), ["一期 · 地市 / 执法", "二期 · 副省"]);
+  assert.deepEqual(collections.map(group => group.label), ["第1期 · 地市 / 执法", "第2期 · 副省"]);
   assert.equal(nativeTimer.timerPaperTitle(version, true), "第 1 套");
   assert.match(nativeTimer.timerPaperSearchText(version), /花生.*一期/);
 });

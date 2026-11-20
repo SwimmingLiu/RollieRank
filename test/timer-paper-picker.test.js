@@ -15,7 +15,7 @@ const paper = (id, period, variant, number = 1) => ({ id, institution: "四海",
 test("flower-peanut first period and both second-period variants remain distinct", () => {
   const papers = [paper("one", "一期", "地市级 / 行政执法类"), paper("two", "二期", "地市级 / 行政执法类"), paper("three", "二期", "副省级"), paper("four", "一期", "地市级 / 行政执法类", 2)];
   const collections = timerCollections(papers);
-  assert.deepEqual(collections.map(collection => collection.label), ["一期 · 地市 / 执法", "二期 · 地市 / 执法", "二期 · 副省"]);
+  assert.deepEqual(collections.map(collection => collection.label), ["第1期 · 地市 / 执法", "第2期 · 地市 / 执法", "第2期 · 副省"]);
   assert.deepEqual(collections[0].papers.map(item => item.id), ["one", "four"]);
   assert.equal(timerPaperTitle(papers[0]), "花生 · 一期 · 第 1 套");
   assert.equal(timerPaperTitle(papers[0], true), "第 1 套");
@@ -30,4 +30,13 @@ test("catalogs without optional metadata keep all real papers in one skippable c
   assert.equal(collections[0].label, "套卷");
   assert.deepEqual(collections[0].papers.map(item => item.id), ["a", "b"]);
   assert.equal(timerPaperTitle(rows[0], true), "练习甲");
+});
+
+test("timer collections use numeric issue order instead of lexicographic text", () => {
+  const rows = [
+    paper("ten", "第10期", "地市级 / 行政执法类"), paper("three", "第3期", "地市级 / 行政执法类"),
+    paper("eight", "第8期", "地市级 / 行政执法类"), paper("two", "二期", "地市级 / 行政执法类"),
+  ];
+  assert.deepEqual(timerCollections(rows).map(collection => collection.label),
+    ["第2期 · 地市 / 执法", "第3期 · 地市 / 执法", "第8期 · 地市 / 执法", "第10期 · 地市 / 执法"]);
 });

@@ -6,18 +6,14 @@
         <view class="analytics__category">{{categories[category].label}}<image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" /></view>
       </picker>
       <button class="analytics__filter" bindtap="openFilters" aria-label="筛选分析记录">
-        <image src="{{uiBase}}/filter.svg" mode="aspectFit" /><text>筛选</text><text wx:if="{{activeFilters}}" class="analytics__filter-count">{{activeFilters}}</text>
+        <image src="{{uiBase}}/filter.svg" mode="aspectFit" /><text wx:if="{{activeFilters}}" class="analytics__filter-count">{{activeFilters}}</text>
       </button>
     </view>
     <view class="analytics__tabs">
       <button wx:for="{{metrics}}" wx:key="key" class="analytics__tab {{metric === item.key ? 'analytics__tab--on' : ''}}" data-key="{{item.key}}" bindtap="setMetric">{{item.label}}</button>
     </view>
     <view wx:if="{{points.length}}" class="analytics__hero">
-      <view class="stack grow">
-        <text class="analytics__caption">最近{{metricLabel}}</text>
-        <text class="display-num analytics__score">{{points[0].value}}</text>
-      </view>
-      <text>{{points.length}}<text class="analytics__caption"> 次</text></text>
+      <text class="grow display-num analytics__score" aria-label="最近{{metricLabel}} {{points[0].value}}">{{points[0].value}}</text>
       <view class="analytics__activity"><image src="{{uiBase}}/trend.svg" mode="aspectFit" /></view>
     </view>
     <view wx:if="{{points.length > 1}}" class="analytics__records">
@@ -52,13 +48,13 @@
     <view class="sheet-panel analytics__filter-sheet" aria-role="dialog" aria-label="筛选练习记录">
       <view class="sheet-head"><text>筛选</text><button class="sheet-close" bindtap="closeFilters" aria-label="关闭"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button></view>
       <view class="analytics__filter-section">
-        <text class="analytics__filter-label">来源套卷</text>
+        <text class="analytics__filter-label">来源</text>
         <view class="analytics__source-list">
           <button wx:for="{{sources}}" wx:key="key" class="analytics__source-chip {{draftSource === item.key ? 'analytics__source-chip--on' : ''}}" data-source="{{item.key}}" bindtap="setDraftSource" aria-pressed="{{draftSource === item.key}}">{{item.label}}</button>
         </view>
       </view>
       <view class="analytics__filter-section">
-        <text class="analytics__filter-label">练习日期</text>
+        <text class="analytics__filter-label">日期</text>
         <view class="analytics__dates">
           <picker mode="date" value="{{draftFrom}}" end="{{draftTo || ''}}" bindchange="setDraftFrom"><view>{{draftFrom || '开始日期'}}<image src="{{uiBase}}/calendar.svg" mode="aspectFit" /></view></picker>
           <text>至</text>

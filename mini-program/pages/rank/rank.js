@@ -9,9 +9,9 @@ const { publisherName, subjectName, subjectId, LOGO } = catalog;
 const SHORT_LABELS = { 政治理论: "政治", 常识判断: "常识", 言语理解: "言语", 数量关系: "数量", 资料分析: "资料" };
 
 const SCOPES = [
-  { key: "selected", label: "岗位", name: "我的岗位", icon: "map-pin" },
-  { key: "nationwide", label: "全国", name: "全国", icon: "globe" },
-  { key: "position", label: "换岗", name: "其他岗位", icon: "search" },
+  { key: "selected", name: "我的岗位", icon: "map-pin" },
+  { key: "nationwide", name: "全国", icon: "globe" },
+  { key: "position", name: "其他岗位", icon: "search" },
 ];
 
 Page({

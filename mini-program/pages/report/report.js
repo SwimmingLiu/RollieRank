@@ -113,7 +113,6 @@ Page({
     this.attempt = attempt;
     const report = attempt.report;
     const timing = attempt.timing;
-    const delta = timing ? timing.actualMs - timing.plannedMs : 0;
     this.setData({
       loading: false,
       error: "",
@@ -135,7 +134,6 @@ Page({
         actual: formatElapsed(timing.actualMs),
         planned: timing.plannedMs / 60000,
         entry: formatElapsed(timing.entryMs),
-        delta: delta === 0 ? "符合计划" : (delta > 0 ? "超时 " : "节省 ") + formatElapsed(Math.abs(delta)),
         modules: timing.modules.map(module => ({
           id: module.id, name: module.name, planned: module.plannedMs / 60000,
           actual: formatElapsed(module.actualMs),

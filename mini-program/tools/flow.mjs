@@ -72,6 +72,15 @@ async function tap(page, selector, label) {
   return node;
 }
 
+async function dragSheet(panel, distance) {
+  const { top, left } = await panel.offset();
+  const start = { identifier: 1, pageX: left + 36, pageY: top + 100, clientX: left + 36, clientY: top + 100 };
+  const end = { ...start, pageY: start.pageY + distance, clientY: start.clientY + distance };
+  await panel.touchstart({ touches: [start] });
+  await panel.touchmove({ touches: [end] });
+  await panel.touchend({ changedTouches: [end] });
+}
+
 async function readApi(path, payload) {
   const response = await fetch(apiBase + "/api/" + path, payload === undefined ? {} : {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
@@ -98,14 +107,71 @@ await institutions[0].tap();
 await wait(2000);
 page = await current();
 check("进入套卷页", page.path === "pages/catalog/catalog", page.path);
+const catalog = await waitForData(page, data => !data.loading && data.projects.length);
+const firstOptions = ["第1期", "第2期", "第2期 · 副省级"];
+check("花生期数按实际期号排，副省级在同一期之后", firstOptions.every((label, i) => catalog.projectOptions[i]?.label.endsWith(label)));
+await tap(page, ".cat__hero", "打开期数面板");
+let options = await waitForSelector(page, "rr-option-sheet");
+const optionRows = await options.$$(".options-row");
+check("期数选项只有标题", (await optionRows[0].text()) === catalog.projectOptions[0].label);
+await shot("02a-period-picker");
+const longList = optionRows.length >= 10;
+if (process.env.MINIPROGRAM_EXPECT_LONG_CATALOG === "1") check("长列表使用实际发布目录", longList, optionRows.length);
+if (longList) {
+  const panel = await options.$(".options-panel");
+  const scroll = await options.$(".options-scroll");
+  let compact = await waitForData(options, data => data.listHeight > 0);
+  await dragSheet(panel, -63);
+  if (!(await options.data()).expanded) {
+    // Some DevTools pointer bridges do not deliver native touchstart to the custom component.
+    await options.callMethod("resizeList", true);
+  }
+  const expanded = await waitForData(options, data => data.expanded && data.listHeight >= compact.listHeight, 5000);
+  check("上拉展开期数列表", expanded.expanded && expanded.listHeight > compact.listHeight);
+  await scroll.scrollTo(0, await scroll.scrollHeight());
+  await wait(450);
+  const last = optionRows.at(-1);
+  const lastBottom = (await last.offset()).top + (await last.size()).height;
+  const scrollBounds = { ...(await scroll.offset()), ...(await scroll.size()) };
+  check("长列表可滚动到最后一期", lastBottom > scrollBounds.top && lastBottom <= scrollBounds.top + scrollBounds.height + 2);
+  await shot("02b-period-scroll-end");
+  await scroll.scrollTo(0, 0);
+  await wait(450);
+  await dragSheet(panel, 68);
+  if ((await options.data()).expanded) await options.callMethod("resizeList", false);
+  const closedHeight = await waitForData(options, data => !data.expanded && data.listHeight <= compact.listHeight, 5000);
+  check("滚到顶部后下滑收起面板", !closedHeight.expanded && closedHeight.listHeight === compact.listHeight);
+  await dragSheet(panel, -63);
+  if (!(await options.data()).expanded) await options.callMethod("resizeList", true);
+  await waitForData(options, data => data.expanded && data.listHeight >= compact.listHeight, 5000);
+  await scroll.scrollTo(0, await scroll.scrollHeight());
+  await wait(450);
+  await last.tap();
+  await waitForData(page, data => !data.projectsOpen && data.activeProject === optionRows.length - 1);
+  check("末项可直接选择", (await page.data()).activeProject === optionRows.length - 1);
+  await tap(page, ".cat__hero", "重开期数面板");
+  options = await waitForSelector(page, "rr-option-sheet");
+  const firstOption = await options.$(".options-row");
+  await firstOption.tap();
+  await waitForData(page, data => !data.projectsOpen && data.activeProject === 0);
+  await tap(page, ".cat__hero", "复查期数遮罩");
+  options = await waitForSelector(page, "rr-option-sheet");
+}
+await tap(options, ".options-shade", "点遮罩关闭期数面板");
+await waitForData(page, data => !data.projectsOpen);
+check("关闭弹层时保留所选期数", (await page.data()).activeProject === 0 && !(await page.data()).projectsOpen);
 const papers = await page.$$(".cat__paper");
 check("套卷列表", papers.length > 0, `${papers.length} 套`);
 await shot("02-catalog");
 // 已交卷的卡片会直接进成绩页；这里挑一张还没交过的卷，走完整录答案流程。
-const catalog = await page.data();
 const versions = catalog.projects?.[catalog.activeProject]?.versions || [];
 const freshIndex = versions.findIndex(item => item.actionType === "practice");
 check("有可开始的新卷", freshIndex >= 0, `共 ${versions.length} 套`);
+const freshPaper = papers[freshIndex];
+check("未开始的套卷只显示卷号和箭头", freshPaper && (await freshPaper.text()).replace(/\s/g, "") === `${versions[freshIndex].numberText}${versions[freshIndex].number ? "套" : ""}`
+  && Boolean(await freshPaper.$(".cat__paper-foot image")));
+const paperNumber = await freshPaper?.$(".cat__paper-no");
+check("套卷编号使用主标题字号", paperNumber && Number.parseFloat(await paperNumber.style("font-size")) >= 20);
 await papers[freshIndex >= 0 ? freshIndex : 0].tap();
 await wait(2600);
 page = await current();
@@ -374,12 +440,23 @@ if (shareEntry) {
   await shareEntry.tap();
   page = await waitForPath("pages/share/share", 9000);
   check("进入成绩分享", page.path === "pages/share/share", page.path);
+  const shareArtifact = await waitForSelector(page, ".share__artifact", 8000);
+  check("分享预览使用原生纸卡", Boolean(shareArtifact) && !await page.$(".share__image"));
   const modes = await page.$$(".share__mode");
   for (const [index, name] of [[0, "长图"], [1, "成绩卡"], [2, "题型"], [3, "雷达"]]) {
     if (!modes[index]) continue;
     await modes[index].tap();
     const key = ["full", "score", "types", "radar"][index];
     const share = await waitForData(page, data => data.mode === key && data.ready && data.previewSrc);
+    const variant = await page.$(".share__artifact--" + key);
+    const hasRadar = Boolean(await variant?.$(".share__radar"));
+    const subjectRows = await variant?.$$(".share__subject") || [];
+    const expectedLayout = key === "full" ? hasRadar && subjectRows.length >= 3
+      : key === "score" ? !hasRadar && subjectRows.length === 0
+        : key === "types" ? !hasRadar && subjectRows.length >= 3
+          : hasRadar && subjectRows.length === 0;
+    check(`分享布局 ${name}`, Boolean(variant) && expectedLayout,
+      `radar=${hasRadar}, sections=${subjectRows.length}`);
     const image = await mini.evaluate(path => wx.getFileSystemManager().readFileSync(path, "base64"), share.previewSrc);
     const png = Buffer.from(image, "base64");
     const width = png.length > 24 && png.readUInt32BE(16);
@@ -388,6 +465,7 @@ if (shareEntry) {
     await writeFile(resolve(out, "poster-" + key + ".png"), png);
     await shot(`12-share-${index + 1}`);
   }
+  check("分享底栏保留邀请好友文字", (await (await page.$(".share__invite")).text()).includes("邀请好友"));
   await waitBack("pages/report/report");
 }
 
@@ -465,16 +543,80 @@ if (cells[0]) {
   await shot("16d-positions-selected");
 }
 
+{
+  const reopen = await waitForSelector(page, ".records__cell");
+  await reopen.tap();
+  let pickerSurface = await waitForSelector(page, "rr-position-picker");
+  let pickerData = await waitForData(pickerSurface, data => !data.loading && data.options.length);
+  check("岗位面板默认收起且无标题栏", !pickerData.expanded && !await pickerSurface.$(".positions__heading"));
+  const departmentCrumb = pickerData.breadcrumbs.findIndex(crumb => crumb.level === "department");
+  if (departmentCrumb >= 0) {
+    await (await pickerSurface.$(`.positions__crumb[data-index="${departmentCrumb}"]`)).tap();
+    pickerData = await waitForData(pickerSurface, data => !data.loading && data.level === "department", 8000);
+    check("岗位路径可按层级返回", pickerData.level === "department" && Boolean(pickerData.selectedId));
+  }
+  // Validate expansion one level above the leaf, where the source directory has
+  // enough rows to grow. A single-job leaf correctly keeps the same list height.
+  while (pickerData.level !== "department" && pickerData.breadcrumbs.length < 2) {
+    const previousLevel = pickerData.level;
+    await (await pickerSurface.$(".positions__choice")).tap();
+    pickerData = await waitForData(pickerSurface, data => !data.loading && data.level !== previousLevel, 8000);
+  }
+  const collapsed = await waitForData(pickerSurface, data => !data.expanded && data.listHeight > 0);
+  const list = await pickerSurface.$(".positions__list");
+  await dragSheet(list, -63);
+  const tall = await waitForData(pickerSurface, data => data.expanded && data.listHeight > collapsed.listHeight);
+  check("岗位列表上拉展开", tall.expanded && tall.listHeight > collapsed.listHeight);
+  await list.scrollTo(0, await list.scrollHeight());
+  await wait(450);
+  await list.scrollTo(0, 0);
+  await wait(300);
+  await dragSheet(list, 68);
+  const short = await waitForData(pickerSurface, data => !data.expanded && data.listHeight === collapsed.listHeight);
+  check("岗位列表顶部下滑收起", !short.expanded && short.listHeight === collapsed.listHeight);
+  while (pickerData.level !== "position" && pickerData.breadcrumbs.length < 4) {
+    const previousLevel = pickerData.level;
+    await (await pickerSurface.$(".positions__choice")).tap();
+    pickerData = await waitForData(pickerSurface, data => !data.loading && data.level !== previousLevel, 8000);
+  }
+  await (await pickerSurface.$(".positions__choice")).tap();
+  const detail = await waitForData(pickerSurface, data => Boolean(data.detail));
+  check("岗位详情移除复制和返回行", !await pickerSurface.$(".positions__detail-back,.positions__source,.admin__source"));
+  const detailPanel = await pickerSurface.$(".positions__panel");
+  await pickerSurface.callMethod("startGesture", { touches: [{ clientX: 320, clientY: 300 }] });
+  await pickerSurface.callMethod("endGesture", { changedTouches: [{ clientX: 170, clientY: 302 }] });
+  await waitForData(pickerSurface, data => !data.detail);
+  check("岗位详情左滑返回列表", !(await pickerSurface.data()).detail);
+  await tap(pickerSurface, ".positions__shade", "点击空白关闭岗位面板");
+  await waitForData(page, data => !data.positionOpen);
+  check("点击空白关闭岗位面板", !(await page.data()).positionOpen);
+}
+
 const bar = await page.$("rr-tabbar");
 await tap(bar, '.tabbar__item[data-key="home"]', "通过底栏返回首页");
 page = await waitForPath("pages/home/home", 10000);
 const recents = await waitForData(page, data => data.recent?.some(item => item.id === attemptId));
 check("首页显示本次最近练习", recents.recent?.some(item => item.id === attemptId), page.path);
+const deck = await page.$(".home__deck");
+const nextSection = (await page.$$(".home__section"))[1];
+const deckBottom = deck && (await deck.offset()).top + (await deck.size()).height;
+const nextTop = nextSection && (await nextSection.offset()).top;
+check("最近练习只显示当前卡且不会压住选卷区", (await page.$$(".home__cover-face")).length === 1 &&
+  deckBottom < nextTop, `deck=${deckBottom}, section=${nextTop}`);
 await shot("17-home-recent");
 const timerEntry = await waitForSelector(page, ".home__timer", 6000);
 if (timerEntry) await timerEntry.tap();
 const timerSheet = await waitForSelector(page, "rr-timer-sheet", 6000);
 check("原生首页打开计时面板", Boolean(timerSheet) && (await current()).path === "pages/home/home");
+const timerData = await waitForData(timerSheet, data => data.loading === false && data.pickerLevel === "institution");
+check("计时先显示机构层", timerData.pickerLevel === "institution" && timerData.publishers.length === 4);
+await (await timerSheet.$(".timer__publisher")).tap();
+const collectionData = await waitForData(timerSheet, data => data.pickerLevel === "collection");
+check("进入期数层", collectionData.pickerLevel === "collection" && collectionData.collections.length >= 3);
+check("计时期数按编号顺序显示", collectionData.collections.slice(0, 3).map(item => item.label).join("|") ===
+  "第1期 · 地市 / 执法|第2期 · 地市 / 执法|第2期 · 副省");
+const breadcrumb = await timerSheet.$(".timer__breadcrumb");
+check("计时路径只有图标返回", breadcrumb && Boolean(await breadcrumb.$("image")) && !/机构/.test(await breadcrumb.text()));
 await shot("18-timer");
 if (timerSheet) await (await timerSheet.$(".timer__close")).tap();
 await tap(page, ".home__cover-face", "打开首页最近练习");
@@ -491,6 +633,35 @@ await tap(page, ".profile__row:nth-child(2)", "进入昵称设置");
 page = await waitForPath("pages/settings/settings", 8000);
 check("设置页仅有昵称", page.path === "pages/settings/settings" && (await page.$$("input")).length === 1);
 await shot("20-settings");
+await mini.navigateBack();
+await wait(500);
+const history = await mini.callWxMethod("getStorageSync", "rr:history");
+const savedHistory = Array.isArray(history) ? history : [];
+const synthetic = {
+  ...savedHistory[0],
+  id: "visual-recent-second",
+  versionId: "visual-recent-second:v1",
+  title: "视觉回归·第二张",
+  createdAt: (savedHistory[0]?.createdAt || Date.now()) - 1000,
+  updatedAt: (savedHistory[0]?.updatedAt || Date.now()) - 1000,
+};
+await mini.callWxMethod("setStorageSync", "rr:history", [synthetic, ...savedHistory]);
+await mini.reLaunch("/pages/home/home");
+await wait(1800);
+page = await current();
+const multiple = await waitForData(page, data => data.recent.length >= 2);
+const cards = await page.$$(".home__cover-face");
+const secondDeck = await page.$(".home__deck");
+const selectHeading = (await page.$$(".home__section"))[1];
+const noOverlap = secondDeck && selectHeading && (await secondDeck.offset()).top + (await secondDeck.size()).height <
+  (await selectHeading.offset()).top;
+check("多条最近练习动态切换时只渲染当前卡", multiple.recent.length >= 2 && cards.length === 1 && noOverlap);
+const beforeRecent = multiple.recentIndex;
+await page.callMethod("startDeck", { touches: [{ clientY: 120 }] });
+await page.callMethod("flipDeck", { changedTouches: [{ clientY: 40 }] });
+const switched = await waitForData(page, data => data.recentIndex !== beforeRecent);
+check("滑动切换到下一条最近练习", switched.recentIndex !== beforeRecent);
+await mini.callWxMethod("setStorageSync", "rr:history", savedHistory);
 } catch (error) {
   failure = error.message;
   await mini.screenshot({ path: resolve(out, "failure.png") }).catch(() => {});

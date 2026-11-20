@@ -6,7 +6,6 @@
       <image class="records__avatar" src="{{avatar || asset.profile}}" mode="aspectFill" />
       <view class="stack grow">
         <text class="records__name ellipsis">{{name}}</text>
-        <text class="records__profile-count">{{records.length + drafts.length}} 份练习</text>
       </view>
       <image class="records__art" src="/assets/answer-paper.svg" mode="aspectFit" />
     </button>
@@ -16,9 +15,9 @@
         <view class="records__cell-label"><image src="{{uiBase}}/map-pin.svg" mode="aspectFit" />报考岗位</view>
         <view class="records__cell-value"><text class="ellipsis grow">{{position ? position.label : '未选岗'}}</text><image src="{{uiBase}}/chevron.svg" mode="aspectFit" /></view>
       </button>
-      <button class="records__cell" bindtap="openAnalytics">
+      <button class="records__cell" bindtap="openAnalytics" aria-label="成长分析，{{records.length}} 次练习">
         <view class="records__cell-label"><image src="{{uiBase}}/trend.svg" mode="aspectFit" />成长分析</view>
-        <view class="records__cell-value"><text class="grow">{{records.length}}<text class="records__muted"> 次练习</text></text><image src="{{uiBase}}/chevron.svg" mode="aspectFit" /></view>
+        <view class="records__cell-value"><text class="grow">{{records.length}}</text><image src="{{uiBase}}/chevron.svg" mode="aspectFit" /></view>
       </button>
     </view>
 

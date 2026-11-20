@@ -2,7 +2,7 @@ const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
 const format = require("../../utils/format.js");
 const catalog = require("../../utils/catalog.js");
-const { reportBands } = require("../../utils/report.js");
+const { reportBands, drawRadar } = require("../../utils/report.js");
 const { WIDTH, posterHeight, drawPoster } = require("../../utils/poster.js");
 const { ASSET } = require("../../config.js");
 
@@ -30,12 +30,19 @@ Page({
     mode: "full",
     modes: MODES,
     uiBase: "/assets/ui",
+    asset: ASSET,
+    publisherLogo: "",
     ready: false,
     saving: false,
     previewSrc: "",
     previewWidth: 0,
     previewHeight: 0,
+    previewScale: 1,
+    radarSrc: "",
     previewTop: 0,
+    summary: null,
+    sections: [],
+    timing: null,
   },
 
   onLoad(query) {
@@ -55,7 +62,10 @@ Page({
       try {
         const standing = await api.request("positions/leaderboard?versionId=" + encodeURIComponent(attempt.versionId) +
           "&guestId=" + encodeURIComponent(storage.guestId()) + "&scope=nationwide");
-        if (standing.self) this.summary = { ...this.summary, rank: standing.self.rank, count: standing.count };
+        if (standing.self) {
+          this.summary = { ...this.summary, rank: standing.self.rank, count: standing.count };
+          this.setData({ summary: this.summary });
+        }
         this.paint();
       } catch {
         // A saved report can be exported while ranks are unavailable.
@@ -73,6 +83,7 @@ Page({
     this.publisher = ASSET[catalog.LOGO[attempt.institution]] || "";
     this.bands = reportBands(report.breakdown);
     const version = getApp().globalData.versions.find(item => item.id === attempt.versionId);
+    const timing = attempt.timing;
     this.summary = {
       identity: catalog.attemptIdentity(version, attempt),
       score: format.scoreCard(report.totalCents),
@@ -80,8 +91,25 @@ Page({
       correct: report.correct,
       wrong: report.wrong,
       blank: report.blank,
+      rank: null,
+      count: 0,
     };
-    this.setData({ loading: false }, () => this.fit());
+    this.setData({
+      loading: false,
+      summary: this.summary,
+      sections: this.bands,
+      publisherLogo: this.publisher,
+      timing: timing ? {
+        planned: timing.plannedMs / 60000,
+        actual: format.minutes(timing.actualMs),
+        difference: (timing.actualMs >= timing.plannedMs ? "+" : "−") + format.minutes(Math.abs(timing.actualMs - timing.plannedMs)),
+        modules: (timing.modules || []).map(module => ({
+          name: module.name,
+          planned: module.plannedMs / 60000,
+          actual: format.minutes(module.actualMs),
+        })),
+      } : null,
+    }, () => this.fit());
   },
 
   setMode(event) {
@@ -91,17 +119,57 @@ Page({
 
   fit() {
     this.createSelectorQuery().select(".share__preview").boundingClientRect(size => {
-      if (!size?.width || !size.height) return;
-      const mode = this.data.mode;
-      const height = posterHeight(mode, this.bands);
-      const fitWidth = (size.width - 36) / WIDTH;
-      const scale = mode === "full" ? fitWidth : Math.min(fitWidth, (size.height - 4) / height);
-      this.setData({
-        previewWidth: Math.floor(WIDTH * scale),
-        previewHeight: Math.floor(height * scale),
-        previewTop: Date.now() % 2,
-      }, () => this.paint());
+      if (!size?.width) return;
+      const scale = Math.min(1, size.width / WIDTH);
+      this.setData({ previewScale: scale, previewWidth: Math.floor(WIDTH * scale) }, () => {
+        this.createSelectorQuery().select(".share__artifact").boundingClientRect(rect => {
+          if (!rect?.height) return;
+          // Mini-program runtimes differ on whether boundingClientRect includes the
+          // transform. Width tells us which height was returned.
+          const transformed = Math.abs(rect.width - WIDTH) > 1;
+          const height = transformed ? rect.height : rect.height * scale;
+          this.setData({ previewHeight: Math.ceil(height), previewTop: Date.now() % 2 }, async () => {
+            await this.prepareRadar();
+            this.paint();
+          });
+        }).exec();
+      });
     }).exec();
+  },
+
+  async prepareRadar() {
+    if (!["full", "radar"].includes(this.data.mode) || !this.bands?.length) return;
+    if (this.radarPromise) return this.radarPromise;
+    this.radarPromise = this.renderRadar();
+    try {
+      await this.radarPromise;
+    } catch {
+      this.radarPromise = null;
+    }
+  },
+
+  async renderRadar() {
+    const canvas = await new Promise(resolve => {
+      this.createSelectorQuery().select("#radarCanvas").fields({ node: true }).exec(([result]) => resolve(result?.node));
+    });
+    if (!canvas) throw new Error("雷达画布尚未准备好");
+    const width = 350;
+    const height = 294;
+    const dpr = wx.getWindowInfo?.().pixelRatio || 2;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    const context = canvas.getContext("2d");
+    context.scale(dpr, dpr);
+    drawRadar(context, this.bands, 0, 0, width, height);
+    const result = await new Promise((resolve, reject) => wx.canvasToTempFilePath({
+      canvas,
+      fileType: "png",
+      destWidth: canvas.width,
+      destHeight: canvas.height,
+      success: resolve,
+      fail: reject,
+    }));
+    await new Promise(resolve => this.setData({ radarSrc: result.tempFilePath }, resolve));
   },
 
   async paint() {
