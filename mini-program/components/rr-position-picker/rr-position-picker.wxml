@@ -3,6 +3,9 @@
   <view class="positions__panel positions__panel--{{expanded ? 'expanded' : 'collapsed'}}"
     aria-role="dialog" aria-label="{{mode === 'browse' ? '查看岗位榜' : '报考岗位'}}"
     data-zone="panel" bindtouchstart="startGesture" bindtouchend="endGesture" bindtouchcancel="cancelGesture">
+    <view class="positions__grabber-zone" data-zone="grabber" catchtouchstart="startGrabber" catchtouchend="endGrabber" catchtouchcancel="cancelGrabber" catchtap="grabberTap">
+      <view class="positions__grabber"></view>
+    </view>
     <block wx:if="{{!detail}}">
       <view class="positions__drag-zone" data-native-touch>
         <view class="positions__exam-tabs" aria-label="考试类型">
@@ -40,7 +43,7 @@
       <button wx:if="{{selectedId && mode === 'select'}}" class="positions__clear" bindtap="clear" disabled="{{saving}}">清除选岗</button>
     </block>
     <block wx:else>
-      <scroll-view class="positions__list" data-native-touch style="{{listHeight ? 'height: ' + listHeight + 'px;' : ''}}" scroll-y enhanced show-scrollbar="{{false}}">
+      <scroll-view class="positions__list" data-native-touch style="{{listHeight ? 'height: ' + listHeight + 'px;' : ''}}" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}">
         <view class="positions__list-content">
         <text class="positions__detail-title">{{detail.title}}</text>
         <text class="positions__detail-code">{{detail.code}}</text>

@@ -20,9 +20,14 @@
 
     <view wx:if="{{recent.length}}" class="home__recent">
       <view class="home__section">最近练习</view>
-      <view class="home__deck {{recent.length > 1 ? 'home__deck--scroll' : ''}}" bindtouchstart="startDeck" bindtouchend="flipDeck">
+      <view class="home__deck {{recent.length > 1 ? 'home__deck--scroll' : ''}} {{deckDragging ? 'home__deck--dragging' : ''}}"
+        bindtouchstart="startDeck" catchtouchmove="moveDeck" bindtouchend="flipDeck" bindtouchcancel="cancelDeck"
+        aria-role="region" aria-label="最近练习，第 {{recentIndex + 1}} 张，共 {{recent.length}} 张，上滑切换">
+        <view wx:if="{{recent.length > 1}}" class="home__deck-layer home__deck-layer--2"></view>
+        <view wx:if="{{recent.length > 1}}" class="home__deck-layer home__deck-layer--1"></view>
         <block wx:for="{{recent}}" wx:key="id">
-        <view wx:if="{{index === recentIndex}}" class="home__cover home__cover--active {{item.institution === '超格' ? 'home__cover--orange' : ''}}">
+        <view wx:if="{{index === recentIndex}}" class="home__cover home__cover--active {{item.institution === '超格' ? 'home__cover--orange' : ''}}"
+          style="transform: translateY({{deckOffset}}px) scale({{deckScale}});">
           <view class="home__cover-face" bindtap="openRecent" data-index="{{index}}" hover-class="press">
             <view class="home__cover-meta">
               <view class="home__cover-publisher">
@@ -52,6 +57,11 @@
           </view>
         </view>
         </block>
+        <view wx:if="{{recent.length > 1}}" class="home__deck-pager" aria-label="第 {{recentIndex + 1}} 张，共 {{recent.length}} 张">
+          <image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
+          <text>{{recentIndex + 1}}</text>
+          <text class="home__deck-pager-total">{{recent.length}}</text>
+        </view>
       </view>
     </view>
     <view wx:if="{{!loading && !error && !recent.length}}" class="home__recent home__recent--empty">

@@ -1,5 +1,5 @@
 .practice { display: flex; flex-direction: column; height: 100vh; min-height: 0; padding-bottom: 0; overflow: hidden; }
-.practice__head { flex: none; padding: 0 22px 12px; border-bottom: 1px solid #f0e9dc; }
+.practice__head { flex: none; padding: 0 22px 10px; border-bottom: 1px solid #f0e9dc; }
 .practice__identity { display: flex; align-items: center; gap: 7px; height: 48px; font-size: 11px; color: #79767d; }
 .practice__identity image { width: 16px; height: 16px; flex: none; }
 .practice__count { margin-left: 5px; white-space: nowrap; font-size: 16px; font-weight: 650; color: #302d26; }
@@ -12,7 +12,7 @@
 .practice__progress { height: 3px; background: #eae2d5; border-radius: 2px; overflow: hidden; }
 .practice__progress view { height: 100%; background: #ba945e; }
 .practice__scroller { flex: 1; min-height: 0; height: 0; }
-.practice__list { padding: 6px 16px 14px; }
+.practice__list { padding: 6px 16px 20px; }
 .practice__list-heading { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 44px; padding: 0 6px; color: #777379; font-size: 12px; }
 .practice__list-heading text:last-child { color: #9e9aa1; }
 .practice__row { position: relative; display: grid; grid-template-columns: 28px repeat(4, minmax(0, 1fr)) 46px; align-items: center; gap: 5px; min-height: 66px; border-bottom: 1px solid #ece3d4; }
@@ -49,9 +49,10 @@
 .practice__sheet-number { position: absolute; top: 7px; left: 8px; color: #8c8073; font-size: 11px; line-height: 1.2; font-weight: 500; font-variant-numeric: tabular-nums; }
 .practice__sheet-answer { line-height: 1.1; font-weight: 650; }
 .practice__sheet-cell:not(.practice__sheet-cell--done) .practice__sheet-answer { color: #d4cec5; font-weight: 400; }
-.practice__single { padding: 18px 22px 24px; }
-.practice__single-card { width: 100%; padding: 21px 18px 10px; border: 1px solid #e7dcc9; border-radius: 23px; background: #fffdf8; box-shadow: 0 3px 0 #e9dfcf; }
-.practice__single-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 23px; }
+.practice__single { padding: 16px 22px 18px; }
+.practice__single-card { width: 100%; min-height: min(430px, calc(100vh - 224px)); padding: 22px 20px 14px; border: 1px solid #e7dcc9; border-radius: 23px; background: #fffdf8; box-shadow: 0 3px 0 #e9dfcf; }
+.practice__single-head { position: relative; display: flex; align-items: center; min-height: 44px; padding-right: 48px; margin-bottom: 25px; }
+.practice__single-head > .practice__filter { position: absolute; top: 50%; right: 0; transform: translateY(-50%); margin: 0 !important; }
 .practice__single-label { color: #9a886e; font-size: 12px; }
 .practice__single-number { margin-inline: 3px; color: #514332; font-size: 32px; font-weight: 650; }
 .practice__single-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
@@ -59,7 +60,7 @@
 .practice__single-choices .practice__choice--on { border-color: #c4a36f; background: #f4e6c8; color: #6c522e; box-shadow: 0 2px 0 #ddc79f; }
 .practice__single-choices image, .practice__single-dot { width: 17px; height: 17px; flex: none; }
 .practice__single-dot { border: 1px solid #e4d8c3; border-radius: 50%; }
-.practice__single-links { display: flex; justify-content: space-between; margin-top: 19px; padding-top: 7px; border-top: 1px solid #eee5d7; }
+.practice__single-links { display: flex; justify-content: space-between; margin-top: clamp(20px, 7vh, 54px); padding-top: 8px; border-top: 1px solid #eee5d7; }
 .practice__single-links button[disabled] { background: transparent; opacity: .45; }
 @media (max-width: 350px) {
   .practice__head, .practice__footer, .practice__single { padding-inline: 16px; }
@@ -69,7 +70,7 @@
 }
 @media (max-height: 650px) {
   .practice__single { padding-top: 10px; }
-  .practice__single-card { padding: 12px; }
+  .practice__single-card { min-height: 0; padding: 12px; }
   .practice__single-head { margin-bottom: 12px; }
   .practice__single-choices .practice__choice { height: 62px; padding-inline: 15px; }
   .practice__single-links { margin-top: 10px; }

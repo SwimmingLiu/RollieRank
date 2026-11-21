@@ -16,6 +16,8 @@ export type TimerCollection = { id: string; label: string; detail: string; insti
 
 const visible = (text: string, institution: string) => institution === "四海" ? text.replaceAll("四海", publisherName(institution)) : text;
 const compactVariant = (variant: string) => variant.replace(/地市级\s*\/\s*行政执法类/g, "地市 / 执法").replaceAll("副省级", "副省");
+// 题量是卷内属性，不是系列层级；与原生目录共用 .raw 的目录边界。
+const collectionVariant = (variant: string) => /^\d+题版$/.test(variant.trim()) ? "" : variant;
 const natural = new Intl.Collator("zh-CN", { numeric: true, sensitivity: "base" });
 const issueNumber = (label: string) => {
   const value = label.split(" · ")[0]?.replace(/\s+/g, "") ?? "";
@@ -38,7 +40,7 @@ const issueLabel = (period: string) => {
 export function timerCollections(papers: readonly TimerPaper[]): TimerCollection[] {
   const groups = new Map<string, TimerCollection>();
   for (const paper of papers) {
-    const project = paper.project?.trim() ?? "", period = paper.period?.trim() ?? "", variant = paper.variant?.trim() ?? "";
+    const project = paper.project?.trim() ?? "", period = paper.period?.trim() ?? "", variant = collectionVariant(paper.variant?.trim() ?? "");
     const id = JSON.stringify([paper.institution, project, period, variant]);
     const label = visible([issueLabel(period), compactVariant(variant)].filter(Boolean).join(" · ") || project || "套卷", paper.institution);
     const detail = visible(project && project !== label ? project : "", paper.institution);

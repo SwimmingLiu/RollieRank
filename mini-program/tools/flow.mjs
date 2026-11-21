@@ -55,6 +55,16 @@ async function waitForSelector(page, selector, timeout = 5000) {
   }
   return node;
 }
+
+async function elementBox(node, timeout = 3000) {
+  const started = Date.now();
+  while (node && Date.now() - started < timeout) {
+    const [offset, size] = await Promise.all([node.offset(), node.size()]);
+    if (offset && size) return { ...offset, ...size };
+    await wait(100);
+  }
+  return null;
+}
 // 页面可能先挂载再取数，等关键字段有值再断言。
 async function waitForData(page, predicate, timeout = 12000) {
   const started = Date.now();
@@ -81,6 +91,17 @@ async function dragSheet(panel, distance) {
   await panel.touchend({ changedTouches: [end] });
 }
 
+async function dragGrabber(grabber, distance) {
+  const { top, left } = await grabber.offset();
+  const size = await grabber.size();
+  const start = { identifier: 1, pageX: left + size.width / 2, pageY: top + size.height / 2,
+    clientX: left + size.width / 2, clientY: top + size.height / 2 };
+  const end = { ...start, pageY: start.pageY + distance, clientY: start.clientY + distance };
+  await grabber.touchstart({ touches: [start] });
+  await grabber.touchmove({ touches: [end] });
+  await grabber.touchend({ changedTouches: [end] });
+}
+
 async function readApi(path, payload) {
   const response = await fetch(apiBase + "/api/" + path, payload === undefined ? {} : {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
@@ -91,6 +112,15 @@ async function readApi(path, payload) {
 
 let attemptId, guestId, failure;
 try {
+// 0. 空记录
+await mini.switchTab("/pages/records/records");
+await wait(1200);
+let emptyRecords = await current();
+await waitForData(emptyRecords, data => !data.loading);
+const emptyCopy = await emptyRecords.$(".records__empty");
+check("空记录只说明没有练习记录", emptyCopy && (await emptyCopy.text()).trim() === "没有练习记录" && !await emptyRecords.$(".records__empty button"));
+await shot("00-records-empty");
+
 // 1. 首页与选卷
 await mini.reLaunch("/pages/home/home");
 await wait(2200);
@@ -162,6 +192,8 @@ await waitForData(page, data => !data.projectsOpen);
 check("关闭弹层时保留所选期数", (await page.data()).activeProject === 0 && !(await page.data()).projectsOpen);
 const papers = await page.$$(".cat__paper");
 check("套卷列表", papers.length > 0, `${papers.length} 套`);
+const compactPaperHeight = papers[0] && (await papers[0].size()).height;
+check("套卷卡压缩内部空白", compactPaperHeight > 0 && compactPaperHeight <= 78, compactPaperHeight + "px");
 await shot("02-catalog");
 // 已交卷的卡片会直接进成绩页；这里挑一张还没交过的卷，走完整录答案流程。
 const versions = catalog.projects?.[catalog.activeProject]?.versions || [];
@@ -169,13 +201,39 @@ const freshIndex = versions.findIndex(item => item.actionType === "practice");
 check("有可开始的新卷", freshIndex >= 0, `共 ${versions.length} 套`);
 const freshPaper = papers[freshIndex];
 check("未开始的套卷只显示卷号和箭头", freshPaper && (await freshPaper.text()).replace(/\s/g, "") === `${versions[freshIndex].numberText}${versions[freshIndex].number ? "套" : ""}`
-  && Boolean(await freshPaper.$(".cat__paper-foot image")));
+  && Boolean(await freshPaper.$(".cat__paper-arrow")));
 const paperNumber = await freshPaper?.$(".cat__paper-no");
 check("套卷编号使用主标题字号", paperNumber && Number.parseFloat(await paperNumber.style("font-size")) >= 20);
 await papers[freshIndex >= 0 ? freshIndex : 0].tap();
 await wait(2600);
 page = await current();
 check("进入录答案", page.path === "pages/practice/practice", page.path);
+const modeToggle = await page.$('[aria-label="切换单题录入"]');
+if (modeToggle) {
+  await modeToggle.tap();
+  await waitForData(page, data => data.single === true);
+  const singleCard = await waitForSelector(page, ".practice__single-card");
+  const mark = await waitForSelector(page, ".practice__single-head .practice__filter");
+  const choices = await waitForSelector(page, ".practice__single-choices");
+  const cardBox = await elementBox(singleCard);
+  const markBox = await elementBox(mark);
+  const choicesBox = await elementBox(choices);
+  const singleLayout = {
+    height: cardBox?.height || 0,
+    cardRight: cardBox ? cardBox.left + cardBox.width : null,
+    markRight: markBox ? markBox.left + markBox.width : null,
+    markTop: markBox?.top ?? null,
+    choicesTop: choicesBox?.top ?? null,
+  };
+  check("单题录入充分利用窗口且存疑靠右", singleLayout.height >= 360 &&
+    singleLayout.markTop < singleLayout.choicesTop &&
+    singleLayout.markRight !== null && singleLayout.cardRight !== null &&
+    singleLayout.markRight > singleLayout.cardRight - 70,
+  JSON.stringify(singleLayout));
+  await shot("03a-single");
+  await (await page.$('[aria-label="切换列表录入"]')).tap();
+  await waitForData(page, data => data.single === false);
+}
 
 // 2. 录答案：选项、存疑、草稿
 const rows = await page.$$(".practice__choice");
@@ -278,6 +336,13 @@ if (rank.count === 0) {
   rank = await page.data();
 }
 check("榜单已取数", rank.count > 0, `count=${rank.count}`);
+const podiumPlace = await page.$$(".rank__card-top text");
+const podiumPlaces = [];
+for (const node of podiumPlace.slice(0, 3)) podiumPlaces.push((await node.text()).trim());
+check("榜单前三按实际位置显示", podiumPlaces.every((value, index) => value === String(index + 1).padStart(2, "0")), podiumPlaces.join(","));
+if (rank.winners?.some(row => row.isMe) && !rank.otherRows?.length) {
+  check("本人已在前三时不追加空榜单", !await page.$(".rank__list"));
+}
 const dims = await page.$$(".rank__dimension");
 if (dims[1]) {
   await dims[1].tap();
@@ -417,18 +482,22 @@ if (ghosts[0]) {
   }
   const discussion = await page.data();
   check("发表评论", Array.isArray(discussion.comments) && discussion.comments.length > 0, `${discussion.comments?.length} 条`);
+  check("评论不重复显示总数栏且使用头像", !await page.$(".disc__head") && Boolean(await page.$(".disc__avatar")));
   const like = await tap(page, ".disc__like", "点赞入口");
   const liked = like && await waitForData(page, data => data.comments[0]?.likedByMe);
   check("点赞已写入", liked?.comments[0]?.likedByMe === true);
   await shot("11-discussion");
   await tap(page, ".disc__actions button:first-of-type", "打开评论回复");
+  const replyRoot = liked?.comments[0]?.id;
   const replyInput = await waitForSelector(page, ".disc__input");
   const replyText = "下一次先做资料分析。";
   await replyInput.input(replyText);
   await waitForData(page, data => data.replyTarget && data.replyDraft.trim() === replyText);
   await tap(page, ".disc__send", "发送本卷回复");
-  const replied = await waitForData(page, data => data.replies.some(reply => reply.text === replyText), 10000);
-  check("回复归入原评论", replied.replies.some(reply => reply.parentId === liked?.comments[0]?.id && reply.text === replyText));
+  const replied = await waitForData(page, data => (data.replyByRoot?.[replyRoot] || []).some(reply => reply.text === replyText), 10000);
+  check("回复归入对应主评论", replied.replyByRoot[replyRoot].some(reply => reply.parentId === replyRoot && reply.text === replyText));
+  check("回复使用缩进头像和独立操作", Boolean(await page.$(".disc__replies .disc__avatar--reply")) &&
+    Boolean(await page.$(".disc__replies .disc__reply-action")));
   await shot("11b-replies");
   await waitBack("pages/report/report");
   page = await current();
@@ -564,16 +633,18 @@ if (cells[0]) {
   }
   const collapsed = await waitForData(pickerSurface, data => !data.expanded && data.listHeight > 0);
   const list = await pickerSurface.$(".positions__list");
-  await dragSheet(list, -63);
+  const grabber = await pickerSurface.$(".positions__grabber-zone");
+  check("岗位抽屉顶部有拖动条", Boolean(grabber) && Boolean(await pickerSurface.$(".positions__grabber")));
+  await dragGrabber(grabber, -63);
   const tall = await waitForData(pickerSurface, data => data.expanded && data.listHeight > collapsed.listHeight);
-  check("岗位列表上拉展开", tall.expanded && tall.listHeight > collapsed.listHeight);
+  check("拖动条上拉展开岗位面板", tall.expanded && tall.listHeight > collapsed.listHeight);
   await list.scrollTo(0, await list.scrollHeight());
   await wait(450);
   await list.scrollTo(0, 0);
   await wait(300);
-  await dragSheet(list, 68);
+  await dragGrabber(grabber, 68);
   const short = await waitForData(pickerSurface, data => !data.expanded && data.listHeight === collapsed.listHeight);
-  check("岗位列表顶部下滑收起", !short.expanded && short.listHeight === collapsed.listHeight);
+  check("拖动条下滑收起岗位面板", !short.expanded && short.listHeight === collapsed.listHeight);
   while (pickerData.level !== "position" && pickerData.breadcrumbs.length < 4) {
     const previousLevel = pickerData.level;
     await (await pickerSurface.$(".positions__choice")).tap();
@@ -582,7 +653,6 @@ if (cells[0]) {
   await (await pickerSurface.$(".positions__choice")).tap();
   const detail = await waitForData(pickerSurface, data => Boolean(data.detail));
   check("岗位详情移除复制和返回行", !await pickerSurface.$(".positions__detail-back,.positions__source,.admin__source"));
-  const detailPanel = await pickerSurface.$(".positions__panel");
   await pickerSurface.callMethod("startGesture", { touches: [{ clientX: 320, clientY: 300 }] });
   await pickerSurface.callMethod("endGesture", { changedTouches: [{ clientX: 170, clientY: 302 }] });
   await waitForData(pickerSurface, data => !data.detail);
@@ -657,7 +727,12 @@ const noOverlap = secondDeck && selectHeading && (await secondDeck.offset()).top
   (await selectHeading.offset()).top;
 check("多条最近练习动态切换时只渲染当前卡", multiple.recent.length >= 2 && cards.length === 1 && noOverlap);
 const beforeRecent = multiple.recentIndex;
+const deckLayers = await page.$$(".home__deck-layer");
+check("最近练习有右侧叠层与上滑提示", deckLayers.length === 2 && Boolean(await page.$(".home__deck-pager")));
 await page.callMethod("startDeck", { touches: [{ clientY: 120 }] });
+await page.callMethod("moveDeck", { touches: [{ clientY: 60 }] });
+const draggedDeck = await page.data();
+check("上滑时最近练习卡跟随手势", draggedDeck.deckOffset < 0 && draggedDeck.deckDragging === true, String(draggedDeck.deckOffset));
 await page.callMethod("flipDeck", { changedTouches: [{ clientY: 40 }] });
 const switched = await waitForData(page, data => data.recentIndex !== beforeRecent);
 check("滑动切换到下一条最近练习", switched.recentIndex !== beforeRecent);

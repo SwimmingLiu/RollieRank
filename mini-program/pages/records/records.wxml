@@ -49,10 +49,7 @@
         </view>
         <view wx:if="{{item.draft}}" class="records__progress"><view style="width: {{item.progress}}%;"></view></view>
       </button>
-      <view wx:if="{{!visible.length}}" class="empty records__empty">
-        <text>{{records.length || drafts.length ? '没有符合条件的记录' : '还没有练习记录'}}</text>
-        <button wx:if="{{!records.length && !drafts.length}}" class="chip" bindtap="openHome">去选卷</button>
-      </view>
+      <text wx:if="{{!visible.length}}" class="records__empty">{{records.length || drafts.length ? '没有符合条件的记录' : '没有练习记录'}}</text>
     </view>
   </view>
 

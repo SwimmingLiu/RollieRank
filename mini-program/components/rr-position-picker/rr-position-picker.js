@@ -160,16 +160,52 @@ Component({
       this.suppressTap = Math.hypot(dx, dy) >= 8;
       if (dx < -Math.max(56, (wx.getWindowInfo?.().windowWidth || 390) * .18) && Math.abs(dx) > Math.abs(dy) * 1.5) {
         this.goBack();
-      } else if (dy < -40 && dy < -Math.abs(dx)) {
-        this.resizeList(true);
-      } else if (dy > 50 && dy > Math.abs(dx)) {
-        if (this.data.expanded) this.resizeList(false);
-        else this.dismiss();
       }
       if (this.suppressTap) {
         clearTimeout(this.suppressTapTimer);
         this.suppressTapTimer = setTimeout(() => { this.suppressTap = false; }, 0);
       }
+    },
+
+    startGrabber(event) {
+      const point = event.touches?.[0];
+      this.grabber = point ? { x: point.clientX, y: point.clientY } : null;
+      this.grabberMoved = false;
+    },
+
+    endGrabber(event) {
+      const from = this.grabber;
+      const to = event.changedTouches?.[0];
+      this.grabber = null;
+      if (!from || !to) return;
+      const dx = to.clientX - from.x;
+      const dy = to.clientY - from.y;
+      this.grabberMoved = Math.hypot(dx, dy) >= 8;
+      if (dx < -60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        this.goBack();
+      } else if (dy > 34 && Math.abs(dy) > Math.abs(dx)) {
+        if (this.data.detail) this.closeDetail();
+        else this.resizeList(false);
+      } else if (dy < -34 && Math.abs(dy) > Math.abs(dx)) {
+        this.resizeList(true);
+      }
+      if (this.grabberMoved) {
+        setTimeout(() => { this.grabberMoved = false; }, 0);
+      }
+    },
+
+    cancelGrabber() {
+      this.grabber = null;
+      this.grabberMoved = true;
+    },
+
+    grabberTap() {
+      if (this.grabberMoved) {
+        this.grabberMoved = false;
+        return;
+      }
+      if (this.data.detail) this.closeDetail();
+      else this.resizeList(!this.data.expanded);
     },
 
     goBack() {
@@ -204,17 +240,17 @@ Component({
       this.createSelectorQuery().select(".positions__panel").boundingClientRect(panel => {
         if (!panel) return;
         if (!this.data.expanded) this.collapsedPanelHeight = Math.ceil(panel.height);
-        this.createSelectorQuery().select(".positions__list-content").boundingClientRect(content => {
-          if (!content) return;
+        this.createSelectorQuery().select(".positions__list").boundingClientRect(list => {
+          if (!list) return;
           // The scroll-view clips its child, so its bounding box cannot reveal rows
           // below the viewport. Rows are fixed-height; use that to size long lists.
           const rowEstimate = this.data.options.length * 52 +
             (this.data.page < this.data.pages ? 44 : 0);
           this.contentHeight = this.data.detail
             ? Math.max(220, Math.ceil(info.windowHeight * .46))
-            : Math.max(53, rowEstimate, Math.ceil(content.height));
-          this.chromeHeight = Math.ceil(content.top - panel.top);
-          this.expandedPanelHeight = Math.floor(info.windowHeight * .88);
+            : Math.max(53, rowEstimate);
+          this.chromeHeight = Math.ceil(list.top - panel.top);
+          this.expandedPanelHeight = Math.floor(info.windowHeight * .92);
           this.applyHeight(this.data.expanded);
         }).exec();
       }).exec();
@@ -232,7 +268,10 @@ Component({
     applyHeight(expanded) {
       if (!this.collapsedPanelHeight || !this.contentHeight) return;
       const panelLimit = expanded ? this.expandedPanelHeight : Math.floor((wx.getWindowInfo?.().windowHeight || 844) * .62);
-      const fittedHeight = Math.max(44, Math.min(this.contentHeight, panelLimit - this.chromeHeight));
+      const detailHeight = Math.floor((wx.getWindowInfo?.().windowHeight || 844) * (expanded ? .42 : .28));
+      const fittedHeight = this.data.detail
+        ? Math.max(120, Math.min(detailHeight, panelLimit - this.chromeHeight))
+        : Math.max(44, Math.min(this.contentHeight, panelLimit - this.chromeHeight));
       // Chrome can move while the expanded list is being torn down. Restore the
       // last stable collapsed height so a short downward swipe is deterministic.
       const listHeight = !expanded && this.data.expanded && this.collapsedListHeight

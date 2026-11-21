@@ -165,8 +165,4 @@ Page({
   openProfile() {
     wx.navigateTo({ url: "/pages/profile/profile" });
   },
-
-  openHome() {
-    wx.switchTab({ url: "/pages/home/home" });
-  },
 });

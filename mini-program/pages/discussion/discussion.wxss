@@ -1,35 +1,43 @@
-.disc__head { display: flex; align-items: center; justify-content: space-between; min-height: 50px; padding: 0 20px; border-bottom: 1px solid #ece4d6; color: #7b6954; }
-.disc__caption { display: flex; align-items: center; gap: 8px; font-weight: 650; font-size: 16px; }
-.disc__caption image { width: 18px; height: 18px; opacity: .62; }
-.disc__count { min-width: 24px; padding: 3px 6px; border-radius: 20px; text-align: center; font-size: 11px; background: #eee4d5; }
-.disc__list { padding: 0 16px 64px; }
-.disc__comment { display: flex; align-items: flex-start; gap: 10px; margin: 0; border: 0; border-bottom: 1px solid #eee8e0; border-radius: 0; box-shadow: none; background: transparent; padding: 15px 0 7px; }
+.disc__list { padding: 0 16px calc(96px + env(safe-area-inset-bottom)); }
+.disc__list--extended { padding-bottom: calc(158px + env(safe-area-inset-bottom)); }
+.disc__comment { display: flex; align-items: flex-start; gap: 10px; margin: 0; border: 0; border-bottom: 1px solid #eee8e0; border-radius: 0; box-shadow: none; background: transparent; padding: 16px 0 11px; }
 .disc__comment:last-of-type { border-bottom: 0; }
-.disc__name { font-size: 13px; font-weight: 600; color: #79634e; }
-.disc__text { display: block; margin: 3px 0 0; font-size: 14px; line-height: 1.75; color: #433a32; overflow-wrap: anywhere; white-space: pre-wrap; }
+.disc__avatar { width: 34px !important; height: 34px; flex: none; border-radius: 50%; border: 1px solid #eadac7; background: #fff7ee; }
+.disc__avatar--reply { width: 24px !important; height: 24px; }
+.disc__name { display: block; font-size: 13px; font-weight: 650; color: #563f2d; }
+.disc__text { display: block; margin: 3px 0 0; font-size: 15px; line-height: 1.62; color: #27221d; overflow-wrap: anywhere; white-space: pre-wrap; }
 .disc__links { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: #896942; overflow-wrap: anywhere; }
 .disc__images { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 5px; }
 .disc__image { width: 72px; height: 72px; border-radius: 10px; }
-.disc__actions { display: flex; align-items: center; gap: 9px; }
-.disc__action { display: flex; align-items: center; gap: 4px; width: auto !important; min-height: 44px; margin: 0 !important; color: #927e65; font-size: 12px; }
-.disc__time { color: #927e65; font-size: 11px; white-space: nowrap; }
-.disc__action-icon { width: 15px; height: 15px; opacity: .63; }
+.disc__actions { display: flex; align-items: center; justify-content: space-between; gap: 13px; min-height: 32px; }
+.disc__meta, .disc__reply-meta { display: flex; align-items: center; gap: 6px; min-width: 0; color: #978b7d; font-size: 11px; line-height: 1.5; }
+.disc__time { color: #978b7d; font-size: 11px; white-space: nowrap; }
+.disc__meta-dot { color: #c0b8ae; }
+.disc__reply-action { width: auto !important; min-height: 30px; margin: 0 !important; padding: 0 2px; color: #5b5148; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.disc__like, .disc__expand { display: flex; align-items: center; gap: 4px; width: auto !important; min-height: 30px; padding: 0; color: #978b7d; font-size: 11px; }
+.disc__like { margin-left: auto !important; }
+.disc__like image { width: 18px; height: 18px; opacity: .68; }
 .disc__reply-open { transform: rotate(180deg); }
-.disc__actions .disc__like { justify-content: center; min-width: 44px; margin-left: auto !important; }
-.disc__like--on, .disc__like--on .disc__action-icon { color: #ad7464; opacity: 1; }
+.disc__like--on, .disc__like--on image { color: #b56f55; opacity: 1; }
 .disc__target { color: #a67458; overflow-wrap: anywhere; }
-.disc__replies { display: flex; flex-direction: column; gap: 8px; border-left: 1px solid #e9ddca; padding: 3px 11px; }
+.disc__expand { margin: 2px 0 0; color: #7b6e61; }
+.disc__expand-line { width: 22px; height: 1px; margin-right: 2px; background: #b5a99a; }
+.disc__expand image { width: 13px; height: 13px; opacity: .66; }
+.disc__replies { display: flex; flex-direction: column; gap: 11px; margin-top: 5px; padding: 7px 11px 3px; border-left: 2px solid #efe2d2; }
+.disc__reply { display: flex; align-items: flex-start; gap: 8px; }
+.disc__reply .disc__text { font-size: 14px; line-height: 1.55; }
+.disc__reply-meta { width: 100%; margin-top: 1px; justify-content: flex-start; }
+.disc__reply .disc__reply-action { width: auto !important; min-height: 26px; }
 .disc__empty { padding-top: 75px; color: #ac9880; display: flex; flex-direction: column; align-items: center; gap: 7px; font-size: 12px; }
 .disc__empty-icon { width: 30px; height: 30px; opacity: .48; }
-.disc__footer { position: fixed; left: 0; right: 0; z-index: 30; padding: 8px 16px max(16px, env(safe-area-inset-bottom)); background: var(--paper); }
-.disc__composer { display: flex; align-items: flex-end; gap: 8px; min-height: 50px; padding: 7px 8px; border: 1px solid #e8ddce; background: #fffdf9; border-radius: 24px; box-shadow: 0 2px 0 #e9dfd44d; }
-.disc__badge { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #f9e9de; border: 1px solid #ead5c8; color: #a7745a; font-size: 11px; flex: none; }
+.disc__footer { position: fixed; left: 0; right: 0; z-index: 30; padding: 7px 14px max(12px, env(safe-area-inset-bottom)); background: var(--paper); }
+.disc__composer { display: flex; align-items: flex-end; gap: 4px; min-height: 46px; padding: 4px 6px 4px 13px; border: 1px solid #e8ddce; background: #fffdf9; border-radius: 23px; box-shadow: 0 2px 0 #e9dfd44d; }
 .disc__input { min-height: 34px; max-height: 145px; line-height: 20px; padding: 7px 0; width: 0; font-size: 14px; }
-.disc__placeholder { color: #967f67; }
+.disc__placeholder { color: #8e8b85; }
 .disc__compose-icon { display: grid; place-items: center; flex: none; width: 34px !important; height: 34px; border-radius: 50%; }
-.disc__compose-icon image { width: 19px; height: 19px; opacity: .72; }
-.disc__send { background: #a56e57; }
-.disc__send image { opacity: 1; }
+.disc__compose-icon image { width: 20px; height: 20px; opacity: .7; }
+.disc__send { background: #e8dfd2; }
+.disc__send image { opacity: .72; }
 .disc__reply-bar { display: flex; align-items: center; padding: 2px 9px; gap: 8px; color: #a37458; font-size: 12px; }
 .disc__pending { margin-bottom: 8px; }
 .disc__attachment { position: relative; width: 62px; height: 62px; }

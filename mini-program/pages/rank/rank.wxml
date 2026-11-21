@@ -31,9 +31,10 @@
     </view>
 
     <view wx:if="{{winners.length}}" class="rank__podium">
-      <button wx:for="{{winners}}" wx:key="publicId" class="rank__podium-card rank__podium-card--{{index + 1}}" bindtap="openResult" data-id="{{item.publicId}}">
+      <button wx:for="{{winners}}" wx:key="publicId" class="rank__podium-card rank__podium-card--{{item.place}}" bindtap="openResult" data-id="{{item.publicId}}"
+        aria-label="榜单第 {{item.place}} 位，{{item.name}}，{{item.scoreText}} 分{{item.rank !== item.place ? '，并列第 ' + item.rank + ' 名' : ''}}">
         <view class="rank__card-top">
-          <text>{{item.rankText}}</text><image wx:if="{{index === 0}}" src="{{uiBase}}/trophy.svg" mode="aspectFit" />
+          <text>{{item.placeText}}</text><image wx:if="{{index === 0}}" src="{{uiBase}}/trophy.svg" mode="aspectFit" />
         </view>
         <view class="rank__podium-avatar">{{item.initials}}</view>
         <text class="rank__podium-name">{{item.name}}</text>
@@ -43,12 +44,13 @@
       </button>
     </view>
 
-    <view class="rank__list">
+    <view wx:if="{{self || otherRows.length}}" class="rank__list">
       <button wx:if="{{self}}" class="rank__row rank__row--self" bindtap="openResult" data-id="{{self.publicId}}">
         <text class="rank__row-rank">{{self.rank}}</text><text class="rank__row-name grow">我的同卷最佳</text><text class="rank__row-score">{{self.scoreText}}</text>
       </button>
-      <button wx:for="{{otherRows}}" wx:key="publicId" class="rank__row" bindtap="openResult" data-id="{{item.publicId}}">
-        <text class="rank__row-rank">{{item.rankText}}</text>
+      <button wx:for="{{otherRows}}" wx:key="publicId" class="rank__row" bindtap="openResult" data-id="{{item.publicId}}"
+        aria-label="榜单第 {{item.place}} 位，{{item.name}}{{item.isMe ? '（我）' : ''}}，{{item.scoreText}} 分{{item.rank !== item.place ? '，并列第 ' + item.rank + ' 名' : ''}}">
+        <text class="rank__row-rank">{{item.placeText}}</text>
         <view class="rank__list-avatar">{{item.initials}}</view>
         <text class="rank__row-name grow">{{item.name}}{{item.isMe ? '（我）' : ''}}</text>
         <text class="rank__row-score">{{item.scoreText}}</text>

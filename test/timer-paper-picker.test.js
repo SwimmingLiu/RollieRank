@@ -40,3 +40,16 @@ test("timer collections use numeric issue order instead of lexicographic text", 
   assert.deepEqual(timerCollections(rows).map(collection => collection.label),
     ["第2期 · 地市 / 执法", "第3期 · 地市 / 执法", "第8期 · 地市 / 执法", "第10期 · 地市 / 执法"]);
 });
+
+test("question-count labels stay inside one raw mock-exam collection", () => {
+  const rows = [
+    paper("one", "10套卷", "130题版", 1),
+    paper("two", "10套卷", "130题版", 2),
+    paper("seven", "10套卷", "120题版", 7),
+    paper("ten", "10套卷", "120题版", 10),
+  ];
+  const collections = timerCollections(rows);
+  assert.equal(collections.length, 1);
+  assert.equal(collections[0].label, "10套卷");
+  assert.deepEqual(collections[0].papers.map(item => item.number), [1, 2, 7, 10]);
+});

@@ -4,6 +4,7 @@ const format = require("../../utils/format.js");
 
 const { ASSET } = require("../../config.js");
 const catalog = require("../../utils/catalog.js");
+const { placeLeaderboardRows } = require("../../utils/rank.js");
 const { publisherName, subjectName, subjectId, LOGO } = catalog;
 
 const SHORT_LABELS = { 政治理论: "政治", 常识判断: "常识", 言语理解: "言语", 数量关系: "数量", 资料分析: "资料" };
@@ -91,25 +92,25 @@ Page({
       const result = await api.request(`positions/leaderboard?${query}`);
       if (request !== this.rankingRequest) return;
       this.rankPage = result.page;
-      const rows = (result.rows || []).map(row => ({
+      // 同分会共享服务端名次，纸卡和后续列表使用实际排序位置。
+      const rows = placeLeaderboardRows(result).map(row => ({
         ...row,
         scoreText: format.scoreCard(row.value),
-        rateText: format.percent(row.rate),
         surpassed: format.percent((row.surpassedPercent || 0) / 100),
-        rankText: String(row.rank).padStart(2, "0"),
         initials: Array.from(row.name || "卷友").slice(0, 2).join(""),
       }));
       const position = result.position;
       const winners = more ? this.data.winners : rows.slice(0, 3);
-      const others = (more ? rows : rows.slice(3)).filter(row => !row.isMe);
+      const otherRows = more ? [...this.data.otherRows, ...rows] : rows.slice(3);
+      const selfVisible = winners.some(row => row.isMe) || otherRows.some(row => row.isMe);
       this.setData({
         loading: false,
         error: "",
         scope: scope === "selected" && !position ? "nationwide" : scope,
         dimension: result.dimension || dimension,
         winners,
-        otherRows: more ? [...this.data.otherRows, ...others] : others,
-        self: result.self && !winners.some(row => row.isMe) ? { ...result.self, scoreText: format.scoreCard(result.self.value) } : null,
+        otherRows,
+        self: result.self && !selfVisible ? { ...result.self, scoreText: format.scoreCard(result.self.value) } : null,
         count: result.count || 0,
         scopeLabel: position ? position.label || [position.department, position.title].filter(Boolean).join(" · ") : "全国考生",
         canLoadMore: result.page < result.pages,
@@ -154,8 +155,8 @@ Page({
 
   help() {
     wx.showModal({
-      title: "同卷榜口径",
-      content: "只统计同一份卷、同一答案版本的完整答卷，每人取最好一次；总分按本卷分值计算，可选择全国或个人岗位范围。",
+      title: "同卷榜规则",
+      content: "交卷后上榜，每人只取本卷最好成绩。\n同分并列，先交卷的排在前面。",
       showCancel: false,
     });
   },

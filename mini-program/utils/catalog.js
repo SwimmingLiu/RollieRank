@@ -13,6 +13,8 @@ const subjectName = name => (JUDGMENT_NAMES.has(name) ? "判断推理" : name);
 const subjectId = (id, name) => (JUDGMENT_NAMES.has(name) ? "judgment" : id);
 const periodDigits = "一二三四五六七八九";
 const compareNames = (a, b) => a.localeCompare(b, "zh", { numeric: true });
+// .raw 的题量标签属于同一机构题库，不能拆成两个“期次”。
+const questionVersion = value => /^\d+题版$/.test(String(value || "").trim());
 
 function periodNumber(period) {
   const value = String(period || "").replace(/\s+/g, "");
@@ -55,13 +57,14 @@ function groupByInstitution(versions) {
     // 同一机构按项目与期数分组，期数内按卷号升序；不把每期当作一个机构。
     const projects = new Map();
     for (const version of group.versions) {
-      const key = [version.project || "", version.period || "", version.variant || ""].join("|");
+      const variant = questionVersion(version.variant) ? "" : version.variant || "";
+      const key = [version.project || "", version.period || "", variant].join("|");
       if (!projects.has(key)) {
         projects.set(key, {
           key,
           project: version.project || "",
           period: version.period || "",
-          variant: version.variant || "",
+          variant,
           versions: [],
         });
       }

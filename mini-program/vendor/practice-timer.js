@@ -311,6 +311,7 @@ var publisherName = (institution) => publishers.find((item) => item.institution 
 // docs/ui-exploration/ios-v3/ui/timer-paper-model.ts
 var visible = (text, institution) => institution === "\u56DB\u6D77" ? text.replaceAll("\u56DB\u6D77", publisherName(institution)) : text;
 var compactVariant = (variant) => variant.replace(/地市级\s*\/\s*行政执法类/g, "\u5730\u5E02 / \u6267\u6CD5").replaceAll("\u526F\u7701\u7EA7", "\u526F\u7701");
+var collectionVariant = (variant) => /^\d+题版$/.test(variant.trim()) ? "" : variant;
 var natural = new Intl.Collator("zh-CN", { numeric: true, sensitivity: "base" });
 var issueNumber = (label) => {
   const value = label.split(" \xB7 ")[0]?.replace(/\s+/g, "") ?? "";
@@ -331,7 +332,7 @@ var issueLabel = (period) => {
 function timerCollections(papers) {
   const groups = /* @__PURE__ */ new Map();
   for (const paper of papers) {
-    const project = paper.project?.trim() ?? "", period = paper.period?.trim() ?? "", variant = paper.variant?.trim() ?? "";
+    const project = paper.project?.trim() ?? "", period = paper.period?.trim() ?? "", variant = collectionVariant(paper.variant?.trim() ?? "");
     const id = JSON.stringify([paper.institution, project, period, variant]);
     const label = visible([issueLabel(period), compactVariant(variant)].filter(Boolean).join(" \xB7 ") || project || "\u5957\u5377", paper.institution);
     const detail = visible(project && project !== label ? project : "", paper.institution);

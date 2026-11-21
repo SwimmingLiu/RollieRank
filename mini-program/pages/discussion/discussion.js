@@ -1,6 +1,28 @@
 const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
-const format = require("../../utils/format.js");
+
+function avatarFor(seed) {
+  const value = String(seed || "卷友");
+  let hash = 0;
+  for (const character of value) hash = (hash * 31 + character.codePointAt(0)) >>> 0;
+  return "/assets/avatars/rank-" + (hash % 8 + 1) + ".svg";
+}
+
+function relativeTime(timestamp) {
+  const date = new Date(timestamp);
+  if (!Number.isFinite(date.getTime())) return "";
+  const now = new Date();
+  const day = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const value = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const days = Math.round((day - value) / 86400000);
+  const time = String(date.getHours()).padStart(2, "0") + ":" + String(date.getMinutes()).padStart(2, "0");
+  if (days === 0) return "今天 " + time;
+  if (days === 1) return "昨天 " + time;
+  if (days > 1 && days < 7) return days + "天前";
+  return date.getFullYear() === now.getFullYear()
+    ? date.getMonth() + 1 + "月" + date.getDate() + "日"
+    : date.getFullYear() + "年" + (date.getMonth() + 1) + "月" + date.getDate() + "日";
+}
 
 async function photoAsPng(tempFilePath) {
   const canvas = wx.createOffscreenCanvas({ type: "2d", width: 1, height: 1 });
@@ -23,18 +45,17 @@ Page({
     error: "",
     comments: [],
     nextCursor: "",
-    replyCursor: "",
     loadingMore: false,
     total: 0,
     draft: "",
-    expanded: "",
-    replies: [],
+    expandedReplies: {},
+    replyByRoot: {},
+    replyCursors: {},
     replyTarget: null,
     replyDraft: "",
     images: [],
     sending: false,
     keyboardHeight: 0,
-    initials: "",
     uiBase: "/assets/ui",
   },
 
@@ -48,7 +69,6 @@ Page({
       draft,
       replyDraft: saved?.replyDraft || "",
       replyTarget: saved?.replyTarget || null,
-      initials: Array.from(storage.name()).slice(0, 2).join(""),
     });
     this.load();
   },
@@ -87,8 +107,8 @@ Page({
   decorate(comment) {
     return {
       ...comment,
-      initials: Array.from(comment.author?.name || "卷友").slice(0, 2).join(""),
-      timeText: format.dateTime(comment.createdAt).replace(/-/g, "/"),
+      avatar: avatarFor(comment.author?.avatarSeed || comment.author?.name),
+      timeText: relativeTime(comment.createdAt),
       target: comment.replyTo?.name || "",
       images: (comment.images || []).map(image => image.dataUri),
     };
@@ -170,13 +190,21 @@ Page({
   },
 
   async loadReplies(id, more = false) {
-    const request = this.replyRequest = (this.replyRequest || 0) + 1;
+    this.replyRequests ||= {};
+    const request = this.replyRequests[id] = (this.replyRequests[id] || 0) + 1;
     try {
-      const cursor = more ? "&before=" + encodeURIComponent(this.data.replyCursor) : "";
+      const previous = this.data.replyByRoot[id] || [];
+      const cursor = more && this.data.replyCursors[id]
+        ? "&before=" + encodeURIComponent(this.data.replyCursors[id])
+        : "";
       const result = await api.request("discussions/replies?" + this.query() + "&rootId=" + encodeURIComponent(id) + cursor);
-      if (request !== this.replyRequest) return;
+      if (request !== this.replyRequests[id]) return;
       const replies = result.comments.map(comment => this.decorate(comment));
-      this.setData({ expanded: id, replies: more ? [...this.data.replies, ...replies] : replies, replyCursor: result.nextCursor || "" });
+      this.setData({
+        expandedReplies: { ...this.data.expandedReplies, [id]: true },
+        replyByRoot: { ...this.data.replyByRoot, [id]: more ? [...previous, ...replies] : replies },
+        replyCursors: { ...this.data.replyCursors, [id]: result.nextCursor || "" },
+      });
     } catch (error) {
       wx.showToast({ title: error.message, icon: "none" });
     }
@@ -184,16 +212,20 @@ Page({
 
   toggleReplies(event) {
     const { id } = event.currentTarget.dataset;
-    if (this.data.expanded === id) {
-      this.replyRequest += 1;
-      this.setData({ expanded: "", replies: [], replyCursor: "" });
+    if (this.data.expandedReplies[id]) {
+      this.replyRequests ||= {};
+      this.replyRequests[id] = (this.replyRequests[id] || 0) + 1;
+      const expandedReplies = { ...this.data.expandedReplies };
+      delete expandedReplies[id];
+      this.setData({ expandedReplies });
     } else {
       this.loadReplies(id);
     }
   },
 
-  moreReplies() {
-    if (this.data.expanded && this.data.replyCursor) this.loadReplies(this.data.expanded, true);
+  moreReplies(event) {
+    const { root } = event.currentTarget.dataset;
+    if (root && this.data.replyCursors[root]) this.loadReplies(root, true);
   },
 
   startReply(event) {
@@ -216,7 +248,9 @@ Page({
       if (result.comment) {
         const comment = this.decorate(result.comment);
         const update = list => list.map(item => item.id === id ? comment : item);
-        this.setData({ comments: update(this.data.comments), replies: update(this.data.replies) });
+        const replyByRoot = Object.fromEntries(Object.entries(this.data.replyByRoot)
+          .map(([root, replies]) => [root, update(replies)]));
+        this.setData({ comments: update(this.data.comments), replyByRoot });
       }
     } catch (error) {
       wx.showToast({ title: error.message, icon: "none" });
@@ -224,7 +258,10 @@ Page({
   },
 
   previewImage(event) {
-    wx.previewImage({ urls: [...this.data.comments, ...this.data.replies].flatMap(item => item.images), current: event.currentTarget.dataset.src });
+    wx.previewImage({
+      urls: [...this.data.comments, ...Object.values(this.data.replyByRoot).flat()].flatMap(item => item.images),
+      current: event.currentTarget.dataset.src,
+    });
   },
 
   copyExternalLink(event) {

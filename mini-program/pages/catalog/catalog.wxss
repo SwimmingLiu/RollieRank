@@ -1,32 +1,27 @@
-.cat__library { padding: 0 20px 24px; }
-.cat__selector { padding: 15px 0 18px; }
-.cat__hero { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100% !important; text-align: left; min-height: 66px; padding: 16px 20px; border-radius: 23px; background: #f4e3be; font-size: 20px; line-height: 1.5; letter-spacing: -.5px; font-weight: 700; }
+.cat__library { padding: 0 20px 18px; }
+.cat__selector { padding: 12px 0 14px; }
+.cat__hero { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100% !important; text-align: left; min-height: 54px; padding: 12px 16px; border-radius: 18px; background: #f4e3be; font-size: 18px; line-height: 1.45; letter-spacing: -.35px; font-weight: 700; }
 .cat__hero--orange { background: #f9d2b8; }
 .cat__hero image { width: 18px; height: 18px; flex: none; opacity: .7; }
-.cat__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.cat__paper { display: flex; flex-direction: column; width: 100% !important; min-height: 100px; gap: 10px; padding: 13px 14px; background: #fffdf9; border: 1px solid #ece6dd; border-radius: 18px; text-align: left; }
-.cat__paper--new { min-height: 84px; }
+.cat__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.cat__paper { display: flex; flex-direction: column; justify-content: center; width: 100% !important; min-height: 64px; gap: 6px; padding: 10px 12px; background: #fffdf9; border: 1px solid #ece6dd; border-radius: 15px; text-align: left; }
 .cat__paper--complete { background: #f3e9d4; border-color: #eadfc5; }
 .cat__paper--draft { background: #fff0e4; border-color: #f0d9c3; }
-.cat__paper-head, .cat__paper-foot { display: flex; align-items: baseline; justify-content: space-between; gap: 4px; width: 100% !important; }
-.cat__paper-head image { width: 15px; height: 15px; flex: none; opacity: .68; }
-.cat__paper-no { font-size: 22px; line-height: 1.2; font-weight: 750; letter-spacing: -.45px; color: #3b3025; }
+.cat__paper-main { display: flex; align-items: center; gap: 7px; width: 100%; }
+.cat__paper-copy { display: flex; flex: 1; min-width: 0; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 8px; }
+.cat__paper-title { max-width: 100%; }
+.cat__paper-title--number, .cat__paper-state { white-space: nowrap; }
+.cat__paper-no { font-size: 26px; line-height: 1.15; font-weight: 700; letter-spacing: -.5px; color: #3b3025; }
 .cat__paper-no--name { font-size: 16px; line-height: 1.4; font-weight: 650; letter-spacing: 0; white-space: normal; overflow-wrap: anywhere; }
-.cat__paper-unit { margin-left: 2px; color: #8a7b64; font-size: 11px; line-height: 1.4; }
-.cat__paper-unit--number { margin-left: 3px; color: #76634d; font-size: 13px; font-weight: 500; }
-.cat__paper-foot { margin-top: auto; min-height: 24px; color: #6c6253; font-size: 14px; font-weight: 550; }
-.cat__paper-foot image { width: 16px; height: 16px; flex: none; align-self: center; margin-left: auto; }
-.cat__paper-score { font-size: 34px; line-height: 1.1; letter-spacing: -.8px; font-weight: 750; color: var(--ink); }
-.cat__paper-count { font-size: 30px; line-height: 1.1; letter-spacing: -.8px; font-weight: 750; color: var(--ink); }
-.cat__progress { margin-top: -4px; height: 3px; background: #eadcc9; border-radius: 2px; overflow: hidden; }
+.cat__paper-unit { margin-left: 2px; color: #76634d; font-size: 11px; line-height: 1.4; }
+.cat__paper-arrow { width: 15px; height: 15px; flex: none; }
+.cat__paper-score { font-size: 18px; line-height: 1.1; letter-spacing: -.55px; font-weight: 700; color: #685236; }
+.cat__paper-count { font-size: 16px; line-height: 1.15; font-weight: 700; color: #685236; }
+.cat__progress { width: 100%; height: 3px; background: #eadcc9; border-radius: 2px; overflow: hidden; }
 .cat__progress view { height: 100%; background: #a67f53; }
 @media (max-width: 350px) {
   .cat__library { padding-inline: 16px; }
-  .cat__grid { gap: 10px; }
-  .cat__paper { padding: 12px; }
-  .cat__hero { font-size: 18px; }
-  .cat__paper-no { font-size: 20px; }
+  .cat__paper { padding-inline: 10px; }
+  .cat__paper-no { font-size: 23px; }
   .cat__paper-no--name { font-size: 15px; }
-  .cat__paper-score { font-size: 31px; }
-  .cat__paper-count { font-size: 27px; }
 }

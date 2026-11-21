@@ -16,6 +16,9 @@ Page({
     asset: ASSET,
     uiBase: "/assets/ui",
     recentIndex: 0,
+    deckOffset: 0,
+    deckScale: 1,
+    deckDragging: false,
     timerOpen: false,
     timerStatus: "ready",
     timerText: "",
@@ -124,6 +127,7 @@ Page({
   },
 
   openRecent(event) {
+    if (this.deckMoved) return;
     const { id, draft, versionId: version } = this.data.recent[event.currentTarget.dataset.index];
     if (draft) {
       wx.navigateTo({ url: `/pages/practice/practice?versionId=${version}&attemptId=${id}` });
@@ -143,13 +147,40 @@ Page({
 
   startDeck(event) {
     this.deckY = event.touches[0]?.clientY;
+    this.deckMoved = false;
+    this.setData({ deckDragging: true });
+  },
+
+  moveDeck(event) {
+    if (this.data.recent.length < 2 || !Number.isFinite(this.deckY)) return;
+    const point = event.touches[0];
+    if (!point) return;
+    const offset = Math.max(-84, Math.min(0, point.clientY - this.deckY));
+    if (Math.abs(offset) >= 8) this.deckMoved = true;
+    const progress = Math.abs(offset) / 84;
+    this.setData({ deckOffset: offset, deckScale: 1 - progress * .025 });
   },
 
   flipDeck(event) {
-    const offset = event.changedTouches[0]?.clientY - this.deckY;
+    const offset = Number.isFinite(this.deckY) ? event.changedTouches[0]?.clientY - this.deckY : 0;
     const length = this.data.recent.length;
-    if (length < 2 || !Number.isFinite(offset) || Math.abs(offset) < 32) return;
-    this.setData({ recentIndex: (this.data.recentIndex + (offset < 0 ? 1 : -1) + length) % length });
+    this.deckY = undefined;
+    if (this.deckMoved) setTimeout(() => { this.deckMoved = false; }, 0);
+    if (length >= 2 && Number.isFinite(offset) && offset <= -38) {
+      const next = (this.data.recentIndex + 1) % length;
+      this.setData({ recentIndex: next, deckOffset: 42, deckScale: .975, deckDragging: false }, () => {
+        setTimeout(() => this.setData({ deckOffset: 0, deckScale: 1 }), 16);
+      });
+      return;
+    }
+    this.setData({ deckOffset: 0, deckScale: 1, deckDragging: false });
+  },
+
+  cancelDeck() {
+    this.deckY = undefined;
+    this.deckMoved = true;
+    setTimeout(() => { this.deckMoved = false; }, 0);
+    this.setData({ deckOffset: 0, deckScale: 1, deckDragging: false });
   },
 
   openTimer() {

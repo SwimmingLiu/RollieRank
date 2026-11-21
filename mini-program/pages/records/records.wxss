@@ -31,7 +31,7 @@
 .records__unit { color: #8b7a60; font-size: 10px; margin-left: 2px; white-space: nowrap; }
 .records__progress { height: 3px; border-radius: 3px; background: #e9dfcd; margin-top: 4px; overflow: hidden; }
 .records__progress view { height: 100%; background: #b38750; }
-.records__empty { grid-column: 1 / -1; }
+.records__empty { grid-column: 1 / -1; padding: 24px 0; color: var(--quiet); text-align: center; font-size: 14px; }
 @media (max-width: 350px) {
   .records { padding-inline: 16px; }
   .records__art { width: 47px; height: 51px; }

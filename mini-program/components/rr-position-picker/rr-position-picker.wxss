@@ -1,8 +1,10 @@
 .positions__layer { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; }
 .positions__shade { position: absolute; inset: 0; background: rgba(249, 246, 239, .36); backdrop-filter: blur(9px); }
-.positions__panel { position: relative; display: flex; flex-direction: column; width: 100%; padding: 14px 20px calc(16px + env(safe-area-inset-bottom)); border: 1px solid #ebe6de; border-bottom: 0; border-radius: 24px 24px 0 0; background: #fffefd; transition: max-height .2s ease; }
+.positions__panel { position: relative; display: flex; flex-direction: column; width: 100%; padding: 4px 20px calc(16px + env(safe-area-inset-bottom)); border: 1px solid #ebe6de; border-bottom: 0; border-radius: 24px 24px 0 0; background: #fffefd; transition: max-height .2s ease; }
 .positions__panel--collapsed { max-height: 68vh; }
 .positions__panel--expanded { max-height: 92vh; }
+.positions__grabber-zone { display: grid; place-items: center; flex: none; height: 24px; touch-action: none; }
+.positions__grabber { width: 42px; height: 5px; border-radius: 999px; background: #d5d0c8; }
 .positions__drag-zone { display: flex; flex-direction: column; flex: none; }
 .positions__exam-tabs { display: grid; grid-template-columns: 1fr 1fr; flex: none; gap: 4px; margin-bottom: 10px; padding: 3px; border-radius: 12px; background: #f4efe6; }
 .positions__exam { display: grid; place-items: center; min-height: 44px; border-radius: 9px; color: #81725f; font-size: 13px; }
