@@ -1,7 +1,6 @@
 const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
 const catalogUtil = require("../../utils/catalog.js");
-const { scoreCard } = require("../../utils/format.js");
 const { homeTimerView } = require("../../utils/timing.js");
 const { formatElapsed } = require("../../vendor/practice-timer.js");
 const { ASSET, WEB_APP_ORIGIN } = require("../../config.js");
@@ -91,10 +90,7 @@ Page({
     for (const record of candidates) {
       if (seen.has(record.versionId)) continue;
       seen.add(record.versionId);
-      recent.push({
-        ...record,
-        ...(record.draft ? {} : { scoreText: scoreCard(record.totalCents) }),
-      });
+      recent.push(record);
       if (recent.length === 3) break;
     }
 
@@ -107,15 +103,19 @@ Page({
       const number = String(version.number || "").padStart(2, "0");
       const paperTitle = catalogUtil.numberedPaper(version) ? "行测 " + number + " 套" : record.title;
       const year = String(version.project || record.title).match(/20\d{2}/)?.[0] || "";
+      const answered = record.draft
+        ? record.answered || 0
+        : Math.max(0, (record.questionCount || 0) - (record.blank || 0));
       return {
         ...record,
+        answered,
         institution,
         edition,
         paperTitle,
         year,
         logo: catalogUtil.LOGO[institution] || "",
         publisher: catalogUtil.publisherName(institution),
-        progress: record.questionCount ? record.answered / record.questionCount * 100 : 0,
+        progress: record.questionCount ? answered / record.questionCount * 100 : 0,
       };
     });
     this.setData({ recent: cards, recentIndex: Math.max(0, cards.findIndex(card => card.id === activeId)) });

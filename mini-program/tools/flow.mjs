@@ -728,7 +728,7 @@ const noOverlap = secondDeck && selectHeading && (await secondDeck.offset()).top
 check("多条最近练习动态切换时只渲染当前卡", multiple.recent.length >= 2 && cards.length === 1 && noOverlap);
 const beforeRecent = multiple.recentIndex;
 const deckLayers = await page.$$(".home__deck-layer");
-check("最近练习有右侧叠层与上滑提示", deckLayers.length === 2 && Boolean(await page.$(".home__deck-pager")));
+check("最近练习有单层纸边和上滑提示", deckLayers.length === 1 && Boolean(await page.$(".home__swipe-cue")));
 await page.callMethod("startDeck", { touches: [{ clientY: 120 }] });
 await page.callMethod("moveDeck", { touches: [{ clientY: 60 }] });
 const draggedDeck = await page.data();

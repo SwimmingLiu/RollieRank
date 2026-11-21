@@ -24,8 +24,8 @@ test("the native homepage uses the capsule-aligned title row and includes a firs
   assert.match(view, /!loading && !error && !recent\.length}}".*?home__recent--empty/);
   assert.doesNotMatch(view, /class="home__brand"/);
   assert.match(view, /catchtouchmove="moveDeck"/);
-  assert.match(view, /class="home__deck-layer home__deck-layer--1"/);
-  assert.match(view, /class="home__deck-pager"/);
+  assert.equal((view.match(/class="home__deck-layer"/g) || []).length, 1);
+  assert.match(view, /class="home__swipe-cue"/);
 });
 
 test("native catalog uses the issue number and keeps regular papers before the provincial variant", () => {

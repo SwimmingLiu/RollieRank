@@ -23,8 +23,7 @@
       <view class="home__deck {{recent.length > 1 ? 'home__deck--scroll' : ''}} {{deckDragging ? 'home__deck--dragging' : ''}}"
         bindtouchstart="startDeck" catchtouchmove="moveDeck" bindtouchend="flipDeck" bindtouchcancel="cancelDeck"
         aria-role="region" aria-label="最近练习，第 {{recentIndex + 1}} 张，共 {{recent.length}} 张，上滑切换">
-        <view wx:if="{{recent.length > 1}}" class="home__deck-layer home__deck-layer--2"></view>
-        <view wx:if="{{recent.length > 1}}" class="home__deck-layer home__deck-layer--1"></view>
+        <view wx:if="{{recent.length > 1}}" class="home__deck-layer"></view>
         <block wx:for="{{recent}}" wx:key="id">
         <view wx:if="{{index === recentIndex}}" class="home__cover home__cover--active {{item.institution === '超格' ? 'home__cover--orange' : ''}}"
           style="transform: translateY({{deckOffset}}px) scale({{deckScale}});">
@@ -34,34 +33,27 @@
                 <image wx:if="{{item.logo}}" class="home__cover-logo" src="{{asset[item.logo]}}" mode="aspectFit" />
                 <text>{{item.publisher}}</text>
               </view>
-              <text class="home__year">{{item.year}}</text>
+              <view wx:if="{{item.year}}" class="home__year-stamp"><text>{{item.year}}</text></view>
             </view>
             <view class="home__cover-main">
-              <block wx:if="{{item.draft}}">
-                <text class="home__period">{{item.edition}}</text>
-                <text class="home__paper-title">{{item.paperTitle}}</text>
-              </block>
-              <block wx:else>
-                <view class="home__score-line"><text class="display-num home__score">{{item.scoreText}}</text><text>分</text></view>
-                <text class="home__period">{{item.edition}}{{item.edition ? ' · ' : ''}}{{item.paperTitle}}</text>
-              </block>
+              <text class="home__period">{{item.edition}}</text>
+              <text class="home__paper-title">{{item.paperTitle}}</text>
               <image class="home__cover-art" src="/assets/answer-paper.svg" mode="aspectFit" />
             </view>
             <view class="home__cover-foot">
-              <view wx:if="{{item.draft}}" class="home__coverage">
+              <view class="home__coverage">
                 <view><text class="home__coverage-count">{{item.answered}}</text> / {{item.questionCount}} 题</view>
                 <view class="home__progress"><view style="width: {{item.progress}}%;"></view></view>
+              </view>
+              <view wx:if="{{recent.length > 1}}" class="home__swipe-cue" aria-hidden="true">
+                <image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
+                <image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
               </view>
               <view class="home__cover-open"><image src="{{uiBase}}/arrow-light.svg" mode="aspectFit" /></view>
             </view>
           </view>
         </view>
         </block>
-        <view wx:if="{{recent.length > 1}}" class="home__deck-pager" aria-label="第 {{recentIndex + 1}} 张，共 {{recent.length}} 张">
-          <image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
-          <text>{{recentIndex + 1}}</text>
-          <text class="home__deck-pager-total">{{recent.length}}</text>
-        </view>
       </view>
     </view>
     <view wx:if="{{!loading && !error && !recent.length}}" class="home__recent home__recent--empty">
