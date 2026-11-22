@@ -1,0 +1,77 @@
+<page-meta page-style="overflow: hidden;" />
+<view class="screen" bindtouchstart="startTabSwipe" bindtouchmove="moveTabSwipe" bindtouchend="endTabSwipe" bindtouchcancel="cancelTabSwipe">
+  <rr-nav title="个人中心" back="{{false}}" action-icon="comment" action-label="意见反馈" action-dot="{{feedbackHasReply}}" bind:action="openFeedback" />
+  <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}" refresher-enabled="{{true}}" refresher-triggered="{{refreshing}}" refresher-background="#fcf8f1" bindrefresherrefresh="onRefresherRefresh">
+  <view class="page-scroll__body">
+  <view class="records {{tabSwiping ? 'records--swiping' : ''}}" style="{{tabSwipeOffset ? 'transform: translateX(' + tabSwipeOffset + 'px);' : ''}}">
+    <button class="records__profile" bindtap="openProfile" aria-label="编辑个人资料">
+      <image class="records__avatar" src="{{avatar || asset.profile}}" mode="aspectFill" />
+      <view class="stack grow">
+        <text class="records__name ellipsis">{{name}}</text>
+        <text wx:if="{{!hasWechatProfile}}" class="records__profile-hint">点击同步微信头像和昵称</text>
+      </view>
+      <image class="records__art" src="/assets/answer-paper.svg" mode="aspectFit" />
+    </button>
+
+    <button class="records__credits" bindtap="openCredits" hover-class="press" aria-label="卷豆，{{creditSignedIn ? creditBalance + ' 颗' : '暂未获取'}}">
+      <image class="records__credits-img" src="{{uiBase}}/bean-ochre.svg" mode="aspectFit" />
+      <text class="records__credits-title">卷豆</text>
+      <view class="records__credits-right grow">
+        <view class="records__credits-amount">
+          <text class="records__credits-num {{creditSignedIn ? '' : 'records__credits-num--empty'}} num">{{creditSignedIn ? creditBalance : '--'}}</text>
+          <text class="records__credits-unit">颗</text>
+        </view>
+        <text wx:if="{{creditSignedIn && creditHeld > 0}}" class="records__credits-sub">占用 {{creditHeld}}</text>
+        <text wx:elif="{{!creditSignedIn && creditLoginOpen}}" class="records__credits-sub">去领取</text>
+      </view>
+      <image class="records__credits-arrow" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+    </button>
+
+    <view class="records__grid">
+      <button class="records__cell" bindtap="openPosition">
+        <view class="records__cell-label"><image src="{{uiBase}}/map-pin.svg" mode="aspectFit" />报考岗位</view>
+        <view class="records__cell-value"><text class="ellipsis grow">{{position ? position.label : '未选岗'}}</text><image src="{{uiBase}}/chevron.svg" mode="aspectFit" /></view>
+      </button>
+      <button class="records__cell" bindtap="openAnalytics" aria-label="成长分析，{{records.length}} 次练习">
+        <view class="records__cell-label"><image src="{{uiBase}}/trend.svg" mode="aspectFit" />成长分析</view>
+        <view class="records__cell-value"><text class="grow">{{records.length}}<text class="records__unit"> 次</text></text><image src="{{uiBase}}/chevron.svg" mode="aspectFit" /></view>
+      </button>
+    </view>
+
+    <view class="records__tools">
+      <view class="records__tabs grow">
+        <button wx:for="{{tabs}}" wx:key="key" class="records__tab {{tab === item.key ? 'records__tab--on' : ''}}" data-key="{{item.key}}" bindtap="setTab">{{item.label}}</button>
+      </view>
+      <button class="records__search" bindtap="toggleSearch" aria-label="搜索套卷">
+        <image src="{{uiBase}}/{{searching ? 'close' : 'search'}}.svg" mode="aspectFit" />
+      </button>
+    </view>
+    <view wx:if="{{searching}}" class="records__search-bar" data-swipe-ignore="1">
+      <input data-swipe-ignore="1" value="{{keyword}}" placeholder="搜索套卷或机构" bindinput="onKeyword" focus="{{searching}}" />
+    </view>
+
+    <view class="records__grid">
+      <button wx:for="{{visible}}" wx:key="id" class="records__row {{item.draft ? '' : 'records__row--complete'}}" data-index="{{index}}" bindtap="openRecord">
+        <view class="records__publisher">
+          <image wx:if="{{item.logo}}" src="{{item.logo}}" mode="aspectFit" />
+          <text class="grow">{{item.publisher}}</text>
+          <image src="{{uiBase}}/{{item.draft ? 'grid' : 'check'}}.svg" mode="aspectFit" />
+        </view>
+        <text class="records__row-meta">{{item.edition}}</text>
+        <text class="records__row-meta">{{item.paper}}{{item.attemptNumber ? ' · 第' + item.attemptNumber + '次' : ''}}</text>
+        <view class="records__row-value">
+          <view wx:if="{{item.draft}}"><text class="records__count">{{item.answered}}</text><text class="records__unit"> / {{item.questionCount}} 题</text></view>
+          <view wx:else><text class="display-num records__score">{{item.scoreText}}</text><text class="records__unit">分</text></view>
+          <image src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+        </view>
+        <view wx:if="{{item.draft}}" class="records__progress"><view style="width: {{item.progress}}%;"></view></view>
+      </button>
+      <text wx:if="{{!visible.length}}" class="records__empty">{{records.length || drafts.length ? '没有符合条件的记录' : '没有练习记录'}}</text>
+    </view>
+  </view>
+  </view>
+  </scroll-view>
+
+  <rr-tabbar active="records" />
+  <rr-position-picker wx:if="{{positionOpen}}" bind:dismiss="closePosition" bind:selection="selectPosition" />
+</view>

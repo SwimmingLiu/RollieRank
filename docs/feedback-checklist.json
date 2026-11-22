@@ -1,0 +1,840 @@
+{
+  "items": [
+    {
+      "id": "T01",
+      "area": "首页与计时",
+      "request": "做题计时从套卷中独立出来，放在首页。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "首页有独立做题计时入口。"
+    },
+    {
+      "id": "T02",
+      "area": "首页与计时",
+      "request": "首页按首次使用、已有练习和计时进行中安排顺序。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "首次先选卷，有练习显示近期记录，运行中计时提前。"
+    },
+    {
+      "id": "T03",
+      "area": "首页与计时",
+      "request": "新建计时由用户选择试卷，不能自动带入正在查看的卷。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "新计时先进入机构选择，不自动带入浏览中的试卷。"
+    },
+    {
+      "id": "T04",
+      "area": "首页与计时",
+      "request": "套卷／自定义能双向切换，保留各自的选择和修改。",
+      "status": "已实施并复验",
+      "finding": "切回套卷重新进入机构列表，丢失原选卷与展开的计划。",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "套卷与自定义分别恢复原选择、分钟和顺序。"
+    },
+    {
+      "id": "T05",
+      "area": "首页与计时",
+      "request": "切换标签的文字颜色符合主题且清晰可读。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "来源标签使用清晰的暖深色。"
+    },
+    {
+      "id": "T06",
+      "area": "首页与计时",
+      "request": "按机构、实际系列／期数、套卷分级选择，明确第一期等身份。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "机构、实际系列期数、卷号分级选择，第一期明确显示。"
+    },
+    {
+      "id": "T07",
+      "area": "首页与计时",
+      "request": "所选套卷使用对应时限，仅自定义允许改总时长。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "题本时限只读；自定义保留整数输入和微调。"
+    },
+    {
+      "id": "T08",
+      "area": "首页与计时",
+      "request": "自定义提供有题库／作答建议依据的推荐时长。",
+      "status": "由最新要求替代",
+      "finding": "最新 N03 明确删除三档按钮；保留有依据的默认分钟、直接输入和微调。",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "按N03删除三档按钮，使用直接整数输入与微调。"
+    },
+    {
+      "id": "T09",
+      "area": "首页与计时",
+      "request": "删除重复的“自定义计时”副标题。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "重复的自定义副标题已移除。"
+    },
+    {
+      "id": "T10",
+      "area": "首页与计时",
+      "request": "减少计时弹层的边缘空隙，重新设计时间输入框。",
+      "status": "已实施并复验",
+      "finding": "320×568 展开后模块输入区被头部与大时间卡挤占。",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "展开模块时压紧摘要，时间输入与编辑区符合纸卡主题。"
+    },
+    {
+      "id": "T11",
+      "area": "首页与计时",
+      "request": "分模块计时用途明确，作为可选模式。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "默认整卷，按需展开分模块计划。"
+    },
+    {
+      "id": "T12",
+      "area": "首页与计时",
+      "request": "模块建议有依据、允许调整，并使用整数分钟。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "依据题本和作答建议分配整数分钟。"
+    },
+    {
+      "id": "T13",
+      "area": "首页与计时",
+      "request": "修改时间后联动检查模块合计与总时长。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "合计与差额同步，未匹配总时长时不能开始。"
+    },
+    {
+      "id": "T14",
+      "area": "首页与计时",
+      "request": "模块顺序支持拖动调整。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "触摸、鼠标、键盘均能调整顺序，焦点边框完整。"
+    },
+    {
+      "id": "E01",
+      "area": "录答",
+      "request": "套卷列表移除逐卷计时图标。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "套卷卡没有逐卷计时入口。"
+    },
+    {
+      "id": "E02",
+      "area": "录答",
+      "request": "编辑图标使用与原计时图标一致的主题按钮样式。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "编辑状态使用暖色圆角图标底。"
+    },
+    {
+      "id": "E03",
+      "area": "录答",
+      "request": "单题录答重新使用当前纸卡主题设计。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "单题为同一暖纸卡与四个清晰选项。"
+    },
+    {
+      "id": "E04",
+      "area": "录答",
+      "request": "单题支持左右滑动切题。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "左右手势可切题，纵向手势不误切。"
+    },
+    {
+      "id": "E05",
+      "area": "录答",
+      "request": "选择答案后自动进入下一题。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "选择及重新选择答案后均按单题规则前进。"
+    },
+    {
+      "id": "E06",
+      "area": "录答",
+      "request": "列表与单题均能设置待检查题。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "列表和单题均有独立存疑操作。"
+    },
+    {
+      "id": "E07",
+      "area": "录答",
+      "request": "说明待检查的用途，不用难懂的“复查”或孤立书签。",
+      "status": "已实施并复验",
+      "finding": "列表仅有小书签；用途说明藏在桌面 title，触屏看不到。",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "使用可见的存疑／已存疑与待检查，触屏能理解。"
+    },
+    {
+      "id": "R01",
+      "area": "练习记录",
+      "request": "清理已知历史测试数据，界面不显示“旧版估分”。",
+      "status": "已实施并复验",
+      "finding": "原迁移把所有旧编号已完成记录收起；已改为匹配完整已知演示种子，并恢复旧归档中的自有记录。",
+      "evidence": [
+        "test-results/feedback-reaudit/history/recovered-authored-record-390.png"
+      ],
+      "resolution": "仅匹配完整已知演示种子；保留旧编号自有答案并从归档恢复，不覆盖新版本。"
+    },
+    {
+      "id": "R02",
+      "area": "练习记录",
+      "request": "无匹配结果时去掉提示语与“清空筛选”按钮。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/history/empty-result-390.png"
+      ],
+      "resolution": "空结果仅保留图标和标题。"
+    },
+    {
+      "id": "C01",
+      "area": "评论",
+      "request": "评论列表与输入借鉴微信公众号／抖音，保持纸卡主题。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/comments/composer-redesign/validation.json"
+      ],
+      "resolution": "评论有清晰层级、同一缩进的回复与紧凑聊天输入。"
+    },
+    {
+      "id": "C02",
+      "area": "评论",
+      "request": "输入、发送和照片操作对齐，使用紧凑布局。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/comments/composer-redesign/validation.json"
+      ],
+      "resolution": "照片、输入、发送位于同一条纸色栏，44px操作对齐。"
+    },
+    {
+      "id": "C03",
+      "area": "评论",
+      "request": "输入内容增加时自动增高。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/comments/composer-redesign/validation.json"
+      ],
+      "resolution": "文字随输入增高，末行保持可见。"
+    },
+    {
+      "id": "C04",
+      "area": "评论",
+      "request": "支持展开为全屏编辑。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/comments/composer-redesign/validation.json"
+      ],
+      "resolution": "长文可展开和收起全屏编辑。"
+    },
+    {
+      "id": "C05",
+      "area": "评论",
+      "request": "语音功能暂缓，移除录音和语音上传。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/comments/composer-redesign/validation.json"
+      ],
+      "resolution": "手机端没有录音、语音上传或音频控件。"
+    },
+    {
+      "id": "C06",
+      "area": "评论",
+      "request": "正文自动识别链接，不设置独立链接输入功能。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/comments/composer-redesign/validation.json"
+      ],
+      "resolution": "链接从正文自动识别。"
+    },
+    {
+      "id": "C07",
+      "area": "评论",
+      "request": "照片使用常驻图标入口，不需要折叠展开附件。",
+      "status": "已实施并复验",
+      "finding": "收起状态仍只有铅笔，照片要先进编辑器。",
+      "evidence": [
+        "test-results/feedback-reaudit/comments/composer-redesign/validation.json"
+      ],
+      "resolution": "收起状态也有独立照片按钮，可直接选图。"
+    },
+    {
+      "id": "C08",
+      "area": "评论",
+      "request": "支持点赞与取消点赞。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/comments/composer-redesign/validation.json"
+      ],
+      "resolution": "点赞／取消与刷新持久化、重试幂等通过。"
+    },
+    {
+      "id": "C09",
+      "area": "评论",
+      "request": "可以回复评论、回复他人，支持展开收起回复。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/comments/composer-redesign/validation.json"
+      ],
+      "resolution": "回复评论和回复他人均保留目标，支持分页、展开与收起。"
+    },
+    {
+      "id": "S01",
+      "area": "分享与品牌",
+      "request": "全站使用指定的 rollierank-logo-transparent.png。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "docs/ui-exploration/ios-v3/motion/interaction-current.json"
+      ],
+      "resolution": "应用、预览、动效与水印使用指定透明Logo。"
+    },
+    {
+      "id": "S02",
+      "area": "分享与品牌",
+      "request": "分享顶部品牌、卷身份、图标与年份对齐。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/new-feedback/implementation-handoff.json"
+      ],
+      "resolution": "年份与卷身份对齐，品牌按最新要求改为底部水印。"
+    },
+    {
+      "id": "S03",
+      "area": "分享与品牌",
+      "request": "可容纳的卷身份保持一行。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/new-feedback/implementation-handoff.json"
+      ],
+      "resolution": "可容纳的完整卷身份使用一行。"
+    },
+    {
+      "id": "S04",
+      "area": "分享与品牌",
+      "request": "移除手机缩放工具栏，自动适配预览。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/new-feedback/implementation-handoff.json"
+      ],
+      "resolution": "自动适配预览，无缩放工具栏。"
+    },
+    {
+      "id": "S05",
+      "area": "分享与品牌",
+      "request": "四种分享样式均可保存真实、完整的 PNG。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/new-feedback/implementation-handoff.json"
+      ],
+      "resolution": "四类真实900px PNG完整下载，雷达像素覆盖导出倍率。"
+    },
+    {
+      "id": "A01",
+      "area": "报告与群体比较",
+      "request": "报告返回首页，避免报告与排名循环。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/feedback-ledger-map.json"
+      ],
+      "resolution": "报告返回首页，排名往返不再循环。"
+    },
+    {
+      "id": "A02",
+      "area": "报告与群体比较",
+      "request": "删除再练弹层中“本次成绩会保留，新建一份空白答卷”。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/feedback-ledger-map.json"
+      ],
+      "resolution": "再练弹层仅保留必要动作。"
+    },
+    {
+      "id": "A03",
+      "area": "报告与群体比较",
+      "request": "二刷对比使用主题图标、纸卡与图形呈现重点。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/feedback-ledger-map.json"
+      ],
+      "resolution": "VS使用成绩纸卡、变化图形与短标签。"
+    },
+    {
+      "id": "A04",
+      "area": "报告与群体比较",
+      "request": "板块对比展示全部实际板块，不能只展示三个。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/feedback-ledger-map.json"
+      ],
+      "resolution": "展示全部实际板块。"
+    },
+    {
+      "id": "A05",
+      "area": "报告与群体比较",
+      "request": "个人得分率与当前范围均值清楚区分。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/feedback-ledger-map.json"
+      ],
+      "resolution": "我的与当前范围均值分别标识。"
+    },
+    {
+      "id": "A06",
+      "area": "报告与群体比较",
+      "request": "去掉比较卡片右上角含义不明的孤立 0。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/feedback-ledger-map.json"
+      ],
+      "resolution": "没有含义不明的角标0。"
+    },
+    {
+      "id": "A07",
+      "area": "报告与群体比较",
+      "request": "移除“样本较少”标签。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/feedback-ledger-map.json"
+      ],
+      "resolution": "没有样本较少标签，保留实际人数。"
+    },
+    {
+      "id": "A08",
+      "area": "报告与群体比较",
+      "request": "报告底部复盘、评论、分享保持同高水平对齐。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/feedback-ledger-map.json"
+      ],
+      "resolution": "复盘、评论、分享三个按钮同高同一行。"
+    },
+    {
+      "id": "A09",
+      "area": "报告与群体比较",
+      "request": "逐题统计所有有效参与人的选项，保留完整样本与留空分母。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/feedback-ledger-map.json"
+      ],
+      "resolution": "按每人完整最佳答卷统计，分母包含留空。"
+    },
+    {
+      "id": "A10",
+      "area": "报告与群体比较",
+      "request": "全部题和错题均显示答对比例。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/feedback-ledger-map.json"
+      ],
+      "resolution": "全部及错题列表显示答对百分比。"
+    },
+    {
+      "id": "A11",
+      "area": "报告与群体比较",
+      "request": "错题显示选择相同错误答案的比例。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/feedback-ledger-map.json"
+      ],
+      "resolution": "已选错题显示相同错误选项比例。"
+    },
+    {
+      "id": "G01",
+      "area": "成长与导航",
+      "request": "成长记录移除左侧红色装饰条。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/new-feedback/implementation-handoff.json"
+      ],
+      "resolution": "记录行没有左侧红色装饰条。"
+    },
+    {
+      "id": "G02",
+      "area": "成长与导航",
+      "request": "套卷、得分、得分率的表头与数值列对齐。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/new-feedback/implementation-handoff.json"
+      ],
+      "resolution": "表头、得分、得分率按固定列对齐。"
+    },
+    {
+      "id": "G03",
+      "area": "成长与导航",
+      "request": "底部导航提升质感，保持当前主题。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/new-feedback/implementation-handoff.json"
+      ],
+      "resolution": "底部为当前主题的纸卡导航。"
+    },
+    {
+      "id": "L01",
+      "area": "排名",
+      "request": "排名界面不显示 v1.0 等技术版本号。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/feedback-ledger-map.json"
+      ],
+      "resolution": "排名不显示技术版本。"
+    },
+    {
+      "id": "L02",
+      "area": "排名",
+      "request": "正式成绩默认上榜，多次取个人最佳，移除上榜设置。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/feedback-ledger-map.json"
+      ],
+      "resolution": "正式交卷自动上榜，取个人最佳，没有上榜设置。"
+    },
+    {
+      "id": "L03",
+      "area": "排名",
+      "request": "榜单规则精简为易读的短句。",
+      "status": "已实施并复验",
+      "finding": "",
+      "evidence": [
+        "test-results/feedback-reaudit/results/feedback-ledger-map.json"
+      ],
+      "resolution": "规则收为三句短说明。"
+    },
+    {
+      "id": "L04",
+      "area": "排名",
+      "request": "未选岗时，选中的范围与实际全国数据一致。",
+      "status": "已实施并复验",
+      "finding": "未选岗时选中“岗位”，却显示全国数据。",
+      "evidence": [
+        "test-results/feedback-reaudit/results/feedback-ledger-map.json"
+      ],
+      "resolution": "无岗位时查询与高亮均为全国，保留明确选择的其他范围。"
+    },
+    {
+      "id": "Q01",
+      "area": "本轮补查",
+      "request": "地市／副省等变体身份在排名中不能丢失。",
+      "status": "已实施并复验",
+      "finding": "第二期地市榜单仅写二期和卷号，丢失地市。",
+      "evidence": [
+        "test-results/feedback-reaudit/results/feedback-ledger-map.json"
+      ],
+      "resolution": "实际年份、系列、地市／副省与套号均保留。"
+    },
+    {
+      "id": "Q02",
+      "area": "本轮补查",
+      "request": "开始或恢复计时后应看到计时主信息，不能沿用计划页尾部滚动。",
+      "status": "已实施并复验",
+      "finding": "从计划页尾部开始计时后，滚动未归顶，主时钟不可见。",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "开始或恢复时主时钟可见。"
+    },
+    {
+      "id": "Q03",
+      "area": "本轮补查",
+      "request": "当前模块计划与整卷计划不得混淆。",
+      "status": "已实施并复验",
+      "finding": "当前政治理论计划 6 分钟，却显示“政治理论 · 计划 46 分钟”。",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "整卷计划与当前模块计划分别准确显示。"
+    },
+    {
+      "id": "Q04",
+      "area": "本轮补查",
+      "request": "键盘尺寸下，正在编辑的模块输入框不能被固定底栏遮挡。",
+      "status": "已实施并复验",
+      "finding": "缩小到键盘尺寸时，末项输入底部与固定合计栏重叠。",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "固定操作栏有独立布局空间，输入不再被遮挡。"
+    },
+    {
+      "id": "Q05",
+      "area": "本轮补查",
+      "request": "根评论和回复草稿在整页刷新后仍可恢复。",
+      "status": "已实施并复验",
+      "finding": "会话内可恢复，整页刷新后根评论和回复草稿均变为空白。",
+      "evidence": [
+        "test-results/feedback-reaudit/comments/after-validation.json"
+      ],
+      "resolution": "文字、照片及不同目标草稿可跨刷新恢复，重试标识保留。"
+    },
+    {
+      "id": "Q06",
+      "area": "本轮补查",
+      "request": "同名作者的回复对象应有可识别的内容上下文。",
+      "status": "已实施并复验",
+      "finding": "所有默认名称均为卷友，回复目标仅显示姓名，缺少内容摘录。",
+      "evidence": [
+        "test-results/feedback-reaudit/comments/after-validation.json"
+      ],
+      "resolution": "回复展示目标内容摘录，同名时仍可辨认。"
+    },
+    {
+      "id": "Q07",
+      "area": "本轮补查",
+      "request": "当前画廊的动效也要使用新 Logo、导航和真实新版界面。",
+      "status": "已实施并复验",
+      "finding": "现有 GIF 仍显示旧珊瑚 Logo、旧导航与预置练习数据。",
+      "evidence": [
+        "test-results/feedback-reaudit/preview-motion-complete/results.json"
+      ],
+      "resolution": "动效已从当前真实页面重录，并校验构建与Logo字节。"
+    },
+    {
+      "id": "N01",
+      "area": "最新批注",
+      "request": "计时选卷左滑返回上一级，保留层级与上下文。",
+      "status": "已实施并复验",
+      "finding": "按当前截图与最新要求实施。",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/backdrop-target/review-after.md"
+      ],
+      "resolution": "内容区和上方遮罩的鼠标／触摸左滑都只退一级，普通点击仍关闭。"
+    },
+    {
+      "id": "N02",
+      "area": "最新批注",
+      "request": "计时选卷列表改为大字、简洁单行，不再重复小字。",
+      "status": "已实施并复验",
+      "finding": "按当前截图与最新要求实施。",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "试卷条目16px简洁单行，搜索上下文按组保留。"
+    },
+    {
+      "id": "N03",
+      "area": "最新批注",
+      "request": "删除整卷／半卷／单项三档按钮。",
+      "status": "已实施并复验",
+      "finding": "按当前截图与最新要求实施。",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "三枚档位按钮及无用代码已移除，保留直接整数输入和微调。"
+    },
+    {
+      "id": "N04",
+      "area": "最新批注",
+      "request": "实际粉笔卷第130题的左右滑动：左滑下一题、右滑上一题，边界有效。",
+      "status": "已实施并复验",
+      "finding": "按当前截图与最新要求实施。",
+      "evidence": [
+        "test-results/feedback-reaudit/timer-entry/latest-comments/review-after.md"
+      ],
+      "resolution": "缩放画廊中粉笔第130题的鼠标与触摸双向切题、边界和答案保留通过。"
+    },
+    {
+      "id": "N05",
+      "area": "最新批注",
+      "request": "反馈参考答案采用同一纸卡主题，按题反馈并连接存疑题。",
+      "status": "已实施并复验",
+      "finding": "按当前截图与最新要求实施。",
+      "evidence": [
+        "test-results/feedback-reaudit/question-feedback"
+      ],
+      "resolution": "按题显示我的／参考和A–D建议；存疑题可带入，明确题号的多题反馈已保存。"
+    },
+    {
+      "id": "N06",
+      "area": "最新批注",
+      "request": "复盘中的板块标题可选择，快速转到其他板块。",
+      "status": "已实施并复验",
+      "finding": "按当前截图与最新要求实施。",
+      "evidence": [
+        "test-results/feedback-reaudit/question-feedback"
+      ],
+      "resolution": "全部板块与当前板块标题都能切换，复盘可筛待检查题。"
+    },
+    {
+      "id": "N07",
+      "area": "最新批注",
+      "request": "空样本状态压缩空白，保留个人值和未测均值。",
+      "status": "已实施并复验",
+      "finding": "按当前截图与最新要求实施。",
+      "evidence": [
+        "test-results/feedback-reaudit/results/new-feedback/implementation-handoff.json"
+      ],
+      "resolution": "空样本提示为紧凑28px行，保留个人值与未测均值。"
+    },
+    {
+      "id": "N08",
+      "area": "最新批注",
+      "request": "排名身份在一行内展示。",
+      "status": "已实施并复验",
+      "finding": "按当前截图与最新要求实施。",
+      "evidence": [
+        "test-results/feedback-reaudit/results/new-feedback/implementation-handoff.json"
+      ],
+      "resolution": "粉笔等完整排名身份在一行内显示。"
+    },
+    {
+      "id": "N09",
+      "area": "最新批注",
+      "request": "分享年份归到套卷身份，品牌使用水印。",
+      "status": "已实施并复验",
+      "finding": "按当前截图与最新要求实施。",
+      "evidence": [
+        "test-results/feedback-reaudit/results/new-feedback/implementation-handoff.json"
+      ],
+      "resolution": "年份进入套卷身份，品牌置于底部水印。"
+    },
+    {
+      "id": "N10",
+      "area": "最新批注",
+      "request": "四种海报全部去掉“本次估分”标签及专属留白。",
+      "status": "已实施并复验",
+      "finding": "按当前截图与最新要求实施。",
+      "evidence": [
+        "test-results/feedback-reaudit/results/new-feedback/implementation-handoff.json"
+      ],
+      "resolution": "四种海报均移除估分小标题及专属留白。"
+    },
+    {
+      "id": "N11",
+      "area": "最新批注",
+      "request": "成长筛选先按国家公务员考试类型组织，机构只作为来源。",
+      "status": "已实施并复验",
+      "finding": "按当前截图与最新要求实施。",
+      "evidence": [
+        "test-results/feedback-reaudit/results/category-count-growth/handoff.json"
+      ],
+      "resolution": "考试类别是唯一类别筛选，来源与日期独立；同类别按各次实际成绩汇总。"
+    },
+    {
+      "id": "N12",
+      "area": "最新批注",
+      "request": "评论输入重做为图片、文字与发送在同栏的紧凑聊天布局。",
+      "status": "已实施并复验",
+      "finding": "按当前截图与最新要求实施。",
+      "evidence": [
+        "test-results/feedback-reaudit/comments/composer-redesign/validation.json"
+      ],
+      "resolution": "输入重做为一条聊天栏，附图与回复摘录放在其上。"
+    },
+    {
+      "id": "N13",
+      "area": "最新批注",
+      "request": "国考练习按130题地市卷、135题副省卷分类，不显示类别未注明或共用。",
+      "status": "已实施并复验",
+      "finding": "以最新明确的产品分类和单层筛选为准。",
+      "resolution": "已知国考／公考模拟卷130题为地市卷，135题为副省卷；两类零记录也可选择。",
+      "evidence": [
+        "test-results/feedback-reaudit/results/category-count-growth/handoff.json"
+      ]
+    },
+    {
+      "id": "N14",
+      "area": "最新批注",
+      "request": "删除同类分值层，只按考试类别汇总；每次成绩保留本卷实际计分。",
+      "status": "已实施并复验",
+      "finding": "以最新明确的产品分类和单层筛选为准。",
+      "resolution": "同类分值入口和子组状态已移除；跨机构、不同权重的同类记录同时保留，各自计分。",
+      "evidence": [
+        "test-results/feedback-reaudit/results/category-count-growth/handoff.json"
+      ]
+    }
+  ]
+}

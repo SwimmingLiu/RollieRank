@@ -1,0 +1,13 @@
+{
+  "style_reference": "https://dribbble.com/shots/27152189-Easy-Lang-learning-app",
+  "files": {
+    "answer-paper.svg": "Original SVG:answer sheet and pencil",
+    "score-ribbon.svg": "Original SVG:result ribbon and check"
+  },
+  "font": {
+    "file": "../fonts/FrauncesVariable.woff2",
+    "source": "https://github.com/google/fonts/tree/main/ofl/fraunces",
+    "license": "SIL Open Font License1.1",
+    "sha256": "b37284bcb325796035a546156157949375e87e403157e3c3f3bc3253e2dd858c"
+  }
+}

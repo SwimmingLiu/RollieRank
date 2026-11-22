@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>卷卷小榜 · 移动端 UI 设计提案</title>
+<style>
+  :root{
+    --bg:#F7F4FA; --card:#FFFFFF; --ink:#2B2433; --muted:#736A7E;
+    --brand:#6B4C86; --brand-dark:#573E70; --soft:#F0E8F7; --lime:#F3D3E3;
+    --line:#E8E0EE; --line-strong:#D9CFE1;
+    --red:#C2586B; --red-soft:#FBECEF; --amber:#A87336; --amber-soft:#FAF2E2;
+    --radius:20px;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    color:var(--ink); background:var(--bg); -webkit-font-smoothing:antialiased;
+  }
+  *{box-sizing:border-box}
+  body{margin:0}
+  button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .wrap{max-width:1440px;margin:0 auto;padding:56px 40px 80px}
+  .eyebrow{font-size:12px;letter-spacing:.16em;color:var(--brand);font-weight:600;text-transform:uppercase}
+  h1{font-size:clamp(34px,4.4vw,52px);line-height:1.16;letter-spacing:-.02em;margin:14px 0 12px;font-weight:650}
+  .lead{font-size:17px;line-height:1.65;color:var(--muted);max-width:640px;margin:0}
+  .head-meta{display:flex;gap:18px;flex-wrap:wrap;margin-top:22px;font-size:12px;color:var(--muted)}
+  .head-meta span{display:inline-flex;align-items:center;gap:6px}
+  .dot{width:5px;height:5px;border-radius:50%;background:var(--brand)}
+
+  section{margin-top:72px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:8px}
+  .sec-num{font-size:12px;color:var(--brand);font-weight:600;letter-spacing:.1em}
+  h2{font-size:24px;margin:0;font-weight:650;letter-spacing:-.01em}
+  .sec-sub{color:var(--muted);font-size:14px;line-height:1.6;margin:6px 0 0 30px;max-width:640px}
+
+  /* principles */
+  .principles{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:28px}
+  .principle{background:var(--card);border-radius:16px;padding:22px 20px 20px}
+  .p-icon{width:38px;height:38px;border-radius:11px;background:var(--soft);display:grid;place-items:center;color:var(--brand);margin-bottom:16px}
+  .principle h3{margin:0 0 6px;font-size:15px;font-weight:600}
+  .principle p{margin:0;font-size:13px;line-height:1.6;color:var(--muted)}
+  .principle .metric{display:block;margin-top:14px;font-size:11px;color:var(--brand);font-weight:600;letter-spacing:.02em}
+
+  /* tokens */
+  .token-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:18px;margin-top:28px}
+  .panel{background:var(--card);border-radius:18px;padding:26px}
+  .panel h3{font-size:13px;margin:0 0 18px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+  .swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .swatch .chip{height:52px;border-radius:12px;border:1px solid rgba(0,0,0,.04)}
+  .swatch b{display:block;font-size:11px;margin-top:8px;font-weight:600}
+  .swatch span{display:block;font-size:10px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
+  .type-scale{display:grid;gap:14px}
+  .type-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:12px}
+  .type-row:last-child{border-bottom:0;padding-bottom:0}
+  .type-row .demo{font-weight:600;letter-spacing:-.02em}
+  .type-row .spec{font-size:11px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .space-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:4px}
+  .space-item{border-radius:10px;background:var(--soft);height:44px;display:flex;align-items:flex-end;padding:7px 8px;font-size:10px;color:var(--brand)}
+  .rule-list{display:grid;gap:12px;margin-top:4px}
+  .rule{display:flex;gap:12px;align-items:flex-start;font-size:12.5px;line-height:1.55;color:var(--ink)}
+  .rule-i{flex:0 0 22px;height:22px;border-radius:7px;background:var(--soft);display:grid;place-items:center;color:var(--brand);font-size:10px;font-weight:700}
+  .rule span{color:var(--muted)}
+
+  /* phone grid */
+  .phones{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:34px 26px;margin-top:34px;justify-items:center}
+  .phone-wrap{width:100%;max-width:390px}
+  .phone{border-radius:46px;background:#211A27;padding:9px;box-shadow:0 24px 48px rgba(20,35,28,.16),0 2px 6px rgba(20,35,28,.1)}
+  .screen{position:relative;height:780px;border-radius:38px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column}
+  .status{height:40px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 24px 4px;font-size:12px;font-weight:600;color:var(--ink);flex:0 0 auto}
+  .status .right{display:flex;gap:5px;align-items:center}
+  .bar{height:3px;width:16px;border-radius:2px;background:var(--ink)}
+  .bar.sm{width:9px;opacity:.5}
+  .appbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 18px 8px;flex:0 0 auto}
+  .appbar h4{margin:0;font-size:16px;font-weight:600}
+  .appbar .sub{font-size:11px;color:var(--muted);font-weight:400;margin-top:2px}
+  .icon-btn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--ink);background:rgba(255,255,255,.65)}
+  .icon-btn.ghost{background:transparent}
+  .content{flex:1 1 auto;overflow:hidden;padding:6px 16px 0}
+  .phone-caption{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;padding:0 6px}
+  .phone-caption b{font-size:14px;font-weight:650}
+  .phone-caption span{font-size:11px;color:var(--muted)}
+  .note{margin:8px 6px 0;font-size:12px;line-height:1.6;color:var(--muted)}
+
+  /* home */
+  .continue{background:linear-gradient(135deg,#7E5A9B 0%,#A87399 100%);color:#fff;border-radius:20px;padding:16px 18px;position:relative;overflow:hidden}
+  .continue .kicker{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#E3D3EE;letter-spacing:.04em}
+  .continue h5{margin:8px 0 12px;font-size:18px;font-weight:600;letter-spacing:-.01em}
+  .continue .progress{height:5px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden}
+  .continue .progress i{display:block;height:100%;width:50%;background:var(--lime);border-radius:3px}
+  .continue .foot{display:flex;justify-content:space-between;font-size:11px;color:#E3D3EE;margin-top:9px}
+  .continue .go{position:absolute;right:16px;bottom:14px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.14);display:grid;place-items:center}
+  .chips{display:flex;gap:8px;margin:16px 0 4px}
+  .chip{height:32px;padding:0 14px;border-radius:999px;background:#fff;display:inline-flex;align-items:center;font-size:12px;color:var(--muted);border:1px solid var(--line)}
+  .chip.on{background:#F1E6F8;color:#5C4173;border-color:#E7D8F2;font-weight:600}
+  .period{display:flex;align-items:center;justify-content:space-between;margin:16px 2px 8px}
+  .period b{font-size:13px;font-weight:650}
+  .period span{font-size:11px;color:var(--muted)}
+  .seg{display:inline-flex;background:#EDE6F2;border-radius:9px;padding:3px;margin:2px 0 10px}
+  .seg span{font-size:11px;padding:4px 12px;border-radius:7px;color:var(--muted)}
+  .seg .on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+  .paper{background:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .paper .idx{width:38px;height:38px;border-radius:11px;background:var(--soft);display:grid;place-items:center;font-size:13px;font-weight:650;color:var(--brand)}
+  .paper .meta{flex:1;min-width:0}
+  .paper .meta b{display:block;font-size:14px;font-weight:600}
+  .paper .meta span{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+  .paper .meta .last{display:inline-block;font-size:10px;color:var(--brand);background:var(--soft);padding:2px 6px;border-radius:5px;margin-left:5px;font-variant-numeric:tabular-nums}
+  .paper .act{height:32px;padding:0 14px;border-radius:9px;background:#F1E6F8;color:#5C4173;font-size:12px;font-weight:600;display:grid;place-items:center;border:1px solid #E7D8F2}
+  .tabbar{flex:0 0 auto;height:64px;background:rgba(255,255,255,.94);border-top:1px solid var(--line);display:flex;padding:6px 20px 10px}
+  .tabbar div{flex:1;display:grid;place-items:center;gap:2px;font-size:10px;color:#8A8194}
+  .tabbar .on{color:var(--brand);font-weight:600}
+
+  /* answer */
+  .thin-progress{height:3px;background:#E8E0EE;border-radius:2px;margin:0 18px 2px;overflow:hidden}
+  .thin-progress i{display:block;height:100%;width:50%;background:var(--brand)}
+  .q-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;padding:18px 6px 0;text-align:center}
+  .q-label{font-size:11px;color:var(--muted);letter-spacing:.04em}
+  .q-num{font-size:34px;font-weight:650;letter-spacing:-.03em;margin:4px 0 6px}
+  .q-type{font-size:12px;color:var(--muted)}
+  .options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:30px 4px 0}
+  .opt{height:88px;border-radius:18px;background:#fff;border:1.5px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative}
+  .opt b{font-size:32px;font-weight:650;letter-spacing:-.02em}
+  .opt span{font-size:10px;color:var(--muted)}
+  .opt.on{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 8px 18px rgba(36,84,69,.22)}
+  .opt.on span{color:#E3D3EE}
+  .opt .tick{position:absolute;top:10px;right:12px;width:16px;height:16px;border-radius:50%;background:var(--lime);color:var(--brand);display:none;place-items:center;font-size:10px;line-height:1;font-weight:700}
+  .opt.on .tick{display:grid}
+  .opt.on .tick{color:var(--brand)}
+  .auto{display:flex;align-items:center;justify-content:space-between;margin:20px 6px 0;font-size:12px;color:var(--muted)}
+  .switch{width:40px;height:23px;border-radius:999px;background:var(--brand);position:relative}
+  .switch::after{content:"";position:absolute;right:2px;top:2px;width:19px;height:19px;border-radius:50%;background:#fff}
+  .bottom-actions{margin-top:auto;padding:12px 16px 22px;display:flex;gap:10px}
+  .btn{height:50px;border-radius:15px;display:grid;place-items:center;font-size:15px;font-weight:600}
+  .btn.primary{background:linear-gradient(135deg,#7E5A9B 0%,#AC779C 100%);color:#fff;flex:1.6;box-shadow:0 8px 18px rgba(36,84,69,.18)}
+  .btn.ghost{background:#fff;color:var(--ink);flex:1;border:1px solid var(--line)}
+  .btn.soft{background:var(--soft);color:var(--brand);flex:1}
+
+  /* answer sheet sheet */
+  .overlay{position:absolute;inset:0;background:rgba(18,30,24,.34);backdrop-filter:blur(1px)}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:26px 26px 0 0;padding:10px 18px 18px;max-height:76%;display:flex;flex-direction:column}
+  .grab{width:36px;height:4px;border-radius:2px;background:#E3DAEA;margin:0 auto 14px}
+  .sheet-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+  .sheet-head b{font-size:16px;font-weight:650}
+  .sheet-head span{font-size:11px;color:var(--muted)}
+  .legend{display:flex;gap:14px;font-size:10px;color:var(--muted);margin-bottom:12px}
+  .legend i{width:8px;height:8px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px}
+  .grid{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;overflow:hidden}
+  .cell{aspect-ratio:1;border-radius:7px;display:grid;place-items:center;font-size:10px;font-weight:600;background:#F9F6FC;color:#736A7E;font-variant-numeric:tabular-nums}
+  .cell.done{background:var(--soft);color:var(--brand)}
+  .cell.now{background:var(--brand);color:#fff;box-shadow:0 0 0 2px rgba(36,84,69,.16)}
+  .cell.blank{background:#fff;border:1px solid var(--line);color:#8A8194}
+  .sheet .btn{margin-top:16px}
+
+  /* report */
+  .hero{background:#fff;border-radius:22px;padding:18px 18px 16px;margin-top:4px}
+  .hero .top{display:flex;justify-content:space-between;align-items:flex-start}
+  .hero .lab{font-size:11px;color:var(--muted)}
+  .score{display:flex;align-items:baseline;gap:5px;margin-top:2px}
+  .score b{font-size:52px;line-height:1;font-weight:650;letter-spacing:-.04em;color:var(--brand)}
+  .score span{font-size:13px;color:var(--muted)}
+  .rank-chip{margin-top:8px;display:inline-flex;align-items:center;gap:6px;background:var(--soft);color:var(--brand);font-size:11px;font-weight:600;padding:5px 9px;border-radius:7px}
+  .mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+  .stat{background:#FBF8FD;border-radius:12px;padding:10px 6px;text-align:center}
+  .stat b{display:block;font-size:18px;font-weight:650;font-variant-numeric:tabular-nums}
+  .stat span{display:block;font-size:10px;color:var(--muted);margin-top:2px}
+  .stat.ok b{color:var(--brand)} .stat.no b{color:var(--red)} .stat.blank b{color:#7A7185}
+  .section-row{display:flex;justify-content:space-between;align-items:baseline;margin:18px 4px 8px}
+  .section-row b{font-size:12px;font-weight:650;letter-spacing:.02em}
+  .section-row span{font-size:11px;color:var(--muted)}
+  .perf{background:#fff;border-radius:16px;padding:6px 14px}
+  .prow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F1ECF5}
+  .prow:last-child{border-bottom:0}
+  .prow .name{width:62px;font-size:12px;font-weight:500;flex:0 0 auto}
+  .prow .track{flex:1;height:6px;border-radius:3px;background:#F1ECF5;overflow:hidden}
+  .prow .track i{display:block;height:100%;border-radius:3px;background:var(--brand)}
+  .prow .pct{width:38px;text-align:right;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
+  .bottom-pad{margin-top:auto;padding:12px 16px 22px;display:flex;gap:10px}
+
+  /* detail */
+  .filter-chips{display:flex;gap:7px;padding:4px 18px 10px}
+  .filter-chips .chip{height:28px;padding:0 11px;font-size:11px}
+  .qrow{background:#fff;border-radius:14px;padding:12px 12px;margin:0 16px 8px;display:flex;gap:10px;align-items:center}
+  .qrow .qn{width:34px;height:34px;border-radius:9px;background:var(--soft);display:grid;place-items:center;font-size:12px;font-weight:650;color:var(--brand);flex:0 0 auto}
+  .qrow.wrong .qn{background:var(--red-soft);color:var(--red)}
+  .qrow .bars{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .obar{text-align:center}
+  .obar .top{font-size:9px;color:var(--muted);display:flex;justify-content:center;gap:2px}
+  .obar .track{display:block;height:5px;border-radius:3px;background:#F1ECF5;margin:4px 3px 0;overflow:hidden}
+  .obar .track i{display:block;height:100%;background:#D5C9DF}
+  .obar.correct .track i{background:var(--brand)}
+  .obar.mine .track i{background:var(--red)}
+  .obar.correct .top{color:var(--brand);font-weight:700}
+  .obar.mine .top{color:var(--red);font-weight:700}
+  .detail-note{margin:6px 20px 0;font-size:10px;color:var(--muted);line-height:1.6}
+
+  /* leaderboard */
+  .board-tabs{display:flex;gap:6px;padding:2px 16px 8px;overflow:hidden}
+  .board-tabs .chip{height:30px;padding:0 12px;font-size:11px;background:#fff}
+  .board-tabs .chip.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .podium{background:#fff;border-radius:18px;margin:2px 16px 10px;padding:6px 14px}
+  .lrow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F2EDF6}
+  .lrow:last-child{border-bottom:0}
+  .lrow .rk{width:24px;font-size:12px;font-weight:700;color:#8A8194;font-variant-numeric:tabular-nums}
+  .lrow .rk.g1{color:#C08A3E} .lrow .rk.g2{color:#8E93A8} .lrow .rk.g3{color:#B4785E}
+  .lrow .av{width:32px;height:32px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-size:12px;color:var(--brand);font-weight:600}
+  .lrow .nm{flex:1;min-width:0;font-size:13px}
+  .lrow .nm small{display:block;font-size:10px;color:var(--muted);margin-top:2px;font-weight:400}
+  .lrow .sc{font-size:15px;font-weight:650;font-variant-numeric:tabular-nums;color:var(--brand)}
+  .me-card{position:absolute;left:12px;right:12px;bottom:12px;background:linear-gradient(135deg,#7E5A9B 0%,#A87399 100%);color:#fff;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 10px 22px rgba(36,84,69,.25)}
+  .me-card .rk{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
+  .me-card .t{flex:1;font-size:11px;color:#E3D3EE;line-height:1.5}
+  .me-card .t b{display:block;font-size:13px;color:#fff;font-weight:600}
+  .me-card .sc{font-size:19px;font-weight:650;font-variant-numeric:tabular-nums}
+
+  /* me */
+  .profile{display:flex;align-items:center;gap:12px;padding:8px 4px 14px}
+  .avatar{width:54px;height:54px;border-radius:50%;background:linear-gradient(140deg,#F0DBEA,#DEC2DA);display:grid;place-items:center;font-size:18px;font-weight:650;color:var(--brand)}
+  .profile b{display:block;font-size:17px;font-weight:650}
+  .profile span{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .metric{background:#fff;border-radius:16px;padding:14px 14px 12px}
+  .metric span{font-size:10px;color:var(--muted)}
+  .metric b{display:block;font-size:26px;font-weight:650;letter-spacing:-.03em;margin-top:3px;font-variant-numeric:tabular-nums}
+  .metric small{font-size:10px;color:var(--brand);background:var(--soft);padding:2px 5px;border-radius:4px;margin-left:4px;font-weight:600}
+  .hist{background:#fff;border-radius:16px;padding:4px 14px;margin-top:10px}
+  .hrow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #F2EDF6}
+  .hrow:last-child{border-bottom:0}
+  .hrow .d{width:44px;font-size:10px;color:var(--muted);line-height:1.4}
+  .hrow .t{flex:1;font-size:12px;font-weight:500}
+  .hrow .t small{display:block;font-size:10px;color:var(--muted);font-weight:400;margin-top:2px}
+  .hrow .s{font-size:15px;font-weight:650;font-variant-numeric:tabular-nums}
+  .hrow .delta{font-size:10px;font-weight:600;padding:2px 5px;border-radius:4px;background:var(--soft);color:var(--brand)}
+  .hrow .delta.down{background:var(--red-soft);color:var(--red)}
+
+  /* components */
+  .comp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px}
+  .comp{background:#fff;border-radius:16px;padding:20px}
+  .comp h3{font-size:12px;color:var(--muted);margin:0 0 14px;font-weight:600}
+  .comp .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .comp .stack{display:grid;gap:8px}
+  .tick-legend{display:flex;gap:12px;font-size:10px;color:var(--muted);margin-top:12px}
+  .tick-legend i{width:14px;height:14px;border-radius:5px;display:inline-grid;place-items:center;font-size:8px;margin-right:4px;vertical-align:-3px}
+  .tick-legend .ok{background:var(--soft);color:var(--brand)}
+  .tick-legend .no{background:var(--red-soft);color:var(--red)}
+  .tick-legend .na{background:#fff;border:1px solid var(--line);color:#8A8194}
+
+  /* density table */
+  .density{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:26px}
+  .dcol{background:#fff;border-radius:18px;padding:22px}
+  .dcol h3{display:flex;align-items:center;gap:8px;font-size:13px;margin:0 0 14px}
+  .dcol .badge{font-size:10px;padding:3px 7px;border-radius:5px;font-weight:600}
+  .dcol.before .badge{background:#EEE9F3;color:#6B5A7A}
+  .dcol.after .badge{background:var(--soft);color:var(--brand)}
+  .dcol ul{margin:0;padding-left:18px;display:grid;gap:9px;font-size:13px;line-height:1.55;color:#5A5163}
+
+  /* questions */
+  .questions{display:grid;gap:12px;margin-top:26px}
+  .q{background:#fff;border-radius:16px;padding:20px 22px;display:grid;grid-template-columns:28px 1fr;gap:14px}
+  .q .n{font-size:12px;font-weight:700;color:var(--brand)}
+  .q b{display:block;font-size:14px;font-weight:650;margin-bottom:6px}
+  .q p{margin:0;font-size:12.5px;line-height:1.65;color:var(--muted)}
+  .q .rec{margin-top:8px;font-size:11px;color:var(--brand);background:var(--soft);display:inline-block;padding:4px 8px;border-radius:6px;font-weight:600}
+
+  footer{margin-top:72px;padding-top:20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--muted)}
+
+  @media (max-width:1180px){ .phones{grid-template-columns:repeat(2,minmax(0,1fr))} .principles{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:860px){
+    .wrap{padding:36px 18px 60px}
+    .token-grid,.density,.comp-grid{grid-template-columns:1fr}
+    .phones{grid-template-columns:1fr;gap:30px}
+    .phone-wrap{max-width:390px}
+    h1{font-size:34px}
+    .sec-sub{margin-left:0}
+    .swatches{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Mobile UI Proposal · v0.1</div>
+    <h1>一眼看到题，<br>一下点到答案。</h1>
+    <p class="lead">小程序不是把网页缩小，而是把一次操作压缩到一个拇指能到的地方。所有页面遵守：一屏一任务、一卡一结论、一按钮一动作。</p>
+    <div class="head-meta">
+      <span><i class="dot"></i>390 × 844 基准</span>
+      <span><i class="dot"></i>Min touch 44 × 44</span>
+      <span><i class="dot"></i>淡紫 → 淡粉 · 柔和低饱和</span>
+    </div>
+  </header>
+
+  <!-- 01 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>四条密度原则</h2></div>
+    <p class="sec-sub">先定“删什么”，再定“加什么”。移动端每一屏只保留一个主动作，其余降级为图标或收起。</p>
+    <div class="principles">
+      <div class="principle">
+        <div class="p-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 12h8"/></svg></div>
+        <h3>一屏一任务</h3>
+        <p>选卷页只负责找卷；答题页只负责选答案。说明文字移入“规则”抽屉。</p>
+        <span class="metric">每屏主动作 ≤ 1</span>
+      </div>
+      <div class="principle">
+        <div class="p-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></div>
+        <h3>数字先于文字</h3>
+        <p>分数、题号、百分比用大号等宽数字。状态用色块 + 符号双编码，不靠长句解释。</p>
+        <span class="metric">1 个数字 = 1 条结论</span>
+      </div>
+      <div class="principle">
+        <div class="p-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div>
+        <h3>拇指热区</h3>
+        <p>高频动作固定在屏幕下半部：选项、上一题/下一题、提交与生成海报。</p>
+        <span class="metric">底部 1/3 承载主动作</span>
+      </div>
+      <div class="principle">
+        <div class="p-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5"/></svg></div>
+        <h3>渐进披露</h3>
+        <p>先给结论，再给细节。题型默认只看最弱的 4 项，逐题统计点击“详细”才展开。</p>
+        <span class="metric">首屏信息 ≤ 3 组</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>设计变量</h2></div>
+    <p class="sec-sub">以淡紫为主色、淡粉作高亮，页面底色带一点紫灰纸张感。语义色同时配符号，色弱用户也能分辨。</p>
+    <div class="token-grid">
+      <div class="panel">
+        <h3>色彩｜COLOR</h3>
+        <div class="swatches">
+          <div class="swatch"><div class="chip" style="background:#F8F5FB"></div><b>页面底色</b><span>#F8F5FB</span></div>
+          <div class="swatch"><div class="chip" style="background:#FFFFFF"></div><b>卡片</b><span>#FFFFFF</span></div>
+          <div class="swatch"><div class="chip" style="background:#6B4C86"></div><b>品牌雾紫</b><span>#6B4C86</span></div>
+          <div class="swatch"><div class="chip" style="background:#F0E8F7"></div><b>雾紫浅底</b><span>#F0E8F7</span></div>
+          <div class="swatch"><div class="chip" style="background:#F3D3E3"></div><b>樱花粉</b><span>#F3D3E3</span></div>
+          <div class="swatch"><div class="chip" style="background:#C2586B"></div><b>答错</b><span>#C2586B</span></div>
+          <div class="swatch"><div class="chip" style="background:#FAF2E2;border-color:#E7D8BC"></div><b>待核对</b><span>#A87336</span></div>
+          <div class="swatch"><div class="chip" style="background:#F7F4FA;border-color:#E1D8E8"></div><b>未答</b><span>#7A7185</span></div>
+        </div>
+        <div class="tick-legend">
+          <span><i class="ok">✓</i>答对</span><span><i class="no">×</i>答错</span><span><i class="na">·</i>未答</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>字号｜TYPE SCALE</h3>
+        <div class="type-scale">
+          <div class="type-row"><span class="demo" style="font-size:40px">72.5</span><span class="spec">成绩 40 / 650 / tabular</span></div>
+          <div class="type-row"><span class="demo" style="font-size:26px">第 36 题</span><span class="spec">题号 26 / 650</span></div>
+          <div class="type-row"><span class="demo" style="font-size:18px">一期 · 第 01 套</span><span class="spec">标题 17–18 / 600</span></div>
+          <div class="type-row"><span class="demo" style="font-size:14px;font-weight:400">130 题 · 上次 64.6 分</span><span class="spec">正文 13–14 / 400</span></div>
+          <div class="type-row"><span class="demo" style="font-size:11px;font-weight:400;color:#736A7E">言语理解 · 每题 0.8 分</span><span class="spec">辅助 11 / 400</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>间距｜SPACING 4PT</h3>
+        <div class="space-grid">
+          <div class="space-item" style="height:28px">4</div>
+          <div class="space-item" style="height:36px">8</div>
+          <div class="space-item" style="height:44px">12</div>
+          <div class="space-item" style="height:52px">16</div>
+        </div>
+        <div class="rule-list" style="margin-top:18px">
+          <div class="rule"><i class="rule-i">R</i><div>卡片圆角 <b>14–22px</b>；按钮 <b>14–16px</b>；胶囊 <b>999px</b><span>　同一屏最多两种圆角。</span></div></div>
+          <div class="rule"><i class="rule-i">L</i><div>分隔线只用 <b>#E8E0EE</b> 1px；不叠加边框与阴影<span>　卡片靠留白分组。</span></div></div>
+          <div class="rule"><i class="rule-i">T</i><div>触控热区 <b>≥ 44 × 44</b>；答题选项 <b>88px</b> 高<span>　拇指可盲选。</span></div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>组件状态｜STATES</h3>
+        <div class="rule-list">
+          <div class="rule"><i class="rule-i">1</i><div>按钮：默认 / 按下（下移 1px、加深 4%）/ 禁用（40% 透明）</div></div>
+          <div class="rule"><i class="rule-i">2</i><div>选项：默认 / 已选（雾紫实底 + 右上角 ✓）/ 正确 / 错误</div></div>
+          <div class="rule"><i class="rule-i">3</i><div>题号格：已答（浅紫）/ 当前（雾紫 + 描边）/ 未答（白底描边）</div></div>
+          <div class="rule"><i class="rule-i">4</i><div>列表行：默认 / 按下（底色 #FBF8FD）/ 禁用（60% 透明）</div></div>
+          <div class="rule"><i class="rule-i">5</i><div>加载：骨架屏保留卡片轮廓，不出现整页转圈</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>核心页面</h2></div>
+    <p class="sec-sub">七块屏幕覆盖完整闭环。每块只解决一个问题，次要信息全部收起。</p>
+
+    <div class="phones">
+
+      <!-- home -->
+      <div class="phone-wrap">
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="right"><i class="bar"></i><i class="bar sm"></i><i class="bar sm"></i></span></div>
+          <div class="appbar">
+            <div><h4>卷卷小榜</h4><div class="sub">今天做哪一套？</div></div>
+            <button class="icon-btn" aria-label="设置"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.2a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.2h4l.4-2.2a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2Z"/></svg></button>
+          </div>
+          <div class="content">
+            <div class="continue">
+              <div class="kicker"><span>继续上次</span><span class="num">65 / 130</span></div>
+              <h5>一期 · 第 01 套</h5>
+              <div class="progress"><i></i></div>
+              <div class="foot"><span>言语理解 · 第 36 题</span><span>2 小时前</span></div>
+            </div>
+
+            <div class="chips"><span class="chip on">四海</span><span class="chip">花生</span><span class="chip">超格</span></div>
+
+            <div class="period"><b>26 下国考 · 一期</b><span>收起 ⌃</span></div>
+            <div class="seg"><span class="on">地市</span><span>副省</span></div>
+
+            <div class="paper">
+              <div class="idx num">01</div>
+              <div class="meta"><b>第 01 套</b><span>130 题 · 100 分<span class="last">上次 64.6</span></span></div>
+              <div class="act">继续</div>
+            </div>
+            <div class="paper">
+              <div class="idx num">02</div>
+              <div class="meta"><b>第 02 套</b><span>130 题 · 100 分</span></div>
+              <div class="act">答题</div>
+            </div>
+            <div class="paper">
+              <div class="idx num">03</div>
+              <div class="meta"><b>第 03 套</b><span>130 题 · 100 分</span></div>
+              <div class="act">答题</div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="on"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>首页</div>
+            <div><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21V10m4 11V4m4 17v-7"/></svg>榜单</div>
+            <div><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>我的</div>
+          </div>
+        </div></div>
+        <div class="phone-caption"><b>01 首页 · 选卷</b><span>信息降至 4 组</span></div>
+        <p class="note">续答卡置顶；机构用胶囊；期数只展示当前展开项；卷别做成两段切换，不再堆成标签墙。</p>
+      </div>
+
+      <!-- answer -->
+      <div class="phone-wrap">
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="right"><i class="bar"></i><i class="bar sm"></i><i class="bar sm"></i></span></div>
+          <div class="appbar">
+            <button class="icon-btn ghost" aria-label="返回"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+            <div style="text-align:center;flex:1"><h4>一期 · 第 01 套</h4><div class="sub">言语理解 · 36–65</div></div>
+            <button class="icon-btn" aria-label="答题卡"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h8M8 17h5"/></svg></button>
+          </div>
+          <div class="thin-progress"><i></i></div>
+          <div class="q-wrap">
+            <div class="q-label">QUESTION</div>
+            <div class="q-num num">第 36 题</div>
+            <div class="q-type">言语理解 · 每题 0.8 分</div>
+            <div class="options">
+              <button class="opt"><span class="tick">✓</span><b>A</b></button>
+              <button class="opt on"><span class="tick">✓</span><b>B</b><span>已选</span></button>
+              <button class="opt"><span class="tick">✓</span><b>C</b></button>
+              <button class="opt"><span class="tick">✓</span><b>D</b></button>
+            </div>
+            <div class="auto"><span>选完自动下一题</span><span class="switch"></span></div>
+          </div>
+          <div class="bottom-actions">
+            <button class="btn ghost">上一题</button>
+            <button class="btn primary">下一题</button>
+          </div>
+        </div></div>
+        <div class="phone-caption"><b>02 答题 · 单手录入</b><span>选项 88px</span></div>
+        <p class="note">选项做成 2×2 大块，比四个小按钮减少误触。已选态是实底 + 右上角 ✓，不用再读文字。</p>
+      </div>
+
+      <!-- answer sheet -->
+      <div class="phone-wrap">
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="right"><i class="bar"></i><i class="bar sm"></i><i class="bar sm"></i></span></div>
+          <div class="appbar">
+            <button class="icon-btn ghost" aria-label="返回"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+            <div style="text-align:center;flex:1"><h4>一期 · 第 01 套</h4><div class="sub">言语理解 · 36–65</div></div>
+            <button class="icon-btn" aria-label="答题卡"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h8M8 17h5"/></svg></button>
+          </div>
+          <div class="thin-progress"><i></i></div>
+          <div class="q-wrap" style="opacity:.35">
+            <div class="q-label">QUESTION</div>
+            <div class="q-num num">第 36 题</div>
+            <div class="q-type">言语理解 · 每题 0.8 分</div>
+            <div class="options">
+              <button class="opt"><b>A</b></button><button class="opt on"><b>B</b></button>
+              <button class="opt"><b>C</b></button><button class="opt"><b>D</b></button>
+            </div>
+          </div>
+          <div class="overlay"></div>
+          <div class="sheet">
+            <div class="grab"></div>
+            <div class="sheet-head"><b>答题卡</b><span class="num">已答 65 · 未答 65</span></div>
+            <div class="legend"><span><i style="background:#F0E8F7"></i>已答</span><span><i style="background:#6B4C86"></i>当前</span><span><i style="background:#fff;border:1px solid #E8E0EE"></i>未答</span></div>
+            <div class="grid">
+              <span class="cell done">1</span><span class="cell done">2</span><span class="cell done">3</span><span class="cell done">4</span><span class="cell done">5</span><span class="cell done">6</span><span class="cell done">7</span><span class="cell done">8</span><span class="cell done">9</span><span class="cell done">10</span>
+              <span class="cell done">11</span><span class="cell done">12</span><span class="cell done">13</span><span class="cell done">14</span><span class="cell done">15</span><span class="cell done">16</span><span class="cell done">17</span><span class="cell done">18</span><span class="cell done">19</span><span class="cell done">20</span>
+              <span class="cell done">21</span><span class="cell done">22</span><span class="cell done">23</span><span class="cell done">24</span><span class="cell done">25</span><span class="cell done">26</span><span class="cell done">27</span><span class="cell done">28</span><span class="cell done">29</span><span class="cell done">30</span>
+              <span class="cell done">31</span><span class="cell done">32</span><span class="cell done">33</span><span class="cell done">34</span><span class="cell done">35</span><span class="cell now">36</span><span class="cell blank">37</span><span class="cell blank">38</span><span class="cell blank">39</span><span class="cell blank">40</span>
+              <span class="cell blank">41</span><span class="cell blank">42</span><span class="cell blank">43</span><span class="cell blank">44</span><span class="cell blank">45</span><span class="cell blank">46</span><span class="cell blank">47</span><span class="cell blank">48</span><span class="cell blank">49</span><span class="cell blank">50</span>
+              <span class="cell blank">51</span><span class="cell blank">52</span><span class="cell blank">53</span><span class="cell blank">54</span><span class="cell blank">55</span><span class="cell blank">56</span><span class="cell blank">57</span><span class="cell blank">58</span><span class="cell blank">59</span><span class="cell blank">60</span>
+              <span class="cell blank">61</span><span class="cell blank">62</span><span class="cell blank">63</span><span class="cell blank">64</span><span class="cell blank">65</span><span class="cell blank">66</span><span class="cell blank">67</span><span class="cell blank">68</span><span class="cell blank">69</span><span class="cell blank">70</span>
+              <span class="cell blank">71</span><span class="cell blank">72</span><span class="cell blank">73</span><span class="cell blank">74</span><span class="cell blank">75</span><span class="cell blank">76</span><span class="cell blank">77</span><span class="cell blank">78</span><span class="cell blank">79</span><span class="cell blank">80</span>
+            </div>
+            <button class="btn primary" style="width:100%">回到第 36 题</button>
+          </div>
+        </div></div>
+        <div class="phone-caption"><b>03 答题卡 · 底部抽屉</b><span>10 列网格</span></div>
+        <p class="note">答题卡不占整页，从底部拉起；三态色块 + 数字，点击任意题号直接跳转。</p>
+      </div>
+
+      <!-- report -->
+      <div class="phone-wrap">
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="right"><i class="bar"></i><i class="bar sm"></i><i class="bar sm"></i></span></div>
+          <div class="appbar">
+            <button class="icon-btn ghost" aria-label="返回"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+            <div style="text-align:center;flex:1"><h4>成绩报告</h4><div class="sub">一期 · 第 01 套 · 规则 V1</div></div>
+            <button class="icon-btn" aria-label="分享"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L8 8m4-4 4 4"/><path d="M5 14v5h14v-5"/></svg></button>
+          </div>
+          <div class="content" style="display:flex;flex-direction:column">
+            <div class="hero">
+              <div class="top">
+                <div>
+                  <div class="lab">本次估分</div>
+                  <div class="score"><b class="num">72.5</b><span>/ 100</span></div>
+                  <div class="rank-chip"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 18V9m5 9V5m5 13v-6m5 6V8"/></svg>超过 76% 同卷考生 · 第 12 / 86</div>
+                </div>
+                <div style="text-align:right"><div class="lab">较上次</div><div style="font-size:15px;font-weight:650;color:#6B4C86;margin-top:4px" class="num">+3.5</div></div>
+              </div>
+              <div class="mini-stats">
+                <div class="stat ok"><b class="num">84</b><span>答对</span></div>
+                <div class="stat no"><b class="num">36</b><span>答错</span></div>
+                <div class="stat blank"><b class="num">10</b><span>未答</span></div>
+              </div>
+            </div>
+
+            <div class="section-row"><b>最需要补的 3 项</b><span>全部 6 项 ›</span></div>
+            <div class="perf">
+              <div class="prow"><span class="name">判断推理</span><span class="track"><i style="width:60%"></i></span><span class="pct num">60%</span></div>
+              <div class="prow"><span class="name">常识判断</span><span class="track"><i style="width:65%"></i></span><span class="pct num">65%</span></div>
+              <div class="prow"><span class="name">资料分析</span><span class="track"><i style="width:70%"></i></span><span class="pct num">70%</span></div>
+            </div>
+            <p class="detail-note">按得分率从低到高排序，只展示最需要行动的题型。</p>
+            <div class="paper" style="margin-top:12px">
+              <div class="idx" style="background:#F7F4FA">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B4C86" stroke-width="1.7" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+              </div>
+              <div class="meta"><b>逐题对比</b><span>答案对照 · 选项分布</span></div>
+              <span style="font-size:11px;color:#6B4C86;font-weight:600">详细 ›</span>
+            </div>
+          </div>
+          <div class="bottom-pad">
+            <button class="btn ghost">看榜单</button>
+            <button class="btn primary">生成海报</button>
+          </div>
+        </div></div>
+        <div class="phone-caption"><b>04 报告 · 精简视图</b><span>结论优先</span></div>
+        <p class="note">首屏只有三件事：多少分、超过多少人、哪几项最弱。六项题型不再全铺，改为“最需补的 3 项”。</p>
+      </div>
+
+      <!-- detail -->
+      <div class="phone-wrap">
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="right"><i class="bar"></i><i class="bar sm"></i><i class="bar sm"></i></span></div>
+          <div class="appbar">
+            <button class="icon-btn ghost" aria-label="返回"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+            <div style="text-align:center;flex:1"><h4>详细报告</h4><div class="sub">逐题对比 · 同卷考生</div></div>
+            <button class="icon-btn" aria-label="筛选"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button>
+          </div>
+          <div class="filter-chips">
+            <span class="chip on">全员</span><span class="chip">&gt; 60</span><span class="chip">&gt; 70</span><span class="chip">&gt; 80</span>
+          </div>
+          <div class="qrow">
+            <span class="qn num">36</span>
+            <span class="bars">
+              <span class="obar"><span class="top">A</span><span class="track"><i style="width:18%"></i></span><span class="top">18</span></span>
+              <span class="obar mine"><span class="top">B</span><span class="track"><i style="width:62%"></i></span><span class="top">62</span></span>
+              <span class="obar correct"><span class="top">C</span><span class="track"><i style="width:12%"></i></span><span class="top">12</span></span>
+              <span class="obar"><span class="top">D</span><span class="track"><i style="width:8%"></i></span><span class="top">8</span></span>
+            </span>
+          </div>
+          <div class="qrow wrong">
+            <span class="qn num">37</span>
+            <span class="bars">
+              <span class="obar"><span class="top">A</span><span class="track"><i style="width:9%"></i></span><span class="top">9</span></span>
+              <span class="obar"><span class="top">B</span><span class="track"><i style="width:14%"></i></span><span class="top">14</span></span>
+              <span class="obar mine"><span class="top">C</span><span class="track"><i style="width:41%"></i></span><span class="top">41</span></span>
+              <span class="obar correct"><span class="top">D</span><span class="track"><i style="width:36%"></i></span><span class="top">36</span></span>
+            </span>
+          </div>
+          <div class="qrow">
+            <span class="qn num">38</span>
+            <span class="bars">
+              <span class="obar"><span class="top">A</span><span class="track"><i style="width:22%"></i></span><span class="top">22</span></span>
+              <span class="obar"><span class="top">B</span><span class="track"><i style="width:11%"></i></span><span class="top">11</span></span>
+              <span class="obar"><span class="top">C</span><span class="track"><i style="width:17%"></i></span><span class="top">17</span></span>
+              <span class="obar correct"><span class="top">D</span><span class="track"><i style="width:50%"></i></span><span class="top">50</span></span>
+            </span>
+          </div>
+          <div class="qrow wrong">
+            <span class="qn num">39</span>
+            <span class="bars">
+              <span class="obar"><span class="top">A</span><span class="track"><i style="width:48%"></i></span><span class="top">48</span></span>
+              <span class="obar correct"><span class="top">B</span><span class="track"><i style="width:33%"></i></span><span class="top">33</span></span>
+              <span class="obar"><span class="top">C</span><span class="track"><i style="width:12%"></i></span><span class="top">12</span></span>
+              <span class="obar"><span class="top">D</span><span class="track"><i style="width:7%"></i></span><span class="top">7</span></span>
+            </span>
+          </div>
+          <p class="detail-note">绿 = 正确答案占比，红 = 你的选择。人数不足 10 人时只显示个人结果。</p>
+        </div></div>
+        <div class="phone-caption"><b>05 报告 · 详细视图</b><span>四选项分布</span></div>
+        <p class="note">每行一道题，四个微型条形只表达“大家选了什么”。不再显示长表格和冗长解析。</p>
+      </div>
+
+      <!-- leaderboard -->
+      <div class="phone-wrap">
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="right"><i class="bar"></i><i class="bar sm"></i><i class="bar sm"></i></span></div>
+          <div class="appbar">
+            <button class="icon-btn ghost" aria-label="返回"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+            <div style="text-align:center;flex:1"><h4>同卷练习榜</h4><div class="sub">一期 · 第 01 套 · 规则 V1</div></div>
+            <button class="icon-btn ghost" aria-label="说明"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v.1"/></svg></button>
+          </div>
+          <div class="board-tabs">
+            <span class="chip on">总分</span><span class="chip">言语</span><span class="chip">判断</span><span class="chip">资料</span>
+          </div>
+          <div class="podium">
+            <div class="lrow"><span class="rk g1 num">1</span><span class="av">A</span><span class="nm">考友 A<small>今天 14:02</small></span><span class="sc num">82.5</span></div>
+            <div class="lrow"><span class="rk g2 num">2</span><span class="av">B</span><span class="nm">考友 B<small>昨天 21:18</small></span><span class="sc num">80.0</span></div>
+            <div class="lrow"><span class="rk g3 num">3</span><span class="av">C</span><span class="nm">考友 C<small>昨天 19:40</small></span><span class="sc num">80.0</span></div>
+            <div class="lrow"><span class="rk num">4</span><span class="av">D</span><span class="nm">考友 D<small>昨天 17:22</small></span><span class="sc num">78.5</span></div>
+            <div class="lrow"><span class="rk num">5</span><span class="av">E</span><span class="nm">考友 E<small>昨天 12:08</small></span><span class="sc num">77.0</span></div>
+            <div class="lrow"><span class="rk num">6</span><span class="av">F</span><span class="nm">考友 F<small>昨天 11:36</small></span><span class="sc num">76.5</span></div>
+            <div class="lrow"><span class="rk num">7</span><span class="av">G</span><span class="nm">考友 G<small>昨天 09:12</small></span><span class="sc num">75.0</span></div>
+            <div class="lrow"><span class="rk num">8</span><span class="av">H</span><span class="nm">考友 H<small>前天 22:40</small></span><span class="sc num">74.5</span></div>
+          </div>
+          <div class="me-card">
+            <span class="rk num">12</span>
+            <span class="t"><b>我的最佳成绩</b>距上一名 0.8 分</span>
+            <span class="sc num">72.5</span>
+          </div>
+        </div></div>
+        <div class="phone-caption"><b>06 排行榜</b><span>本人置底</span></div>
+        <p class="note">榜单只显示名次、昵称、分数；题型榜用同一套结构，切换 Tab 即可。本人卡片固定底部。</p>
+      </div>
+
+      <!-- me -->
+      <div class="phone-wrap">
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="right"><i class="bar"></i><i class="bar sm"></i><i class="bar sm"></i></span></div>
+          <div class="appbar"><div><h4>我的</h4></div><button class="icon-btn" aria-label="设置"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.2a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.2h4l.4-2.2a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2Z"/></svg></button></div>
+          <div class="content">
+            <div class="profile">
+              <div class="avatar">Pl</div>
+              <div style="flex:1"><b>Pluto</b><span>已练习 12 套 · 本周 3 套</span></div>
+              <span style="font-size:11px;color:#6B4C86;background:#F0E8F7;padding:5px 9px;border-radius:7px;font-weight:600">已登录</span>
+            </div>
+            <div class="duo">
+              <div class="metric"><span>最佳</span><b class="num">72.5<small>分</small></b></div>
+              <div class="metric"><span>平均</span><b class="num">68.2<small>分</small></b></div>
+            </div>
+            <div class="section-row"><b>最近练习</b><span>全部记录 ›</span></div>
+            <div class="hist">
+              <div class="hrow"><span class="d">今天</span><span class="t">一期 · 第 01 套<small>言语 80% · 判断 60%</small></span><span class="s num">72.5</span><span class="delta">+3.5</span></div>
+              <div class="hrow"><span class="d">昨天</span><span class="t">一期 · 第 02 套<small>言语 73% · 判断 57%</small></span><span class="s num">69.0</span><span class="delta down">−2.1</span></div>
+              <div class="hrow"><span class="d">10/21</span><span class="t">二期 · 副省 第 01 套<small>言语 76% · 判断 63%</small></span><span class="s num">71.1</span><span class="delta">+1.2</span></div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>首页</div>
+            <div><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21V10m4 11V4m4 17v-7"/></svg>榜单</div>
+            <div class="on"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>我的</div>
+          </div>
+        </div></div>
+        <div class="phone-caption"><b>07 我的 · 历史</b><span>趋势在前</span></div>
+        <p class="note">不做柱状大屏。每次练习一行，分数 + 涨跌标签即可；点开单卷才看趋势。</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>组件库</h2></div>
+    <p class="sec-sub">小程序里所有页面都由这 8 个组件拼成。先固定组件，再扩展页面，避免每页重新发明按钮。</p>
+    <div class="comp-grid">
+      <div class="comp">
+        <h3>按钮 BUTTON</h3>
+        <div class="stack">
+          <button class="btn primary" style="height:44px">主按钮 · 生成海报</button>
+          <button class="btn soft" style="height:44px">次按钮 · 看榜单</button>
+          <button class="btn ghost" style="height:44px;border:1px solid var(--line)">弱按钮 · 上一题</button>
+        </div>
+      </div>
+      <div class="comp">
+        <h3>胶囊 CHIP</h3>
+        <div class="row">
+          <span class="chip on">四海</span><span class="chip">花生</span><span class="chip">超格</span>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <span class="chip on" style="height:28px;font-size:11px">全员</span><span class="chip" style="height:28px;font-size:11px">&gt; 70</span>
+        </div>
+      </div>
+      <div class="comp">
+        <h3>题号格 CELL</h3>
+        <div class="row">
+          <span class="cell done" style="width:32px">12</span>
+          <span class="cell now" style="width:32px">36</span>
+          <span class="cell blank" style="width:32px">37</span>
+        </div>
+        <div class="tick-legend"><span><i class="ok">✓</i>已答</span><span><i class="no">×</i>错题</span><span><i class="na">·</i>未答</span></div>
+      </div>
+      <div class="comp">
+        <h3>列表行 LIST ROW</h3>
+        <div class="paper" style="margin:0">
+          <div class="idx num">01</div>
+          <div class="meta"><b>第 01 套</b><span>130 题 · 上次 64.6</span></div>
+          <div class="act">继续</div>
+        </div>
+      </div>
+      <div class="comp">
+        <h3>进度条 PROGRESS</h3>
+        <div style="margin-top:6px">
+          <div class="prow" style="padding:8px 0"><span class="name">完成度</span><span class="track"><i style="width:50%"></i></span><span class="pct num">50%</span></div>
+          <div class="thin-progress" style="margin:14px 0 0"><i style="width:65%"></i></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:6px">65 / 100 已答</div>
+        </div>
+      </div>
+      <div class="comp">
+        <h3>成绩卡 SCORE</h3>
+        <div class="metric" style="background:#FBF8FD"><span>本次估分</span><b class="num" style="color:var(--brand)">72.5<small>/100</small></b></div>
+        <div class="rank-chip" style="margin-top:8px">超过 76% · 第 12 / 86</div>
+      </div>
+      <div class="comp">
+        <h3>分段控制 SEGMENT</h3>
+        <div class="seg" style="margin:0"><span class="on">地市</span><span>副省</span></div>
+        <div class="seg" style="margin:10px 0 0"><span class="on">精简</span><span>详细</span></div>
+      </div>
+      <div class="comp">
+        <h3>提示 TOAST / BANNER</h3>
+        <div style="background:var(--soft);color:var(--brand);font-size:11px;padding:9px 12px;border-radius:10px">草稿已保存在本机</div>
+        <div style="background:var(--amber-soft);color:#A87336;font-size:11px;padding:9px 12px;border-radius:10px;margin-top:8px">答案已更新，请查看新版说明</div>
+      </div>
+      <div class="comp">
+        <h3>空状态 EMPTY</h3>
+        <div style="text-align:center;padding:10px 0">
+          <div style="width:44px;height:44px;border-radius:14px;background:var(--soft);margin:0 auto 8px;display:grid;place-items:center;color:var(--brand)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 12h8"/></svg>
+          </div>
+          <div style="font-size:12px;font-weight:600">还没有练习记录</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px">选一套卷开始吧</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>密度改造：删了什么</h2></div>
+    <p class="sec-sub">同一份产品信息，移动端不是等比缩小，而是重新决定谁先出现、谁被折叠、谁只留一个图标。</p>
+    <div class="density">
+      <div class="dcol before">
+        <h3><span class="badge">旧版 H5</span>信息平铺</h3>
+        <ul>
+          <li>首页顶部同时出现标题、说明、题数、满分、版本、规则入口</li>
+          <li>答题页四周都是信息：题型、分值、进度、说明、键盘提示</li>
+          <li>报告首屏一次性铺满 6–9 个题型卡片，每个都带三行说明</li>
+          <li>排行榜每行带头像、日期、题型明细、击败比例</li>
+          <li>所有状态都靠文字解释“已选 / 已答 / 未答”</li>
+        </ul>
+      </div>
+      <div class="dcol after">
+        <h3><span class="badge">新</span>一屏一结论</h3>
+        <ul>
+          <li>首页只留续答、机构、期数、套卷四组；规则收进套卷详情</li>
+          <li>答题页中间只留题号与 2×2 选项；答题卡从底部拉起</li>
+          <li>报告先给分数、排名、最弱 3 项；完整题型进入“全部”</li>
+          <li>榜单行只留名次、昵称、分数；时间放进小字</li>
+          <li>状态用色块 + ✓ / × / · 双编码，零文字也能读</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>三项已确认的结构决策</h2></div>
+    <p class="sec-sub">以下三项已确认，直接作为组件结构与交互验收依据。</p>
+    <div class="questions">
+      <div class="q"><span class="n">01</span><div><b>首页：续答优先</b><p>打开即回到上次进度；续答卡置顶，套卷列表紧随其后，不再用大标题与说明占首屏。</p><span class="rec">已确认 · 续答优先</span></div></div>
+      <div class="q"><span class="n">02</span><div><b>报告首屏：最弱 3 项</b><p>按得分率从低到高只展示最需要行动的 3 项，其余进入“全部 6 项 ›”，避免首屏变成小字表格。</p><span class="rec">已确认 · 最弱 3 项</span></div></div>
+      <div class="q"><span class="n">03</span><div><b>答题页：隐藏底部导航</b><p>答题时全屏沉浸，只保留返回与答题卡入口；退出答题后再回到首页三栏导航，减少误触。</p><span class="rec">已确认 · 答题页隐藏 Tab</span></div></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>卷卷小榜 · 移动端 UI 设计提案 v0.1</span>
+    <span>基于现有 H5 视觉与 390×844 基准 · 2026.11</span>
+  </footer>
+</div>
+</body>
+</html>

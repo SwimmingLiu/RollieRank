@@ -1,0 +1,99 @@
+{
+  "license": "MIT",
+  "entries": [
+    {
+      "slug": "button",
+      "sourceUrl": "https://beui.dev/r/button/raw",
+      "registryUrl": "https://beui.dev/r/button",
+      "pageUrl": "https://beui.dev/components/motion/button",
+      "updatedAt": "2026-10-18",
+      "registrySha256": "58d7e773006f20b80c883b9049475869cfc7f4e5557c5e378511ba8f1b163be8",
+      "files": [
+        {
+          "path": "components/motion/button/index.tsx",
+          "sha256": "655757cf219acf1a150863ed4194cc3b0357db19e7d330db8421b2944f77d2ff"
+        },
+        {
+          "path": "components/motion/button/base.tsx",
+          "sha256": "4737eddd464cd7907a64e1af3f82a4aa9d6edc7e2c75dffae9a8052543a19173"
+        },
+        {
+          "path": "components/motion/button/stateful.tsx",
+          "sha256": "6d51552e64b217b46579dc7d3fffac2ecb88f0affa11ba7cce8c502ae96d2540"
+        },
+        {
+          "path": "components/motion/button/magnetic.tsx",
+          "sha256": "371c75beeed8bae17831eeee13d50c5872771c5b870fe190cbd03758fbe15434"
+        },
+        {
+          "path": "components/motion/button/metallic.tsx",
+          "sha256": "cacd300d8d79bca2487adb632293d5885e60c734c1d3d8127566cbd2bda9cafa"
+        },
+        {
+          "path": "lib/ease.ts",
+          "sha256": "cde4ce91ec645335cfa8297d6094c90b6e62ee6a1a021fe2ac0a6ece673c2a8f"
+        },
+        {
+          "path": "lib/hooks/use-hover-capable.ts",
+          "sha256": "b5b9397bfa03859e04673c8f1817cf13ff55d2a9688955d6e0459ae70db90d06"
+        },
+        {
+          "path": "lib/utils.ts",
+          "sha256": "7c8c3dfc0cdd370d44932828eb067ef771c8fe7996693221d5d4b90af6d54f2d"
+        },
+        {
+          "path": "components/motion/magnetic.tsx",
+          "sha256": "f7802af9bbe57998575f6d9846ecfccc842f3c682e8fb0958957581dfd9873a3"
+        }
+      ]
+    },
+    {
+      "slug": "tabs",
+      "sourceUrl": "https://beui.dev/r/tabs/raw",
+      "registryUrl": "https://beui.dev/r/tabs",
+      "pageUrl": "https://beui.dev/components/motion/tabs",
+      "updatedAt": "2026-10-18",
+      "registrySha256": "9d71dc546e54e916f9e04a0bc5b40007d6298b1140d05622756fd7016fbc30ea",
+      "files": [
+        {
+          "path": "components/motion/tabs.tsx",
+          "sha256": "828e457cae084b8479135aca0b7ff531810e5108745ad8c7bc6b0322fd073775"
+        },
+        {
+          "path": "lib/ease.ts",
+          "sha256": "cde4ce91ec645335cfa8297d6094c90b6e62ee6a1a021fe2ac0a6ece673c2a8f"
+        },
+        {
+          "path": "lib/utils.ts",
+          "sha256": "7c8c3dfc0cdd370d44932828eb067ef771c8fe7996693221d5d4b90af6d54f2d"
+        }
+      ]
+    },
+    {
+      "slug": "tilt-card",
+      "sourceUrl": "https://beui.dev/r/tilt-card/raw",
+      "registryUrl": "https://beui.dev/r/tilt-card",
+      "pageUrl": "https://beui.dev/components/motion/tilt-card",
+      "updatedAt": "2026-10-18",
+      "registrySha256": "85ddc7f3eb478fce49d36c7b7ce18c519d574a071cd16a7cc99edb97d22ada84",
+      "files": [
+        {
+          "path": "components/motion/tilt-card.tsx",
+          "sha256": "7d54b0aba15f6c156abb9f5f8e7ecd0cfcf52c3dfbbaad78cfec79f269b36b77"
+        },
+        {
+          "path": "lib/ease.ts",
+          "sha256": "cde4ce91ec645335cfa8297d6094c90b6e62ee6a1a021fe2ac0a6ece673c2a8f"
+        },
+        {
+          "path": "lib/hooks/use-hover-capable.ts",
+          "sha256": "b5b9397bfa03859e04673c8f1817cf13ff55d2a9688955d6e0459ae70db90d06"
+        },
+        {
+          "path": "lib/utils.ts",
+          "sha256": "7c8c3dfc0cdd370d44932828eb067ef771c8fe7996693221d5d4b90af6d54f2d"
+        }
+      ]
+    }
+  ]
+}

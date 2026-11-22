@@ -1,0 +1,36 @@
+{
+  "date": "2026-11-14",
+  "scope": "iOS positions module; final 4781 and shared vendor integration delegated to coordination",
+  "sources": {
+    "src/features/positions.js": "51ee92093f444cb82fec4923d304ae3294e86a1c08b935a762b976238a144fbb",
+    "docs/ui-exploration/ios-v3/features/positions.js": "84dca27aedeb55642e062c2e4eaaae8712a70c241667f992c53b049878325b84",
+    "docs/ui-exploration/ios-v3/features/positions.css": "b4a57d377ea1dc4d36c04616b89309e429d9b28b34ebfb56e9e814d34b71230b",
+    "docs/ui-exploration/ios-v3/ui/ranking.tsx": "9759effe783616615265788b5cbd8b721856b3559d05d8029071e7288f22104a",
+    "test/ios-positions.test.js": "4e9c01b595335c30d16d4cc60d7046570b860c126240a3275853524ce80e8511",
+    "test/ios-positions-browser.test.js": "b49232f21d602ca498a39f7380a539e47efe7848903e5349eccc5e93cfbc3b3f",
+    "test/ios-positions-fixtures.mjs": "74faed16948d5967c154dafc1af2f244c4a211b8cf6a5a905f50a24ef44e8710",
+    "docs/issue-ios-positions.md": "4dabf641f9142903cc8a21015de5eb5ab916ab40e17570a2897330e7c219b78e",
+    "docs/solution-ios-positions.md": "5ed85acda23f1dd54d866c2936d3d3cdbaf89a8be817a5a7605e52d9d9ab8ff1",
+    "docs/integration-ios-positions.md": "772ef54a301a75f2be0426d2baa18c54a2ea0e370c32afa2e423a11c443d11e6",
+    "docs/pr-ios-positions.md": "5c41a7721d6e4a5280badb7c6d50ed3a1c8ed59be479e5931b6a433df0366761"
+  },
+  "browserSourceHashes": {
+    "src/features/positions.js": "51ee92093f444cb82fec4923d304ae3294e86a1c08b935a762b976238a144fbb",
+    "docs/ui-exploration/ios-v3/features/positions.js": "84dca27aedeb55642e062c2e4eaaae8712a70c241667f992c53b049878325b84",
+    "docs/ui-exploration/ios-v3/features/positions.css": "b4a57d377ea1dc4d36c04616b89309e429d9b28b34ebfb56e9e814d34b71230b",
+    "docs/ui-exploration/ios-v3/ui/ranking.tsx": "9759effe783616615265788b5cbd8b721856b3559d05d8029071e7288f22104a"
+  },
+  "checks": {
+    "iosTests": 7,
+    "originalCompatibilityTests": 7,
+    "bridgeTests": 2,
+    "practiceModelTests": 4,
+    "typecheck": "passed",
+    "browserErrors": []
+  },
+  "pending": [
+    "4781 public service and iframe combined validation",
+    "shared bridge/vendor rebuild",
+    "report/share props and all four features together"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "use_case": "logo-brand",
+  "mode": "built-in image_gen",
+  "source": "exec-f57b6bb3-a8c2-4d9d-b84f-16332a99265b.png",
+  "meaning": "Two curled paper sheets with staggered heights integrate exam-paper practice and ranking.",
+  "prompt": "rollierank-v4-prompt.txt",
+  "files": {
+    "rollierank-logo-v4-64.png": "55c23edf039bf02b76e6b2ffb750cd8df3ce82561147e384bec73170f6e6dd59",
+    "rollierank-logo-v4.png": "f5973aac99cce8d99c6d173c2ea04d41c76bfd3530eb2a3e3e03eb5d771e9dd0",
+    "rollierank-logo-v4-256.png": "60307bf75a7c4867ff32ed79e1479ace9d36620b0d5ee103656ee697b766d571"
+  },
+  "processing": "Original preserved; sips only resized to256px and64px, transparency retained."
+}

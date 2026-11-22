@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["../docs/ui-exploration/ios-v3/ui/*"],
+      "@base-ui/react/*": ["../docs/ui-exploration/ios-v3/ui/node_modules/@base-ui/react/*"],
+      "lucide-react": ["../docs/ui-exploration/ios-v3/ui/node_modules/lucide-react"],
+      "react": ["../docs/ui-exploration/ios-v3/ui/node_modules/@types/react"],
+      "react-dom/*": ["../docs/ui-exploration/ios-v3/ui/node_modules/@types/react-dom/*"],
+      "motion/*": ["../docs/ui-exploration/ios-v3/ui/node_modules/motion/*"],
+      "clsx": ["../docs/ui-exploration/ios-v3/ui/node_modules/clsx"],
+      "tailwind-merge": ["../docs/ui-exploration/ios-v3/ui/node_modules/tailwind-merge"]
+    },
+    "typeRoots": ["../docs/ui-exploration/ios-v3/ui/node_modules/@types"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}

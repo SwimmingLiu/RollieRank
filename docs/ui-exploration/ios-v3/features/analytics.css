@@ -1,0 +1,191 @@
+/* 报告只保留原生摘要，首刷宿主隐藏时也移除网格空隙。 */
+[data-feature="analytics-comparison"][hidden] { display: none !important; }
+.ios-analytics { min-width: 0; font-family: var(--ui-font, inherit); color: var(--ink, #18181b); }
+.ios-analysis-card { min-width: 0; background: #fffdf8 !important; border: 1px solid #eadfce !important; border-radius: 22px !important; gap: 0 !important; padding: 0 !important; box-shadow: 0 4px 0 #29292804; }
+.ios-analysis-card > [data-slot="card-content"] { padding: 16px !important; min-width: 0; }
+.ios-analysis-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ios-analysis-heading h2 { margin: 0; font-size: 16px; font-weight: 720; letter-spacing: -.3px; }
+.ios-analysis-heading > small { font-size: 11px; color: #79767d; }
+.ios-analysis-heading > button { margin: -7px -6px -7px 0; color: #79767d; }
+/* VS 以两张成绩纸卡和完整板块小卡表达变化，避免表格列头与长说明挤占手机。 */
+.ios-analysis-vs { container-type:inline-size; background:#fff9ed!important; border-color:#e7d5b4!important; box-shadow:0 3px 0 #e9ddc7; }
+.ios-analysis-vs .ios-analysis-heading h2 { font-size:16px; }
+.ios-analysis-vs .ios-analysis-heading > button { width:36px; min-width:36px; height:36px; min-height:36px; padding:0; }
+.ios-analysis-vs .ios-analysis-score-pair { position:relative; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:15px; }
+.ios-analysis-vs .ios-vs-score { display:grid!important; align-content:center; justify-items:start; gap:9px; min-width:0; min-height:94px; height:auto!important; padding:14px 12px!important; border:1px solid #e8dcc4!important; border-radius:16px!important; background:#fffdf7!important; color:#7c6950; text-align:left; box-shadow:0 2px 0 #eadfc9!important; }
+.ios-analysis-vs .ios-vs-current { background:#f2e0b8!important; border-color:#e6d0a0!important; color:#4a3a26; }
+.ios-analysis-vs .ios-vs-score > small { font-size:12px; font-weight:500; color:#998367; }
+.ios-analysis-vs .ios-vs-score > span { display:flex; align-items:baseline; gap:4px; min-width:0; white-space:nowrap; }
+.ios-analysis-vs .ios-vs-score strong { font:650 clamp(27px,9cqw,35px)/1.05 var(--display-font,serif); font-variant-numeric:tabular-nums; letter-spacing:-.7px; }
+.ios-analysis-vs .ios-vs-score.is-wide strong { font-size:clamp(23px,8cqw,31px); }
+.ios-analysis-vs .ios-vs-score em { font:400 12px/1.4 var(--ui-font,inherit); color:#a38c6c; }
+.ios-analysis-vs .ios-vs-divider { position:absolute; left:50%; top:36px; transform:translateX(-50%); display:grid; place-items:center; width:26px; height:26px; border:1px solid #e9dbc3; border-radius:9px; background:#fff9ed; color:#b09b7c; font-size:12px; font-weight:650; letter-spacing:.3px; }
+.ios-analysis-vs .ios-analysis-delta { display:flex; width:fit-content; align-items:center; gap:6px; margin:12px auto 0; padding:7px 13px; border-radius:12px; background:#eaf0df; color:#6e8152; }
+.ios-analysis-vs .ios-analysis-delta.is-down { background:#f6e4d9; color:#b0785e; }
+.ios-analysis-vs .ios-analysis-delta.is-same,.ios-analysis-vs .ios-analysis-delta.is-missing { background:#eee7d9; color:#95846b; }
+.ios-analysis-vs .ios-analysis-delta strong { font:650 21px/1.1 var(--display-font,serif); font-variant-numeric:tabular-nums; letter-spacing:-.3px; }
+.ios-analysis-vs .ios-analysis-delta.is-same strong { font:550 13px/1.4 var(--ui-font,inherit); letter-spacing:0; }
+.ios-analysis-vs .ios-analysis-delta > small { font-size:12px; }
+.ios-analysis-vs .ios-analysis-rate-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-top:16px; }
+.ios-analysis-vs .ios-analysis-rate-pair > span { display:grid; gap:7px; min-width:0; padding:10px; border:1px solid #ecdfc8; border-radius:12px; background:#fbf2e2; }
+.ios-analysis-vs .ios-analysis-rate-pair > span > small { display:flex; align-items:center; gap:5px; font-size:12px; color:#9b8262; }
+.ios-analysis-vs .ios-analysis-rate-pair > span > span { display:flex; align-items:baseline; gap:5px; min-width:0; font-variant-numeric:tabular-nums; }
+.ios-analysis-vs .ios-analysis-rate-pair > span > span > small { color:#9e8c72; font-size:12px; }
+.ios-analysis-vs .ios-analysis-rate-pair > span > span > svg { color:#c3ac8c; }
+.ios-analysis-vs .ios-analysis-rate-pair b { color:#5b4933; font-size:15px; font-weight:650; }
+.ios-analysis-vs .ios-vs-subject-heading { display:flex; align-items:center; gap:9px; margin:18px 0 10px; color:#aa9271; font-size:12px; }
+.ios-analysis-vs .ios-vs-subject-heading h3 { margin:0 auto 0 0; color:#7e684b; font-size:13px; font-weight:600; }
+.ios-analysis-vs .ios-vs-subject-heading > span { display:flex; align-items:center; gap:4px; }
+.ios-analysis-vs .ios-vs-subject-heading > small { font-size:12px; color:#ad997b; }
+.ios-vs-legend-tick { width:2px; height:10px; border-radius:1px; background:#9c876b; }
+.ios-vs-legend-fill { width:9px; height:5px; border-radius:3px; background:#b68a50; }
+.ios-analysis-vs .ios-analysis-subject-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; list-style:none; margin:0; padding:0; }
+.ios-analysis-vs .ios-vs-subject { min-width:0; padding:11px 10px 10px; border:1px solid #eadfc9; border-radius:13px; background:#fffdf7; }
+.ios-analysis-vs .ios-vs-subject > header { display:flex; align-items:center; justify-content:space-between; gap:5px; min-height:17px; }
+.ios-analysis-vs .ios-vs-subject h3 { margin:0; min-width:0; color:#786247; font-size:12px; line-height:1.4; font-weight:550; overflow-wrap:anywhere; }
+.ios-analysis-vs .ios-vs-points { display:flex; align-items:center; justify-content:flex-end; gap:1px; flex:none; color:#78915c; font:600 12px/1.4 var(--ui-font,inherit); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.ios-analysis-vs .ios-vs-subject.is-down .ios-vs-points { color:#bb8067; }
+.ios-analysis-vs .ios-vs-subject.is-same .ios-vs-points,.ios-analysis-vs .ios-vs-subject.is-missing .ios-vs-points { color:#ad9a7e; font-size:12px; font-weight:400; }
+.ios-analysis-vs .ios-vs-rate-glyph { position:relative; height:6px; margin:13px 1px 9px; border-radius:6px; background:#eee5d4; }
+.ios-analysis-vs .ios-vs-rate-fill { position:absolute; top:0; bottom:0; left:0; border-radius:6px; background:#b68a50; }
+.ios-analysis-vs .ios-vs-subject.is-down .ios-vs-rate-fill { background:#d49b80; }
+.ios-analysis-vs .ios-vs-previous-tick { position:absolute; top:-3px; width:2px; height:12px; border-radius:1px; background:#907b5e; transform:translateX(-1px); box-shadow:0 0 0 1px #fffdf7; }
+.ios-analysis-vs .ios-vs-rate-glyph.is-missing { background:repeating-linear-gradient(90deg,#eee5d4 0 5px,transparent 5px 8px); }
+.ios-analysis-vs .ios-vs-subject-values { display:flex; align-items:baseline; justify-content:space-between; gap:4px; font-variant-numeric:tabular-nums; }
+.ios-analysis-vs .ios-vs-subject-values strong { font:650 23px/1.1 var(--display-font,serif); color:#5a4630; letter-spacing:-.4px; }
+.ios-analysis-vs .ios-vs-subject-values small { font:400 12px/1.4 var(--ui-font,inherit); color:#a89374; }
+@media(max-width:350px) {
+  .ios-analysis-vs .ios-vs-score { padding:13px 10px!important; min-height:88px; }
+  .ios-analysis-vs .ios-analysis-rate-pair > span { padding:9px 8px; }
+  .ios-analysis-vs .ios-analysis-rate-pair > span > span { gap:3px; }
+  .ios-analysis-vs .ios-analysis-rate-pair b { font-size:14px; }
+  .ios-analysis-vs .ios-vs-subject { padding:10px 8px; }
+  .ios-analysis-vs .ios-vs-points svg { display:none; }
+  .ios-analysis-vs .ios-vs-subject-heading { gap:7px; }
+  .ios-analysis-vs .ios-vs-subject-values strong { font-size:21px; }
+}
+.ios-analysis-mini { margin-top: 8px; }
+.ios-analysis-plot { min-width: 0; outline-offset: 4px; border-radius: 12px; }
+.ios-analysis-plot svg { display: block; width: 100%; height: auto; overflow: visible; }
+.ios-analysis-plot text { fill: #969198; font-size: 12px; font-family: var(--ui-font, sans-serif); }
+.ios-analysis-grid { fill: none; stroke: #eee9e8; stroke-dasharray: 3 5; }
+.ios-analysis-line { fill: none; stroke: #ef7d82; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.ios-analysis-plot circle { fill: #ef7d82; stroke: #fff; stroke-width: 1.5; cursor: pointer; }
+.ios-analysis-plot circle.is-selected { fill: #fff; stroke: #ce646d; stroke-width: 2; }
+.ios-analysis-plot.is-mini text { font-size: 10px; }
+/* 分析页沿用暖纸卡；图表、记录和筛选分层，避免重复卷名与窄屏小字。 */
+.ios-analysis-dashboard { display:grid; gap:14px; min-width:0; padding:12px 18px 24px; }
+.ios-analysis-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.ios-analysis-toolbar button { font-size:13px; }
+.ios-analysis-toolbar button:last-child { gap:6px; }
+.ios-analysis-dimension { max-width:75%; min-width:0; }
+.ios-analysis-tabs [role="tablist"] { display:flex; width:100%; background:#ebe5da; border-radius:13px; padding:3px; }
+.ios-analysis-tabs [role="tablist"] > div { flex:1; }
+.ios-analysis-tabs [role="tab"] { width:100%; min-height:38px; font-size:13px; }
+.ios-analysis-tabs [data-tabs-indicator] { background:#fffdf8!important; box-shadow:0 2px 4px #5e4a3010; }
+.ios-analysis-tabs [data-tabs-label] { color:#332e2c!important; }
+.ios-analysis-summary { display:flex; align-items:center; justify-content:space-between; gap:14px; padding-bottom:8px; }
+.ios-analysis-summary > span { display:grid; gap:7px; }
+.ios-analysis-summary small { color:#918477; font-size:12px; }
+.ios-analysis-summary strong { font-family:var(--display-font,inherit); color:#332e2c; font-size:34px; line-height:1.1; font-weight:700; font-variant-numeric:tabular-nums; }
+.ios-analysis-summary b { font-size:14px; font-weight:600; font-variant-numeric:tabular-nums; }
+.ios-analysis-summary em { margin-left:3px; font-size:11px; font-style:normal; color:#918477; }
+.ios-analysis-summary-meta { display:grid; gap:8px; margin-left:auto; }
+.ios-analysis-summary-meta > span { display:flex; align-items:center; gap:6px; }
+.ios-analysis-summary-meta svg { color:#ac9880; }
+.ios-analysis-overview.is-first { background:#f3e5c6!important; border-color:#ead6ad!important; }
+.ios-analysis-overview.is-first .ios-analysis-summary { padding:2px 0; }
+.ios-analysis-overview .rr2-progress-ring { color:#b58a4f; --rr-progress-track:#dfcda9; flex:none; }
+.ios-analysis-selected { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:9px 10px; border-radius:10px; background:#f7eee7; font-size:12px; color:#918477; }
+.ios-analysis-selected > span { display:flex; align-items:center; gap:5px; }
+.ios-analysis-selected > b { color:#332e2c; font-size:14px; font-weight:650; }
+.ios-analysis-records { width:100%; table-layout:fixed; border-collapse:collapse; font-size:12px; }
+.ios-analysis-records th { color:#918477; font-size:11px; text-align:right; font-weight:400; padding:12px 0 6px; }
+.ios-analysis-records th:first-child { text-align:left; }
+
+.ios-analysis-records td { padding:9px 0; border-bottom:1px solid #eee5d9; text-align:right; font-variant-numeric:tabular-nums; }
+.ios-analysis-records tr:last-child td { border-bottom:0; }
+
+.ios-analysis-records td > button { font-size:12px; padding:0!important; min-width:0; min-height:44px!important; width:100%; justify-content:flex-end; gap:2px; }
+.ios-analysis-records .ios-analysis-record-name { display:flex; flex-direction:row; justify-content:flex-start; align-items:center; text-align:left; gap:7px; padding:0 6px 0 7px!important; }
+.ios-analysis-record-name > span:last-child { display:grid; gap:5px; min-width:0; }
+.ios-analysis-record-name b { display:block; font-size:12px; font-weight:550; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; }
+.ios-analysis-record-name small { color:#918477; font-size:11px; font-weight:400; }
+.ios-analysis-record-name > :first-child { flex-shrink:0; }
+.ios-analysis-missing { display:block; color:#918477; font-size:11px; }
+.ios-analysis-pages { display:flex; align-items:center; justify-content:center; gap:12px; padding-top:8px; }
+.ios-analysis-pages button { font-size:12px; }
+.ios-analysis-empty { padding:24px 0; text-align:center; font-size:13px; color:#918477; }
+.ios-analysis-unavailable { font-size:12px; color:#918477; }
+.ios-analysis-unavailable p { margin:5px 0 0; }
+/* 一个标题行承载返回和关闭，输入框只保留组件外框，避免原型全局 input 边框叠加。 */
+.ios-analysis-sheet { font-family:var(--ui-font,inherit); background:#fffdf8!important; color:#332e2c; }
+.ios-analysis-sheet-top { display:flex; align-items:center; gap:6px; margin:0 0 14px; }
+.ios-analysis-sheet-top h2 { margin:0; flex:1; font-size:18px; font-weight:650; }
+.ios-analysis-sheet-top button { flex-shrink:0; }
+.beui-island.ios-analysis-sheet .ios-analysis-search { margin-bottom:12px; }
+.beui-island.ios-analysis-sheet .ios-analysis-search [data-state] { border:1px solid #e7dac7; border-radius:12px; background:#fff; height:44px; }
+.beui-island.ios-analysis-sheet .ios-analysis-search input.peer { width:100%; height:100%; border:0!important; border-radius:0!important; background:transparent!important; box-shadow:none!important; outline:0; padding:0 12px 0 38px!important; font:400 14px/1.4 var(--ui-font,inherit); }
+.beui-island.ios-analysis-sheet .ios-analysis-search input.peer:focus-visible { outline:0; }
+.beui-island.ios-analysis-sheet .ios-analysis-options { display:grid; gap:0; min-width:0; }
+.beui-island.ios-analysis-sheet .ios-analysis-options > div { min-width:0; }
+.beui-island.ios-analysis-sheet .ios-analysis-options > button,.beui-island.ios-analysis-sheet .ios-analysis-options > div > button { width:100%; justify-content:space-between; text-align:left; height:auto!important; min-height:50px; padding:12px!important; border:0; border-bottom:1px solid #eee5d9; border-radius:0; background:transparent; box-shadow:none; font-size:14px; }
+.beui-island.ios-analysis-sheet .ios-analysis-options button[aria-pressed="true"] { background:#f7eae2; color:#8b5a47; border-radius:12px; border-bottom-color:transparent; }
+.beui-island.ios-analysis-sheet .ios-analysis-options button > span { display:grid; gap:4px; min-width:0; white-space:normal; overflow-wrap:anywhere; }
+.beui-island.ios-analysis-sheet .ios-analysis-options button b { font-weight:550; }
+.beui-island.ios-analysis-sheet .ios-analysis-options button small { color:#918477; font-size:12px; }
+.beui-island.ios-analysis-sheet .ios-analysis-options .ios-analysis-option-check { display:flex; width:18px; flex:none; color:#be8166; }
+.beui-island.ios-analysis-sheet .ios-analysis-dimensions { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.beui-island.ios-analysis-sheet .ios-analysis-dimensions > div:first-child { grid-column:1/-1; }
+.beui-island.ios-analysis-sheet .ios-analysis-dimensions > div > button { border:1px solid #eadfce; border-radius:12px; min-height:48px; }
+.beui-island.ios-analysis-sheet .ios-analysis-filters { gap:8px; }
+.beui-island.ios-analysis-sheet .ios-analysis-filters > button { gap:12px; border:1px solid #eadfce; border-radius:14px; min-height:68px; }
+.beui-island.ios-analysis-sheet .ios-analysis-filters button > i { display:grid; place-items:center; width:34px; height:34px; border-radius:10px; background:#f0e4cf; color:#9e7c50; flex:none; }
+.beui-island.ios-analysis-sheet .ios-analysis-filters button > span { flex:1; overflow:hidden; }
+.beui-island.ios-analysis-sheet .ios-analysis-filters button small { white-space:nowrap; text-overflow:ellipsis; overflow:hidden; }
+.ios-analysis-date-fields { display:grid; gap:12px; }
+.ios-analysis-date-fields p { margin:0; color:#b87569; font-size:13px; }
+.beui-island.ios-analysis-sheet .ios-analysis-date-endpoints { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+.beui-island.ios-analysis-sheet .ios-analysis-date-endpoints button { display:grid; gap:6px; height:auto; min-height:66px; padding:10px; border:1px solid #eadfce; border-radius:12px; box-shadow:none; background:#fff; }
+.beui-island.ios-analysis-sheet .ios-analysis-date-endpoints button[aria-pressed="true"] { border-color:#c99578; background:#faf0e5; color:#6e4936; }
+.beui-island.ios-analysis-sheet .ios-analysis-date-endpoints small { font-size:12px; font-weight:400; color:#918477; }
+.beui-island.ios-analysis-sheet .ios-analysis-date-endpoints b { font-size:14px; font-weight:550; }
+.beui-island.ios-analysis-sheet .ios-analysis-date-actions { display:flex; gap:12px; }
+.beui-island.ios-analysis-sheet .ios-analysis-date-actions button { flex:1; min-height:44px; }
+.beui-island.ios-analysis-sheet .ios-analysis-date-actions button:last-child { background:#302e26; color:#fffdf8; border-color:#302e26; }
+/* 成熟日历保留键盘、月份和日期逻辑，尺寸与颜色由当前纸卡主题统一。 */
+.beui-island.ios-analysis-sheet .ios-analysis-calendar .rdp-root { --rdp-accent-color:#b78762; --rdp-accent-background-color:#f4e7d5; --rdp-day-width:100%; --rdp-day-height:38px; --rdp-day_button-width:100%; --rdp-day_button-height:36px; --rdp-day_button-border-radius:10px; --rdp-day_button-border:0; --rdp-selected-border:1px solid #b78762; --rdp-outside-opacity:.35; font-size:13px; }
+.beui-island.ios-analysis-sheet .ios-analysis-calendar .rdp-months { display:block; max-width:none; }
+.beui-island.ios-analysis-sheet .ios-analysis-calendar .rdp-month_grid { width:100%; table-layout:fixed; margin:0; box-shadow:none; border:0; }
+.beui-island.ios-analysis-sheet .ios-analysis-calendar .rdp-month_caption { font-size:15px; align-items:center; }
+.beui-island.ios-analysis-sheet .ios-analysis-calendar .rdp-weekday { font-size:12px; color:#918477; background:transparent; padding:9px 0; border:0; text-align:center; }
+.beui-island.ios-analysis-sheet .ios-analysis-calendar .rdp-day { padding:1px; border:0; background:transparent; }
+.beui-island.ios-analysis-sheet .ios-analysis-calendar .rdp-day button { font-size:13px; min-width:0; border-radius:10px; box-shadow:none; padding:0; }
+.beui-island.ios-analysis-sheet .ios-analysis-calendar .rdp-selected { font-size:13px; }
+.beui-island.ios-analysis-sheet .ios-analysis-calendar .rdp-range_middle { background:#f7eee0; }
+.beui-island.ios-analysis-sheet .ios-analysis-calendar .rdp-range_start button,.beui-island.ios-analysis-sheet .ios-analysis-calendar .rdp-range_end button { background:#b78762; color:#fff; }
+.beui-island.ios-analysis-sheet .ios-analysis-calendar .rdp-button_previous,.beui-island.ios-analysis-sheet .ios-analysis-calendar .rdp-button_next { box-shadow:none; border-radius:10px; background:transparent; }
+.ios-analysis-help { font-size:14px; line-height:1.8; }
+.ios-analysis-help p { margin:0 0 12px; }
+.ios-analysis-help a { display:inline-flex; gap:4px; align-items:center; min-height:36px; color:#ac7458; }
+.ios-analysis-entry { display:flex; justify-content:space-between; align-items:center; min-height:70px; padding:15px; color:#332e2c; text-decoration:none; font-size:14px; font-weight:650; }
+.ios-analysis-entry svg { width:24px; height:24px; color:#ce646d; }
+.ios-analysis-sr { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+@media(max-width:350px) {
+  .ios-analysis-dashboard { padding-inline:12px; }
+  .ios-analysis-card > [data-slot="card-content"] { padding:14px!important; }
+  .ios-analysis-summary strong { font-size:30px; }
+  .ios-analysis-record-name { gap:5px; }
+  .ios-analysis-record-name > :first-child { display:none; }
+}
+
+/* 数值列与表头共用列轨道，进入报告的箭头占独立触区，不挤歪百分比。 */
+.ios-analysis-records .analysis-paper-col{width:auto}
+.ios-analysis-records .analysis-score-col{width:27%}
+.ios-analysis-records .analysis-value-col{width:21%}
+.ios-analysis-records .analysis-open-col{width:32px}
+.ios-analysis-records td:nth-child(2),.ios-analysis-records th:nth-child(2){padding-right:8px}
+.ios-analysis-records td:nth-child(3),.ios-analysis-records th:nth-child(3){padding-right:0}
+.ios-analysis-records .ios-analysis-record-value{color:#675744}
+.ios-analysis-records .ios-analysis-record-open > button{width:32px!important;min-width:32px;justify-content:flex-end;padding:0!important;color:#aa9475}
+.ios-analysis-records .ios-analysis-record-name{padding-left:0!important}

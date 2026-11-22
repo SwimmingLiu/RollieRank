@@ -1,0 +1,1 @@
+{"name":"uploadFile","version":"1.0.0","description":"Upload file to cloud storage with admin permission","main":"index.js","dependencies":{"wx-server-sdk":"latest"},"scripts":{"test":"echo \"Error: no test specified\" && exit 1"},"author":"","license":"ISC"}

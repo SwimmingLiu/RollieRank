@@ -1,0 +1,12 @@
+{
+  "scope": "iOS corrections wrapper, optional shared modal container configuration, focused browser test",
+  "sha256": {
+    "docs/ui-exploration/ios-v3/features/corrections.js": "924988a399ebd414ee717f2059b47f1b0058a353394243dc0d8c5f9042f6527e",
+    "docs/ui-exploration/ios-v3/features/corrections.css": "b51b4e4637b7055578670e0c663c4bd66ed95651afe237baefbd8413b7f95cf5",
+    "src/features/corrections.js": "97c4f5a46c4ca9ce737526ab35dff4774a4e3b8c44982f2d9e91884a791154fc",
+    "test/ios-corrections-browser.test.js": "719006be31dfe2a79856c803b45971dd7e73bcabd60206bb27f801a28086d81a"
+  },
+  "verification": "test-results/ios-corrections/verification.json",
+  "sourceUnchangedSinceBrowserVerification": true,
+  "pendingIntegration": "User port 4781, public app/service-client/bridge build and combined validation belong to coordinating chat."
+}

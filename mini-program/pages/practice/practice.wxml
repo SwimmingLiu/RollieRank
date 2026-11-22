@@ -1,0 +1,153 @@
+<view class="screen screen--plain practice">
+  <rr-nav title="录答案" />
+
+  <view wx:if="{{loading}}" class="loading">正在打开答题卡…</view>
+  <view wx:elif="{{error}}" class="empty">
+    <text>{{error}}</text>
+    <button class="chip" bindtap="retry">重新读取</button>
+  </view>
+
+  <block wx:else>
+    <view class="practice__head">
+      <view class="practice__identity">
+        <image wx:if="{{publisherLogo}}" src="{{publisherLogo}}" mode="aspectFit" />
+        <text class="ellipsis grow">{{identity}}</text>
+        <view class="practice__count" aria-label="已录 {{answered}} 题，共 {{version.questionCount}} 题">{{answered}}<text> / {{version.questionCount}}</text></view>
+      </view>
+      <view class="practice__filters">
+        <button class="practice__filter grow" bindtap="openSections">
+          <text>{{sections[activeSection].type}}</text>
+          <image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
+        </button>
+        <button class="practice__filter practice__filter--icon {{markOnly ? 'practice__filter--on' : ''}}" bindtap="toggleMarkFilter" aria-label="待检查 {{uncertain}} 题" aria-pressed="{{markOnly}}">
+          <image src="{{uiBase}}/mark.svg" mode="aspectFit" /><text wx:if="{{uncertain}}">{{uncertain}}</text>
+        </button>
+        <button class="practice__filter practice__filter--icon" bindtap="toggleMode" aria-label="{{single ? '切换列表录入' : '切换单题录入'}}">
+          <image src="{{uiBase}}/{{single ? 'grid' : 'square'}}.svg" mode="aspectFit" />
+        </button>
+      </view>
+      <view class="practice__progress"><view style="width: {{progress}}%;"></view></view>
+    </view>
+
+    <scroll-view wx:if="{{!single}}" class="practice__scroller" scroll-y scroll-into-view="{{scrollTarget}}" enhanced show-scrollbar="{{false}}">
+      <view class="practice__list">
+        <block wx:for="{{questions}}" wx:key="number">
+          <view wx:if="{{item.heading}}" class="practice__list-heading"><text>{{item.heading}}</text><text>{{item.range}}</text></view>
+          <view id="answer-{{item.number}}" class="practice__row {{item.number === current ? 'practice__row--current' : ''}} {{item.marked ? 'practice__row--marked' : ''}}">
+            <text class="num practice__no">{{item.number}}</text>
+            <button wx:for="{{choices}}" wx:for-item="choice" wx:key="*this"
+                    class="practice__choice {{item.answer === choice ? 'practice__choice--on' : ''}}"
+                    data-number="{{item.number}}" data-choice="{{choice}}" bindtap="choose">{{choice}}</button>
+            <button class="practice__mark {{item.marked ? 'practice__mark--on' : ''}}" data-number="{{item.number}}" bindtap="toggleMark"
+              aria-label="{{(item.marked ? '取消存疑，第 ' : '标记存疑，第 ') + item.number + ' 题'}}" aria-pressed="{{item.marked}}">
+              <image src="{{uiBase}}/mark.svg" mode="aspectFit" />
+            </button>
+          </view>
+        </block>
+        <view wx:if="{{!questions.length}}" class="empty">没有待检查的题目</view>
+      </view>
+    </scroll-view>
+
+    <scroll-view wx:else class="practice__scroller practice__single" scroll-y enhanced show-scrollbar="{{false}}" bindtouchstart="startSwipe" bindtouchmove="moveSwipe" bindtouchend="endSwipe" bindtouchcancel="cancelSwipe">
+      <view wx:if="{{currentQuestion}}" class="practice__single-card {{singleDragging ? 'practice__single-card--dragging' : ''}}" style="{{singleOffset || singleOpacity < 1 ? 'transform: translateX(' + singleOffset + 'px); opacity: ' + singleOpacity + ';' : ''}}">
+        <view class="practice__single-head">
+          <view class="practice__single-label">第 <text class="display-num practice__single-number">{{current}}</text> 题</view>
+          <button class="practice__filter practice__single-mark {{currentQuestion.marked ? 'practice__filter--on' : ''}}" data-number="{{current}}" bindtap="toggleMark"
+            aria-label="{{currentQuestion.marked ? '取消存疑' : '标记存疑'}}" aria-pressed="{{currentQuestion.marked}}">
+            <image src="{{uiBase}}/mark.svg" mode="aspectFit" />
+            <text>{{currentQuestion.marked ? '已存疑' : '存疑'}}</text>
+          </button>
+        </view>
+        <view class="practice__single-choices">
+          <button wx:for="{{choices}}" wx:key="*this" class="practice__choice {{currentQuestion.answer === item ? 'practice__choice--on' : ''}}"
+                  data-number="{{current}}" data-choice="{{item}}" bindtap="choose">
+            <text class="practice__single-letter">{{item}}</text>
+            <view class="practice__single-badge {{currentQuestion.answer === item ? 'practice__single-badge--on' : ''}}">
+              <image wx:if="{{currentQuestion.answer === item}}" src="{{uiBase}}/check-light.svg" mode="aspectFit" />
+            </view>
+          </button>
+        </view>
+        <view class="practice__single-links">
+          <button class="practice__single-nav" bindtap="previousQuestion" disabled="{{current === firstQuestion}}" aria-label="上一题">
+            <image src="{{uiBase}}/back.svg" mode="aspectFit" /><text>上一题</text>
+          </button>
+          <button class="practice__single-nav" bindtap="nextQuestion" disabled="{{current === lastQuestion}}" aria-label="下一题">
+            <text>下一题</text><image src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+          </button>
+        </view>
+      </view>
+      <view wx:else class="empty">没有待检查的题目</view>
+    </scroll-view>
+
+    <view class="practice__footer">
+      <button class="btn btn--ghost" bindtap="openSheet" aria-label="答题卡">
+        <image class="btn__icon" src="{{uiBase}}/grid.svg" mode="aspectFit" />
+      </button>
+      <button class="btn btn--primary practice__submit" disabled="{{submitting}}" bindtap="submit">
+        {{answered < version.questionCount ? '交卷 · 未答 ' + (version.questionCount - answered) : '提交估分'}}
+      </button>
+    </view>
+
+    <rr-position-picker wx:if="{{sheet === 'position'}}" bind:dismiss="closeSheet" bind:selection="submitAfterPosition" />
+    <view wx:elif="{{sheet === 'position-prompt'}}" class="sheet-layer {{sheetDragging ? 'sheet-layer--dragging' : ''}} {{sheetClosing ? 'sheet-layer--closing' : ''}}">
+      <view class="sheet-shade" style="{{sheetShadeOpacity < 1 ? 'opacity: ' + sheetShadeOpacity + ';' : ''}}" catchtap="closeSheet" catchtouchmove="noopSheet"></view>
+      <view class="sheet-panel practice__dialog" style="{{sheetDragY ? 'transform: translateY(' + sheetDragY + 'px);' : ''}}"
+        bindtouchstart="startSheetDrag" bindtouchmove="moveSheetDrag" bindtouchend="endSheetDrag" bindtouchcancel="cancelSheetDrag">
+        <view class="sheet-grabber-zone" data-sheet-zone="handle" catchtouchstart="startSheetDrag" catchtouchmove="moveSheetDrag" catchtouchend="endSheetDrag" catchtouchcancel="cancelSheetDrag">
+          <view class="sheet-grabber"></view>
+        </view>
+        <view class="sheet-head">
+          <text>选岗查看同岗排名</text>
+          <button class="sheet-close" bindtap="closeSheet" aria-label="关闭"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button>
+        </view>
+        <view class="sheet-actions">
+          <button class="btn btn--soft practice__skip" bindtap="doSubmit">先提交</button>
+          <button class="btn btn--primary" bindtap="openPosition">去选岗</button>
+        </view>
+      </view>
+    </view>
+    <view wx:elif="{{sheet}}" class="sheet-layer {{sheetDragging ? 'sheet-layer--dragging' : ''}} {{sheetClosing ? 'sheet-layer--closing' : ''}}">
+      <view class="sheet-shade" style="{{sheetShadeOpacity < 1 ? 'opacity: ' + sheetShadeOpacity + ';' : ''}}" catchtap="closeSheet" catchtouchmove="noopSheet"></view>
+      <view class="sheet-panel practice__dialog" style="{{sheetDragY ? 'transform: translateY(' + sheetDragY + 'px);' : ''}}"
+        bindtouchstart="startSheetDrag" bindtouchmove="moveSheetDrag" bindtouchend="endSheetDrag" bindtouchcancel="cancelSheetDrag">
+        <view class="sheet-grabber-zone" data-sheet-zone="handle" catchtouchstart="startSheetDrag" catchtouchmove="moveSheetDrag" catchtouchend="endSheetDrag" catchtouchcancel="cancelSheetDrag">
+          <view class="sheet-grabber"></view>
+        </view>
+        <view class="sheet-head">
+          <text>{{sheet === 'submit' ? (answered < version.questionCount ? '还有 ' + (version.questionCount - answered) + ' 题未答' : '确认交卷') : sheet === 'sections' ? '选择板块' : '答题卡'}}</text>
+          <button class="sheet-close" bindtap="closeSheet" aria-label="关闭"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button>
+        </view>
+        <scroll-view wx:if="{{sheet !== 'submit'}}" scroll-y class="sheet-scroll" scroll-top="{{sheetScrollTop}}" enhanced show-scrollbar="{{false}}" bindscroll="onSheetScroll">
+          <view wx:if="{{sheet === 'sections'}}" class="practice__section-list">
+            <button wx:for="{{sections}}" wx:key="key" class="practice__section-option {{index === activeSection ? 'practice__section-option--on' : ''}}" data-index="{{index}}" bindtap="switchSection">
+              <text class="grow">{{item.type}}</text>
+              <text class="practice__section-range">{{item.start}}–{{item.end}}</text>
+              <image src="{{uiBase}}/{{index === activeSection ? 'check' : 'chevron'}}.svg" mode="aspectFit" />
+            </button>
+          </view>
+          <view wx:else class="practice__answer-sheet" aria-label="按题型选择题号">
+            <view class="practice__sheet-summary">已答 <text class="practice__sheet-answered">{{answered}}</text><text> / {{version.questionCount}}</text></view>
+            <view wx:for="{{sheetSections}}" wx:for-item="group" wx:key="key" class="practice__sheet-group">
+              <view class="practice__sheet-group-title"><text>{{group.type}}</text><text>{{group.start}}–{{group.end}} 题</text></view>
+              <view class="practice__sheet-grid">
+                <button wx:for="{{group.questions}}" wx:for-item="question" wx:key="number"
+                  class="practice__sheet-cell {{question.answer ? 'practice__sheet-cell--done' : ''}} {{question.marked ? 'practice__sheet-cell--marked' : ''}} {{question.current ? 'practice__sheet-cell--current' : ''}}"
+                  id="answer-sheet-{{question.number}}" data-number="{{question.number}}" bindtap="goQuestion" aria-label="第 {{question.number}} 题，{{question.answer || '未答'}}">
+                  <text class="practice__sheet-number">{{question.number}}</text>
+                  <view wx:if="{{question.marked}}" class="practice__sheet-dot"></view>
+                  <text class="practice__sheet-answer">{{question.answer || '·'}}</text>
+                </button>
+              </view>
+            </view>
+          </view>
+        </scroll-view>
+        <block wx:else>
+          <view class="sheet-actions">
+            <button class="btn btn--soft" bindtap="closeSheet">继续录入</button>
+            <button class="btn btn--primary practice__confirm" bindtap="confirmSubmission" disabled="{{submitting}}">{{answered < version.questionCount ? '留空交卷' : '交卷'}}</button>
+          </view>
+        </block>
+      </view>
+    </view>
+  </block>
+</view>

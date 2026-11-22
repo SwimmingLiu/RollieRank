@@ -1,0 +1,409 @@
+@font-face{font-family:Fraunces;src:url("assets/fonts/FrauncesVariable.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+/* The selected reference informs display typography, flat colour and original line drawings.
+   Shared components keep their actual focus, hit targets and drag behaviour. */
+:root{--paper:#fcf8f1;--cover:#f4e3be;--blush:#f6cbd2;--drawing:#302f28}
+.rr-brand-title{font-weight:750;letter-spacing:-1.1px}.rr-publisher-name{font-weight:650}.rr-publisher-logo,.rr-publisher-logo img{width:38px;height:38px}
+.rr-deck{height:294px}.rr-recent{height:250px}
+.rr3-practice-cover{container-type:inline-size;border:0!important;border-radius:27px!important;background:var(--cover)!important;padding:18px 0 16px!important;gap:11px!important;box-shadow:0 14px 22px -23px #69564070}
+.rr3-practice-cover:before{display:none}.rr3-practice-cover[data-institution="超格"]{background:#f9d2b8!important}
+.rr3-practice-cover .rr2-publisher{font-size:13px;font-weight:650}.rr3-practice-cover .rr2-publisher>span{width:26px!important;height:26px!important;background:transparent!important}
+.rr3-cover-year{font-size:12px;color:#665b4c;letter-spacing:.05em}.rr3-cover-content{position:relative;display:flex;flex-direction:column;justify-content:center;gap:6px;min-height:110px;padding:0 21px!important}
+.rr3-cover-period{font-size:13px;color:#756044;display:flex;align-items:baseline;gap:4px}.rr3-cover-period b{font-size:23px;color:#3c3429;font-family:Fraunces,serif;font-weight:700;font-variation-settings:"SOFT" 100,"WONK" 1}
+.rr3-cover-title{display:flex;align-items:baseline;gap:5px;font-size:25px;font-weight:700;letter-spacing:-.7px;line-height:1.3;position:relative;z-index:1;width:65%}.rr3-cover-title b{font:750 42px/1 Fraunces,serif;font-variation-settings:"SOFT" 100,"WONK" 1;letter-spacing:-1.5px}
+.rr3-cover-art{position:absolute;width:112px;height:112px;object-fit:contain;right:13px;top:calc(50% - 56px);pointer-events:none}
+.rr3-cover-score{display:flex;align-items:baseline;gap:5px;position:relative;z-index:1;width:68%}.rr3-cover-score>strong{font:750 clamp(42px,16cqw,58px)/1.1 Fraunces,serif;font-variation-settings:"SOFT" 100,"WONK" 1;letter-spacing:-2px}.rr3-cover-score>span{font-size:12px;color:#786750}.rr3-cover-identity{font-size:12px;line-height:1.6;position:relative;z-index:1;width:66%;color:#534b3c}
+.rr3-practice-cover .rr2-recent-foot{gap:13px!important}.rr3-practice-cover .rr2-card-open{border-radius:999px!important;min-height:44px!important;height:44px!important;font-weight:550!important;padding:0 15px!important;gap:8px!important}
+.rr3-cover-progress{width:108px;display:flex;flex-direction:column;gap:9px;min-width:0}.rr3-cover-progress>span{white-space:nowrap;font-size:12px;color:#71654f}.rr3-cover-progress b{font-size:16px;font-weight:650;color:#322e26}.rr3-cover-progress small{font-size:11px}.rr3-cover-progress [data-slot=progress-bar]{color:#5f5943}.rr3-cover-progress .rr2-progress-track{height:3px!important;background:#e1d0ac!important}
+.rr3-cover-status{font-size:12px;display:flex;align-items:center;gap:5px;color:#596649}.rr3-cover-status>span{display:flex;align-items:center;gap:3px;margin-left:3px;font-size:13px}
+.rr-back-card[data-institution="四海"]{background:#ead9b7!important;border-color:#e5d3ae!important}.rr-back-card[data-institution="超格"]{background:#f5ceb2!important;border-color:#e8b997!important}.rr-peek{color:#756855}.rr-peek span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The report has a single result hero and two useful subject actions, with the full list available on demand. */
+#app[data-page=report],.view[data-page=report],#app[data-page=report] #top,#app[data-page=report] #bottom{background:var(--paper)}
+.rr3-report{padding:18px 20px 28px;gap:25px}.rr3-score-card{container-type:inline-size;background:var(--blush)!important;border:0!important;border-radius:28px!important;padding:0!important;gap:0!important;box-shadow:0 16px 25px -28px #7b515a}
+.rr3-score-content{display:grid;grid-template-columns:minmax(0,1fr) 78px;gap:11px 10px;padding:23px 23px 18px!important;align-items:start}
+.rr3-score-label{font-size:13px;font-weight:600;color:#74505a;grid-column:1}.rr3-total{grid-column:1;display:flex;flex-direction:column;align-items:flex-start;gap:7px;white-space:nowrap;min-width:0}
+.rr3-total>strong{font-family:Fraunces,serif;font-size:clamp(44px,19cqw,70px);font-weight:750;font-variation-settings:"SOFT" 100,"WONK" 1;line-height:1.03;letter-spacing:-1.5px}.rr3-total.wide-value>strong{font-size:clamp(38px,16cqw,60px)}.rr3-total>span{font-size:11px;color:#6e4c56}
+.rr3-score-art{grid-column:2;grid-row:1/3;align-self:center;width:78px;height:97px;object-fit:contain;transform:rotate(7deg)}
+.rr3-rank-link{grid-column:1/-1;justify-self:start;display:flex!important;gap:6px!important;min-height:40px!important;height:40px!important;margin-top:7px;padding:0 11px!important;background:#fff5e6b3!important;border-radius:11px!important;color:#544432!important;font-size:12px!important;font-weight:450!important}.rr3-rank-link b{font-size:17px;font-weight:650}.rr3-rank-link small{font-size:10px;color:#886e60}.rr3-rank-link>svg:last-child{margin-left:7px}
+.rr3-outcomes{grid-column:1/-1;margin-top:7px;padding-top:14px;border-top:1px solid #d9abb454;font-size:12px;gap:12px}.rr3-outcomes b{font-size:20px}
+.rr3-section-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px}.rr3-section-heading h2{font-size:17px;font-weight:650;letter-spacing:-.45px}.rr3-section-heading .rr2-section-toggle{color:#746d61!important}
+.rr3-featured-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.rr3-subject-card{padding:0!important;gap:0!important;border:1px solid #e9dfce!important;background:#f4ecdc!important;border-radius:21px!important;box-shadow:none!important}.rr3-subject-card.tone-1{background:#fffdf8!important}
+.rr3-subject-card>[data-slot=card-content]{padding:17px 15px 19px!important;display:flex;flex-direction:column;gap:13px}.rr3-subject-name{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:550;gap:3px}.rr3-subject-name>svg{color:#968a76}.rr3-subject-points{font:650 31px/1.1 Fraunces,serif;font-variation-settings:"SOFT" 70,"WONK" 1;white-space:nowrap;letter-spacing:-.6px}.rr3-subject-points small{font:400 11px/1.4 var(--ui-font);letter-spacing:0;color:#6f6352}
+.rr3-subject-card [data-slot=progress-bar]{color:#b87f73}.rr3-subject-card .rr2-progress-track{height:4px!important;background:#e9dfd0!important}
+.rr3-all-sections{padding:15px 0 22px!important;border:1px solid #ebe3d6!important;border-radius:22px!important;background:#fffdf9!important;gap:0!important}.rr3-all-sections>[data-slot=card-content]{padding:0 18px!important}.rr3-all-sections .rr2-score-bars{gap:18px}.rr3-all-sections .rr2-section-score{padding-block:8px;margin-block:0}.rr3-all-sections .rr2-section-score-label{margin-bottom:10px}
+.rr2-artwork-total>strong{font-family:Fraunces,serif;font-weight:750;font-variation-settings:"SOFT" 100,"WONK" 1;letter-spacing:-2px}
+@media(max-width:350px){.rr3-cover-art{width:96px;height:96px;right:10px;top:calc(50% - 48px)}.rr3-cover-title{font-size:22px}.rr3-cover-title b{font-size:37px}.rr3-cover-progress{width:98px}.rr3-practice-cover .rr2-recent-foot{gap:8px!important}.rr3-practice-cover .rr2-card-open{padding:0 12px!important;font-size:12px!important;gap:5px!important}.rr3-report{padding-inline:16px}.rr3-score-content{padding:20px 18px 17px!important;grid-template-columns:minmax(0,1fr) 68px}.rr3-score-art{width:68px;height:88px}.rr3-subject-card>[data-slot=card-content]{padding-inline:12px!important}.rr3-subject-points{font-size:29px}.rr3-featured-sections{gap:10px}}
+@media(max-height:650px){.rr-deck{height:212px}.rr-recent{height:192px}.rr3-practice-cover{padding:11px 0 10px!important;gap:7px!important}.rr3-cover-content{min-height:86px}.rr3-cover-art{width:88px;height:88px;top:calc(50% - 44px)}.rr3-cover-title{font-size:22px}.rr3-cover-title b{font-size:34px}.rr3-cover-period b{font-size:20px}.rr3-cover-score>strong{font-size:41px}}
+@media(max-width:280px){.rr3-cover-art{display:none}.rr3-cover-title,.rr3-cover-score,.rr3-cover-identity{width:100%}.rr3-cover-content{padding-inline:14px!important}.rr3-practice-cover .rr2-recent-meta,.rr3-practice-cover .rr2-recent-foot{padding-inline:14px!important}.rr3-practice-cover .rr2-recent-foot{flex-wrap:wrap}.rr3-cover-progress{width:100%}.rr3-featured-sections{grid-template-columns:1fr}.rr3-score-content{grid-template-columns:minmax(0,1fr) 52px;padding-inline:14px!important}.rr3-score-art{width:52px}.rr3-total>strong{font-size:38px}.rr3-outcomes{display:flex;flex-wrap:wrap}.rr3-total.wide-value>strong{font-size:34px}}
+
+/* Reserve the illustration area when a completed score has three integer digits. */
+.rr3-cover-score.wide-value>strong{font-size:clamp(36px,14cqw,51px)}
+
+/* Short phones keep both review targets in view without shrinking their hit areas. */
+.rr3-rank-link{height:44px!important;min-height:44px!important}
+@media(max-height:650px){
+ .rr3-report{padding-top:10px;gap:17px}.rr3-score-content{padding-top:17px!important;padding-bottom:14px!important;row-gap:8px}
+ .rr3-score-art{height:78px}.rr3-rank-link{margin-top:2px}.rr3-outcomes{margin-top:3px;padding-top:10px}.rr3-outcomes b{font-size:19px}
+ .rr3-subject-card>[data-slot=card-content]{padding-top:12px!important;padding-bottom:14px!important;gap:9px}.rr3-subject-points{font-size:28px}.rr3-section-heading{margin-bottom:10px}
+}
+
+/* The current paper is identified by its content; its action is a single round arrow. */
+.rr3-practice-cover .rr2-card-open{width:44px!important;min-width:44px!important;padding:0!important;border-radius:50%!important;display:grid;place-items:center}
+.rr3-practice-cover[data-institution="超格"] .rr3-cover-progress .rr2-progress-track{background:#ecc4a6!important}
+
+/* A period is a collection; specifications appear once above the individual paper covers. */
+.rr3-catalog{padding:0 20px 24px}.rr3-catalog-selector{position:sticky;top:0;z-index:4;background:#fff;padding:14px 0 18px}
+.rr3-period-card{border:0!important;padding:0!important;gap:0!important;border-radius:23px!important;background:#f4e3be!important}.rr3-catalog[data-institution="超格"] .rr3-period-card{background:#f9d2b8!important}
+.rr3-period-card>[data-slot=card-content]{padding:18px 20px!important;display:flex;flex-direction:column;gap:9px}.rr3-catalog-spec{font-size:12px;color:#6b5e4e;line-height:1.6}
+.rr3-period-face{display:flex;align-items:center;justify-content:space-between;font-size:16px;font-weight:600}.rr3-period-face b{font:750 34px/1 var(--display-font);font-variation-settings:"SOFT" 100,"WONK" 1;margin:0 2px}.rr3-period-face>svg{color:#746149}
+.rr3-paper-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.rr3-paper-cover{border:1px solid #ece6dd!important;padding:0!important;gap:0!important;border-radius:21px!important;background:#fffdf9!important;min-height:132px}
+.rr3-paper-cover.complete{background:#f3e9d4!important;border-color:#eadfc5!important}.rr3-paper-cover.draft{background:#fff0e4!important;border-color:#f0d9c3!important}.rr3-paper-cover>[data-slot=card-content]{padding:16px 16px 17px!important;display:flex;flex-direction:column;gap:14px;height:100%}
+.rr3-paper-top{display:flex;justify-content:space-between;align-items:flex-start}.rr3-paper-top>strong{font:650 33px/1.1 var(--display-font);font-variation-settings:"SOFT" 100,"WONK" 1;letter-spacing:-.7px}.rr3-paper-top small{font:400 11px/1 var(--ui-font);margin-left:4px;color:#847a6c;letter-spacing:0}.rr3-paper-state{color:#6f7d58;margin-top:4px}.rr3-paper-cover.draft .rr3-paper-state{color:#b87545}
+.rr3-paper-foot{margin-top:auto;display:flex;align-items:baseline;justify-content:space-between;gap:4px;min-height:24px}.rr3-paper-foot>svg{align-self:center;color:#82745e}.rr3-paper-score{font-size:19px;font-weight:700;letter-spacing:-.6px}.rr3-paper-score small{font-size:10px;margin-left:3px;font-weight:400;letter-spacing:0;color:#756c5f}.rr3-paper-progress-label{font-size:15px;font-weight:700}.rr3-paper-progress-label small{font-size:11px;font-weight:400;color:#786956}
+.rr3-paper-cover [data-slot=progress-bar]{margin-top:-7px;color:#a67f53}.rr3-paper-cover .rr2-progress-track{height:3px!important;background:#eadcc9!important}
+.rr3-period-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;padding:2px 0 18px}.rr3-period-option{height:49px!important;min-height:49px!important;border-radius:12px!important;background:#f7f1e5!important;color:#514b40!important;font-size:18px!important;font-weight:650!important}.rr3-period-option.selected{background:#22231d!important;color:#fff!important}
+/* A paper card uses one inset frame and one illustration, leaving every score as readable component text. */
+.rr-deck--drum{margin-top:14px;perspective:1000px}
+.rr-deck--drum .rr-recent{transform-origin:center;transition:none}
+.rr-deck--drum .rr-back-card{border-radius:25px!important;box-shadow:0 4px 8px -7px #4b392d55}
+.rr-deck--drum .rr-back-card[data-institution="四海"]{background:#f2e3c1!important;border-color:#e5d3ae!important}
+.rr-deck--drum .rr-back-card[data-institution="超格"]{background:#f8dcc8!important;border-color:#e8b997!important}
+.rr-deck--drum .rr-recent[data-distance="2"] .rr-back-card{justify-content:flex-start;padding-top:9px!important}
+.rr-deck--drum .rr-peek{font-size:11px;line-height:1.5}
+.rr2-share-page{background:#faf9f6;padding-top:14px;padding-bottom:24px}
+.rr5-share-artwork{--card-ink:#302b29;--card-tint:#f5d5ce;--card-soft:#faf1ea;container-type:inline-size;display:flex;flex-direction:column;background:#fffdf8!important;color:var(--card-ink);border:1px solid #e8e1d7!important;border-radius:20px!important;padding:10px!important;gap:0!important;box-shadow:0 8px 0 -4px #f2e8de,0 20px 32px -26px #6f514a80;overflow:hidden}
+.rr5-share-artwork[data-institution="超格"]{--card-tint:#f9d9c0;--card-soft:#fff3e7}
+.rr5-poster-brand{display:flex!important;align-items:center;justify-content:space-between;padding:6px 6px 13px!important;gap:12px}
+.rr5-poster-brand>span:first-child{display:flex;align-items:center;gap:7px}
+.rr5-poster-brand>span:first-child>span{width:24px!important;height:24px!important;border-radius:6px!important;background:transparent!important}
+.rr5-poster-brand strong{font-size:14px;font-weight:700;letter-spacing:-.3px}
+.rr5-poster-brand>span:last-child{font-size:12px;color:#716761;font-weight:600;letter-spacing:.03em}
+.rr5-poster-frame{border:1px dashed #68544c;border-radius:13px;overflow:hidden;display:flex;flex-direction:column;flex:1}
+.rr5-poster-hero{position:relative;isolation:isolate;padding:16px 17px 0!important;background:var(--card-tint);min-width:0}
+.rr5-poster-paper{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11px;color:#624e46;line-height:1.6;position:relative;z-index:1}
+.rr5-poster-paper>span:first-child{width:19px!important;height:19px!important;background:transparent!important}
+.rr5-poster-paper>span:nth-child(n+3){border-left:1px solid #a27a6766;padding-left:7px}
+.rr5-poster-paper b{font-size:14px;font-weight:750;color:#3d302b}
+.rr5-poster-total{position:relative;z-index:1;display:flex;flex-direction:column;gap:7px;margin-top:22px;padding-bottom:45px;min-width:0;pointer-events:none}
+.rr5-poster-total>span{font-size:12px;color:#624e46;font-weight:600}
+.rr5-poster-total>strong{font:750 clamp(46px,22cqw,88px)/1.05 var(--display-font);font-variation-settings:"SOFT" 100,"WONK" 1;letter-spacing:-2px;white-space:nowrap;align-self:flex-start}
+.rr5-poster-total.wide-value>strong{font-size:clamp(42px,19cqw,77px)}
+.rr5-poster-total>small{font-size:11px;color:#69534b}
+.rr5-poster-illustration{position:absolute;width:155px;height:111px;object-fit:contain;right:-8px;bottom:42px;z-index:0;transform:rotate(8deg);pointer-events:none}
+.rr5-poster-rank{position:relative;display:flex;align-items:center;gap:7px;border-top:1px solid #9c716333;min-height:48px;font-size:12px;color:#624c43;z-index:1}
+.rr5-poster-rank>strong{margin-left:auto;font-size:25px;font-weight:750;color:#3e302b;letter-spacing:-.5px}
+.rr5-poster-rank small{font-size:11px;color:#69534b;letter-spacing:0;font-weight:500}
+.rr5-poster-sections{background:#fffdf8;padding:17px 15px 16px!important;flex:1}
+.rr5-section-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
+.rr5-section-heading h2{font-size:14px;font-weight:700;letter-spacing:-.3px}
+.rr5-section-heading>span{font-size:10px;color:#756c65}
+.rr5-share-artwork .rr2-score-matrix{grid-template-columns:repeat(3,minmax(0,1fr));gap:0}
+.rr5-share-artwork .rr2-score-matrix>.rr2-section-score{padding:0!important;border:0!important;min-width:0;overflow:hidden}
+.rr5-share-artwork .rr4-score-cell{padding:0!important;gap:0!important;background:transparent!important;box-shadow:none!important;border:0!important;border-radius:0!important;height:100%}
+.rr5-share-artwork .rr4-score-cell>[data-slot=card-content]{padding:12px 8px 13px!important;border-bottom:1px solid #e9e2d8;display:flex;flex-direction:column;gap:9px;min-height:81px}
+.rr5-share-artwork .rr2-section-score:not(:nth-child(3n)) .rr4-score-cell>[data-slot=card-content]{border-right:1px solid #e9e2d8}
+.rr5-share-artwork .rr2-section-score:nth-child(n+7) .rr4-score-cell>[data-slot=card-content]{border-bottom:0}
+/* Subject names and maximum scores stay readable in the phone preview as well as in the full export. */
+.rr5-share-artwork .rr2-section-score-label{font-size:13px;font-weight:500;white-space:normal;margin:0;gap:7px;flex-direction:column;align-items:flex-start;line-height:1.45}
+.rr5-share-artwork .rr2-section-score-label>strong{font-size:22px;line-height:1.2;font-weight:750;letter-spacing:-.5px;white-space:nowrap}
+.rr5-share-artwork .rr2-section-score-label small{font-size:11px;color:#66584f;letter-spacing:0;font-weight:500}
+.rr5-share-artwork .rr2-progress-track{height:3px!important;background:#eee6dc!important}
+.rr5-share-artwork .rr2-section-progress{color:#ba8173}
+.rr5-share-artwork .rr2-section-progress.lower{color:#93867b}
+/* The static export uses this same layout at an explicit card size; it keeps the paper edge and all nine cells. */
+.rr5-share-artwork[data-export]{width:450px!important;height:720px!important;min-height:720px!important;border-radius:20px!important;padding:13px!important;box-shadow:none!important}
+.rr5-share-artwork[data-export] .rr5-poster-brand{padding:8px 9px 17px!important}
+.rr5-share-artwork[data-export] .rr5-poster-brand strong{font-size:18px}
+.rr5-share-artwork[data-export] .rr5-poster-brand>span:first-child>span{width:30px!important;height:30px!important}
+.rr5-share-artwork[data-export] .rr5-poster-brand>span:last-child{font-size:14px}
+.rr5-share-artwork[data-export] .rr5-poster-hero{padding:20px 23px 0!important}
+.rr5-share-artwork[data-export] .rr5-poster-paper{font-size:13px;gap:8px}
+.rr5-share-artwork[data-export] .rr5-poster-paper b{font-size:17px}
+.rr5-share-artwork[data-export] .rr5-poster-total{margin-top:22px;padding-bottom:20px;gap:8px}
+.rr5-share-artwork[data-export] .rr5-poster-total>span{font-size:14px}
+.rr5-share-artwork[data-export] .rr5-poster-total>small{font-size:13px}
+.rr5-share-artwork[data-export] .rr5-poster-illustration{width:185px;height:130px;right:-5px;bottom:50px}
+.rr5-share-artwork[data-export] .rr5-poster-rank{min-height:57px;font-size:14px}
+.rr5-share-artwork[data-export] .rr5-poster-rank>strong{font-size:30px}
+.rr5-share-artwork[data-export] .rr5-poster-rank small{font-size:13px}
+.rr5-share-artwork[data-export] .rr5-poster-sections{padding:19px 19px 18px!important}
+.rr5-share-artwork[data-export] .rr5-section-heading{margin-bottom:12px}
+.rr5-share-artwork[data-export] .rr5-section-heading h2{font-size:17px}
+.rr5-share-artwork[data-export] .rr5-section-heading>span{font-size:12px}
+.rr5-share-artwork[data-export] .rr2-score-matrix{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.rr5-share-artwork[data-export] .rr4-score-cell>[data-slot=card-content]{padding:12px!important;min-height:84px;gap:9px}
+.rr5-share-artwork[data-export] .rr2-section-score-label{font-size:14px}
+.rr5-share-artwork[data-export] .rr2-section-score-label>strong{font-size:27px}
+.rr5-share-artwork[data-export] .rr2-section-score-label small{font-size:12px}
+@media(max-width:350px){.rr3-catalog{padding-inline:16px}.rr3-paper-grid{gap:10px}.rr3-paper-cover>[data-slot=card-content]{padding:14px!important}.rr5-poster-hero{padding-inline:13px!important}.rr5-poster-paper{font-size:10px;gap:5px}.rr5-poster-paper>span:nth-child(n+3){padding-left:6px}.rr5-poster-illustration{width:130px;height:96px;right:-10px;bottom:42px}.rr5-poster-total>strong{font-size:61px}.rr5-poster-total.wide-value>strong{font-size:53px}.rr5-poster-sections{padding-inline:8px!important}.rr5-share-artwork .rr4-score-cell>[data-slot=card-content]{padding-inline:6px!important}.rr5-share-artwork .rr2-section-score-label{font-size:12px}.rr5-share-artwork .rr2-section-score-label>strong{font-size:20px}.rr5-share-artwork .rr2-section-score-label small{font-size:10px}}
+@media(max-width:280px){.rr3-paper-grid{grid-template-columns:1fr}.rr3-period-options{grid-template-columns:repeat(3,minmax(0,1fr))}.rr5-share-artwork:not([data-export]) .rr2-score-matrix{grid-template-columns:repeat(2,minmax(0,1fr))}.rr5-share-artwork:not([data-export]) .rr4-score-cell>[data-slot=card-content]{border:0!important;border-bottom:1px solid #e9e2d8!important}.rr5-share-artwork:not([data-export]) .rr2-section-score:nth-child(odd) .rr4-score-cell>[data-slot=card-content]{border-right:1px solid #e9e2d8!important}.rr5-share-artwork:not([data-export]) .rr5-poster-total>strong{font-size:clamp(36px,22cqw,53px)}.rr5-share-artwork:not([data-export]) .rr5-poster-illustration{display:none}.rr5-share-artwork:not([data-export]) .rr5-poster-total{padding-bottom:18px}}
+
+.rr3-period-option{padding:0!important;min-width:0!important}
+
+/* Institutions expose named collections; only the entries that have periods display a period. */
+.rr5-collection-face h2{font-size:24px;line-height:1.4;font-weight:700;letter-spacing:-.5px;margin:0}
+.rr5-paper-name{font-size:13px;line-height:1.5;color:#655a4d;margin-top:-6px}
+.rr5-collection-options{display:flex;flex-direction:column;gap:10px;padding:2px 0 18px}
+.rr5-collection-option{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:88px;padding:15px 18px;border:1px solid #e7dfd2;border-radius:18px;background:#fffdf8;text-align:left}
+.rr5-collection-option.selected{background:#f4e3be;border-color:#d9c8a8}
+.rr5-collection-option>span{display:flex;flex-direction:column;gap:6px;min-width:0}
+.rr5-collection-option strong{font-size:16px;font-weight:650;line-height:1.5}
+.rr5-collection-option small{font-size:12px;color:#786c5c;line-height:1.5}
+.rr5-collection-option>.ico{width:18px;height:18px;flex-shrink:0;color:#7c705b}
+.rr-publisher-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.rr-publisher-main{padding:13px!important;gap:8px}
+.rr-publisher-logo,.rr-publisher-logo img{width:32px;height:32px}
+.rr-publisher-name{font-size:15px;white-space:nowrap}
+.rr-publisher-arrow{width:14px;height:14px}
+@media(max-width:350px){.rr5-collection-face h2{font-size:22px}.rr-publisher-main{padding:11px!important;gap:6px}.rr-publisher-name{font-size:14px}.rr-publisher-logo,.rr-publisher-logo img{width:28px;height:28px}}
+@media(max-width:280px){.rr-publisher-grid{grid-template-columns:1fr}}
+
+.rr3-section-heading .rr2-section-toggle{min-height:44px!important;height:44px!important;gap:5px!important}
+
+/* Managed Button labels use display:contents; layout the actual inner label, not its registry wrapper. */
+.rr5-collection-option{width:100%;height:auto!important;min-height:88px!important;padding:15px 18px!important;border-radius:18px!important;justify-content:space-between!important;background:#fffdf8!important;color:#3b332c!important;border:1px solid #e7dfd2!important}
+.rr5-collection-option.selected{background:#f4e3be!important;border-color:#d9c8a8!important}
+.rr5-collection-option .rr-button-label>span{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.rr5-collection-option .ico{width:18px;height:18px;flex-shrink:0;color:#7c705b}
+
+/* Collection names can be longer than a period; keep ranking context on its own readable line. */
+.rr2-rank-heading{grid-template-columns:34px minmax(0,1fr);row-gap:3px}
+.rr2-rank-identity{grid-column:2;justify-content:flex-start;font-size:12px;line-height:1.6;padding-bottom:4px}
+.rr2-rank-identity>span:last-child{text-align:left;text-wrap:pretty}
+@media(max-width:350px){.rr2-rank-identity{font-size:11px}}
+
+/* Ranked players use the same warm paper, bold display numbers and illustrated portraits as the practice cards. */
+#app[data-page=rank],.view[data-page=rank]{background:var(--paper)}
+.rr6-ranking{gap:14px;padding:18px 20px 24px}
+.rr6-rank-header{display:flex;align-items:center;gap:9px;min-height:40px;position:sticky;top:0;z-index:5;background:var(--paper)}
+.rr6-rank-header h1{font-size:25px;font-weight:700;letter-spacing:-.6px}
+.rr6-rank-back{min-width:44px!important;width:44px!important;min-height:44px!important;height:44px!important;margin-left:-9px;padding:0!important}
+.rr6-rank-context{padding:0!important;gap:0!important;background:#fffdf8!important;border:1px solid #ece3d6!important;border-radius:15px!important;box-shadow:none!important}
+.rr6-rank-context>[data-slot=card-content]{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;padding:11px 12px!important;color:#675d50;font-size:13px;line-height:1.5}
+.rr6-rank-context span{display:inline-flex;align-items:center;gap:5px}
+.rr6-context-publisher{font-weight:650;color:#302c25}
+.rr6-context-publisher>[data-slot=avatar]{width:25px!important;height:25px!important;background:transparent!important;border-radius:6px!important}
+.rr6-context-year{color:#8b7b65;font-size:12px}
+.rr6-ranking .rr2-rank-tab-list{background:#ece5da!important}
+.rr6-ranking .rr2-rank-tab-indicator{background:#292a24!important;border-color:#292a24!important;box-shadow:none!important}
+.rr6-ranking .rr2-rank-tab[aria-selected=true],.rr6-ranking .rr2-rank-tab[aria-selected=true] [data-tabs-label]{color:#fffaf1!important}
+.rr6-winners{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;align-items:end;min-height:236px;padding:14px 1px 13px;perspective:1000px}
+.rr6-winner-wrap{min-width:0;height:186px;transform-style:preserve-3d}
+.rr6-winner-wrap.place-1{height:218px;z-index:2}
+.rr6-winner-tilt{height:100%;perspective:900px}
+.rr6-winner-card{height:100%;padding:0!important;gap:0!important;border:1px solid #dfd5c3!important;border-radius:22px!important;background:#fffdf7!important;box-shadow:0 4px 0 #e4dac6,0 5px 0 1px #d0c1a7,0 15px 19px -15px #58432f60;overflow:visible!important}
+.rr6-winner-card.place-1{background:#f1dba9!important;border-color:#d8bc86!important;box-shadow:0 5px 0 #d8bc86,0 6px 0 1px #c8a874,0 17px 22px -14px #77593860;transform:rotate(-1deg)}
+.rr6-winner-card.place-2{transform:rotate(-4deg)}.rr6-winner-card.place-3{transform:rotate(4deg);background:#f5e1cf!important}
+.rr6-winner-card>[data-slot=card-content]{height:100%;display:flex;align-items:center;flex-direction:column;position:relative;padding:28px 7px 12px!important;gap:6px}
+.rr6-winner-card.place-1>[data-slot=card-content]{padding-top:35px!important;gap:8px}
+.rr6-place{position:absolute;top:9px;left:12px;font-size:12px;font-weight:750;color:#867553;letter-spacing:.04em}
+.rr6-crown{position:absolute;top:10px;left:calc(50% - 12px);color:#8c6834;transform:rotate(-8deg)}
+.rr6-winner-avatar{width:53px!important;height:53px!important;min-width:53px!important;border:2px solid #fffaf2!important;border-radius:50%!important;box-shadow:0 2px 0 #bc9e7133!important;background:#fffaf2!important;overflow:hidden}
+.rr6-winner-card.place-1 .rr6-winner-avatar{width:65px!important;height:65px!important;min-width:65px!important;border-width:3px!important}
+.rr6-winner-name{font-size:12px;font-weight:550;line-height:1.5;white-space:nowrap;color:#64563f}
+.rr6-winner-score{font:750 29px/1.12 var(--display-font);font-variation-settings:"SOFT" 100,"WONK" 1;letter-spacing:-.7px;white-space:nowrap;color:#2f2c25}
+.rr6-winner-card.place-1 .rr6-winner-score{font-size:34px}
+.rr6-winner-card small{font-size:10px;color:#827157;margin-top:-4px}
+.rr6-self-card{padding:0!important;gap:0!important;background:#eee3cd!important;border:1px solid #dfd0b6!important;border-radius:19px!important;box-shadow:0 3px 0 #e3d6bf}
+.rr6-self-card>[data-slot=card-content]{display:flex;align-items:center;gap:11px;padding:14px!important}
+.rr6-self-card [data-slot=avatar],.rr6-rank-row [data-slot=avatar]{width:39px!important;height:39px!important;border-radius:50%!important;background:#fffdf8!important;border:1px solid #e2d7c7!important;flex-shrink:0;overflow:hidden}
+.rr6-self-copy{display:flex;flex-direction:column;gap:3px}.rr6-self-copy>span{font-size:12px;color:#77684f}.rr6-self-copy>strong{font-size:25px;font-weight:750;line-height:1.1}.rr6-self-copy small{font-size:11px;color:#88785e;font-weight:500}
+.rr6-self-score{display:flex;align-items:baseline;gap:4px;margin-left:auto;font-size:28px;font-weight:750;letter-spacing:-.9px;white-space:nowrap}.rr6-self-score small{font-size:11px;font-weight:450;color:#807056;letter-spacing:0}
+.rr6-rank-list{padding:0;margin:2px 0 0;list-style:none}.rr6-rank-row{display:flex;align-items:center;gap:10px;min-height:66px;border-bottom:1px solid #e9e2d7;padding:9px 2px}.rr6-row-place{width:22px;font-size:12px;font-weight:650;color:#9b8f7b}.rr6-row-name{font-size:14px;font-weight:550;color:#514b42;flex:1;min-width:0}.rr6-row-score{font-size:23px;font-weight:750;letter-spacing:-.6px;white-space:nowrap;color:#353229}
+/* A colour seam from the previous white header must not show on the warm report surface. */
+#app[data-page=report] #top{border-bottom:0;box-shadow:none}
+.rr3-score-card{background:#f1e0bb!important}.rr3-score-label,.rr3-total>span{color:#726044}.rr3-rank-link{background:#fff9eccc!important;color:#5f5039!important}.rr3-outcomes{border-top-color:#d9c49b66}
+/* The confirmation actions fill the bottom of the sheet, with the primary action on the thumb side. */
+.sheet-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:12px;margin-top:24px}.sheet-actions button{width:100%!important;min-height:48px!important;height:48px!important}
+/* The share card has a visible paper edge and a soft contact shadow; inner artwork has no ornamental frame. */
+.rr5-share-artwork{--card-tint:#f1e0bb;border-color:#ded2be!important;box-shadow:inset 0 1px 0 #fff,0 5px 0 #e1d3bc,0 6px 0 1px #cfc0a5,0 20px 28px -17px #654a3259;transform-style:preserve-3d}
+.rr5-poster-frame{border:0;border-radius:13px;box-shadow:inset 0 1px 0 #fff8e6}
+.rr5-share-artwork[data-export]{border-width:1px 4px 8px 1px!important;border-color:#fefbf6 #dfd0bd #cdbca2 #fefbf6!important;box-shadow:inset 0 1px 0 #fff!important}
+@media(max-width:350px){.rr6-ranking{padding-inline:16px;gap:12px}.rr6-winners{gap:7px}.rr6-winner-score{font-size:25px}.rr6-winner-card.place-1 .rr6-winner-score{font-size:29px}.rr6-winner-name{font-size:11px}.rr6-winner-avatar{width:46px!important;height:46px!important;min-width:46px!important}.rr6-winner-card.place-1 .rr6-winner-avatar{width:56px!important;height:56px!important;min-width:56px!important}.rr6-self-score{font-size:25px}.rr6-row-score{font-size:21px}.rr6-row-name{font-size:13px}.rr6-rank-row{gap:8px}.rr6-rank-context>[data-slot=card-content]{gap:7px 9px;font-size:12px}}
+@media(max-width:280px){.rr6-winners{grid-template-columns:1fr}.rr6-winner-wrap,.rr6-winner-wrap.place-1{height:auto}.rr6-winner-card>[data-slot=card-content],.rr6-winner-card.place-1>[data-slot=card-content]{padding:14px!important;display:grid;grid-template-columns:46px 1fr;gap:6px 12px}.rr6-winner-avatar{grid-row:1/3}.rr6-place,.rr6-crown{display:none}.rr6-winner-card{transform:none!important}.rr6-self-copy>strong{font-size:22px}.rr6-self-score{font-size:22px}}
+
+/* Paper cards use full-card balance: large serif issue number + compact real spec for new papers, score/progress hero for active ones. */
+.rr3-paper-grid{gap:11px}
+.rr3-paper-cover{position:relative;min-height:66px;border-radius:17px!important;border-color:#e8dfd0!important;box-shadow:0 3px 0 #ebe1d0!important}
+.rr3-paper-cover.complete{background:#f3e6cb!important;border-color:#e3d2b0!important;box-shadow:0 3px 0 #e4d4b4!important}
+.rr3-paper-cover.draft{background:#fff1e3!important;border-color:#efd4b9!important;box-shadow:0 3px 0 #eed4ba!important}
+.rr3-paper-cover>[data-slot=card-content]{padding:12px 13px!important;flex-direction:row!important;align-items:center;justify-content:space-between;gap:10px}
+.rr3-paper-top{align-items:center;flex:none}
+.rr3-paper-cover.new .rr3-paper-top>strong{font:750 26px/1 var(--display-font);font-variation-settings:"SOFT" 100,"WONK" 1;letter-spacing:-.7px;color:#2f261d}
+.rr6-paper-stamp{position:relative;display:grid!important;place-items:center;width:38px;height:38px;border-radius:12px;background:#e7d5b1;font:750 17px/1 var(--display-font)!important;letter-spacing:-.4px!important;color:#56442c!important}
+.rr3-paper-cover.draft .rr6-paper-stamp{background:#f7dbc0}
+.rr6-paper-badge{position:absolute;right:-4px;top:-4px;display:grid;place-items:center;width:15px;height:15px;border-radius:50%;background:#fffdf8;border:1px solid #d9c6a0;color:#5c6e44}
+.rr3-paper-top small{font-size:11px;margin-left:2px;color:#8c7b63;font-weight:450}
+.rr3-paper-state{width:10px;height:10px;margin-top:0;color:currentColor}
+.rr3-paper-foot{margin-top:0!important;flex:1;min-width:0;align-items:center;justify-content:flex-end}
+.rr3-paper-score{font:750 22px/1 var(--display-font);font-variation-settings:"SOFT" 100,"WONK" 1;letter-spacing:-.6px;color:#2f261d;white-space:nowrap}
+.rr6-paper-draft-col{display:flex;flex-direction:column;gap:5px;width:100%;min-width:0}
+.rr6-paper-draft-col [data-slot=progress-bar]{margin-top:0!important}
+.rr3-paper-progress-label{font:750 17px/1 var(--ui-font);letter-spacing:-.4px;color:#5f4a32}
+.rr3-paper-score small,.rr3-paper-progress-label small{font:450 11px/1.3 var(--ui-font);letter-spacing:0;color:#8c7b63}
+.rr6-paper-action{display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:50%;background:#f4ece0;color:#74644e}
+.rr3-paper-cover.new{min-height:66px}
+.rr6-collection-copy{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.rr6-collection-meta{font-size:12px;line-height:1.3;color:#7e694d;font-weight:500}
+.rr6-collection-stat{flex:none;padding:3px 8px;border-radius:999px;background:rgba(255,253,248,.62);color:#5f4c32;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.rr6-collection-chevron{display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:50%;background:rgba(255,253,248,.5);color:#5f4c32}
+.rr6-collection-bar{width:100%;height:4px;margin-top:10px;border-radius:99px;background:rgba(126,105,77,.16);overflow:hidden}
+.rr6-collection-bar>span{display:block;height:100%;border-radius:99px;background:#8c6e43}
+.rr5-collection-face{gap:8px}
+.rr5-collection-face h2{font-size:19px;line-height:1.45}
+.rr5-collection-option{min-height:70px!important;padding:17px 18px!important}
+/* The radar compares the same nine earned/max values as the subject cards. */
+.rr6-radar-card{padding:0!important;gap:0!important;border:1px solid #e9dfce!important;background:#fffdf8!important;border-radius:23px!important;box-shadow:none!important}
+.rr6-radar-card>[data-slot=card-header]{display:flex;align-items:center;justify-content:space-between;padding:17px 18px 0!important;gap:10px}
+.rr6-radar-card h2{font-size:17px;font-weight:650;letter-spacing:-.4px}
+.rr6-radar-card>[data-slot=card-header]>span{font-size:11px;color:#918269}
+.rr6-radar-card>[data-slot=card-content]{position:relative;padding:6px 8px 10px!important}
+.rr6-radar-plot{height:267px;position:relative}.rr6-radar-plot canvas{font-family:var(--ui-font)}
+.rr6-radar-data{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);padding:0;margin:0;list-style:none}
+@media(max-width:350px){.rr3-paper-grid{gap:9px}.rr3-paper-cover,.rr3-paper-cover.new{min-height:60px;border-radius:15px!important}.rr3-paper-cover>[data-slot=card-content]{padding:10px!important;gap:7px}.rr6-paper-stamp{width:34px;height:34px;border-radius:10px;font-size:15px!important}.rr3-paper-cover.new .rr3-paper-top>strong{font-size:23px}.rr3-paper-score{font-size:19px}.rr3-paper-progress-label{font-size:15px}.rr6-paper-action{width:25px;height:25px}.rr5-collection-face h2{font-size:17px}.rr6-radar-plot{height:250px}}
+
+/* TiltCard's default crop hides paper thickness; these two composed cards need their edges visible. */
+.rr2-share-tilt,.rr6-winner-tilt{overflow:visible!important}
+.rr2-share-tilt:before{inset:7px 4px -8px;background:#e9dcc5;border-color:#d8c6a7;transform:rotate(-1.2deg)}
+.rr2-share-tilt:after{inset:12px 10px -15px;background:#f3eadb;border-color:#dfd0b8;transform:rotate(.8deg)}
+.rr6-ranking .rr2-rank-tab{height:44px!important;min-height:44px!important}
+
+/* Correct/wrong are compact paired counters next to the score; the rank action anchors the card bottom. */
+.rr3-outcomes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:2px;padding:0;border:0}
+.rr3-outcomes>span{display:flex;align-items:center;justify-content:flex-start;gap:8px;padding:10px 11px;min-height:53px;border:1px solid #ddc9a44d;border-radius:14px;background:#fff9ec88}
+.rr3-outcomes b{font-size:25px;font-weight:750;line-height:1}.rr3-outcomes small{font-size:11px;font-weight:500;color:#7b705c}
+.rr6-outcome-icon{display:grid;place-items:center;width:26px;height:26px;flex-shrink:0;border-radius:50%;background:#e8eddd}
+.rr3-outcomes .correct{color:#557d51}.rr3-outcomes .wrong{color:#b26045}.rr3-outcomes .wrong .rr6-outcome-icon{background:#f1dfd1}
+.rr3-rank-link{width:100%;justify-self:stretch;min-height:46px!important;height:46px!important;padding:12px 1px 0!important;margin-top:5px;border-radius:0!important;border-top:1px solid #c9b08155!important;background:transparent!important;justify-content:flex-start!important}
+.rr3-rank-link>b{margin-left:auto;font-size:24px;letter-spacing:-.5px}.rr3-rank-link>svg:last-child{margin-left:4px}.rr3-rank-link small{font-size:11px}
+/* Primary metrics show rates; exact earned/max remains a quiet reference in the detailed report. */
+.rr6-subject-raw{display:block;font-size:11px;line-height:1.5;color:#8a7b64;margin-top:-7px}
+.rr3-subject-points small{font-size:15px;margin-left:2px}
+.rr6-section-raw{display:block;text-align:right;font-size:11px;line-height:1.4;color:#94856f;margin-top:-6px;margin-bottom:8px}
+.rr2-section-score-label strong small{font-size:12px;margin-left:2px}
+/* Six rate bars replace nine repeated fraction cells in the shared score card. */
+.rr6-share-rates{display:flex;flex-direction:column;gap:13px}
+.rr6-rate-row{min-width:0}.rr6-rate-row>div:first-child{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:7px}
+.rr6-rate-row>div:first-child>span{font-size:13px;color:#665b4a;line-height:1.5}
+.rr6-rate-row strong{font-size:21px;font-weight:750;letter-spacing:-.5px;line-height:1.1;color:#3c352a}
+.rr6-rate-row strong small{font-size:11px;font-weight:500;letter-spacing:0;margin-left:2px;color:#827055}
+.rr6-rate-row .rr2-progress-track{height:7px!important;background:#eee5d4!important;border-radius:6px!important}
+.rr6-rate-row [data-slot=progress-bar]{color:#b68d56}
+.rr5-share-artwork[data-export] .rr6-share-rates{gap:16px}
+.rr5-share-artwork[data-export] .rr6-rate-row>div:first-child>span{font-size:15px}
+.rr5-share-artwork[data-export] .rr6-rate-row strong{font-size:24px}
+.rr5-share-artwork[data-export] .rr6-rate-row strong small{font-size:13px}
+.rr5-share-artwork[data-export] .rr6-rate-row .rr2-progress-track{height:8px!important}
+/* All seven rank dimensions fit the normal phone; narrow phones can swipe the same control without a scrollbar. */
+.rr6-ranking .rr2-rank-tabs{overflow-x:auto;scrollbar-width:none}.rr6-ranking .rr2-rank-tabs::-webkit-scrollbar{display:none}
+.rr6-ranking .rr2-rank-tab-list{min-width:324px}.rr6-ranking .rr2-rank-tab{font-size:12px!important;min-width:44px!important;padding-inline:5px!important}
+/* Saved practice belongs to the same warm, illustrated paper-card system as home and the library. */
+#app[data-page=me],.view[data-page=me],#app[data-page=me] #top,#app[data-page=me] #bottom{background:var(--paper)}
+.rr6-profile{gap:16px!important;padding-top:17px!important}
+.rr6-profile .rr2-profile-identity{padding:0!important;background:#f0e2c4!important;border:1px solid #e3d3b1!important;border-radius:23px!important;box-shadow:0 4px 0 #e4d6bb}
+.rr6-profile .rr2-profile-person{position:relative;padding:17px 18px!important;gap:13px;min-height:100px}
+.rr6-profile .rr2-profile-avatar{width:57px!important;height:57px!important;border:3px solid #fffaf0!important;border-radius:50%!important;background:#fffaf0!important}
+.rr6-profile .rr2-profile-person-copy h2{font-size:25px;font-weight:700;letter-spacing:-.5px}
+.rr6-profile .rr2-profile-person-copy p{color:#857351;font-size:12px;margin-top:5px}
+.rr6-profile-art{position:absolute;right:14px;top:13px;width:70px;height:75px;object-fit:contain;transform:rotate(9deg);opacity:.9}
+.rr6-profile .rr2-profile-search-field{background:#fffdf8!important;border-color:#e6ddce!important;border-radius:15px!important;box-shadow:none!important}
+.rr6-profile .rr2-profile-tab-list{background:#ebe4d9!important}
+.rr6-profile .rr2-profile-tab-indicator{background:#2d2c25!important;border-color:#2d2c25!important;box-shadow:none!important}
+.rr6-profile .rr2-profile-tab[aria-selected=true],.rr6-profile .rr2-profile-tab[aria-selected=true] [data-tabs-label]{color:#fffaf0!important}
+.rr6-record-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px!important}
+.rr6-record-card{padding:0!important;gap:0!important;min-width:0;border-radius:18px!important;border:1px solid #e9dfce!important;background:#fffdf8!important;box-shadow:0 3px 0 #eae1d0!important}
+.rr6-record-card.complete{background:#f0e3c8!important;border-color:#e4d3b1!important}
+.rr6-record-body{padding:13px 13px 14px!important;display:flex;flex-direction:column;gap:6px;min-height:145px}
+.rr6-record-brand{display:flex;align-items:center;gap:6px;min-width:0}
+.rr6-record-brand>img{width:20px;height:20px;object-fit:contain}.rr6-record-brand>strong{font-size:13px;font-weight:650}.rr6-record-brand>svg{margin-left:auto;flex-shrink:0;color:#87916b;width:13px;height:13px}
+.rr6-record-scope{font-size:11px;color:#8a7a60;line-height:1.5}
+.rr6-record-paper{font-size:11px;color:#76684f;line-height:1.5}.rr6-record-paper small{font-size:10px}
+.rr6-record-value{display:flex;align-items:baseline;gap:4px;justify-content:space-between;margin-top:auto;padding-top:5px;min-width:0}
+.rr6-record-value>strong{font:750 29px/1.1 var(--display-font);font-variation-settings:"SOFT" 100,"WONK" 1;letter-spacing:-.8px;white-space:nowrap}
+.rr6-record-value>strong.num{font:750 26px/1.1 var(--ui-font);letter-spacing:-.6px}
+.rr6-record-value strong small{font:450 10px/1.3 var(--ui-font);letter-spacing:0;color:#8b7a60;margin-left:2px}
+.rr6-record-value>svg{width:14px;height:14px;flex-shrink:0;color:#9c8b6b}
+.rr6-record-body [data-slot=progress-bar]{color:#b38750;margin-top:4px}.rr6-record-body .rr2-progress-track{height:3px!important;background:#e9dfcd!important}
+.rr6-profile .rr2-profile-empty{grid-column:1/-1}
+@media(max-width:350px){.rr6-record-grid{gap:10px!important}.rr6-record-body{padding:11px!important;min-height:140px}.rr6-record-value>strong{font-size:25px}.rr6-record-value>strong.num{font-size:23px}.rr6-record-brand>strong{font-size:12px}.rr6-profile-art{right:11px;width:58px;height:67px}.rr3-outcomes>span{padding:9px 8px;gap:5px}.rr3-outcomes b{font-size:23px}.rr6-outcome-icon{width:23px;height:23px}}
+@media(max-width:280px){.rr6-record-grid{grid-template-columns:1fr}.rr6-profile-art{display:none}.rr3-outcomes{grid-template-columns:1fr}}
+
+/* The wider export uses compact vertical spacing while retaining large chart labels and the full paper edge. */
+.rr6-share-rates{gap:9px}
+.rr5-share-artwork[data-export] .rr5-poster-brand{padding-bottom:13px!important}
+.rr5-share-artwork[data-export] .rr5-poster-hero{padding-top:17px!important}
+.rr5-share-artwork[data-export] .rr5-poster-total{margin-top:18px;padding-bottom:0;gap:7px}
+.rr5-share-artwork[data-export] .rr5-poster-rank{min-height:50px}
+.rr5-share-artwork[data-export] .rr5-poster-sections{padding-top:15px!important;padding-bottom:15px!important}
+.rr5-share-artwork[data-export] .rr6-share-rates{gap:10px}
+.rr5-share-artwork[data-export] .rr6-rate-row strong{font-size:22px}
+.rr6-record-scope{font-size:12px;color:#7c6d54}
+
+/* Poster display numerals are tied to the 450px artwork, independent of the phone preview width. */
+.rr5-share-artwork[data-export] .rr5-poster-total>strong{font-size:88px}
+.rr5-share-artwork[data-export] .rr5-poster-total.wide-value>strong{font-size:77px}
+
+/* The answer sheet and comparison table use the same paper surface as the result and saved cards. */
+#app,#stage,#top,#bottom,.view{background:var(--paper)}
+.view[data-page=home],.view[data-page=me]{touch-action:pan-y}
+.tabbar{background:transparent;border-color:#e9e1d4}
+.entry-sticky,.type-heading{background:var(--paper)}
+.answer-row{border-color:#ece3d4}
+.choice{border-color:#e7dece!important;box-shadow:0 2px 0 #e3d8c4!important}
+.choice.selected{border-color:#292a24!important;background:#292a24!important;box-shadow:0 2px 0 #1e211b!important;color:#fffaf0!important}
+.detail-table thead th{background:#f3eee5;border-color:#e6ddce;color:#7e725e}
+.detail-type-row th{background:var(--paper)!important;color:#7c6d54!important;border-color:#e7dece!important}
+.detail-answer-row th,.detail-answer-row td{border-color:#e9e1d4!important}
+
+/* Keyboard navigation keeps a visible focus marker in the same ink palette as the controls. */
+#top h1:focus-visible,.view h1:focus-visible{outline:2px solid #8d7853;outline-offset:3px;border-radius:4px}
+
+/* Sticky masks must follow the page surface, including the answer-sheet continuation and collection header. */
+.entry-sticky:after,.rr3-catalog-selector{background:var(--paper)}
+
+/* 录答头部以卷名和实时完成数为同一行，成功保存无需常驻占位。 */
+.entry-sticky .identity{min-height:48px;border-bottom:0;gap:12px}
+.entry-sticky .paper-identity{flex:1;min-width:0}
+.entry-sticky .paper-identity>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.entry-count{flex:none;color:#302d26;font-size:16px;font-weight:650;white-space:nowrap;letter-spacing:-.3px}
+.entry-count small{font-size:11px;font-weight:450;color:#a0927c;letter-spacing:0}
+.entry-sticky .entry-progress{padding:0 22px 12px}
+.entry-progress .track{height:3px;background:#eae2d5}
+.entry-progress .track i{background:#ba945e}
+#save-state:not([hidden]){display:flex;align-items:center;gap:5px;padding-bottom:8px;font-size:11px;color:#af5f4d}
+#save-state .ico{width:13px;height:13px}
+
+/* 历史页的筛选与搜索共用一行，保留原纸卡辨识度并缩短重复空隙。 */
+.rr6-profile{gap:12px!important;padding-top:12px!important}
+.rr6-profile .rr2-profile-person{min-height:82px;padding:13px 16px!important}
+.rr6-profile .rr2-profile-avatar{width:48px!important;height:48px!important}
+.rr6-profile .rr2-profile-person-copy h2{font-size:23px}
+.rr6-profile-art{width:57px;height:60px;top:10px}
+.rr-record-controls{gap:8px}
+.rr-record-toolbar{display:flex;align-items:center;gap:8px}
+.rr-record-toolbar .rr2-profile-tabs{flex:1;min-width:0}
+.rr-record-toolbar .rr2-profile-tab-list{min-height:42px;padding:3px!important}
+.rr-record-toolbar .rr2-profile-tab{min-height:36px;height:36px;font-size:12px!important;padding-inline:9px!important}
+.rr-record-search-toggle{flex:none;width:42px!important;height:42px!important;min-height:42px!important;padding:0!important;border:1px solid #e6ddce!important;border-radius:13px!important;color:#8b7a60;background:#fffdf8!important}
+.rr-record-search-toggle[aria-expanded=true]{color:#a36e63;background:#f7eae3!important}
+.rr6-record-grid{gap:10px!important}
+.rr6-record-body{min-height:124px;padding:11px 12px 12px!important;gap:4px}
+.rr6-record-value>strong{font-size:28px}
+.rr6-record-value>strong.num{font-size:25px}
+
+/* 真实订正放在总分标签旁，短状态保持轻量且可进入处理详情。 */
+.rr3-score-label{display:flex;align-items:center;flex-wrap:wrap;gap:5px}
+.rr3-score-label .rr-score-correction:not(:empty){display:inline-flex;width:auto;margin:0;padding:0;font-size:10px;line-height:1}
+.rr-score-correction .ios-corrections-report-status{display:inline-flex;width:auto;min-height:25px;padding:3px 5px;gap:3px;border:1px solid #c3a87b55;border-radius:7px;background:transparent;color:#856345;font:500 10px/1.4 var(--ui-font)}
+.rr-score-correction .ios-corrections-report-status .icon{width:12px;height:12px}
+.rr-score-correction .ios-corrections-report-status strong{margin-left:3px}
+.rr-score-correction .ios-corrections-report-status>.icon:last-child{display:none}
+@media(max-width:350px){
+ .entry-sticky .identity{margin-inline:16px;font-size:10px;gap:8px}
+ .entry-sticky .entry-progress{padding-inline:16px}
+ .entry-count{font-size:15px}.entry-count small{font-size:10px}
+ .rr6-profile{gap:10px!important;padding-inline:16px}
+ .rr6-record-body{min-height:119px;padding:10px!important}
+ .rr6-record-value>strong{font-size:25px}
+ .rr-practice-tool-content{min-height:76px;padding:12px!important}
+ .rr-practice-tool-value>strong{font-size:14px}
+}

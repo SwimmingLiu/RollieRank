@@ -1,0 +1,9 @@
+<import src="../../templates/startup-card.wxml" />
+<web-view wx:if="{{src}}" src="{{src}}" use-web-title="{{false}}" binderror="onWebError"></web-view>
+<view wx:elif="{{error}}" class="web-status">
+  <text>{{error}}</text>
+  <button class="btn btn--primary" bindtap="start">重试</button>
+  <button class="btn btn--soft" bindtap="backToNative">打开本机练习</button>
+</view>
+<!-- 建立连接前仍显示与原稿首屏相同的占位结构。 -->
+<view wx:else class="rr-startup-screen"><template is="startup-card" data="{{logo}}" /></view>

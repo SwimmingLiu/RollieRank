@@ -1,0 +1,1 @@
+{"envId":"cloud1-8g137o5da8d5e269","region":"ap-shanghai","functionRoot":"./","functions":[{"name":"deleteExamRecord","timeout":10,"memorySize":256,"runtime":"Nodejs16.13","handler":"index.main","installDependency":true}]}

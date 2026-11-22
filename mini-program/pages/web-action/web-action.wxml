@@ -1,0 +1,12 @@
+<view class="screen screen--plain">
+  <rr-nav title="{{kind === 'invite' ? '邀请好友' : '保存海报'}}" />
+  <view class="web-action">
+    <button wx:if="{{kind === 'invite'}}" class="btn btn--primary" open-type="share">发送同卷邀请</button>
+    <block wx:else>
+      <text wx:if="{{busy}}">正在保存海报…</text>
+      <text wx:if="{{error}}">{{error}}</text>
+      <button wx:if="{{permission}}" class="btn btn--soft" bindtap="openAlbumSettings">打开设置</button>
+      <button wx:if="{{error}}" class="btn btn--primary" bindtap="save">重试</button>
+    </block>
+  </view>
+</view>

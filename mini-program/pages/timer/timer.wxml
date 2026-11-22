@@ -1,0 +1,2 @@
+<!-- 旧路径复用首页面板，兼容此前打开的入口。 -->
+<rr-timer-sheet standalone bind:dismiss="closeTimer" />

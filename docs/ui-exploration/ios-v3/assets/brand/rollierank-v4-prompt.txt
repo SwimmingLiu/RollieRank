@@ -1,0 +1,7 @@
+Use case: logo-brand
+Asset type: production app icon / brand symbol for 卷卷小榜 (RollieRank), a paper-exam practice scoring and same-paper ranking app for adult exam candidates.
+Primary request: Design one original, memorable logo symbol. Two broad curled paper sheets interlock into one compact, confident silhouette. Their staggered upper edges subtly suggest a ranking podium; one clean curled lower edge expresses the Chinese idea of 卷 (rolled paper). The paper and ranking ideas must feel like one integrated shape.
+Composition: One centered mark inside a softly rounded coral square, occupying most of the square with optically balanced margins. Square-on view. Transparent canvas outside the icon tile. One final asset, not a presentation sheet or multiple variants.
+Style: Refined contemporary app branding, vector-friendly strong shapes. Matte white paper against soft coral (#F27076 to #F49B96). A tiny restrained fold highlight can express depth; the silhouette carries the identity. It must remain recognizable at 32px and work beside a black Chinese wordmark on a white interface.
+Text: None. No letters, no numerals, no Chinese text; the wordmark is rendered separately by the interface.
+Constraints: Genuine transparency outside the tile. Clear contrast and crisp edges. No black app tile, no purple or blue. No outlined document with a bar chart, no generic finance icon, no trophy, star, sparkle, mascot face, tiny ruled lines, glossy bevel, thick extrusion, heavy drop shadow, scene, mockup, or watermark.

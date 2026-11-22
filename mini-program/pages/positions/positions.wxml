@@ -1,0 +1,4 @@
+<view class="screen screen--plain">
+  <rr-nav title="报考岗位" />
+  <rr-position-picker bind:dismiss="onDone" bind:selection="onDone" />
+</view>

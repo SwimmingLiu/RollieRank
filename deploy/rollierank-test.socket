@@ -1,0 +1,9 @@
+[Unit]
+Description=RollieRank test API socket
+
+[Socket]
+ListenStream=127.0.0.1:4175
+Accept=no
+
+[Install]
+WantedBy=sockets.target

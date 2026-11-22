@@ -1,0 +1,147 @@
+<page-meta page-style="overflow: hidden;" />
+<view class="screen screen--plain">
+  <rr-nav
+    title="{{tab === 'mine' ? '我的反馈' : '意见反馈'}}"
+    action="{{tab === 'mine' ? '写反馈' : '记录'}}"
+    action-label="{{tab === 'mine' ? '返回提交反馈' : '查看我的反馈'}}"
+    action-dot="{{tab !== 'mine' && hasUnreadReply}}"
+    bind:action="toggleTab"
+  />
+
+  <scroll-view
+    class="page-scroll"
+    scroll-y
+    enhanced
+    show-scrollbar="{{false}}"
+    refresher-enabled="{{tab === 'mine'}}"
+    refresher-triggered="{{refreshing}}"
+    refresher-background="#fcf8f1"
+    bindrefresherrefresh="onRefresherRefresh"
+  >
+    <view class="{{tab === 'submit' ? 'fb__scroll-submit' : 'page-scroll__body--plain'}}">
+      <view class="fb">
+        <!-- 提交反馈 -->
+        <view wx:if="{{tab === 'submit'}}" class="fb__form">
+          <view class="fb__cats">
+            <button
+              wx:for="{{categories}}"
+              wx:key="key"
+              class="fb__cat {{category === item.key ? 'fb__cat--on' : ''}}"
+              data-key="{{item.key}}"
+              bindtap="selectCategory"
+              hover-class="press"
+            >
+              <image class="fb__cat-icon" src="{{uiBase}}/{{item.icon}}.svg" mode="aspectFit" />
+              <text>{{item.label}}</text>
+            </button>
+          </view>
+
+          <view class="fb__composer">
+            <textarea
+              class="fb__textarea"
+              value="{{content}}"
+              maxlength="1000"
+              placeholder="{{placeholder}}"
+              placeholder-class="fb__placeholder"
+              bindinput="onContent"
+              auto-height="{{false}}"
+            />
+            <view class="fb__composer-foot">
+              <view class="fb__images">
+                <view wx:for="{{images}}" wx:key="path" class="fb__thumb">
+                  <image class="fb__thumb-img" src="{{item.path}}" mode="aspectFill" data-index="{{index}}" bindtap="previewDraftImage" />
+                  <button class="fb__thumb-del" data-index="{{index}}" bindtap="removeImage" aria-label="移除截图">
+                    <image src="{{uiBase}}/close.svg" mode="aspectFit" />
+                  </button>
+                </view>
+                <button wx:if="{{images.length < 3}}" class="fb__add-img" bindtap="pickImages" disabled="{{picking || submitting}}" aria-label="添加截图">
+                  <image src="{{uiBase}}/image.svg" mode="aspectFit" />
+                  <text class="num">{{picking ? '…' : images.length + '/3'}}</text>
+                </button>
+              </view>
+              <text class="fb__counter num">{{content.length}}/1000</text>
+            </view>
+          </view>
+
+          <view class="fb__contact-card">
+            <image class="fb__contact-icon" src="{{uiBase}}/comment.svg" mode="aspectFit" />
+            <input
+              class="fb__contact-input grow"
+              value="{{contact}}"
+              maxlength="100"
+              placeholder="联系方式 · 微信号或邮箱（选填）"
+              placeholder-class="fb__placeholder"
+              bindinput="onContact"
+            />
+          </view>
+
+          <text wx:if="{{formError}}" class="fb__error" aria-role="alert">{{formError}}</text>
+        </view>
+
+        <!-- 我的反馈 -->
+        <view wx:else class="fb__mine">
+          <view wx:if="{{loadingMine && !mine.length}}" class="fb__empty">读取中…</view>
+          <view wx:elif="{{mineError}}" class="fb__empty">
+            <text>{{mineError}}</text>
+            <button class="fb__empty-btn" bindtap="loadMine">重试</button>
+          </view>
+          <view wx:elif="{{mine.length}}" class="fb__list">
+            <view wx:for="{{mine}}" wx:key="id" class="fb__item">
+              <view class="fb__item-head">
+                <text class="fb__item-cat">{{item.categoryLabel}}</text>
+                <text class="fb__item-status fb__item-status--{{item.status}}">{{item.statusLabel}}</text>
+              </view>
+              <text class="fb__item-content">{{item.content}}</text>
+              <view wx:if="{{item.images.length}}" class="fb__item-images">
+                <image
+                  wx:for="{{item.images}}"
+                  wx:for-item="img"
+                  wx:for-index="imgIndex"
+                  wx:key="imgIndex"
+                  class="fb__item-img"
+                  src="{{img.dataUri}}"
+                  mode="aspectFill"
+                  data-id="{{item.id}}"
+                  data-index="{{imgIndex}}"
+                  bindtap="previewMineImage"
+                />
+              </view>
+              <view wx:if="{{item.reply && item.reply.text}}" class="fb__reply">
+                <view class="fb__reply-head">
+                  <text class="fb__reply-title">回复</text>
+                  <text class="fb__reply-time">{{item.repliedAtText}}</text>
+                </view>
+                <text class="fb__reply-text">{{item.reply.text}}</text>
+              </view>
+              <view class="fb__item-foot">
+                <text class="fb__item-time">{{item.createdAtText}}</text>
+                <text wx:if="{{item.contact}}" class="fb__item-contact ellipsis">{{item.contact}}</text>
+              </view>
+            </view>
+          </view>
+          <view wx:else class="fb__empty">
+            <text>还没有提交过反馈</text>
+            <button class="fb__empty-btn fb__empty-btn--primary" bindtap="toggleTab">去写一条</button>
+          </view>
+
+          <view class="fb__foot-links">
+            <button class="fb__admin-link" bindtap="openAdmin">
+              <image src="{{uiBase}}/lock.svg" mode="aspectFit" />
+              <text>维护者</text>
+            </button>
+          </view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view wx:if="{{tab === 'submit'}}" class="footer-bar">
+    <button
+      class="fb__submit"
+      bindtap="submitFeedback"
+      loading="{{submitting}}"
+      disabled="{{submitting || !canSubmit}}"
+      hover-class="press"
+    >{{submitting ? '提交中…' : '提交反馈'}}</button>
+  </view>
+</view>

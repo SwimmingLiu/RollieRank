@@ -1,0 +1,18 @@
+{
+  "design": "paper-cards-1114-v3",
+  "generation_records": [
+    {
+      "file": "brand/rollierank-logo-v4-256.png",
+      "original": "brand/rollierank-logo-v4.png",
+      "prompt": "brand/rollierank-v4-prompt.txt",
+      "source": "brand/rollierank-v4-source.json"
+    },
+    {
+      "file": "illustrations/score-keepsake-v1-640.png",
+      "original": "illustrations/score-keepsake-v1.png",
+      "prompt": "illustrations/score-keepsake-v1-prompt.txt",
+      "source": "illustrations/score-keepsake-v1-source.json"
+    }
+  ],
+  "vector_records": "illustrations/sources.json"
+}

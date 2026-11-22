@@ -1,0 +1,116 @@
+/* 整卷优先，只有分模块配置才展开输入和排序；沿用已有计时与首页纸卡样式。 */
+body.beui-island .rr-timer-limit { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:17px 16px; border:1px solid #e7d8bd; border-radius:16px; background:#f7edd8; }
+body.beui-island .rr-timer-limit > span { display:grid; gap:5px; }
+body.beui-island .rr-timer-limit b { font-size:14px; font-weight:600; color:#51412e; }
+body.beui-island .rr-timer-limit small { font-size:11px; color:#9b8566; }
+body.beui-island .rr-timer-limit strong { display:flex; align-items:baseline; gap:5px; font:650 31px/1 var(--display-font,serif); color:#6c5433; }
+body.beui-island .rr-timer-limit em { font:400 12px/1 var(--ui-font,inherit); font-style:normal; color:#9b8566; }
+body.beui-island .rr-timer-module-toggle { display:flex; align-items:center; justify-content:flex-start; gap:8px; width:100%; height:42px; min-height:42px; padding:0 4px; border:0; border-radius:10px; box-shadow:none; background:transparent; color:#897457; font-size:13px; }
+body.beui-island .rr-timer-module-toggle > span { flex:1; text-align:left; }
+body.beui-island .rr-timer-module-toggle > svg:last-child { transition:transform .16s ease; }
+body.beui-island .rr-timer-module-toggle .is-open { transform:rotate(180deg); }
+body.beui-island .rr-timer-allocation { margin-top:-10px; }
+body.beui-island .rr-timer-module-controls { display:flex; align-items:center; gap:5px; }
+body.beui-island .rr-timer-module-controls .rr-timer-module-toggle { width:auto; flex:1; }
+body.beui-island .rr-timer-module-toggle small { margin-left:7px; color:#ad987b; font-size:11px; font-weight:400; }
+body.beui-island .rr-timer-balance { width:34px; min-width:34px; height:34px; min-height:34px; padding:0; box-shadow:none; background:transparent; color:#a08a6d; }
+body.beui-island .rr-timer-reorder-list { margin:0; padding:0; list-style:none; }
+body.beui-island .rr-timer-planned-module { position:relative; display:grid; grid-template-columns:34px minmax(0,1fr) 68px 18px; align-items:center; gap:8px; padding:4px 0; border-bottom:1px solid #eee3d1; background:#fffdf8; }
+body.beui-island .rr-timer-planned-module > span { font-size:13px; color:#756047; }
+body.beui-island .rr-timer-planned-module > small { font-size:11px; color:#9d886a; }
+body.beui-island .rr-timer-planned-module .rr-session-plan-input { width:68px; }
+body.beui-island .rr-timer-drag-handle { cursor:grab; display:grid; place-items:center; width:34px; min-width:34px; height:38px; min-height:38px; padding:0; border:0; border-radius:8px; background:transparent; color:#bbab92; box-shadow:none; }
+body.beui-island .rr-timer-drag-handle:active { cursor:grabbing; }
+body.beui-island .rr-timer-allocation-total { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 3px 0; color:#8d7b61; font-size:12px; }
+body.beui-island .rr-timer-allocation-total b { font-size:14px; color:#5c4931; }
+body.beui-island .rr-timer-allocation-total > svg { color:#8e9c71; }
+body.beui-island .rr-timer-allocation-total.is-mismatch strong { font-size:12px; color:#bc7c61; font-weight:500; }
+body.beui-island .rr-timer-source-tabs { margin-bottom:0; }
+body.beui-island .rr-timer-source-tabs [role=tablist] { display:flex; width:100%; padding:3px; border-radius:12px; background:#eee6d8; }
+body.beui-island .rr-timer-source-tabs [role=tablist] > div { flex:1; }
+body.beui-island .rr-timer-source-tabs [role=tab] { width:100%; height:38px; min-height:38px; font-size:13px; color:#78654c!important; }
+body.beui-island .rr-timer-source-tabs [role=tab][aria-selected=true] { color:#4e3b25!important; font-weight:600; }
+/* Tabs 的覆盖标签继承暖深色，避免白字落在浅纸色指示片上。 */
+body.beui-island .rr-timer-source-tabs [data-tabs-label] { color:inherit!important; -webkit-text-fill-color:currentColor; }
+body.beui-island .rr-timer-source-tabs [data-tabs-indicator] { background:#fffdf8; }
+body.beui-island .rr-timer-config .rr-session-clock { padding-top:8px; }
+/* 给按钮栏真实布局空间，避免短屏和键盘出现时输入框滚进粘性遮罩下。 */
+body.beui-island .rr-sheet:has(.rr-timer-config) > [data-slot=bottom-sheet-body] { display:flex; flex-direction:column; min-height:0; overflow:hidden; }
+body.beui-island .rr-sheet:has(.rr-timer-config) .sheet-heading { flex:none; }
+body.beui-island .rr-sheet:has(.rr-timer-config) #sheet-content { display:flex; flex-direction:column; min-height:0; max-height:none; overflow:hidden; padding-bottom:max(12px,env(safe-area-inset-bottom)); }
+body.beui-island #practice-timer-ui { display:flex; flex-direction:column; min-height:0; }
+body.beui-island .rr-timer-config { display:flex; flex-direction:column; gap:0; min-height:0; max-height:calc(88svh - 112px); padding-bottom:0; }
+/* 焦点框会伸出控件5px；滚动区留出边距，同时保持正文原来的左右对齐。 */
+body.beui-island .rr-timer-scroll-content { display:grid; align-content:start; gap:15px; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:0 6px 10px; margin-inline:-6px; scroll-padding-block:6px; }
+body.beui-island .rr-timer-config > .rr-timer-sticky-footer { flex:none; position:static; padding:4px 0 6px; background:#fffdf8; }
+body.beui-island .rr-timer-sticky-footer > .rr-session-actions { padding-top:10px; }
+body.beui-island .rr-timer-sticky-footer .rr-timer-allocation-total { padding-top:4px; }
+body.beui-island .rr-session-active-plan { display:block; margin-top:6px; color:#7d674a; }
+/* 展开计划时压紧上方摘要，把阅读空间留给可调整的模块。 */
+body.beui-island .is-planning-modules .rr-timer-scroll-content { gap:8px; }
+body.beui-island .is-planning-modules .rr-timer-selected-paper button { min-height:32px; padding-block:0; }
+body.beui-island .is-planning-modules .rr-timer-limit { padding:9px 12px; }
+body.beui-island .is-planning-modules .rr-timer-limit > span { gap:3px; }
+body.beui-island .is-planning-modules .rr-timer-limit strong { font-size:27px; }
+body.beui-island .is-planning-modules .rr-timer-module-toggle { height:34px; min-height:34px; }
+body.beui-island .rr-session-plan-input input.peer { appearance:textfield; -moz-appearance:textfield; outline:none; }
+body.beui-island .rr-session-plan-input input::-webkit-inner-spin-button,body.beui-island .rr-session-plan-input input::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+body.beui-island .rr-session-plan-input [data-state]:focus-within { outline:2px solid #cbb18b; outline-offset:1px; }
+body.beui-island .rr-session-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+body.beui-island .rr-timer-config,body.beui-island .rr-timer-paper-picker { padding-inline:0; }
+body.beui-island .rr-timer-selected-paper { min-width:0; }
+body.beui-island .rr-timer-selected-paper button { display:flex; align-items:center; justify-content:flex-start; gap:8px; width:100%; min-height:40px; height:auto; padding:4px 0; border:0; border-radius:8px; background:transparent; box-shadow:none; color:#917655; }
+body.beui-island .rr-timer-selected-paper button > span { flex:1; min-width:0; text-align:left; white-space:normal; font-size:12px; line-height:1.5; }
+body.beui-island .rr-timer-custom-plan { display:grid; gap:10px; }
+body.beui-island .rr-timer-duration { display:grid; gap:6px; padding:14px 12px 12px; border:1px solid #e7d8bd; border-radius:18px; background:#f7edd8; }
+body.beui-island .rr-timer-duration > span { text-align:center; font-size:12px; color:#9a8361; }
+body.beui-island .rr-timer-duration-stepper { display:flex; justify-content:center; align-items:center; gap:12px; }
+body.beui-island .rr-timer-duration-stepper > button { display:grid; place-items:center; width:34px; min-width:34px; min-height:34px; height:34px; padding:0; border:1px solid #d9c7a6; border-radius:50%; background:#fffaf0; color:#927147; box-shadow:none; }
+body.beui-island .rr-timer-duration-value { display:flex; align-items:center; gap:3px; }
+body.beui-island .rr-timer-duration-value > small { margin-top:15px; color:#9a8361; font-size:12px; }
+body.beui-island .rr-timer-duration .rr-timer-total-input { width:102px; }
+body.beui-island .rr-timer-duration .rr-timer-total-input [data-state] { height:60px!important; border:0!important; border-radius:8px!important; background:transparent!important; }
+body.beui-island .rr-timer-duration .rr-timer-total-input input.peer { padding:0!important; font:650 46px/1.1 var(--display-font,serif)!important; color:#6d5433; appearance:textfield; -moz-appearance:textfield; }
+body.beui-island .rr-timer-total-input input::-webkit-inner-spin-button,body.beui-island .rr-timer-total-input input::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+body.beui-island .is-planning-modules .rr-timer-custom-plan { gap:6px; }
+body.beui-island .is-planning-modules .rr-timer-duration { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; }
+body.beui-island .is-planning-modules .rr-timer-duration-stepper { gap:5px; }
+body.beui-island .is-planning-modules .rr-timer-duration-stepper > button { width:34px; min-width:34px; height:34px; min-height:34px; }
+body.beui-island .is-planning-modules .rr-timer-duration .rr-timer-total-input { width:68px; }
+body.beui-island .is-planning-modules .rr-timer-duration .rr-timer-total-input [data-state] { height:38px!important; }
+body.beui-island .is-planning-modules .rr-timer-duration .rr-timer-total-input input.peer { font-size:30px!important; }
+body.beui-island .is-planning-modules .rr-timer-duration-value > small { margin-top:7px; font-size:11px; }
+body.beui-island .rr-timer-breadcrumbs { display:flex; align-items:center; flex-wrap:wrap; gap:2px; min-width:0; color:#b19a78; font-size:12px; }
+body.beui-island .rr-timer-breadcrumbs button { min-height:32px; height:32px; padding:0 6px; border:0; border-radius:7px; box-shadow:none; background:transparent; color:#8b6f4a; font-size:12px; }
+body.beui-island .rr-timer-breadcrumbs > span { min-width:0; padding-left:3px; font-size:12px; color:#776147; line-height:1.5; }
+body.beui-island .rr-timer-paper-list[data-picker-level=institution] { gap:8px; }
+body.beui-island .rr-timer-institution-option { display:flex; align-items:center; justify-content:flex-start; gap:11px; width:100%; min-height:66px; height:auto; padding:12px; border:1px solid #e8ddcb; border-radius:14px; background:#fffdf8; color:#69543a; box-shadow:none; }
+body.beui-island .rr-timer-institution-option > span:nth-child(2) { display:grid; gap:5px; min-width:0; flex:1; text-align:left; }
+body.beui-island .rr-timer-institution-option b { font-size:14px; font-weight:600; }
+body.beui-island .rr-timer-collection-option { display:flex; align-items:center; justify-content:flex-start; gap:10px; width:100%; min-height:66px; height:auto; padding:12px 4px; border:0; border-bottom:1px solid #eee4d4; border-radius:0; background:transparent; box-shadow:none; color:#6b5436; }
+body.beui-island .rr-timer-collection-option > span { display:grid; gap:5px; flex:1; min-width:0; text-align:left; white-space:normal; }
+body.beui-island .rr-timer-collection-option b { font-size:14px; font-weight:550; }
+body.beui-island .rr-timer-collection-option small { color:#a28b6a; font-size:12px; white-space:normal; }
+/* 套卷信息合成常规字号的一行，搜索时只在分组标题保留一次系列身份。 */
+body.beui-island .rr-timer-paper-option { min-height:52px; padding:12px 4px; gap:8px; }
+body.beui-island .rr-timer-paper-option > .rr-timer-paper-copy { flex:1; min-width:0; text-align:left; white-space:nowrap; font-size:16px; font-weight:450; line-height:1.5; }
+body.beui-island .rr-timer-paper-option > svg { flex:none; }
+body.beui-island .rr-timer-search-group { min-width:0; }
+body.beui-island .rr-timer-search-group h3 { margin:16px 4px 4px; color:#9a7d58; font-size:14px; font-weight:500; line-height:1.6; overflow-wrap:anywhere; }
+body.beui-island .rr-timer-breadcrumbs .rr-timer-back { width:34px; min-width:34px; padding:0; margin-right:2px; }
+body.beui-island .rr-timer-breadcrumbs .rr-timer-back + button { padding-left:0; }
+@media(max-width:350px) {
+  body.beui-island .rr-timer-limit { padding:14px; }
+  body.beui-island .rr-timer-planned-module { gap:5px; grid-template-columns:34px minmax(0,1fr) 60px 15px; }
+  body.beui-island .rr-timer-planned-module .rr-session-plan-input { width:60px; }
+}
+@media(max-height:650px) {
+  /* 320×568保留可见模块行；上下摘要不再挤空真正要编辑的区域。 */
+  body.beui-island .rr-sheet:has(.rr-timer-config) { max-height:94svh!important; }
+  body.beui-island .rr-sheet:has(.rr-timer-config) .sheet-heading { padding-block:0 4px; }
+  body.beui-island .rr-timer-config { max-height:calc(94svh - 104px); }
+  body.beui-island .rr-timer-scroll-content { gap:10px; }
+  body.beui-island .is-planning-modules .rr-timer-scroll-content { gap:6px; }
+  body.beui-island .is-planning-modules .rr-timer-limit { padding:7px 12px; }
+  body.beui-island .is-planning-modules .rr-timer-planned-module { padding-block:2px; }
+}

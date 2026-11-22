@@ -1,0 +1,63 @@
+{
+  "license": "MIT",
+  "entries": [
+    {
+      "slug": "bottom-sheet",
+      "sourceUrl": "https://beui.dev/r/bottom-sheet/raw",
+      "registryUrl": "https://beui.dev/r/bottom-sheet",
+      "pageUrl": "https://beui.dev/components/motion/bottom-sheet",
+      "updatedAt": "2026-11-10",
+      "registrySha256": "b3632b01cf83c2f672df02669cc758167193e7f2e4e2e5551e5ca9b512c21891",
+      "files": [
+        {
+          "path": "components/motion/bottom-sheet.tsx",
+          "sha256": "129d54e937dc5f144e837bb4b44f4887a5846cdec27e71e71542fdbace8a33a5",
+          "retained_existing": false
+        },
+        {
+          "path": "lib/ease.ts",
+          "sha256": "cde4ce91ec645335cfa8297d6094c90b6e62ee6a1a021fe2ac0a6ece673c2a8f",
+          "retained_existing": false
+        },
+        {
+          "path": "lib/hooks/use-focus-trap.ts",
+          "sha256": "faab917563064f16ef514f2286510f3a1471d0798e63276608647353c4f0e9f7",
+          "retained_existing": false
+        },
+        {
+          "path": "lib/i18n.tsx",
+          "sha256": "5431651a737b19a53b2777fe214c6c6177ae7877919d94750c6c594565946dba",
+          "retained_existing": false
+        },
+        {
+          "path": "lib/presence-gate.tsx",
+          "sha256": "f3c3911933dda28679c108281da9acc37e8f98bc28d7bb79ff63bc0e3aaa9c74",
+          "retained_existing": false
+        },
+        {
+          "path": "lib/touch.ts",
+          "sha256": "f2a15c243c86c8bd1abb6e2e65a423b3a4c45cc1d797ebd83997f21cd1beadb9",
+          "retained_existing": false
+        },
+        {
+          "path": "lib/utils.ts",
+          "sha256": "7c8c3dfc0cdd370d44932828eb067ef771c8fe7996693221d5d4b90af6d54f2d",
+          "retained_existing": false
+        }
+      ]
+    },
+    {
+      "slug": "card",
+      "sourceUrl": "https://beui.dev/r/card/raw",
+      "registryUrl": "https://beui.dev/r/card",
+      "pageUrl": "https://beui.dev/components/motion/card",
+      "updatedAt": "2026-11-10",
+      "files": [
+        {
+          "path": "components/motion/card.tsx",
+          "sha256": "a4897c870b16da7de486f4e35104dde69bc62393e0f3ac1f462cbb08de975193"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+<import src="../../templates/startup-card.wxml" />
+<page-meta page-style="overflow: hidden;" />
+<view wx:if="{{openingWeb}}" class="screen screen--plain">
+  <rr-nav title="卷卷小榜" logo="{{asset.logo}}" back="{{false}}" />
+  <view class="rr-startup-screen"><template is="startup-card" /></view>
+</view>
+<view wx:else class="screen" bindtouchstart="startTabSwipe" bindtouchmove="moveTabSwipe" bindtouchend="endTabSwipe" bindtouchcancel="cancelTabSwipe">
+  <rr-nav title="卷卷小榜" logo="{{asset.logo}}" back="{{false}}" />
+
+  <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}" refresher-enabled="{{true}}" refresher-triggered="{{refreshing}}" refresher-background="#fcf8f1" bindrefresherrefresh="onRefresherRefresh">
+  <view class="page-scroll__body">
+  <view class="home__body {{tabSwiping ? 'home__body--swiping' : ''}}" style="{{tabSwipeOffset ? 'transform: translateX(' + tabSwipeOffset + 'px);' : ''}}">
+    <button wx:if="{{timerStatus !== 'ready'}}" class="home__timer" bindtap="openTimer" hover-class="press"
+      aria-label="{{timerStatus === 'finished' ? '查看计时记录' : timerStatus === 'paused' ? '继续已暂停的计时' : '打开进行中的计时'}}">
+      <view class="home__timer-icon"><image src="{{uiBase}}/clock-ochre.svg" mode="aspectFit" /></view>
+      <text class="grow home__timer-title">做题计时</text>
+      <image wx:if="{{timerStatus === 'paused'}}" class="home__timer-state" src="{{uiBase}}/pause.svg" mode="aspectFit" />
+      <image wx:elif="{{timerStatus === 'finished'}}" class="home__timer-state" src="{{uiBase}}/check.svg" mode="aspectFit" />
+      <text class="display-num home__elapsed">{{timerText}}</text>
+      <view class="home__timer-open"><image src="{{uiBase}}/arrow-light.svg" mode="aspectFit" /></view>
+    </button>
+
+    <view wx:if="{{recent.length}}" class="home__recent">
+      <view class="home__section">最近练习</view>
+      <view class="home__deck {{recent.length > 1 ? 'home__deck--scroll' : ''}} {{deckDragging ? 'home__deck--dragging' : ''}}"
+        bindtouchstart="startDeck" catchtouchmove="moveDeck" bindtouchend="flipDeck" bindtouchcancel="cancelDeck"
+        aria-role="region" aria-label="最近练习，第 {{recentIndex + 1}} 张，共 {{recent.length}} 张，上滑切换">
+        <view wx:if="{{recent.length > 1}}" class="home__deck-layer"></view>
+        <block wx:for="{{recent}}" wx:key="id">
+        <view wx:if="{{index === recentIndex}}" class="home__cover home__cover--active {{item.institution === '超格' ? 'home__cover--orange' : ''}}"
+          style="transform: translateY({{deckOffset}}px) scale({{deckScale}});">
+          <view class="home__cover-face" bindtap="openRecent" data-index="{{index}}" hover-class="press">
+            <view class="home__cover-meta">
+              <view class="home__cover-publisher">
+                <image wx:if="{{item.logo}}" class="home__cover-logo" src="{{asset[item.logo]}}" mode="aspectFit" />
+                <text>{{item.publisher}}</text>
+              </view>
+              <view wx:if="{{item.year}}" class="home__year-stamp"><text>{{item.year}}</text></view>
+            </view>
+            <view class="home__cover-main">
+              <text class="home__period">{{item.edition}}</text>
+              <text class="home__paper-title">{{item.paperTitle}}</text>
+              <image class="home__cover-art" src="/assets/answer-paper.svg" mode="aspectFit" />
+            </view>
+            <view class="home__cover-foot">
+              <view class="home__coverage">
+                <view><text class="home__coverage-count">{{item.answered}}</text> / {{item.questionCount}} 题</view>
+                <view class="home__progress"><view style="width: {{item.progress}}%;"></view></view>
+              </view>
+              <view wx:if="{{recent.length > 1}}" class="home__swipe-cue" aria-hidden="true">
+                <image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
+                <image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
+              </view>
+              <view class="home__cover-open"><image src="{{uiBase}}/arrow-light.svg" mode="aspectFit" /></view>
+            </view>
+          </view>
+        </view>
+        </block>
+      </view>
+    </view>
+    <view wx:if="{{!loading && !error && !recent.length}}" class="home__recent home__recent--empty">
+      <view class="home__section">最近练习</view>
+      <view class="home__empty-cover">
+        <view class="home__empty-copy">
+          <text class="home__empty-title">还没有练习</text>
+        </view>
+        <image class="home__empty-art" src="/assets/answer-paper.svg" mode="aspectFit" />
+      </view>
+    </view>
+
+    <block wx:if="{{loading}}">
+      <template wx:if="{{!recent.length}}" is="startup-card" />
+    </block>
+    <view wx:elif="{{error}}" class="empty">
+      <text>{{error}}</text>
+      <button class="chip" bindtap="retry">重新读取</button>
+    </view>
+    <view wx:else>
+      <view class="home__section">选卷估分</view>
+      <view class="home__grid">
+        <button wx:for="{{institutions}}" wx:key="name" class="home__inst" data-name="{{item.name}}" bindtap="openInstitution" hover-class="press">
+          <image wx:if="{{item.logo}}" class="home__inst-logo" src="{{asset[item.logo]}}" mode="aspectFit" />
+          <text class="home__inst-name">{{item.label}}</text>
+          <image class="home__inst-arrow" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+        </button>
+      </view>
+    </view>
+
+    <button wx:if="{{!loading && timerStatus === 'ready'}}" class="home__timer" bindtap="openTimer" hover-class="press" aria-label="开始做题计时">
+      <view class="home__timer-icon"><image src="{{uiBase}}/clock-ochre.svg" mode="aspectFit" /></view>
+      <text class="grow home__timer-title">做题计时</text>
+      <view class="home__timer-open"><image src="{{uiBase}}/play-light.svg" mode="aspectFit" /></view>
+    </button>
+  </view>
+  </view>
+  </scroll-view>
+  <rr-tabbar active="home" />
+</view>
+<rr-timer-sheet wx:if="{{timerOpen}}" bind:change="refreshTimer" bind:dismiss="closeTimer" bind:entered="closeTimer" />

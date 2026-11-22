@@ -1,0 +1,146 @@
+/* 卷卷小榜 · 纸卡主题：暖象牙纸、克制的珊瑚与赭石、细线条图标。 */
+page {
+  --paper: #fcf8f1;
+  --paper-deep: #f7f1e6;
+  --card: #fffdf8;
+  --ink: #18181b;
+  --ink-soft: #4a443f;
+  --quiet: #79767d;
+  --line: #ece5d8;
+  --line-soft: #f1ebe0;
+  --cover: #f4e3be;
+  --cover-soft: #fbf0d6;
+  --tint: #f7d9c9;
+  --tint-soft: #fdf0e7;
+  --coral: #ef7d82;
+  --coral-soft: #fff0ee;
+  --rose: #f9e3e1;
+  --ochre: #b98a3e;
+  --green: #268458;
+  --red: #d54e4e;
+  --shadow: 0 10rpx 30rpx rgba(126, 100, 63, 0.08);
+  --radius: 32rpx;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Nunito, FangYuan, -apple-system, "PingFang SC", sans-serif;
+  font-variation-settings: "BEVL" 100;
+  font-size: 15px;
+  line-height: 1.5;
+  height: 100%;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+view, text, scroll-view, input, textarea, button, image { box-sizing: border-box; }
+button { max-width: none; min-width: 0; margin: 0; padding: 0; background: none; border-radius: 0; line-height: 1.5; font-size: inherit; font-weight: inherit; color: inherit; }
+button::after { border: none; }
+input, textarea { width: 100%; background: none; border: none; font-size: inherit; color: inherit; }
+/* 原生滚动仍然可用，全站所有页面与容器都隐藏视觉滑动块（滚动条）。 */
+page, view, scroll-view, textarea { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+::-webkit-scrollbar,
+page::-webkit-scrollbar,
+view::-webkit-scrollbar,
+scroll-view::-webkit-scrollbar,
+textarea::-webkit-scrollbar,
+.wx-scroll-view::-webkit-scrollbar,
+::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  color: transparent !important;
+  background: transparent !important;
+}
+
+/* 所有页面锁定视口高度，内容走 enhanced show-scrollbar=false 的 scroll-view，彻底消除微信根页面滑动块。 */
+rr-nav { flex: none; }
+.screen { display: flex; flex-direction: column; height: 100vh; min-height: 0; overflow: hidden; padding-bottom: 0; background: var(--paper); }
+.screen--plain { padding-bottom: 0; }
+.page-scroll { flex: 1; min-height: 0; height: 0; width: 100%; }
+.page-scroll__body { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+.page-scroll__body--plain { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+
+/* 卡片 */
+.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); }
+.card--flat { box-shadow: none; border: 2rpx solid var(--line); }
+.card--cover { background: var(--cover); }
+.card--tint { background: var(--tint-soft); }
+.card--pad { padding: 36rpx; }
+.press { transition: transform 120ms ease, opacity 120ms ease; }
+.press:active { transform: scale(0.985); opacity: 0.92; }
+
+.row { display: flex; align-items: center; }
+.row--between { justify-content: space-between; }
+.row--gap { gap: 20rpx; }
+.stack { display: flex; flex-direction: column; }
+.grow { flex: 1; min-width: 0; }
+.ellipsis { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+.text-xs { font-size: 22rpx; color: var(--quiet); }
+.text-sm { font-size: 26rpx; color: var(--quiet); }
+.text-md { font-size: 30rpx; }
+.text-lg { font-size: 36rpx; font-weight: 600; }
+.text-quiet { color: var(--quiet); }
+.text-ink { color: var(--ink); }
+.bold { font-weight: 600; }
+.num { font-variant-numeric: tabular-nums; }
+
+.display-num { font-family: Fraunces, FangYuan, Georgia, serif; font-variation-settings: "SOFT" 100, "WONK" 1; }
+
+/* 主按钮与次操作 */
+.footer-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 12px 20px calc(16px + env(safe-area-inset-bottom)); background: var(--paper); }
+.footer-bar__inner { display: flex; align-items: center; gap: 12px; }
+.btn { min-height: 48px; border-radius: 24px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; font-weight: 650; transition: transform 120ms ease, opacity 120ms ease; }
+.btn:active { transform: scale(0.985); opacity: 0.9; }
+.btn--primary { flex: 1; width: auto !important; background: #18181b; color: #fffaf0; }
+.btn--ghost { width: 48px !important; flex: none; background: #fffdf8; border: 1px solid #e7dece; }
+.btn--soft { background: var(--tint-soft); color: var(--ink); }
+.btn--block { width: 100%; }
+.btn--disabled { opacity: 0.45; }
+.btn__icon { width: 20px; height: 20px; }
+.icon-button { display: grid; place-items: center; flex: none; width: 44px !important; height: 44px; margin: 0 !important; }
+.icon-button > image { width: 18px; height: 18px; }
+@media (max-width: 350px) { .footer-bar { padding-inline: 16px; } }
+
+/* 标签 */
+.chip { display: inline-flex; align-items: center; gap: 8rpx; height: 52rpx; padding: 0 22rpx; border-radius: 26rpx; background: var(--line-soft); color: var(--quiet); font-size: 24rpx; }
+.chip--on { background: #2b2724; color: #fff8ee; }
+.chip--coral { background: var(--coral-soft); color: #c2565c; }
+
+.tabs { display: flex; gap: 8rpx; padding: 8rpx; background: var(--paper-deep); border-radius: 28rpx; }
+.tabs__item { flex: 1; height: 64rpx; display: flex; align-items: center; justify-content: center; border-radius: 22rpx; font-size: 26rpx; color: var(--quiet); }
+.tabs__item--on { background: #2b2724; color: #fff8ee; font-weight: 600; }
+
+.section-title { font-size: 30rpx; font-weight: 600; margin: 36rpx 4rpx 20rpx; }
+
+.empty { padding: 80rpx 0; display: flex; flex-direction: column; align-items: center; gap: 18rpx; color: var(--quiet); }
+.empty__icon { width: 64rpx; height: 64rpx; opacity: 0.5; }
+
+.loading { padding: 120rpx 0; text-align: center; color: var(--quiet); font-size: 26rpx; }
+
+.progress { height: 12rpx; border-radius: 6rpx; background: #efd9d4; overflow: hidden; }
+.progress__fill { height: 100%; border-radius: 6rpx; background: var(--coral); }
+
+/* 全站统一底部抽屉主题：暖纸磨砂遮罩、暖象牙圆角外壳、统一顶边线与轻投影、居中 iPhone 拖动条。 */
+.sheet-layer { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; }
+.sheet-shade, .sheet-shade--blur { position: absolute; inset: 0; background: rgba(249, 246, 239, .46); -webkit-backdrop-filter: blur(9px); backdrop-filter: blur(9px); transition: opacity .28s cubic-bezier(.32, .72, 0, 1); }
+.sheet-panel { width: 100%; max-height: 86vh; position: relative; background: #fffdf8; border: 1px solid #ebe2d3; border-bottom: 0; border-radius: 24px 24px 0 0; box-shadow: 0 -10px 30px rgba(74, 58, 36, .08); padding: 4px 20px calc(18px + env(safe-area-inset-bottom)); transition: transform .34s cubic-bezier(.32, .72, 0, 1); will-change: transform; }
+.sheet-panel::after { content: ""; position: absolute; left: -1px; right: -1px; top: 100%; height: 96px; background: #fffdf8; border-left: 1px solid #ebe2d3; border-right: 1px solid #ebe2d3; pointer-events: none; }
+.sheet-layer--dragging .sheet-panel, .sheet-layer--dragging .sheet-shade { transition: none !important; }
+.sheet-layer--closing .sheet-panel { transform: translateY(100%) !important; transition: transform .26s cubic-bezier(.32, .72, 0, 1) !important; }
+.sheet-layer--closing .sheet-shade { opacity: 0 !important; transition: opacity .24s cubic-bezier(.32, .72, 0, 1) !important; }
+.sheet-grabber-zone { display: grid; place-items: center; flex: none; height: 24px; margin: 0 -20px; touch-action: none; }
+.sheet-grabber { width: 40px; height: 4px; border-radius: 999px; background: #d5cfc5; }
+.sheet-head { position: relative; display: flex; align-items: center; justify-content: space-between; min-height: 44px; font-size: 20px; font-weight: 700; }
+@media (max-width: 350px) { .sheet-panel { padding-inline: 16px; } .sheet-grabber-zone { margin-inline: -16px; } }
+.sheet-head:has(.sheet-close) { padding-right: 44px; }
+.sheet-close { position: absolute; top: 50%; right: 0; transform: translateY(-50%); display: grid; place-items: center; width: 44px !important; height: 44px; }
+.sheet-close image { width: 16px; height: 16px; }
+.sheet-scroll { max-height: 62vh; }
+.sheet-actions { display: flex; gap: 12px; padding-top: 16px; }
+.sheet-actions .btn--soft { flex: 1; }
+.sheet-actions .btn--primary { flex: 2; }
+
+/* 底部固定栏预留实际空间，长内容不被遮挡 */
+.pad-bottom { height: 40rpx; }

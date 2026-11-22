@@ -1,0 +1,845 @@
+/* =========================================================
+   RollieRank 桌面端运营管理后台（仅作用于 .admin-console）
+   现代中后台视觉体系：中性灰画布、纯白卡片、细腻描边、清晰层级
+   ========================================================= */
+
+.app-shell.admin-console {
+  --admin-bg: #f5f6f8;
+  --admin-surface: #ffffff;
+  --admin-surface-subtle: #f9fafb;
+  --admin-border: #e5e7eb;
+  --admin-border-strong: #d1d5db;
+  --admin-ink: #111827;
+  --admin-ink-secondary: #4b5563;
+  --admin-ink-muted: #6b7280;
+  --admin-accent: #18181b;
+  --admin-accent-hover: #27272a;
+  --admin-success-bg: #ecfdf3;
+  --admin-success-fg: #067647;
+  --admin-warn-bg: #fffaeb;
+  --admin-warn-fg: #b54708;
+  --admin-danger-bg: #fef3f2;
+  --admin-danger-fg: #b42318;
+  --admin-muted-bg: #f3f4f6;
+  --admin-muted-fg: #4b5563;
+  display: grid;
+  grid-template-columns: 236px minmax(0, 1fr);
+  min-height: 100vh;
+  background: var(--admin-bg);
+  color: var(--admin-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+/* 左侧固定专业导航栏 */
+.admin-console .admin-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 14px;
+  background: var(--admin-surface);
+  border-right: 1px solid var(--admin-border);
+  z-index: 20;
+}
+
+.admin-console .admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 16px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #f0f1f3;
+  text-decoration: none;
+  color: var(--admin-ink);
+}
+
+.admin-console .admin-brand img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  flex: none;
+}
+
+.admin-console .admin-brand span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.admin-console .admin-brand b {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.admin-console .admin-brand small {
+  font-size: 11px;
+  color: var(--admin-ink-muted);
+  font-weight: 500;
+}
+
+.admin-console .admin-nav-group {
+  padding: 10px 10px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #9ca3af;
+  text-transform: uppercase;
+}
+
+.admin-console .admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-console .admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--admin-ink-secondary);
+  font: 500 13.5px/1.3 inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.admin-console .admin-nav-item:hover {
+  background: #f3f4f6;
+  color: var(--admin-ink);
+}
+
+.admin-console .admin-nav-item.is-primary {
+  background: var(--admin-accent);
+  color: #ffffff;
+}
+
+.admin-console .admin-nav-item.is-primary:hover {
+  background: var(--admin-accent-hover);
+}
+
+.admin-console .admin-nav-item .icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  opacity: 0.78;
+}
+
+.admin-console .admin-sidebar-footer {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #f0f1f3;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-console .admin-mode-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--admin-surface-subtle);
+  color: var(--admin-ink-muted);
+  font-size: 12px;
+}
+
+.admin-console .admin-mode-pill i,
+.admin-console .admin-env-badge i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #16a34a;
+  display: inline-block;
+}
+
+/* 顶栏与主内容区 */
+.app-shell.admin-console .app-main.admin-main {
+  margin-left: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--admin-bg);
+}
+
+.app-shell.admin-console .topbar.admin-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 58px;
+  padding: 0 28px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-console .admin-topbar .breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--admin-ink-muted);
+}
+
+.admin-console .admin-topbar .breadcrumb b {
+  color: var(--admin-ink);
+  font-weight: 600;
+}
+
+.admin-console .admin-topbar .breadcrumb .icon {
+  width: 14px;
+  height: 14px;
+  opacity: 0.5;
+}
+
+.admin-console .admin-topbar .topbar-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-console .admin-env-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid var(--admin-border);
+  border-radius: 999px;
+  background: var(--admin-surface);
+  color: var(--admin-ink-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.admin-console .admin-content {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 24px 28px 56px;
+  min-width: 0;
+}
+
+/* 后台页面头部与 KPI 指标网格 */
+.admin-console .admin-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.admin-console .admin-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.admin-console .admin-header h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--admin-ink);
+}
+
+.admin-console .admin-header p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--admin-ink-muted);
+}
+
+.admin-console .admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-console .admin-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-console .admin-kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: var(--admin-surface);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
+  min-width: 0;
+}
+
+.admin-console .admin-kpi-card span {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--admin-ink-muted);
+}
+
+.admin-console .admin-kpi-card strong {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--admin-ink);
+}
+
+.admin-console .admin-kpi-card small {
+  font-size: 12px;
+  color: var(--admin-ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-console .admin-auth-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  background: #fffbeb;
+}
+
+.admin-console .admin-auth-banner strong {
+  display: block;
+  font-size: 14px;
+  color: #92400e;
+}
+
+.admin-console .admin-auth-banner p {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: #b45309;
+}
+
+.admin-console .admin-section {
+  scroll-margin-top: 74px;
+  min-width: 0;
+}
+
+/* 统一后台所有卡片、按钮、表单、表格视觉（覆盖旧紫粉风格） */
+.admin-console .card,
+.admin-console .disc-admin-card,
+.admin-console .correction-card,
+.admin-console .positions-admin {
+  margin: 0;
+  padding: 20px 22px;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: var(--admin-surface);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  color: var(--admin-ink);
+}
+
+.admin-console .section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.admin-console .section-head h2,
+.admin-console .correction-heading h2,
+.admin-console .positions-admin-heading h2,
+.admin-console .disc-admin-heading h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  color: var(--admin-ink);
+  letter-spacing: -0.01em;
+}
+
+.admin-console .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font: 500 13px/1 inherit;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+}
+
+.admin-console .button.primary {
+  border: 1px solid var(--admin-accent);
+  background: var(--admin-accent);
+  color: #ffffff;
+}
+
+.admin-console .button.primary:hover:not(:disabled) {
+  background: var(--admin-accent-hover);
+  border-color: var(--admin-accent-hover);
+}
+
+.admin-console .button.outline {
+  border: 1px solid var(--admin-border-strong);
+  background: var(--admin-surface);
+  color: var(--admin-ink);
+}
+
+.admin-console .button.outline:hover:not(:disabled) {
+  background: var(--admin-surface-subtle);
+  border-color: #9ca3af;
+}
+
+.admin-console .button.compact {
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: 12.5px;
+}
+
+.admin-console .text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 0 8px;
+  border-radius: 6px;
+  color: var(--admin-ink-secondary);
+  font: 500 12.5px/1 inherit;
+}
+
+.admin-console .text-button:hover {
+  background: #f3f4f6;
+  color: var(--admin-ink);
+}
+
+.admin-console .icon {
+  width: 15px;
+  height: 15px;
+}
+
+/* 后台套卷 Tabs 与数据表格 */
+.admin-console .admin-tabs.line-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  margin: 0 0 12px;
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  background: var(--admin-surface);
+}
+
+.admin-console .admin-tabs.line-tabs button {
+  min-height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--admin-ink-secondary);
+  font: 500 13px/1 inherit;
+  cursor: pointer;
+}
+
+.admin-console .admin-tabs.line-tabs button.selected {
+  background: var(--admin-accent);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.admin-console .admin-table {
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--admin-surface);
+}
+
+.admin-console .admin-table-head,
+.admin-console .admin-table-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 2.2fr) 72px 136px 86px minmax(150px, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+}
+
+.admin-console .admin-table-head {
+  background: var(--admin-surface-subtle);
+  border-bottom: 1px solid var(--admin-border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--admin-ink-muted);
+}
+
+.admin-console .admin-table-row {
+  border-bottom: 1px solid #f0f1f3;
+  font-size: 13px;
+  background: var(--admin-surface);
+  transition: background 0.12s ease;
+}
+
+.admin-console .admin-table-row:last-child {
+  border-bottom: 0;
+}
+
+.admin-console .admin-table-row:hover {
+  background: #fafafa;
+}
+
+.admin-console .admin-table-row b {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--admin-ink);
+}
+
+.admin-console .admin-table-row small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--admin-ink-muted);
+}
+
+.admin-console .admin-table-row .mono {
+  font-variant-numeric: tabular-nums;
+  color: var(--admin-ink-secondary);
+  font-size: 12.5px;
+}
+
+.admin-console .tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.admin-console .tag.success {
+  background: var(--admin-success-bg);
+  color: var(--admin-success-fg);
+}
+
+.admin-console .tag.warning {
+  background: var(--admin-warn-bg);
+  color: var(--admin-warn-fg);
+}
+
+.admin-console .tag.muted {
+  background: var(--admin-muted-bg);
+  color: var(--admin-muted-fg);
+}
+
+.admin-console .admin-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.admin-console .audit-list > div {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0f1f3;
+  font-size: 13px;
+}
+
+.admin-console .audit-list > div:last-child {
+  border-bottom: 0;
+}
+
+.admin-console .audit-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--admin-surface-subtle);
+  border: 1px solid var(--admin-border);
+  color: var(--admin-ink-secondary);
+}
+
+.admin-console .audit-list small,
+.admin-console .audit-list time {
+  color: var(--admin-ink-muted);
+  font-size: 12px;
+}
+
+/* 答案纠错与岗位目录在后台中的视觉统一 */
+.admin-console .correction-count {
+  background: var(--admin-warn-bg);
+  color: var(--admin-warn-fg);
+  font-size: 12px;
+  padding: 2px 9px;
+  border-radius: 999px;
+}
+
+.admin-console .correction-list-row {
+  border-color: #f0f1f3;
+  padding: 12px 0;
+}
+
+.admin-console .correction-muted,
+.admin-console .positions-admin p {
+  color: var(--admin-ink-muted);
+  font-size: 13px;
+}
+
+.admin-console input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.admin-console select,
+.admin-console textarea {
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 8px;
+  background: var(--admin-surface);
+  color: var(--admin-ink);
+  font-size: 13px;
+}
+
+.admin-console input:focus,
+.admin-console select:focus,
+.admin-console textarea:focus {
+  outline: 2px solid rgba(24, 24, 27, 0.14);
+  border-color: var(--admin-accent);
+}
+
+/* =========================================================
+   评论管理工作台 (.disc-admin-*)
+   ========================================================= */
+.disc-admin-card { margin-top: 0; }
+.disc-admin-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.disc-admin-heading h2 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0; font-size: 16px; font-weight: 650; }
+.disc-admin-sub { margin: 4px 0 0; color: #6b7280; font-size: 12.5px; }
+.disc-admin-count { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; background: #fef3f2; color: #b42318; font-size: 12px; font-weight: 600; }
+.disc-admin-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.disc-admin-muted { margin: 14px 0 0; color: #6b7280; font-size: 13px; line-height: 1.6; }
+.disc-admin-error { margin: 10px 0 0; color: #b42318; font-size: 13px; }
+
+.disc-admin-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #f0f1f3;
+}
+
+.disc-admin-filters {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  background: #f9fafb;
+  flex-wrap: wrap;
+}
+
+.disc-admin-tab {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #4b5563;
+  font: 500 12.5px/1 inherit;
+  cursor: pointer;
+}
+
+.disc-admin-tab.is-active {
+  background: #ffffff;
+  color: #111827;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
+}
+
+.disc-admin-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 220px;
+  max-width: 360px;
+}
+
+.disc-admin-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 34px;
+  padding: 5px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  font: inherit;
+  font-size: 13px;
+}
+
+.disc-admin-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.disc-admin-item {
+  padding: 14px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
+  transition: border-color 0.14s ease, background 0.14s ease;
+}
+
+.disc-admin-item:hover {
+  border-color: #d1d5db;
+  background: #fcfcfd;
+}
+
+.disc-admin-item-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.disc-admin-item-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.disc-admin-item-meta b {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  word-break: break-word;
+}
+
+.disc-admin-item-meta small {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.disc-admin-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.disc-admin-status { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+.disc-admin-status-approved { background: #ecfdf3; color: #067647; }
+.disc-admin-status-pending { background: #fffaeb; color: #b54708; }
+.disc-admin-status-flagged { background: #fef3f2; color: #b42318; }
+.disc-admin-status-rejected { background: #f3f4f6; color: #4b5563; }
+
+.disc-admin-reply-to { margin: 6px 0 0; color: #6b7280; font-size: 12px; }
+.disc-admin-text { margin: 8px 0 0; font-size: 13.5px; line-height: 1.65; color: #1f2937; white-space: pre-wrap; word-break: break-word; }
+.disc-admin-links { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.disc-admin-links a { font-size: 12px; color: #2563eb; word-break: break-all; }
+.disc-admin-images { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.disc-admin-thumb { padding: 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; background: #f9fafb; cursor: pointer; }
+.disc-admin-thumb img { display: block; width: 68px; height: 68px; object-fit: cover; }
+.disc-admin-audio { display: block; width: 100%; max-width: 320px; height: 34px; margin-top: 10px; }
+.disc-admin-reason { margin: 8px 0 0; padding: 7px 10px; border: 1px solid #fde68a; border-radius: 8px; background: #fffbeb; color: #92400e; font-size: 12px; line-height: 1.5; }
+
+.disc-admin-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f1f3;
+}
+
+.disc-admin-danger { color: #dc2626 !important; margin-left: auto; }
+.disc-admin-danger:hover { background: #fef2f2 !important; color: #b91c1c !important; }
+.disc-admin-pager { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; font-size: 12.5px; color: #6b7280; }
+.disc-admin-blocked { margin-top: 14px; padding-top: 12px; border-top: 1px solid #f0f1f3; }
+.disc-admin-blocked summary { cursor: pointer; color: #4b5563; font-size: 12.5px; font-weight: 500; }
+.disc-admin-blocked ul { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.disc-admin-blocked li { padding: 10px 12px; border: 1px solid #f0f1f3; border-radius: 8px; background: #f9fafb; font-size: 12px; }
+.disc-admin-blocked li small { display: block; margin-top: 3px; color: #6b7280; }
+.disc-admin-blocked li p { margin: 5px 0 0; color: #1f2937; }
+.disc-admin-preview-quote { margin: 10px 0 0; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb; font-size: 13px; line-height: 1.6; color: #1f2937; }
+.disc-admin-lightbox { text-align: center; }
+.disc-admin-lightbox img { max-width: 100%; max-height: 60vh; border-radius: 8px; object-fit: contain; }
+
+/* 评论区作者待审徽章 */
+.discussions-mod-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #fffaeb;
+  color: #b54708;
+  font-size: 11px;
+  font-weight: 500;
+  vertical-align: middle;
+}
+
+/* 响应式适配（保证 320 / 390 / 768 / 1280 / 1440 均无横向溢出） */
+@media (max-width: 1024px) {
+  .app-shell.admin-console {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-console .admin-sidebar {
+    display: none;
+  }
+  .admin-console .admin-topbar {
+    padding: 0 16px;
+  }
+  .admin-console .admin-content {
+    padding: 16px 14px 40px;
+  }
+  .admin-console .admin-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .admin-console .admin-table-head {
+    display: none;
+  }
+  .admin-console .admin-table-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+  .admin-console .admin-row-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-console .admin-kpi-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-console .admin-env-badge {
+    display: none;
+  }
+  .admin-console .card,
+  .admin-console .disc-admin-card,
+  .admin-console .correction-card,
+  .admin-console .positions-admin {
+    padding: 14px;
+  }
+}

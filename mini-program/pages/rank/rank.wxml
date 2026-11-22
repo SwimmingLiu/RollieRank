@@ -1,0 +1,68 @@
+<page-meta page-style="overflow: hidden;" />
+<view class="screen screen--plain">
+  <rr-nav title="同卷榜" leading="{{true}}" action-icon="help" action-label="榜单规则" bind:action="help" />
+  <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="page-scroll__body--plain">
+  <view wx:if="{{loading}}" class="loading">正在读取榜单…</view>
+  <view wx:elif="{{error}}" class="empty">
+    <text>{{error}}</text>
+    <button class="chip" bindtap="load">重新读取</button>
+  </view>
+
+  <view wx:else class="rank">
+    <view class="rank__identity">
+      <image wx:if="{{logo}}" src="{{logo}}" mode="aspectFit" />
+      <text class="rank__publisher">{{publisher}}</text><text class="grow">{{identity}}</text>
+    </view>
+    <scroll-view class="rank__dimensions" scroll-x enhanced show-scrollbar="{{false}}">
+      <view class="rank__dimension-row">
+        <button wx:for="{{dimensions}}" wx:key="key" class="rank__dimension {{dimension === item.key ? 'rank__dimension--on' : ''}}" data-key="{{item.key}}" bindtap="setDimension">{{item.label}}</button>
+      </view>
+    </scroll-view>
+    <view class="rank__scope">
+      <button wx:for="{{scopes}}" wx:key="key" class="rank__scope-tab {{scope === item.key ? 'rank__scope-tab--on' : ''}}" data-key="{{item.key}}" bindtap="setScope" aria-label="{{item.name}}" aria-pressed="{{scope === item.key}}">
+        <image src="{{uiBase}}/{{item.icon}}.svg" mode="aspectFit" />
+        <text>{{item.short}}</text>
+      </button>
+    </view>
+    <button class="rank__position" bindtap="changePosition" disabled="{{scope === 'nationwide'}}">
+      <view class="rank__position-icon"><image src="{{uiBase}}/{{scope === 'nationwide' ? 'globe' : 'map-pin'}}.svg" mode="aspectFit" /></view>
+      <view class="stack grow">
+        <text class="rank__position-title ellipsis">{{scopeLabel}}</text>
+      </view>
+      <view class="rank__count"><image src="{{uiBase}}/users.svg" mode="aspectFit" />{{count}}</view>
+    </button>
+
+    <view wx:if="{{winners.length}}" class="rank__podium">
+      <button wx:for="{{winners}}" wx:key="publicId" class="rank__podium-card rank__podium-card--{{item.place}}" bindtap="openResult" data-id="{{item.publicId}}"
+        aria-label="榜单第 {{item.place}} 位，{{item.name}}，{{item.scoreText}} 分{{item.rank !== item.place ? '，并列第 ' + item.rank + ' 名' : ''}}">
+        <view class="rank__card-top">
+          <text>{{item.placeText}}</text><image wx:if="{{index === 0}}" src="{{uiBase}}/trophy.svg" mode="aspectFit" />
+        </view>
+        <view class="rank__podium-avatar">{{item.initials}}</view>
+        <text class="rank__podium-name">{{item.name}}{{item.isMe ? '（我）' : ''}}</text>
+        <text class="display-num rank__podium-score {{item.scoreText.length > 5 ? 'rank__podium-score--wide' : ''}}">{{item.scoreText}}</text>
+        <text class="rank__muted">分</text>
+        <view class="rank__percentile" aria-label="超越 {{item.surpassed}} 的考生"><image src="{{uiBase}}/trend.svg" mode="aspectFit" /><text>{{item.surpassed}}</text></view>
+      </button>
+    </view>
+
+    <view wx:if="{{self || otherRows.length}}" class="rank__list">
+      <button wx:if="{{self}}" class="rank__row rank__row--self" bindtap="openResult" data-id="{{self.publicId}}">
+        <text class="rank__row-rank">{{self.rank}}</text><text class="rank__row-name grow">我的同卷最佳</text><text class="display-num rank__row-score">{{self.scoreText}}</text>
+      </button>
+      <button wx:for="{{otherRows}}" wx:key="publicId" class="rank__row" bindtap="openResult" data-id="{{item.publicId}}"
+        aria-label="榜单第 {{item.place}} 位，{{item.name}}{{item.isMe ? '（我）' : ''}}，{{item.scoreText}} 分{{item.rank !== item.place ? '，并列第 ' + item.rank + ' 名' : ''}}">
+        <text class="rank__row-rank">{{item.placeText}}</text>
+        <view class="rank__list-avatar">{{item.initials}}</view>
+        <text class="rank__row-name grow">{{item.name}}{{item.isMe ? '（我）' : ''}}</text>
+        <text class="display-num rank__row-score">{{item.scoreText}}</text>
+      </button>
+    </view>
+    <button wx:if="{{canLoadMore}}" class="rank__more" bindtap="loadMore">继续加载</button>
+    <view wx:if="{{!winners.length}}" class="empty">{{scope === 'nationwide' ? '这份卷还没有人参与' : '该岗位暂无考生参与'}}</view>
+  </view>
+  </view>
+  </scroll-view>
+  <rr-position-picker wx:if="{{positionMode}}" mode="{{positionMode}}" bind:dismiss="closePosition" bind:selection="selectPosition" />
+</view>

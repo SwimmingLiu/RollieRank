@@ -1,0 +1,44 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/catalog/catalog",
+    "pages/practice/practice",
+    "pages/report/report",
+    "pages/review/review",
+    "pages/rank/rank",
+    "pages/records/records",
+    "pages/admin/admin",
+    "pages/analytics/analytics",
+    "pages/share/share",
+    "pages/positions/positions",
+    "pages/discussion/discussion",
+    "pages/timer/timer",
+    "pages/settings/settings",
+    "pages/profile/profile",
+    "pages/credits/credits",
+    "pages/feedback/feedback",
+    "pages/web/web",
+    "pages/web-action/web-action"
+  ],
+  "window": {
+    "navigationStyle": "custom",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FCF8F1",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#79767D",
+    "selectedColor": "#302B29",
+    "backgroundColor": "#FFFDF8",
+    "list": [
+      { "pagePath": "pages/home/home", "text": "首页" },
+      { "pagePath": "pages/records/records", "text": "个人中心" }
+    ]
+  },
+  "style": "v2",
+  "renderer": "webview",
+  "componentFramework": "glass-easel",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

@@ -1,0 +1,91 @@
+{
+  "type": "one-pager",
+  "lang": "cn",
+  "brief": {
+    "audience": "卷卷小榜产品评审者",
+    "job": "比较卷豆、卷票、卷粮在扫描入口的实际文案，评审答题卡扫描的用量规则和上线顺序。",
+    "template": "one-pager",
+    "formats": ["html", "pdf", "png"],
+    "page_target": 1,
+    "length_target": "一页中文评审稿，详细流程与验收见完整方案",
+    "narrative": "先看试用与用量，再试读三个名字和扫描步骤，最后看邀请、购买、广告各何时开放。",
+    "required_facts": [
+      "还可扫描 3 张",
+      "老卷友首次绑定也领 3 颗",
+      "现有运营积分单独记账",
+      "选套卷 → 拍照或选图 → 填入答题卡 → 核对 → 交卷",
+      "扫描和后续开放的付费功能共用卷豆余额",
+      "结果保存后才扣，失败会退回，重复请求只扣一次",
+      "存疑题标「待核对」",
+      "已有草稿默认只补空题",
+      "手动录答和交卷免费",
+      "扫码注册先记邀请来源",
+      "微信群活动提审，小红书和抖音先发纯成绩图",
+      "个人主体指南采用道具直购",
+      "通用购豆待代币充值获准后开放",
+      "1 颗",
+      "5 颗",
+      "10 颗",
+      "30 颗",
+      "60 颗",
+      "¥1",
+      "¥4",
+      "¥6",
+      "¥15",
+      "¥27",
+      "¥1.00",
+      "¥0.80",
+      "¥0.60",
+      "¥0.50",
+      "¥0.45",
+      "看完领 1 颗，每天最多 2 颗",
+      "各付费功能可单独设置用几颗",
+      "赠送、奖励上限和渠道可调",
+      "实拍验证 130 / 135 题的识别和成本"
+    ],
+    "required_assets": [
+      "../../assets/rollierank-logo-transparent.png",
+      "../ui-exploration/ios-v3/screens/ios-refinement-2/entry.png"
+    ],
+    "acceptance_checks": [
+      "单页 A4，中文字体正常，正文无遮挡或溢出",
+      "三个名字共用同一文案句式",
+      "纸卡底色、珊瑚字色、原标志和现有录答页截图",
+      "五档按卷豆颗数定价，显示共用余额和通用购豆开放条件，邀请及广告规则与完整方案一致",
+      "HTML 在 320px 和常规桌面宽度可读"
+    ],
+    "preserve": [
+      "试用、扫描、邀请和广告默认参数",
+      "实拍识别成本、活动和支付资格须上线前确认"
+    ],
+    "evidence": [
+      "../solution-tool-credits.md",
+      "../../mini-program/app.wxss",
+      "https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/virtual-payment/person.html",
+      "https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/virtual-payment.html"
+    ],
+    "explicit_deviations": [
+      "演示稿随卷卷小榜纸卡主题使用暖米色和深珊瑚色"
+    ]
+  },
+  "content": {
+    "title": "卷豆与答题卡扫描",
+    "subtitle": "拍一张答题卡，核对答案后交卷。",
+    "metrics": [
+      { "value": "3 颗", "label": "注册送" },
+      { "value": "1 颗", "label": "每张用" },
+      { "value": "0 颗", "label": "失败时扣" }
+    ],
+    "argument": [
+      "扫描和后续开放的付费功能共用卷豆余额。扫描入口写「还可扫描 3 张」，用量明细可查。"
+    ],
+    "evidence": [
+      "「本次用 1 颗卷豆」",
+      "「本次用 1 张卷票」",
+      "「本次用 1 份卷粮」",
+      "新人在注册后 7 天内首次扫描并导入或正式交卷，邀请人领 2 颗，每月最多奖励 10 位。",
+      "通用购豆待代币充值获准后开放。"
+    ],
+    "next_step": "先确认老卷友是否同领 3 颗，以及邀请发奖时机。"
+  }
+}

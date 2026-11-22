@@ -1,0 +1,17 @@
+<view class="options-layer {{dragging ? 'options-layer--dragging' : ''}} {{closing ? 'options-layer--closing' : ''}}">
+  <view class="options-shade" style="{{shadeOpacity < 1 ? 'opacity: ' + shadeOpacity + ';' : ''}}" catchtap="dismiss" catchtouchmove="ignoreTouch"></view>
+  <view class="options-panel" style="{{dragY ? 'transform: translateY(' + dragY + 'px);' : ''}}" aria-role="dialog" aria-label="{{label}}"
+    bindtouchstart="startTouch" bindtouchmove="moveTouch" bindtouchend="endTouch" bindtouchcancel="cancelTouch">
+    <view class="options-grabber-zone" data-zone="handle" catchtouchstart="startTouch" catchtouchmove="moveTouch" catchtouchend="endTouch" catchtouchcancel="cancelTouch">
+      <view class="options-grabber"></view>
+    </view>
+    <scroll-view class="options-scroll {{listHeight ? '' : 'options-scroll--measuring'}}" style="{{(liveListHeight || listHeight) ? 'height: ' + (liveListHeight || listHeight) + 'px;' : ''}}" scroll-y="{{expanded || !canExpand}}" enhanced bounces="{{false}}" show-scrollbar="{{false}}" bindscroll="onScroll">
+      <view class="options-content">
+        <button wx:for="{{items}}" wx:key="key" class="options-row {{selected === item.key ? 'options-row--selected' : ''}}" aria-pressed="{{selected === item.key}}" data-key="{{item.key}}" bindtap="select" hover-class="options-row--pressed">
+          <text>{{item.label}}</text>
+          <image wx:if="{{selected === item.key}}" src="/assets/ui/check.svg" mode="aspectFit" />
+        </button>
+      </view>
+    </scroll-view>
+  </view>
+</view>

@@ -1,0 +1,94 @@
+/* 群体分析承接既有纸卡与 beUI 面板，不在报告主屏堆叠统计文字。 */
+.rr-insights { color:#3c342c; font-family:var(--ui-font,inherit); min-width:0; }
+.rr-insight-status { display:grid; place-items:center; gap:14px; min-height:130px; font-size:13px; color:#8c7b68; }
+.rr-insight-toolbar { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px; }
+.rr-insight-toolbar > div { display:flex; gap:4px; padding:3px; background:#eee6d8; border-radius:12px; }
+.rr-insights .rr-insight-toolbar button { min-height:34px; height:34px; padding:0 12px; font-size:12px; border-radius:9px; box-shadow:none; }
+.rr-insights .rr-insight-toolbar button[aria-pressed=true] { color:#42392f; background:#fffdf8; }
+.rr-insight-toolbar > span,.rr-insight-public-meta > span { display:flex; align-items:center; gap:4px; color:#918477; font-size:12px; }
+.rr-insight-toolbar small { font-size:10px; padding:3px 5px; background:#f4e7d3; border-radius:5px; }
+.rr-insight-hint { margin:0 0 10px; font-size:12px; color:#9b826c; }
+.rr-insight-bands { min-width:0; margin-bottom:18px; }
+.rr-insight-bands [role=tablist] { width:100%; display:flex; padding:3px; border-radius:12px; background:#f1eadd; }
+.rr-insight-bands [role=tablist] > div { flex:1; min-width:0; }
+.rr-insight-bands [role=tab] { width:100%; min-width:0; min-height:36px; padding:0 3px; font-size:11px; }
+.rr-insight-bands [data-tabs-label] { color:#655746!important; }
+.rr-insight-bands [data-tabs-indicator] { background:#fffdf8!important; }
+.rr-insight-empty { display:flex; align-items:center; justify-content:center; gap:8px; min-height:85px; color:#a9957b; font-size:13px; }
+/* 本人数据仍可读时，空群体提示只占一行，不挤低后面的比较卡片。 */
+.rr-insight-empty.is-compact{justify-content:flex-start;min-height:28px;padding:4px 0;margin:4px 0 10px;font-size:12px}
+.rr-insight-question-heading { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.rr-insight-question-heading > b { display:grid; text-align:center; gap:5px; font-size:18px; font-weight:650; }
+.rr-insight-question-heading small { font-size:11px; font-weight:400; color:#95816c; }
+.rr-insight-answers { display:flex; justify-content:center; gap:18px; font-size:12px; padding:10px; background:#f8f0e3; border-radius:12px; margin-bottom:16px; }
+.rr-insight-answers span { display:flex; align-items:center; gap:5px; }
+.rr-insight-answers span:last-child { color:#69815d; }
+/* 参考答案反馈与当前答案对相邻，保留一枚紧凑的纸色次要操作。 */
+.rr-insights .rr-insight-reference-feedback{height:32px;min-height:32px;padding:0 10px;margin:-6px 0 14px;border-radius:9px;background:#f8f0e3;color:#8d7255;font-size:12px}
+.rr-insight-options { display:grid; gap:16px; }
+.rr-insight-options > div:not(.rr-insight-blank) { display:grid; grid-template-columns:28px minmax(0,1fr) 56px; align-items:center; gap:10px; }
+.rr-insight-options > div > b { position:relative; font-size:15px; font-weight:600; }
+.rr-insight-options > div > b i { display:block; position:absolute; left:15px; top:0; width:4px; height:4px; border-radius:50%; background:#d28b74; }
+.rr-insight-options .rr2-progress-bar { color:#bd9565; }
+.rr-insight-options .is-correct .rr2-progress-bar { color:#8da078; }
+.rr-insight-options > div > span:last-child { display:grid; gap:4px; font-size:12px; text-align:right; }
+.rr-insight-options strong { font-size:14px; font-weight:600; }
+.rr-insight-options small { color:#9a8772; font-size:11px; }
+.rr-insight-options .rr-insight-blank { display:flex; align-items:center; justify-content:space-between; border-top:1px solid #e9dfd0; padding-top:12px; font-size:12px; color:#9a8772; }
+/* 两列纸卡把主值、均值和差值分开对齐；只留一条本人进度与均值刻线。 */
+.rr-insight-comparison-caption { display:flex; justify-content:space-between; align-items:center; margin:0 0 9px; color:#8c7a65; font-size:12px; }
+.rr-insight-comparison-caption small { font-size:11px; }
+.rr-insight-comparison { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.beui-island .rr-insight-subject-card { min-width:0; padding:0; gap:0; border:1px solid #e9dbc3; border-radius:16px; background:#fffaf0; box-shadow:0 2px 0 #e7dac622; }
+.beui-island .rr-insight-subject-card:nth-child(4n+2),.beui-island .rr-insight-subject-card:nth-child(4n+3) { background:#f3e8d2; }
+.beui-island .rr-insight-subject-card > [data-slot=card-content] { min-width:0; padding:12px; }
+.rr-insight-subject-card header { display:flex; align-items:center; justify-content:space-between; gap:3px; min-width:0; }
+.rr-insight-subject-card header b { font-size:12px; font-weight:600; white-space:nowrap; }
+.rr-insight-delta { flex-shrink:0; color:#74835b; font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; }
+.rr-insight-delta.is-down { color:#b5745e; }
+.rr-insight-own { display:flex; align-items:baseline; gap:4px; padding:12px 0 9px; }
+.rr-insight-own strong { font:650 clamp(24px,6.8vw,30px)/1.1 var(--display-font,serif); font-variant-numeric:tabular-nums; letter-spacing:-.5px; white-space:nowrap; }
+.rr-insight-own small { color:#9b8871; font-size:11px; }
+.rr-insight-mean { display:flex; align-items:center; justify-content:space-between; gap:5px; margin-bottom:10px; color:#99816a; font-size:11px; }
+.rr-insight-mean b { color:#76624f; font-size:12px; font-weight:550; font-variant-numeric:tabular-nums; }
+.rr-insight-comparison-track { position:relative; padding-block:3px; }
+.rr-insight-comparison-track .rr2-progress-bar { color:#b48a51; }
+.rr-insight-comparison-track .rr2-progress-track { height:4px!important; background:#e7d9c4!important; }
+.rr-insight-mean-marker { display:block; position:absolute; top:0; height:10px; width:2px; border-radius:2px; transform:translateX(-50%); background:#cf8a73; }
+.rr-insight-subjects { display:grid; gap:19px; }
+.rr-insight-subjects header { display:grid; grid-template-columns:minmax(0,1fr) auto 40px; align-items:center; gap:8px; margin-bottom:8px; font-size:12px; }
+.rr-insight-subjects header b { font-weight:550; }
+.rr-insight-subjects header > span { color:#9a8772; font-size:11px; }
+/* 逐题统计是第五列的紧凑测量值，错误选项比例仅作为次行，不扩大表格。 */
+.rr-detail-cohort { display:grid; justify-items:center; gap:3px; color:#806c53; font-variant-numeric:tabular-nums; line-height:1.2; }
+.rr-detail-cohort strong { font-size:12px; font-weight:600; white-space:nowrap; }
+.rr-detail-cohort small { color:#b17d66; font-size:10px; white-space:nowrap; }
+.rr-detail-cohort[data-state=loading],.rr-detail-cohort[data-state=error] { color:#ae9e8b; }
+.rr-insight-public { display:grid; grid-template-columns:minmax(0,1fr); gap:24px; padding-bottom:8px; min-width:0; }
+.rr-insights .rr-insight-score { min-width:0; padding:0; border:1px solid #e1cda7; background:#f2e3be; border-radius:20px; }
+.rr-insights .rr-insight-score > [data-slot=card-content] { min-width:0; padding:17px; }
+.rr-insight-person { display:flex; align-items:center; gap:9px; margin-bottom:16px; font-size:14px; }
+/* 合法长昵称不能把名次挤成多行，完整姓名仍由DOM文本及title提供。 */
+.rr-insight-person > b { flex:1; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-weight:550; }
+.rr-insight-person > span:last-child { margin-left:auto; flex-shrink:0; white-space:nowrap; font-size:12px; color:#8d7557; }
+.rr-insight-score strong { font:600 42px/1.15 var(--display-font,serif); }
+.rr-insight-score strong small { font:400 12px/1.4 var(--ui-font,sans-serif); color:#8b765b; }
+.rr-insight-public-meta { display:flex; justify-content:space-between; margin-top:14px; }
+.rr-insight-subjects .rr2-progress-bar { color:#b48650; }
+.rr-insight-entry { margin-left:auto; display:flex; align-items:center; }
+.rr-detail-distribution { width:34px; min-width:34px; height:38px; border-radius:10px; color:#a08059; font:600 14px var(--ui-font,inherit); }
+.rr6-rank-row { position:relative; }
+.rr6-rank-surpassed { font-size:11px; color:#9c7952; font-weight:500; }
+@media(max-width:350px) { .rr-insight-bands [role=tab] { font-size:10px; } .rr-insight-subject-card > [data-slot=card-content] { padding:10px!important; } }
+
+/* 图标保持18px，比较入口触区不能随rem基准缩到30px。 */
+body.beui-island .rr-insight-entry > button{width:36px!important;min-width:36px!important;height:36px!important;min-height:36px!important;padding:0!important;border-radius:10px}
+
+/* 对比值使用等宽列及各自标签，数字不再依赖颜色或角标才能理解。 */
+.rr-insight-value-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin:14px 0}
+.rr-insight-value-pair>span{display:grid;gap:7px;min-width:0}
+.rr-insight-value-pair small{font-size:11px;color:#91806a;white-space:nowrap}
+.rr-insight-value-pair strong{font:650 21px/1.1 var(--display-font,serif);color:#6c4e28;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rr-insight-value-pair>span:last-child strong{color:#a7745c}
+/* 320px 的纸卡每列约 53px，缩小数字字号以完整容纳 71.7% 等小数。 */
+@media(max-width:350px){.rr-insight-value-pair{gap:5px}.rr-insight-value-pair strong{font-size:18px}.rr-insight-value-pair small{font-size:10px}}

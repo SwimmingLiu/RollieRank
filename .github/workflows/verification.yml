@@ -1,0 +1,77 @@
+name: RollieRank verification
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rollierank-verification-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      CI: "true"
+      VERIFY_OUTPUT: test-results/verification
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.19"
+      - name: Install application dependencies
+        run: |
+          npm ci
+          npm ci --prefix docs/ui-exploration/ios-v3/ui
+      - name: Install verification dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql
+          uv sync --frozen --group verify
+          uv run --frozen --group verify python -m playwright install --with-deps chromium
+      - name: Doctor
+        run: >-
+          uv run --frozen --group verify python scripts/verify-rollierank.py doctor
+          --output test-results/verification
+      - name: Check test deployment and mini-program environment routing
+        run: |
+          bash -n deploy/install-test-api.sh
+          node --check scripts/verify-test-wallet.mjs
+          node --test test/test-environment.test.js
+      - name: Verify wallet PostgreSQL migrations, billing and WeChat purchase reconciliation
+        run: >-
+          uv run --frozen --group verify python scripts/verify-rollierank.py feature tool-credits
+          --output test-results/verification-wallet
+      # The CLI rejects zero-exit test runs containing skips and retains current interaction screenshots.
+      - name: Verify isolated journeys, test API safeguards and preview layouts
+        run: >-
+          uv run --frozen --group verify python scripts/verify-rollierank.py all
+          --output test-results/verification
+      # 答题卡识别是纯 Node 能力：真实起服务、真跑三张不同版式的照片，并记录耗时。
+      - name: Verify answer-sheet recognition
+        run: >-
+          node --test test/omr.test.js &&
+          python3 scripts/verify-omr.py --repeat 3 --output test-results/omr
+      - name: Upload verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rollierank-verification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            test-results/verification
+            test-results/verification-wallet
+            test-results/omr
+          if-no-files-found: warn
+          retention-days: 14

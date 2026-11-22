@@ -1,0 +1,5 @@
+{
+  "usingComponents": { "rr-timer-sheet": "/components/rr-timer-sheet/rr-timer-sheet" },
+  "navigationStyle": "custom",
+  "disableScroll": true
+}

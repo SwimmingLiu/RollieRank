@@ -1,0 +1,287 @@
+<view class="screen screen--plain share">
+  <rr-nav title="成绩分享" />
+  <view wx:if="{{loading}}" class="loading">正在准备分享图…</view>
+  <view wx:elif="{{error}}" class="empty">
+    <text>{{error}}</text>
+    <button class="chip" bindtap="retry">重新读取</button>
+  </view>
+  <view wx:else class="share__studio">
+    <view class="share__controls">
+      <view class="share__modes">
+        <button wx:for="{{modes}}" wx:key="key" class="share__mode {{mode === item.key ? 'share__mode--on' : ''}}" data-key="{{item.key}}" bindtap="setMode">{{item.label}}</button>
+      </view>
+      <view class="share__styles" aria-label="海报风格">
+        <button wx:for="{{styles}}" wx:key="key" class="share__style-chip {{style === item.key ? 'share__style-chip--on' : ''}}" data-key="{{item.key}}" bindtap="setStyle">
+          <view class="share__swatch" style="background: {{item.swatch}};"></view>
+          <text>{{item.label}}</text>
+        </button>
+      </view>
+    </view>
+
+    <scroll-view class="share__preview" scroll-y scroll-top="{{previewTop}}" enhanced show-scrollbar="{{false}}">
+      <view class="share__preview-inner share__style--{{style}}">
+        <view class="share__stage" style="width: {{previewWidth}}px; height: {{previewHeight}}px;">
+          <view class="share__artifact share__artifact--{{mode}}" style="transform: scale({{previewScale}});">
+            <!-- Ticket Top Paper Surface -->
+            <view class="share__top {{(mode === 'types' || mode === 'radar') ? 'share__top--compact' : ''}}">
+              <view class="share__mast">
+                <image wx:if="{{publisherLogo}}" class="share__logo" src="{{publisherLogo}}" mode="aspectFit" />
+                <view class="share__identity-block">
+                  <text class="share__identity">{{summary.paperName}}</text>
+                  <text wx:if="{{summary.subLine}}" class="share__series">{{summary.subLine}}</text>
+                </view>
+                <view wx:if="{{summary.rank}}" class="share__rank-chip" aria-label="同卷排名第 {{summary.rank}} 名">
+                  <image class="share__rank-icon" src="{{uiBase}}/{{isDark ? 'trophy-gold.svg' : 'trophy-ochre.svg'}}" mode="aspectFit" />
+                  <text class="display-num share__rank-num">#{{summary.rank}}</text>
+                  <text class="num share__rank-total">/ {{summary.count}}</text>
+                </view>
+                <view wx:elif="{{mode === 'types' || mode === 'radar'}}" class="share__rank-chip">
+                  <text class="display-num share__rank-num">{{summary.score}} 分</text>
+                </view>
+              </view>
+
+              <block wx:if="{{mode === 'full' || mode === 'score'}}">
+                <view class="share__hero">
+                  <view class="share__score-col">
+                    <view class="share__score-line">
+                      <text class="display-num share__score-int {{summary.scoreCompact ? 'share__score-int--compact' : ''}}">{{summary.scoreInt}}</text>
+                      <text wx:if="{{summary.scoreDec}}" class="display-num share__score-dec {{summary.scoreCompact ? 'share__score-dec--compact' : ''}}">{{summary.scoreDec}}</text>
+                    </view>
+                    <view class="share__score-sub">
+                      <text class="share__max">/ {{summary.max}} 分</text>
+                      <view wx:if="{{comparison && comparison.deltaCents !== 0}}" class="num share__delta-pill share__delta-pill--{{comparison.deltaTone}}">
+                        <image class="share__delta-icon" src="{{uiBase}}/{{comparison.deltaTone === 'up' ? 'share-up.svg' : 'share-down.svg'}}" mode="aspectFit" />
+                        <text>{{comparison.deltaText}}</text>
+                      </view>
+                    </view>
+                  </view>
+                  <view class="share__art-wrap">
+                    <view wx:if="{{isDark}}" class="share__art-halo"></view>
+                    <image class="share__art" src="{{asset.keepsake}}" mode="aspectFit" />
+                  </view>
+                </view>
+
+                <view class="share__ruler">
+                  <view class="share__ruler-track">
+                    <view wx:for="{{rulerSubMarks}}" wx:key="*this" class="share__ruler-submark" style="left: {{item}}%;"></view>
+                    <view class="share__ruler-fill" style="width: {{summary.scorePct}}%;"></view>
+                    <view class="share__ruler-mark" style="left: 25%;"></view>
+                    <view class="share__ruler-mark" style="left: 50%;"></view>
+                    <view class="share__ruler-mark" style="left: 75%;"></view>
+                    <view class="share__ruler-pin-halo" style="left: {{summary.pinPct}}%;"></view>
+                    <view class="share__ruler-pin" style="left: {{summary.pinPct}}%;"></view>
+                  </view>
+                  <view class="share__ruler-ticks num">
+                    <text wx:for="{{rulerTicks}}" wx:key="*this">{{item}}</text>
+                  </view>
+                </view>
+              </block>
+            </view>
+
+            <!-- Ticket Tear Perforation -->
+            <view class="share__perf">
+              <view class="share__notch share__notch--l"></view>
+              <view class="share__perf-line"></view>
+              <view class="share__notch share__notch--r"></view>
+            </view>
+
+            <!-- Ticket Body -->
+            <view class="share__body">
+              <!-- Outcome Visual (A1 Donut + 3 Bespoke Vector Icon Tiles OR A2 Segmented Bar) -->
+              <block wx:if="{{mode === 'full' || mode === 'score'}}">
+                <view wx:if="{{isRings}}" class="share__seg-wrap">
+                  <view class="share__seg-bar">
+                    <view wx:if="{{outcomes.okPct > 0}}" class="share__seg-ok" style="width: {{outcomes.okPct}}%;"></view>
+                    <view wx:if="{{outcomes.noPct > 0}}" class="share__seg-no" style="width: {{outcomes.noPct}}%;"></view>
+                    <view wx:if="{{outcomes.blPct > 0}}" class="share__seg-bl" style="width: {{outcomes.blPct}}%;"></view>
+                  </view>
+                  <view class="share__seg-meta num">
+                    <view class="share__seg-item"><view class="share__seg-dot share__seg-dot--ok"></view><text>正确</text><text class="display-num share__seg-val">{{summary.correct}}</text></view>
+                    <view class="share__seg-item"><view class="share__seg-dot share__seg-dot--no"></view><text>错误</text><text class="display-num share__seg-val">{{summary.wrong}}</text></view>
+                    <view class="share__seg-item"><view class="share__seg-dot share__seg-dot--bl"></view><text>未答</text><text class="display-num share__seg-val">{{summary.blank}}</text></view>
+                  </view>
+                </view>
+
+                <view wx:else class="share__donut-row">
+                  <view class="share__donut-wrap">
+                    <image wx:if="{{donutSrc}}" class="share__donut-img" src="{{donutSrc}}" mode="aspectFit" aria-label="正确率 {{outcomes.accuracy}}%" />
+                  </view>
+                  <view class="share__donut-stats">
+                    <view class="share__dchip" aria-label="正确 {{summary.correct}} 题">
+                      <view class="share__dicon share__dicon--ok">
+                        <image class="share__dicon-svg" src="{{uiBase}}/{{isDark ? 'share-ok-dark.svg' : 'share-ok.svg'}}" mode="aspectFit" />
+                      </view>
+                      <text class="display-num share__dval">{{summary.correct}}</text>
+                      <text class="share__dlbl">正确</text>
+                    </view>
+                    <view class="share__dchip" aria-label="错误 {{summary.wrong}} 题">
+                      <view class="share__dicon share__dicon--no">
+                        <image class="share__dicon-svg" src="{{uiBase}}/{{isDark ? 'share-wrong-dark.svg' : 'share-wrong.svg'}}" mode="aspectFit" />
+                      </view>
+                      <text class="display-num share__dval">{{summary.wrong}}</text>
+                      <text class="share__dlbl">错误</text>
+                    </view>
+                    <view class="share__dchip" aria-label="未答 {{summary.blank}} 题">
+                      <view class="share__dicon share__dicon--bl">
+                        <image class="share__dicon-svg" src="{{uiBase}}/{{isDark ? 'share-blank-dark.svg' : 'share-blank.svg'}}" mode="aspectFit" />
+                      </view>
+                      <text class="display-num share__dval">{{summary.blank}}</text>
+                      <text class="share__dlbl">未答</text>
+                    </view>
+                  </view>
+                </view>
+              </block>
+
+              <!-- Repeat Attempt VS Row (Full Mode) -->
+              <view wx:if="{{mode === 'full' && comparison}}" class="share__vs-row">
+                <text class="share__vs-caption">较上次</text>
+                <text class="display-num share__vs-scores">{{comparison.previousScore}} → {{comparison.currentScore}}</text>
+                <text class="num share__vs-delta share__vs-delta--{{comparison.deltaTone}}">{{comparison.deltaText}}{{comparison.deltaCents !== 0 ? ' 分' : ''}}</text>
+              </view>
+
+              <!-- Score Card Bottom Visual (A1 Mini 6-bar Equalizer OR A2 3x2 Rings) -->
+              <block wx:if="{{mode === 'score'}}">
+                <view wx:if="{{isRings}}" class="share__rings-grid">
+                  <view wx:for="{{sections}}" wx:key="name" class="share__ring-tile {{item.isBest ? 'share__ring-tile--best' : ''}}">
+                    <image wx:if="{{item.ringSrc}}" class="share__ring-img" src="{{item.ringSrc}}" mode="aspectFit" />
+                    <text class="share__ring-name">{{item.name}}</text>
+                    <text class="num share__ring-raw">{{item.earned}} / {{item.max}} 分</text>
+                  </view>
+                </view>
+                <view wx:else class="share__eq-box">
+                  <view class="share__eq-head">
+                    <view class="share__sec-title-wrap">
+                      <image class="share__sec-icon" src="{{uiBase}}/share-bars.svg" mode="aspectFit" />
+                      <text class="share__eq-title">六科表现</text>
+                    </view>
+                    <view wx:if="{{bestBand}}" class="share__best-tag">
+                      <image class="share__star-icon" src="{{uiBase}}/share-star.svg" mode="aspectFit" />
+                      <text>{{bestBand.short}} {{bestBand.pctInt}}%</text>
+                    </view>
+                  </view>
+                  <view class="share__eq-bars">
+                    <view wx:for="{{sections}}" wx:key="name" class="share__eq-col {{item.isBest ? 'share__eq-col--best' : item.isLow ? 'share__eq-col--low' : ''}}">
+                      <text class="display-num share__eq-pct">{{item.pctInt}}%</text>
+                      <view class="share__eq-track"><view class="share__eq-fill" style="height: {{item.pctInt}}%;"></view></view>
+                      <text class="share__eq-lbl">{{item.short}}</text>
+                    </view>
+                  </view>
+                </view>
+              </block>
+
+              <!-- Radar Section (Full & Radar Modes) -->
+              <view wx:if="{{mode === 'full' || mode === 'radar'}}" class="share__section share__radar-section">
+                <view class="share__sec-head">
+                  <view class="share__sec-title-wrap">
+                    <image class="share__sec-icon" src="{{uiBase}}/share-radar.svg" mode="aspectFit" />
+                    <text class="share__heading">能力轮廓</text>
+                  </view>
+                  <view wx:if="{{bestBand}}" class="share__best-tag">
+                    <image class="share__star-icon" src="{{uiBase}}/share-star.svg" mode="aspectFit" />
+                    <text>{{bestBand.name}} {{bestBand.pctInt}}%</text>
+                  </view>
+                </view>
+                <view class="share__radar-wrap">
+                  <image wx:if="{{radarSrc}}" class="share__radar" src="{{radarSrc}}" mode="aspectFit" aria-label="各板块得分率雷达图" />
+                </view>
+              </view>
+
+              <!-- Subjects / Types Section (Full & Types Modes) -->
+              <view wx:if="{{mode === 'full' || mode === 'types'}}" class="share__section share__subjects">
+                <block wx:if="{{isRings}}">
+                  <view class="share__sec-head">
+                    <view class="share__sec-title-wrap">
+                      <image class="share__sec-icon" src="{{uiBase}}/share-rings.svg" mode="aspectFit" />
+                      <text class="share__heading">六科微表盘</text>
+                    </view>
+                    <view wx:if="{{bestBand}}" class="share__best-tag">
+                      <image class="share__star-icon" src="{{uiBase}}/share-star.svg" mode="aspectFit" />
+                      <text>{{bestBand.name}} {{bestBand.pctInt}}%</text>
+                    </view>
+                  </view>
+                  <view class="share__rings-grid share__rings-grid--flush">
+                    <view wx:for="{{sections}}" wx:key="name" class="share__ring-tile share__subject {{item.isBest ? 'share__ring-tile--best' : ''}}">
+                      <image wx:if="{{item.ringSrc}}" class="share__ring-img" src="{{item.ringSrc}}" mode="aspectFit" />
+                      <text class="share__ring-name">{{item.name}}</text>
+                      <text class="num share__ring-raw">{{item.earned}} / {{item.max}} 分</text>
+                    </view>
+                  </view>
+                </block>
+                <block wx:else>
+                  <view class="share__sec-head">
+                    <view class="share__sec-title-wrap">
+                      <image class="share__sec-icon" src="{{uiBase}}/share-bars.svg" mode="aspectFit" />
+                      <text class="share__heading">板块分布</text>
+                    </view>
+                    <view wx:if="{{bestBand}}" class="share__best-tag">
+                      <image class="share__star-icon" src="{{uiBase}}/share-star.svg" mode="aspectFit" />
+                      <text>{{bestBand.name}} {{bestBand.pctInt}}%</text>
+                    </view>
+                  </view>
+                  <view class="share__vchart">
+                    <view class="share__vchart-ref-row">
+                      <view class="share__vchart-ref"></view>
+                      <text class="num share__vchart-ref-tag">80%</text>
+                    </view>
+                    <view wx:for="{{sections}}" wx:key="name" class="share__vbar share__subject {{item.isBest ? 'share__vbar--best' : item.isLow ? 'share__vbar--low' : ''}}">
+                      <text class="display-num share__vbar-pct">{{item.pctInt}}<text class="share__vbar-sign">%</text></text>
+                      <view class="share__vbar-track">
+                        <view class="share__vbar-fill" style="height: {{item.pctInt}}%;"></view>
+                      </view>
+                      <text class="share__vbar-lbl">{{item.short}}</text>
+                      <text class="num share__vbar-raw">{{item.earned}}/{{item.max}}</text>
+                    </view>
+                  </view>
+                </block>
+              </view>
+
+              <!-- Timing Section (Full Mode when timed) -->
+              <view wx:if="{{mode === 'full' && timing}}" class="share__section share__timing">
+                <view class="share__timing-head">
+                  <view class="share__sec-title-wrap">
+                    <image class="share__sec-icon" src="{{uiBase}}/share-clock.svg" mode="aspectFit" />
+                    <text class="share__heading">做题用时</text>
+                  </view>
+                  <text class="num share__timing-total">{{timing.actual}} · 计划 {{timing.planned}} 分（{{timing.difference}}）</text>
+                </view>
+                <view wx:for="{{timing.modules}}" wx:key="name" class="share__timing-row">
+                  <text>{{item.name}}</text>
+                  <text class="num">{{item.planned}} 分</text>
+                  <text class="display-num">{{item.actual}}</text>
+                </view>
+              </view>
+
+              <!-- Clean QR Footer -->
+              <view class="share__footer">
+                <view class="share__brand">
+                  <image class="share__brand-logo" src="{{asset.logo}}" mode="aspectFit" />
+                  <view class="share__brand-copy">
+                    <text class="share__brand-name">卷卷小榜</text>
+                    <text class="share__brand-sub">扫码同卷估分看排名</text>
+                  </view>
+                </view>
+                <view class="share__qr-halo">
+                  <view class="share__qr-wrap">
+                    <image class="share__qr" src="{{asset.qrcode}}" mode="aspectFill" aria-label="卷卷小榜小程序码" />
+                  </view>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <canvas wx:if="{{!loading && !error}}" type="2d" id="radarCanvas" class="share__offscreen share__radar-canvas" />
+  <canvas wx:if="{{!loading && !error}}" type="2d" id="donutCanvas" class="share__offscreen share__donut-canvas" />
+  <canvas wx:if="{{!loading && !error}}" type="2d" id="ringCanvas" class="share__offscreen share__ring-canvas" />
+  <canvas wx:if="{{!loading && !error}}" type="2d" id="shareCanvas" class="share__offscreen share__canvas" />
+
+  <view wx:if="{{!loading && !error}}" class="share__actions">
+    <button class="btn btn--primary" bindtap="save" disabled="{{!ready || saving}}">
+      <image class="btn__icon" src="{{uiBase}}/download-light.svg" mode="aspectFit" />保存海报
+    </button>
+    <button class="btn share__invite" open-type="share" aria-label="邀请同卷好友"><image class="btn__icon" src="{{uiBase}}/share-outline.svg" mode="aspectFit" />邀请好友</button>
+  </view>
+</view>

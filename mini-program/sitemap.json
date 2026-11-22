@@ -1,0 +1,6 @@
+{
+  "desc": "卷卷小榜",
+  "rules": [
+    { "action": "allow", "page": "*" }
+  ]
+}

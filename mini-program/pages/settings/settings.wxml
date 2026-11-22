@@ -1,0 +1,14 @@
+<view class="screen screen--plain">
+  <rr-nav title="修改昵称" />
+  <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="page-scroll__body--plain">
+  <form class="set__card" bindsubmit="saveName">
+    <label class="set__label" for="name">微信昵称</label>
+    <view class="set__row">
+      <input class="set__input" id="name" name="name" type="nickname" value="{{name}}" maxlength="12" placeholder="点击选择微信昵称（最多 12 字）" bindinput="onName" bindblur="onName" aria-label="昵称" />
+      <button class="set__save" form-type="submit" loading="{{saving}}" disabled="{{saving}}">保存</button>
+    </view>
+  </form>
+  </view>
+  </scroll-view>
+</view>

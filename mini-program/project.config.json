@@ -1,0 +1,46 @@
+{
+  "compileType": "miniprogram",
+  "appid": "wx7febd9298bcc5b9b",
+  "projectname": "rollierank",
+  "libVersion": "3.16.1",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "minifyWXML": true,
+    "urlCheck": true,
+    "checkSiteMap": true,
+    "uglifyFileName": false,
+    "compileHotReLoad": true,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "useCompilerPlugins": false
+  },
+  "packOptions": {
+    "ignore": [
+      {
+        "type": "folder",
+        "value": "/minitest"
+      },
+      {
+        "type": "folder",
+        "value": "/tools"
+      },
+      {
+        "type": "file",
+        "value": "/README.md"
+      },
+      {
+        "type": "file",
+        "value": "/assets-manifest.json"
+      }
+    ],
+    "include": []
+  },
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  },
+  "testRoot": "minitest/"
+}

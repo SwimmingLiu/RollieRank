@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<!-- ==================================================================
+     ONE-PAGER TEMPLATE · parchment design system
+     单页 A4 方案/报告/执行摘要
+     改完跑：python3 -c "from weasyprint import HTML; HTML('one-pager.html').write_pdf('out.pdf')"
+     目标：页数必须 == 1
+     ================================================================== -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>卷豆与答题卡扫描</title>
+<meta name="author" content="卷卷小榜">
+<meta name="description" content="卷卷小榜的卷豆、答题卡扫描、卷豆套餐、邀请与广告方案。">
+<meta name="keywords" content="卷卷小榜, 卷豆, 答题卡, 扫描, 产品方案">
+<meta name="generator" content="Kami">
+<style>
+  /* Regular weight */
+  @font-face {
+    font-family: "TsangerJinKai02";
+    src: local("TsangerJinKai02 W04");
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  /* Bold weight - W05 for all bold variants */
+  @font-face {
+    font-family: "TsangerJinKai02";
+    src: local("TsangerJinKai02 W05");
+    font-weight: 500;
+    font-style: normal;
+  }
+
+  @page {
+    size: A4;
+    margin: 15mm 18mm 15mm 18mm;
+    background: var(--parchment);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --parchment: #fcf8f1;
+    --ivory:     #f7f1e6;
+    --near-black:#141413;
+    --dark-warm: #3d3d3a;
+    --olive:     #504e49;
+    --stone:     #6b6a64;
+    --brand:     #a44349;
+    --border:    #ece5d8;
+    --border-soft:#f1ebe0;
+    --tag-bg:    #fff0ee;
+    --serif: "TsangerJinKai02", "Source Han Serif SC", "Source Han Serif CN", "Noto Serif CJK SC", "Noto Serif SC", "Songti SC", "STSong", "SimSun", Georgia, serif;
+    --sans: var(--serif);
+  }
+
+  html, body { background: var(--parchment); }
+
+  @media screen {
+    body { max-width: 210mm; margin: 0 auto; padding: 15mm 18mm; }
+  }
+
+  body {
+    color: var(--near-black);
+    font-family: var(--serif);
+    font-size: 10pt;
+    line-height: 1.45;
+    letter-spacing: 0.3pt;
+  }
+
+  .serif {
+    font-family: var(--serif);
+  }
+
+  /* ========== HEADER ========== */
+  .header {
+    margin-bottom: 16pt;
+    padding-bottom: 12pt;
+    border-bottom: 0.5pt solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20pt;
+  }
+  .title-block {
+    flex: 1;
+  }
+  .eyebrow {
+    font-size: 9pt;
+    color: var(--brand);
+    letter-spacing: 1.5pt;
+    text-transform: uppercase;
+    margin-bottom: 7pt;
+    font-weight: 500;
+  }
+  /* CN locale tuning: TsangerJinKai glyphs are wider per character, so H1 sits
+     slightly smaller (24pt vs EN 26pt) with looser leading (1.15 vs EN 1.12)
+     to keep optical density aligned across the two locales. */
+  h1 {
+    font-family: var(--serif);
+    font-size: 24pt;
+    font-weight: 500;
+    color: var(--near-black);
+    line-height: 1.15;
+    margin-bottom: 5pt;
+  }
+  .subtitle {
+    font-size: 11pt;
+    color: var(--olive);
+    line-height: 1.4;
+  }
+  .meta {
+    font-size: 9pt;
+    color: var(--stone);
+    text-align: right;
+    line-height: 1.45;
+    white-space: nowrap;
+  }
+  /* 品牌 logo 槽(可选,来自 brand profile;默认无 logo,样式仅在取消注释后生效)。 */
+  .brand-logo {
+    height: 44px;
+    width: auto;
+    max-width: 160px;
+    object-fit: contain;
+    align-self: flex-start;
+  }
+
+  /* ========== METRICS ========== */
+  /* 横向 baseline 布局 - -  和 resume.html 一致的 kami native 姿态。
+     背景透明、无边框，用 typography 本身承担层次，不加容器。 */
+  .metrics {
+    display: flex;
+    gap: 14pt;
+    margin-bottom: 18pt;
+    padding: 4pt 0 6pt 0;
+    border-bottom: 0.3pt dotted var(--border);
+  }
+  .metric {
+    flex: 1;
+    background: transparent;
+    padding: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 4pt;
+    break-inside: avoid;
+  }
+  .metric-value {
+    font-family: var(--serif);
+    font-size: 20pt;
+    font-weight: 500;
+    color: var(--brand);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    letter-spacing: -0.2pt;
+  }
+  .metric-label {
+    font-size: 9pt;
+    color: var(--olive);
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+
+  /* ========== SECTIONS ========== */
+  /* PRODUCT SHOT (optional) - one real screenshot as the page's visual anchor.
+     Uncomment the <figure> in the body, point src at a local image, and tune
+     .frame height to fill the page. object-fit trims dead margin, not the window. */
+  .product-shot { margin-bottom: 16pt; break-inside: avoid; }
+  .product-shot .frame {
+    height: 110mm;
+    overflow: hidden;
+    border-radius: 5pt;
+  }
+  .product-shot .frame img {
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center; display: block;
+  }
+  .product-shot figcaption {
+    margin-top: 7pt; font-size: 8.5pt;
+    color: var(--stone); line-height: 1.45; text-align: center;
+  }
+  .product-shot figcaption .hl { color: var(--brand); font-weight: 500; }
+
+  section { margin-bottom: 18pt; break-inside: avoid; }
+  section:last-of-type { margin-bottom: 0; }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: 16pt;
+    font-weight: 500;
+    color: var(--near-black);
+    margin-bottom: 6pt;
+  }
+  h2 .sub {
+    font-size: 9pt;
+    color: var(--stone);
+    font-weight: 400;
+    margin-left: 6pt;
+  }
+
+  p { margin-bottom: 6pt; line-height: 1.45; }
+  p:last-child { margin-bottom: 0; }
+
+  .lead {
+    font-size: 12pt;
+    line-height: 1.5;
+    color: var(--dark-warm);
+    margin-bottom: 14pt;
+  }
+
+  .hl { color: var(--brand); font-weight: 500; }
+
+  /* ========== 2-column grid ========== */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18pt;
+  }
+
+  /* ========== 短横线 list（代替默认 bullet） ========== */
+  ul.dash {
+    margin: 0;
+    padding-left: 16pt;
+  }
+  ul.dash li {
+    margin-bottom: 5pt;
+    line-height: 1.45;
+  }
+  ul.dash li:last-child { margin-bottom: 0; }
+  ul.dash li::marker { color: var(--brand); }
+
+  /* ========== Timeline (横向进度点) ========== */
+  .timeline {
+    display: flex;
+    gap: 12pt;
+    margin-top: 6pt;
+  }
+  .tl-step {
+    flex: 1;
+    break-inside: avoid;
+  }
+  .tl-year {
+    font-family: var(--serif);
+    font-size: 11pt;
+    font-weight: 500;
+    color: var(--brand);
+    margin-bottom: 2pt;
+  }
+  .tl-head {
+    font-size: 10pt;
+    font-weight: 500;
+    color: var(--near-black);
+    margin-bottom: 2pt;
+  }
+  .tl-body {
+    font-size: 9pt;
+    color: var(--olive);
+    line-height: 1.4;
+  }
+
+  /* ========== Tag ========== */
+  .tag {
+    display: inline-block;
+    background: var(--tag-bg);    /* 实色！不要 rgba */
+    color: var(--brand);
+    font-size: 9pt;
+    font-weight: 500;
+    padding: 1pt 5pt;
+    border-radius: 3pt;
+    letter-spacing: 0.3pt;
+    margin-right: 3pt;
+  }
+
+  /* ========== Callout / 高亮块 ========== */
+  /* 和 long-doc / equity-report 的 .callout 同形：ivory 填充与文字承担强调，
+     只有 padding 按各自密度收紧。 */
+  .callout {
+    background: var(--ivory);
+    border-radius: 3pt;
+    padding: 8pt 12pt;
+    margin: 10pt 0;
+    font-size: 10pt;
+    line-height: 1.5;
+    color: var(--olive);
+    break-inside: avoid;
+  }
+  .callout .hl, .callout .em-brand { color: var(--brand); }
+
+  /* ========== TABLE (kami-table) ========== */
+  table, .kami-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+    margin: 8pt 0;
+    break-inside: avoid;
+  }
+  table th, .kami-table th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--dark-warm);
+    padding: 5pt 6pt;
+    border-bottom: 0.6pt solid var(--border);
+    background: transparent;
+  }
+  table td, .kami-table td {
+    padding: 4pt 6pt;
+    border-bottom: 0.25pt solid var(--border);
+    vertical-align: top;
+  }
+  table.compact th, .kami-table.compact th { padding: 3pt 5pt; font-size: 8pt; }
+  table.compact td, .kami-table.compact td { padding: 2.5pt 5pt; font-size: 8pt; line-height: 1.4; }
+  table.financial td:not(:first-child), .kami-table.financial td:not(:first-child) {
+    text-align: right; font-variant-numeric: tabular-nums;
+  }
+  table.financial th:not(:first-child), .kami-table.financial th:not(:first-child) { text-align: right; }
+  table.striped tbody tr:nth-child(even) td, .kami-table.striped tbody tr:nth-child(even) td {
+    background: var(--ivory);
+  }
+  table .total td, .kami-table .total td {
+    font-weight: 500; border-top: 0.6pt solid var(--border); border-bottom: none; color: var(--near-black);
+  }
+  /* Outer columns sit on the text edge, so a table lines up with the heading above it.
+     Striped rows keep their inset: the ivory fill needs room around the text. */
+  table:not(.striped) th:first-child, table:not(.striped) td:first-child { padding-left: 0; }
+  table:not(.striped) th:last-child, table:not(.striped) td:last-child { padding-right: 0; }
+
+  /* ========== FOOTER ========== */
+  .footer {
+    margin-top: 18pt;
+    padding-top: 6pt;
+    border-top: 0.3pt dotted var(--border);
+    font-size: 9pt;
+    color: var(--stone);
+    display: flex;
+    justify-content: space-between;
+    letter-spacing: 0.3pt;
+  }
+</style>
+<style>
+  .name-panel { grid-template-columns: 1.3fr 1fr; align-items: start; }
+  .name-panel .product-shot { margin: 0 0 14pt; }
+  .name-panel .product-shot .frame { height: 46mm; background: var(--ivory); }
+  .name-panel .product-shot .frame img { height: auto; object-position: top; }
+  .name-panel figcaption { font-size: 9pt; text-align: left; }
+  .name-panel td:first-child, .rules td:first-child, .rules th:first-child {
+    white-space: nowrap;
+    width: 20%;
+  }
+  .name-note { color: var(--olive); }
+  .keep { white-space: nowrap; }
+  .flow { margin-top: 0; color: var(--near-black); }
+  .review-note { color: var(--brand); }
+  .review-note a { text-underline-offset: 0.18em; }
+  .bean-packs { margin-block: 6pt 8pt; table-layout: fixed; font-variant-numeric: tabular-nums; }
+  .bean-packs :is(th, td) { padding-block: 2pt; text-align: right; white-space: nowrap; }
+  .bean-packs :is(th, td):first-child { width: 19%; text-align: left; }
+
+  @media print {
+    .header, .metrics, .lead { margin-bottom: 10pt; }
+    section { margin-bottom: 8pt; }
+    .name-panel table, .rules { margin-block: 5pt; }
+    .flow { margin-bottom: 7pt; }
+    .bean-packs { margin-block: 4pt 6pt; }
+  }
+
+  @media screen {
+    body { padding-inline: clamp(18px, 6vw, 18mm); }
+    p, td { text-wrap: pretty; }
+    .name-panel .product-shot .frame { width: 100%; height: auto; aspect-ratio: 390 / 245; }
+  }
+
+  @media screen and (max-width: 620px) {
+    body { padding: 20px 18px 26px; }
+    .header { gap: 12px; }
+    .header h1 { font-size: 21pt; }
+    .brand-logo { height: 38px; }
+    .metrics { gap: 12px; }
+    .metric { min-width: 0; flex-direction: column; align-items: flex-start; gap: 2pt; }
+    .name-panel { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .name-panel .product-shot .frame { max-width: 390px; }
+    .rules td:first-child, .rules th:first-child { width: 25%; }
+  }
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="title-block">
+    <p class="eyebrow">卷卷小榜</p>
+    <h1>卷豆与答题卡扫描</h1>
+    <p class="subtitle">拍一张答题卡，核对答案后交卷。</p>
+  </div>
+  <img class="brand-logo" src="../../assets/rollierank-logo-transparent.png" alt="卷卷小榜标志">
+</header>
+
+<div class="metrics" aria-label="扫描答题卡的拟定用量">
+  <div class="metric">
+    <div class="metric-value">3 颗</div>
+    <div class="metric-label">注册送</div>
+  </div>
+  <div class="metric">
+    <div class="metric-value">1 颗</div>
+    <div class="metric-label">每张用</div>
+  </div>
+  <div class="metric">
+    <div class="metric-value">0 颗</div>
+    <div class="metric-label">失败时扣</div>
+  </div>
+</div>
+
+<p class="lead">扫描和后续开放的付费功能共用卷豆余额。扫描入口写<span class="keep">「还可扫描 3 张」</span>，用量明细可查。</p>
+
+<div class="two-col name-panel">
+  <section>
+    <h2>三个名字，试读一句</h2>
+    <table class="kami-table">
+      <thead><tr><th scope="col">名称</th><th scope="col">确认扫描时怎么写</th></tr></thead>
+      <tbody>
+        <tr><td><span class="hl">卷豆</span></td><td>「本次用 1 颗卷豆」<br><span class="name-note">「送 3 颗」「用 1 颗」都顺口。</span></td></tr>
+        <tr><td>卷票</td><td>「本次用 1 张卷票」<br><span class="name-note">有纸卡感，像扫描专用券。</span></td></tr>
+        <tr><td>卷粮</td><td>「本次用 1 份卷粮」<br><span class="name-note">像备考补给，得解释一份能用几次。</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+  <figure class="product-shot">
+    <div class="frame">
+      <img src="../ui-exploration/ios-v3/screens/ios-refinement-2/entry.png" alt="现有录答页中的 A、B、C、D 选项与存疑标记">
+    </div>
+    <figcaption>现有录答页（局部），扫描结果在这里核对。</figcaption>
+  </figure>
+</div>
+
+<section>
+  <h2>扫完直接核对</h2>
+  <p class="callout flow">选套卷 → 拍照或选图 → 填入答题卡 → 核对 → 交卷</p>
+  <p>确认前显示本次用几颗卷豆。结果保存后才扣，失败会退回，重复请求只扣一次。<br>存疑题标「待核对」，已有草稿默认只补空题。手动录答和交卷免费。</p>
+</section>
+
+<section>
+  <h2>卷豆从哪来</h2>
+  <table class="kami-table rules">
+    <thead><tr><th scope="col">方式</th><th scope="col">拟定规则</th></tr></thead>
+    <tbody>
+      <tr><td>首次登录</td><td>每个微信账号领一份。老卷友首次绑定也领 3 颗。</td></tr>
+      <tr><td>邀请奖励</td><td>扫码注册先记邀请来源。新人在注册后 7 天内首次扫描并导入或正式交卷，邀请人领 2 颗，每月最多奖励 10 位。 微信群活动提审，小红书和抖音先发纯成绩图。</td></tr>
+      <tr><td>看广告</td><td>流量主开通后开放激励视频。看完领 1 颗，每天最多 2 颗。</td></tr>
+      <tr><td>购买卷豆</td><td>微信<a class="hl keep" href="https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/virtual-payment/person.html">个人主体指南</a>采用道具直购。通用购豆待<a class="hl keep" href="https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/virtual-payment.html">代币充值</a>获准后开放。</td></tr>
+    </tbody>
+  </table>
+  <table class="kami-table bean-packs" aria-label="五档卷豆套餐试价">
+    <thead><tr><th scope="col">卷豆颗数</th><th scope="col">1 颗</th><th scope="col">5 颗</th><th scope="col" class="hl">10 颗</th><th scope="col">30 颗</th><th scope="col">60 颗</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">试价</th><td>¥1</td><td>¥4</td><td class="hl">¥6</td><td>¥15</td><td>¥27</td></tr>
+      <tr><th scope="row">每颗</th><td>¥1.00</td><td>¥0.80</td><td>¥0.60</td><td>¥0.50</td><td>¥0.45</td></tr>
+    </tbody>
+  </table>
+  <p>各付费功能可单独设置用几颗。赠送、奖励上限和渠道可调，现有运营积分单独记账。</p>
+</section>
+
+<section>
+  <h2>先让卷友扫起来</h2>
+  <p>首版接微信账号、卷豆余额、扫描和后台补发，实拍验证 130 / 135 题的识别和成本。<br>购豆和邀请各自获准后再开放，最后接广告。</p>
+  <p class="review-note">先确认老卷友是否同领 3 颗，以及邀请发奖时机。 <a class="hl keep" href="../solution-tool-credits.md">完整方案与验收</a></p>
+</section>
+</body>
+</html>

@@ -1,0 +1,49 @@
+{
+  "style": "Lorelei",
+  "creator": "Lisa Wischofsky",
+  "license": "CC0 1.0",
+  "license_url": "https://www.dicebear.com/styles/lorelei/",
+  "kind": "SVG vector assets from existing avatar library",
+  "assets": [
+    {
+      "file": "rank-1.svg",
+      "source": "https://api.dicebear.com/10.x/lorelei/svg?seed=rollierank-preview-1&backgroundColor=f4e3be",
+      "sha256": "0e1f697e50333222b36f2593a3cf0a049a2a137e11dcbe5ee59761cf85e7e03a"
+    },
+    {
+      "file": "rank-2.svg",
+      "source": "https://api.dicebear.com/10.x/lorelei/svg?seed=rollierank-preview-2&backgroundColor=f7e8d6",
+      "sha256": "6be9e8676a486c6bb052f4d0d8f89ff86f74e814c74e8a52d640b99f7a1c1a14"
+    },
+    {
+      "file": "rank-3.svg",
+      "source": "https://api.dicebear.com/10.x/lorelei/svg?seed=rollierank-preview-3&backgroundColor=f5dcc8",
+      "sha256": "4a7d7572d7a8b9d8e3df791aebc0439e90105fffb6992f2b18249984d1c0f326"
+    },
+    {
+      "file": "rank-4.svg",
+      "source": "https://api.dicebear.com/10.x/lorelei/svg?seed=rollierank-preview-4&backgroundColor=e9e8dd",
+      "sha256": "39e0764ce8ca3269c1978d2045c95de42a29da6960b0f47177ecbe7fa84fb07a"
+    },
+    {
+      "file": "rank-5.svg",
+      "source": "https://api.dicebear.com/10.x/lorelei/svg?seed=rollierank-preview-5&backgroundColor=f2dfd1",
+      "sha256": "b6e35508b59f98e187572910ffed5b66cd1dd1bdd50a2e4dc81588c002581bcb"
+    },
+    {
+      "file": "rank-6.svg",
+      "source": "https://api.dicebear.com/10.x/lorelei/svg?seed=rollierank-preview-6&backgroundColor=f9e6d8",
+      "sha256": "9676411ece61dd047d03628e8fbab96051642e159d35cd986303e7344e1559e3"
+    },
+    {
+      "file": "rank-7.svg",
+      "source": "https://api.dicebear.com/10.x/lorelei/svg?seed=rollierank-preview-7&backgroundColor=e9e3d5",
+      "sha256": "fb9168041ee491639f467d8f5fa2706b7f728406e5eea7c03d1c26edab99f189"
+    },
+    {
+      "file": "rank-8.svg",
+      "source": "https://api.dicebear.com/10.x/lorelei/svg?seed=rollierank-preview-8&backgroundColor=f7e9cc",
+      "sha256": "0765520538b731712be70f6d178020e87b94b0ad35550dcac35eb6230dd66f48"
+    }
+  ]
+}

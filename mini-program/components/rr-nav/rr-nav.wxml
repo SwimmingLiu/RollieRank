@@ -1,0 +1,17 @@
+<view class="nav {{logo ? 'nav--brand' : ''}}" style="padding-top: {{statusBarHeight}}px; --menu-clearance: {{menuClearance}}px;">
+  <view class="nav__bar {{actionIcon || action ? 'nav__bar--action' : ''}} {{leading ? 'nav__bar--leading' : ''}}" style="height: {{navHeight}}px;">
+    <button wx:if="{{back}}" class="nav__back" bindtap="goBack" aria-label="返回" hover-class="nav__pressed">
+      <image class="nav__back-icon" src="/assets/ui/back.svg" mode="aspectFit" />
+    </button>
+    <view wx:if="{{logo}}" class="nav__brand" aria-label="{{title}}">
+      <image class="nav__logo" src="{{logo}}" mode="aspectFit" />
+      <text class="nav__brand-title">{{title}}</text>
+    </view>
+    <text wx:else class="nav__title">{{title}}</text>
+    <button wx:if="{{actionIcon || action}}" class="nav__action" bindtap="onAction" aria-label="{{actionLabel || action}}" hover-class="nav__pressed">
+      <image wx:if="{{actionIcon}}" class="nav__icon" src="/assets/ui/{{actionIcon}}.svg" mode="aspectFit" />
+      <text wx:else>{{action}}</text>
+      <view wx:if="{{actionDot}}" class="nav__dot"></view>
+    </button>
+  </view>
+</view>

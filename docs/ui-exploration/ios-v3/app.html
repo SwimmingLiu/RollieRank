@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#ffffff"><title> </title>
+<script>
+  // 微信可能在页面初始化前使用 HTML 标题。首页品牌已经放在胶囊下方。
+  if (new URLSearchParams(location.search).get("embed") !== "wechat") {
+    document.title = "卷卷小榜 · 练习与分享";
+  }
+</script>
+<!-- 设计预览固定本轮资源版本，避免浏览器沿用旧稿缓存。 --><link rel="icon" href="assets/brand/rollierank-logo-transparent.png?v=paper-cards-1114-v3"><link rel="stylesheet" href="vendor/beui.css?v=paper-cards-1114-v3"><!--只加载当前组件主题，避免旧浮雕样式覆盖成熟组件。--><link rel="stylesheet" href="modern.css?v=paper-cards-1114-v3"><!-- 页面构图使用同一批真实组件，独立覆盖本轮布局。 --><link rel="stylesheet" href="refined.css?v=paper-cards-1114-v3"><link rel="stylesheet" href="editorial.css?v=paper-cards-1114-v3"><link rel="stylesheet" href="typography.css?v=paper-cards-1114-v3"><!-- 同一手机界面接入业务模块，样式限制在独立功能宿主内。 --><!-- 答题卡的方格尺寸覆盖公共按钮默认值。 --><link rel="stylesheet" href="features/answer-sheet.css?v=ios-refinement-2"><link rel="stylesheet" href="features/practice-session.css?v=practice-session-1"><link rel="stylesheet" href="features/timer-configuration.css?v=timer-configuration-2"><link rel="stylesheet" href="features/single-answer.css?v=single-answer-1"><link rel="stylesheet" href="features/insights.css?v=insights-1"><link rel="stylesheet" href="features/sharing.css?v=sharing-1"><link rel="stylesheet" href="features/base.css?v=ios-refinement-2"><link rel="stylesheet" href="features/positions.css?v=ios-refinement-2"><link rel="stylesheet" href="features/position-picker.css?v=ios-refinement-2"><link rel="stylesheet" href="features/analytics.css?v=ios-refinement-2"><link rel="stylesheet" href="features/discussions.css?v=ios-refinement-2"><link rel="stylesheet" href="features/corrections.css?v=ios-refinement-2"><!-- 各页面和弹层使用同一暖灰细滚动条。 --><link rel="stylesheet" href="../../../../src/scrollbars.css?v=ios-refinement-2"></head>
+<body class="beui-island">
+  <div id="app">
+    <header id="top" class="publisher-top"></header>
+    <main id="stage">
+      <!-- 首屏在加载脚本、连接微信和读取练习记录期间显示同一张占位卡。 -->
+      <div id="startup" class="view">
+        <div class="rr-home">
+          <div class="rr-brand">
+            <img class="rr-brand-mark" src="assets/brand/rollierank-logo-transparent.png" alt="">
+            <h1 class="rr-brand-title">卷卷小榜</h1>
+          </div>
+          <section class="rr-recents rr-home-loading" aria-labelledby="startup-heading">
+            <div class="rr-section-heading">
+              <h2 id="startup-heading">最近练习</h2>
+              <span class="rr-loading-label" role="status">正在读取</span>
+            </div>
+            <div class="rr-paper-skeleton" aria-hidden="true">
+              <div class="rr-paper-skeleton-meta"><span></span><span></span></div>
+              <div class="rr-paper-skeleton-copy"><span></span><span></span><span></span></div>
+              <div class="rr-paper-skeleton-foot"><span></span><i></i></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+    <footer id="bottom"></footer>
+  </div>
+  <div id="sheet-host"></div>
+  <script src="vendor/beui.js?v=paper-cards-1114-v3" defer></script>
+  <script type="module" src="app.js?v=ios-refinement-2"></script>
+</body></html>

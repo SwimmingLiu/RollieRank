@@ -1,0 +1,10 @@
+{
+  "name": "rollierank-site",
+  "private": true,
+  "type": "commonjs",
+  "description": "卷卷小榜 SEO/GEO 独立站点（rank.swimmingliu.cn）",
+  "scripts": {
+    "serve": "python3 -m http.server 8791 --directory .",
+    "pack": "cd \"$(dirname \"$0\")\" && rm -f ../rank-site.zip && zip -qr ../rank-site.zip . -x '.*' -x 'README.md' && ls -l ../rank-site.zip"
+  }
+}

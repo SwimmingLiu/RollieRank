@@ -1,0 +1,152 @@
+{
+ "appid": "wxd74bddd3fe422729",
+ "title": "行测小助理",
+ "entry": "pages/index/index.html",
+ "pageCount": 18,
+ "pages": [
+  {
+   "route": "pages/index/index",
+   "title": "",
+   "window": {
+    "enablePullDownRefresh": true
+   }
+  },
+  {
+   "route": "pages/support/support",
+   "title": "支持开发者",
+   "window": {
+    "navigationBarTitleText": "支持开发者"
+   }
+  },
+  {
+   "route": "pages/exam/exam",
+   "title": "正在答题",
+   "window": {
+    "backgroundTextStyle": "dark",
+    "navigationBarTitleText": "正在答题",
+    "enablePullDownRefresh": true
+   }
+  },
+  {
+   "route": "pages/result/result",
+   "title": "",
+   "window": {}
+  },
+  {
+   "route": "pages/set-history/set-history",
+   "title": "",
+   "window": {}
+  },
+  {
+   "route": "pages/timer-setup/timer-setup",
+   "title": "备考计时器",
+   "window": {
+    "navigationBarTitleText": "备考计时器",
+    "navigationBarBackgroundColor": "#2C3E50",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F5F7FA"
+   }
+  },
+  {
+   "route": "pages/timer-records/timer-records",
+   "title": "本地计时记录",
+   "window": {
+    "navigationBarTitleText": "本地计时记录",
+    "navigationBarBackgroundColor": "#2C3E50",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F5F7FA"
+   }
+  },
+  {
+   "route": "pages/timer/timer",
+   "title": "备考计时器",
+   "window": {
+    "navigationBarTitleText": "备考计时器",
+    "pageOrientation": "landscape",
+    "navigationStyle": "custom",
+    "backgroundColor": "#000000"
+   }
+  },
+  {
+   "route": "pages/timer-report/timer-report",
+   "title": "训练分析报告",
+   "window": {
+    "navigationBarTitleText": "训练分析报告",
+    "navigationBarBackgroundColor": "#2C3E50",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F5F7FA"
+   }
+  },
+  {
+   "route": "pages/letter/letter",
+   "title": "",
+   "window": {}
+  },
+  {
+   "route": "pages/user-list/user-list",
+   "title": "所有用户",
+   "window": {
+    "navigationBarTitleText": "所有用户",
+    "enablePullDownRefresh": true,
+    "backgroundColor": "#F9F9F9"
+   }
+  },
+  {
+   "route": "pages/admin/report-list/report-list",
+   "title": "错误反馈列表",
+   "window": {
+    "navigationBarTitleText": "错误反馈列表",
+    "enablePullDownRefresh": true
+   }
+  },
+  {
+   "route": "pages/math-tools/menu/menu",
+   "title": "数学计算",
+   "window": {
+    "navigationBarTitleText": "数学计算"
+   }
+  },
+  {
+   "route": "pages/math-tools/percentage/percentage",
+   "title": "百化分训练",
+   "window": {
+    "navigationBarTitleText": "百化分训练",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black",
+    "disableScroll": true
+   }
+  },
+  {
+   "route": "pages/percentage-result/percentage-result",
+   "title": "练习结果",
+   "window": {
+    "navigationBarTitleText": "练习结果",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black"
+   }
+  },
+  {
+   "route": "pages/fb-tool/fb-tool",
+   "title": "FB排版工具获取",
+   "window": {
+    "navigationBarTitleText": "FB排版工具获取"
+   }
+  },
+  {
+   "route": "pages/idiom/idiom",
+   "title": "官媒搜索",
+   "window": {
+    "navigationBarTitleText": "官媒搜索"
+   }
+  },
+  {
+   "route": "pages/idiom-reader/idiom-reader",
+   "title": "阅读正文",
+   "window": {
+    "navigationBarTitleText": "阅读正文"
+   }
+  }
+ ],
+ "files": 29,
+ "packageVersion": 78
+}

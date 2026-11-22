@@ -1,0 +1,66 @@
+<view class="positions__layer {{dragging ? 'positions__layer--dragging' : ''}} {{closing ? 'positions__layer--closing' : ''}}">
+  <view class="positions__shade" style="{{shadeOpacity < 1 ? 'opacity: ' + shadeOpacity + ';' : ''}}" catchtap="dismiss" catchtouchmove="ignoreMove"></view>
+  <view class="positions__panel positions__panel--{{expanded ? 'expanded' : 'collapsed'}}"
+    style="{{dragY ? 'transform: translateY(' + dragY + 'px);' : ''}}"
+    aria-role="dialog" aria-label="{{mode === 'browse' ? '查看岗位榜' : '报考岗位'}}"
+    data-zone="panel" bindtouchstart="startGesture" bindtouchmove="moveGesture" bindtouchend="endGesture" bindtouchcancel="cancelGesture">
+    <view class="positions__grabber-zone" data-zone="grabber" catchtouchstart="startGrabber" catchtouchmove="moveGrabber" catchtouchend="endGrabber" catchtouchcancel="cancelGrabber" catchtap="grabberTap">
+      <view class="positions__grabber"></view>
+    </view>
+    <block wx:if="{{!detail}}">
+      <view class="positions__drag-zone" data-native-touch>
+        <view class="positions__exam-tabs" aria-label="考试类型">
+          <button wx:for="{{exams}}" wx:key="key" class="positions__exam {{exam === item.key ? 'positions__exam--on' : ''}}" data-exam="{{item.key}}" bindtap="chooseExam" aria-pressed="{{exam === item.key}}">{{item.label}}</button>
+        </view>
+        <view wx:if="{{breadcrumbs.length}}" class="positions__crumbs" aria-label="岗位目录路径">
+          <block wx:for="{{breadcrumbs}}" wx:key="id">
+            <button wx:if="{{!item.automatic}}" class="positions__crumb" data-index="{{index}}" bindtap="goCrumb">
+              <text class="positions__path-dot"></text><text class="grow">{{item.label}}</text><image src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+            </button>
+          </block>
+        </view>
+        <view wx:if="{{searchable}}" class="positions__search">
+          <image src="{{uiBase}}/search.svg" mode="aspectFit" />
+          <input class="grow" value="{{keyword}}" placeholder="搜索当前层级" confirm-type="search" maxlength="120" bindinput="onKeyword" bindconfirm="search" />
+          <button wx:if="{{keyword}}" class="positions__search-clear" bindtap="clearSearch" aria-label="清除搜索"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button>
+        </view>
+      </view>
+      <scroll-view class="positions__list" style="{{(liveListHeight || listHeight) ? 'height: ' + (liveListHeight || listHeight) + 'px;' : ''}}" scroll-y="{{expanded || !canExpand}}" enhanced bounces="{{false}}" show-scrollbar="{{false}}"
+        bindscroll="listScroll" bindscrolltolower="listReachEnd">
+        <view class="positions__list-content">
+          <view wx:if="{{error}}" class="positions__state"><text>{{error}}</text><button bindtap="search">重新读取</button></view>
+          <view wx:elif="{{!options.length}}" class="positions__state">{{loading ? '正在读取岗位目录…' : emptyText}}</view>
+          <block wx:else>
+            <view wx:for="{{options}}" wx:key="id" class="positions__row">
+              <button class="positions__choice" data-id="{{item.id}}" bindtap="choose">
+                <text class="grow">{{item.label}}</text>
+                <image src="{{uiBase}}/{{item.positionId && selectedId === item.positionId ? 'check' : 'chevron'}}.svg" mode="aspectFit" />
+              </button>
+            </view>
+          </block>
+          <button wx:if="{{page < pages && !error}}" class="positions__more" bindtap="loadMore" disabled="{{loading}}">{{loading ? '正在读取…' : '继续加载'}}</button>
+        </view>
+      </scroll-view>
+      <button wx:if="{{selectedId && mode === 'select'}}" class="positions__clear" bindtap="clear" disabled="{{saving}}">清除选岗</button>
+    </block>
+    <block wx:else>
+      <view class="positions__detail-head">
+        <text class="positions__detail-title">{{detail.title}}</text>
+        <text class="positions__detail-code">{{detail.code}}</text>
+      </view>
+      <scroll-view class="positions__list" data-native-touch style="{{(liveListHeight || listHeight) ? 'height: ' + (liveListHeight || listHeight) + 'px;' : ''}}" scroll-y="{{expanded || !canExpand}}" enhanced bounces="{{false}}" show-scrollbar="{{false}}" bindscroll="listScroll">
+        <view class="positions__list-content">
+        <view class="positions__detail-fields">
+          <view><text>招录部门</text><text>{{detail.department}}</text></view>
+          <view wx:if="{{detail.unit}}"><text>用人单位</text><text>{{detail.unit}}</text></view>
+          <view wx:if="{{detail.location}}"><text>工作地点</text><text>{{detail.location}}</text></view>
+          <view wx:if="{{detail.recruits !== null && detail.recruits !== undefined}}"><text>招录人数</text><text>{{detail.recruits}} 人</text></view>
+          <view wx:if="{{detail.education}}"><text>学历</text><text>{{detail.education}}</text></view>
+          <view wx:if="{{detail.major}}"><text>专业</text><text>{{detail.major}}</text></view>
+        </view>
+        </view>
+      </scroll-view>
+      <button class="btn btn--primary positions__confirm" bindtap="select" disabled="{{saving}}" loading="{{saving}}">{{mode === 'browse' ? '查看这个岗位的榜单' : '选择这个岗位'}}</button>
+    </block>
+  </view>
+</view>

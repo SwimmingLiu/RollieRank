@@ -1,0 +1,206 @@
+.fb { display: flex; flex-direction: column; gap: 14px; padding: 12px 22px 20px; }
+.fb__scroll-submit { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
+.fb__form { display: flex; flex-direction: column; gap: 12px; }
+
+/* 4 个轻量图标化分类卡：选中态用暖赭纸卡，把唯一深黑留给主按钮 */
+.fb__cats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+.fb__cat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100% !important;
+  margin: 0 !important;
+  min-height: 64px;
+  padding: 9px 4px;
+  border: 1px solid #e9dfce;
+  border-radius: 16px;
+  background: var(--card);
+  box-shadow: 0 2px 0 #eae1d0;
+  color: #77664f;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.fb__cat-icon { width: 18px; height: 18px; opacity: .68; }
+.fb__cat--on {
+  border-color: #d6b680;
+  background: #f3e4c3;
+  box-shadow: 0 2px 0 #e4cfa3;
+  color: #3f2f19;
+  font-weight: 650;
+}
+.fb__cat--on .fb__cat-icon { opacity: 1; }
+
+/* 单层纸卡输入区（无嵌套双框） */
+.fb__composer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 16px 14px;
+  border: 1px solid #e9dfce;
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow: 0 3px 0 #eae1d0;
+}
+.fb__textarea {
+  width: 100%;
+  height: 144px;
+  padding: 0;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.65;
+}
+.fb__placeholder { color: #b0a28d; }
+.fb__composer-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid #f2ebe0;
+}
+.fb__images { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.fb__thumb {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e7ddcc;
+  background: #f6efe2;
+}
+.fb__thumb-img { width: 100%; height: 100%; }
+.fb__thumb-del {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 18px !important;
+  height: 18px;
+  margin: 0 !important;
+  border-radius: 50%;
+  background: rgba(24, 24, 27, 0.72) !important;
+  display: grid;
+  place-items: center;
+}
+.fb__thumb-del image { width: 9px; height: 9px; filter: invert(1); }
+.fb__add-img {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 58px !important;
+  height: 58px;
+  margin: 0 !important;
+  border: 1px dashed #d8c7ab;
+  border-radius: 12px;
+  background: #fcf6ea !important;
+  color: #8a785f !important;
+  font-size: 10px;
+  font-weight: 500;
+}
+.fb__add-img[disabled] { opacity: .55; background: #fcf6ea !important; color: #8a785f !important; }
+.fb__add-img image { width: 18px; height: 18px; opacity: .7; }
+.fb__counter { flex: none; font-size: 11px; color: #a79985; padding-bottom: 2px; }
+
+/* 独立联系方式单行卡片 */
+.fb__contact-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 50px;
+  padding: 0 15px;
+  border: 1px solid #e9dfce;
+  border-radius: 16px;
+  background: var(--card);
+  box-shadow: 0 2px 0 #eae1d0;
+}
+.fb__contact-icon { width: 17px; height: 17px; flex: none; opacity: .52; }
+.fb__contact-input { height: 48px; font-size: 14px; color: var(--ink); }
+
+.fb__error { display: block; padding: 0 4px; color: #b75243; font-size: 12px; line-height: 1.5; }
+
+/* 底部固定主按钮：显式覆盖微信 style:v2 button[disabled] 的浅灰洗白样式 */
+.fb__submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100% !important;
+  height: 48px;
+  margin: 0 !important;
+  border-radius: 24px;
+  background: #18181b !important;
+  color: #fffaf0 !important;
+  font-size: 15px;
+  font-weight: 650;
+}
+.fb__submit[disabled] {
+  background: #e3dbcd !important;
+  color: #9c8f7b !important;
+}
+
+/* 我的反馈列表 */
+.fb__list { display: flex; flex-direction: column; gap: 12px; }
+.fb__item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid #e9dfce;
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow: 0 3px 0 #eae1d0;
+}
+.fb__item-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.fb__item-cat { font-size: 12px; font-weight: 650; color: #5c4e3c; padding: 2px 8px; border-radius: 8px; background: #f3ead8; }
+.fb__item-status { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 8px; background: #f5ebd8; color: #966838; }
+.fb__item-status--processing { background: #ece9e3; color: #5c5750; }
+.fb__item-status--replied { background: #e5f1e8; color: #26734d; }
+.fb__item-status--closed { background: #eeebe6; color: #79767d; }
+.fb__item-content { font-size: 14px; line-height: 1.6; color: var(--ink); white-space: pre-wrap; word-break: break-word; }
+.fb__item-images { display: flex; flex-wrap: wrap; gap: 8px; }
+.fb__item-img { width: 64px; height: 64px; border-radius: 10px; border: 1px solid #e9dfce; background: #f6efe2; }
+.fb__reply { padding: 10px 12px; border-radius: 12px; background: #f7f0e2; border: 1px solid #eadcc2; display: flex; flex-direction: column; gap: 4px; }
+.fb__reply-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.fb__reply-title { font-size: 12px; font-weight: 650; color: #7b5a34; }
+.fb__reply-time { font-size: 11px; color: #9a8567; }
+.fb__reply-text { font-size: 13px; line-height: 1.6; color: #3a3127; white-space: pre-wrap; word-break: break-word; }
+.fb__item-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 6px; border-top: 1px solid #f2ebe0; font-size: 11px; color: #94846e; }
+.fb__item-contact { max-width: 55%; text-align: right; }
+
+.fb__empty { padding: 64px 16px 32px; display: flex; flex-direction: column; align-items: center; gap: 14px; color: #8c7d68; font-size: 14px; text-align: center; }
+.fb__empty-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto !important;
+  height: 36px;
+  margin: 0 !important;
+  padding: 0 18px;
+  border-radius: 18px;
+  background: #ece5d8 !important;
+  color: #5c4e3c !important;
+  font-size: 13px;
+  font-weight: 600;
+}
+.fb__empty-btn--primary { background: #18181b !important; color: #fffaf0 !important; }
+
+.fb__foot-links { display: flex; justify-content: center; padding-top: 18px; }
+.fb__admin-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: auto !important;
+  margin: 0 !important;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: #a3947e;
+}
+.fb__admin-link image { width: 13px; height: 13px; opacity: .62; }
+
+@media (max-width: 350px) {
+  .fb { padding-inline: 16px; }
+  .fb__cats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

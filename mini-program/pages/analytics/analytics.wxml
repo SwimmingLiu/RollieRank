@@ -1,0 +1,85 @@
+<page-meta page-style="overflow: hidden;" />
+<view class="screen">
+  <rr-nav title="成长分析" />
+  <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="page-scroll__body">
+  <view class="analytics">
+    <view class="analytics__tools">
+      <picker mode="selector" range="{{categories}}" range-key="label" value="{{category}}" bindchange="selectCategory">
+        <view class="analytics__category">{{categories[category].label}}<image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" /></view>
+      </picker>
+      <button class="analytics__filter" bindtap="openFilters" aria-label="筛选分析记录">
+        <image src="{{uiBase}}/filter.svg" mode="aspectFit" /><text wx:if="{{activeFilters}}" class="analytics__filter-count">{{activeFilters}}</text>
+      </button>
+    </view>
+    <view class="analytics__tabs">
+      <button wx:for="{{metrics}}" wx:key="key" class="analytics__tab {{metric === item.key ? 'analytics__tab--on' : ''}}" data-key="{{item.key}}" bindtap="setMetric">{{item.label}}</button>
+    </view>
+    <view wx:if="{{points.length}}" class="analytics__hero">
+      <view class="stack grow">
+        <text class="analytics__hero-label">最近{{metricLabel}}</text>
+        <text class="display-num analytics__score" aria-label="最近{{metricLabel}} {{points[0].value}}">{{points[0].value}}</text>
+      </view>
+      <view class="analytics__activity"><image src="{{uiBase}}/trend.svg" mode="aspectFit" /></view>
+    </view>
+    <view wx:if="{{points.length > 1}}" class="analytics__records">
+      <text class="analytics__title">{{metricLabel}}走势</text>
+      <view class="analytics__trend-wrap">
+        <image wx:if="{{trendSrc}}" class="analytics__trend" src="{{trendSrc}}" mode="aspectFit" aria-label="{{metricLabel}}走势图" />
+        <canvas id="trend" type="2d" class="analytics__trend-canvas" />
+      </view>
+    </view>
+    <view wx:if="{{points.length}}" class="analytics__records">
+      <view class="row row--between">
+        <text class="analytics__title">练习记录</text><text class="analytics__caption">{{rangeText}}</text>
+      </view>
+      <view class="analytics__row analytics__columns"><text>套卷</text><text>得分</text><text>{{metric === 'accuracy' ? '正确率' : '得分率'}}</text><text></text></view>
+      <button wx:for="{{pageRows}}" wx:key="id" class="analytics__row analytics__record" data-id="{{item.id}}" bindtap="openRecord">
+        <view class="analytics__identity">
+          <image wx:if="{{item.logo}}" src="{{item.logo}}" mode="aspectFit" />
+          <view class="stack grow"><text class="ellipsis">{{item.label}}</text><text class="analytics__caption">{{item.dateText}}</text></view>
+        </view>
+        <text>{{item.score}} / {{item.max}}</text><text>{{metric === 'accuracy' ? item.accuracy : item.rate}}</text>
+        <image class="analytics__chevron" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+      </button>
+      <view wx:if="{{pages > 1}}" class="analytics__pages" aria-label="练习分页">
+        <button data-delta="-1" bindtap="changePage" disabled="{{page === 0}}" aria-label="早一页"><image class="analytics__page-back" src="{{uiBase}}/back.svg" mode="aspectFit" /></button>
+        <text>{{page + 1}} / {{pages}}</text>
+        <button data-delta="1" bindtap="changePage" disabled="{{page >= pages - 1}}" aria-label="晚一页"><image src="{{uiBase}}/chevron.svg" mode="aspectFit" /></button>
+      </view>
+    </view>
+    <view wx:else class="empty">暂无对应练习记录</view>
+  </view>
+  </view>
+  </scroll-view>
+  <rr-tabbar active="records" />
+
+  <view wx:if="{{filterOpen}}" class="sheet-layer {{sheetDragging ? 'sheet-layer--dragging' : ''}} {{sheetClosing ? 'sheet-layer--closing' : ''}}">
+    <view class="sheet-shade" style="{{sheetShadeOpacity < 1 ? 'opacity: ' + sheetShadeOpacity + ';' : ''}}" catchtap="closeFilters" catchtouchmove="noopSheet"></view>
+    <view class="sheet-panel analytics__filter-sheet" style="{{sheetDragY ? 'transform: translateY(' + sheetDragY + 'px);' : ''}}" aria-role="dialog" aria-label="筛选练习记录"
+      bindtouchstart="startSheetDrag" bindtouchmove="moveSheetDrag" bindtouchend="endSheetDrag" bindtouchcancel="cancelSheetDrag">
+      <view class="sheet-grabber-zone" data-sheet-zone="handle" catchtouchstart="startSheetDrag" catchtouchmove="moveSheetDrag" catchtouchend="endSheetDrag" catchtouchcancel="cancelSheetDrag">
+        <view class="sheet-grabber"></view>
+      </view>
+      <view class="sheet-head"><text>筛选</text><button class="sheet-close" bindtap="closeFilters" aria-label="关闭"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button></view>
+      <view class="analytics__filter-section">
+        <text class="analytics__filter-label">来源</text>
+        <view class="analytics__source-list">
+          <button wx:for="{{sources}}" wx:key="key" class="analytics__source-chip {{draftSource === item.key ? 'analytics__source-chip--on' : ''}}" data-source="{{item.key}}" bindtap="setDraftSource" aria-pressed="{{draftSource === item.key}}">{{item.label}}</button>
+        </view>
+      </view>
+      <view class="analytics__filter-section">
+        <text class="analytics__filter-label">日期</text>
+        <view class="analytics__dates">
+          <picker mode="date" value="{{draftFrom}}" end="{{draftTo || ''}}" bindchange="setDraftFrom"><view class="analytics__date-field"><text>{{draftFrom || '开始日期'}}</text><image src="{{uiBase}}/calendar.svg" mode="aspectFit" /></view></picker>
+          <text>至</text>
+          <picker mode="date" value="{{draftTo}}" start="{{draftFrom || ''}}" bindchange="setDraftTo"><view class="analytics__date-field"><text>{{draftTo || '结束日期'}}</text><image src="{{uiBase}}/calendar.svg" mode="aspectFit" /></view></picker>
+        </view>
+      </view>
+      <text wx:if="{{filterError}}" class="analytics__filter-error" aria-role="alert">{{filterError}}</text>
+      <view class="analytics__filter-actions">
+        <button bindtap="clearFilters">清除</button><button bindtap="applyFilters">应用</button>
+      </view>
+    </view>
+  </view>
+</view>

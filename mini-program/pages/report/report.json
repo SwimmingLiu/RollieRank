@@ -1,0 +1,8 @@
+{
+  "usingComponents": {
+    "rr-nav": "/components/rr-nav/rr-nav",
+    "rr-radar": "/components/rr-radar/rr-radar"
+  },
+  "navigationStyle": "custom",
+  "disableScroll": true
+}

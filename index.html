@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <!-- 原页面采用单一估分工作区；完整原型使用紫粉品牌与可路由的应用外壳。 -->
+    <meta name="theme-color" content="#f7f4fa" />
+    <meta
+      name="description"
+      content="卷卷小榜，记录每一次行测练习。选套卷、录答案、看成绩，找到下一次进步的方向。"
+    />
+    <title>卷卷小榜 · 把每一次进步记下来</title>
+    <link rel="icon" href="/ios-v3/assets/brand/rollierank-logo-transparent.png" type="image/png" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./src/app.js"></script>
+  </head>
+  <body>
+    <div id="app">
+      <div class="boot-state">
+        <img src="/ios-v3/assets/brand/rollierank-logo-transparent.png" width="48" height="48" alt="" />
+        <p>正在打开你的练习本…</p>
+      </div>
+    </div>
+    <dialog id="modal" aria-labelledby="modal-title"></dialog>
+    <div id="toast" class="toast" role="status" hidden></div>
+    <noscript
+      ><p class="boot-state">请启用 JavaScript 后使用卷卷小榜。</p></noscript
+    >
+  </body>
+</html>

@@ -1,0 +1,1 @@
+.web-action { display: flex; flex-direction: column; gap: 14px; padding: 24px 20px; } .web-action button { width: 100% !important; }

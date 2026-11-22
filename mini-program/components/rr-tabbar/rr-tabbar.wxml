@@ -1,0 +1,8 @@
+<view class="tabbar">
+  <view class="tabbar__pill">
+    <view wx:for="{{items}}" wx:key="key" class="tabbar__item {{active === item.key ? 'tabbar__item--on' : ''}}" data-url="{{item.url}}" data-key="{{item.key}}" bindtap="go">
+      <image class="tabbar__icon" src="{{base}}/tab{{active === item.key ? '-active' : ''}}/{{item.key}}.svg" mode="aspectFit" />
+      <text class="tabbar__label">{{item.label}}</text>
+    </view>
+  </view>
+</view>

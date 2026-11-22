@@ -1,0 +1,28 @@
+/* 单题只保留一层纸卡；章节和录答进度仍由原工具栏表达。 */
+body.beui-island .rr-single-answer { padding:18px 22px 26px; overflow:hidden; }
+body.beui-island .rr-single-paper { padding:21px 18px 10px; border:1px solid #e7dcc9; border-radius:23px; background:#fffdf8; box-shadow:0 3px 0 #e9dfcf; user-select:none; -webkit-user-select:none; }
+body.beui-island .rr-single-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:23px; }
+body.beui-island .rr-single-heading h2 { display:flex; align-items:baseline; gap:6px; margin:0; color:#514332; }
+body.beui-island .rr-single-heading h2 small { font-size:12px; color:#9a886e; font-weight:400; }
+body.beui-island .rr-single-heading h2 strong { font:650 32px/1.15 var(--display-font,serif); font-variant-numeric:tabular-nums; }
+body.beui-island .rr-single-mark { display:inline-flex; gap:5px; min-height:38px; height:38px; padding:0 9px; border:0; border-radius:10px; color:#9b8667; background:transparent; box-shadow:none; font-size:12px; }
+body.beui-island .rr-single-mark[aria-pressed=true] { background:#f2e6cf; color:#a27d4b; }
+body.beui-island .rr-single-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+body.beui-island .rr-single-options .rr-single-option { display:flex; align-items:center; justify-content:space-between; gap:9px; min-width:0; min-height:78px; height:78px; padding:0 19px; border:1px solid #e9dfcf; border-radius:15px; color:#7c705f; background:#fffefb; box-shadow:0 2px 0 #eee5d6; }
+body.beui-island .rr-single-option b { font:550 25px/1 var(--ui-font,inherit); }
+body.beui-island .rr-single-option-dot { width:17px; height:17px; border:1px solid #e4d8c3; border-radius:50%; }
+body.beui-island .rr-single-options .rr-single-option.is-selected { border-color:#c4a36f; background:#f4e6c8; color:#6c522e; box-shadow:0 2px 0 #ddc79f; }
+body.beui-island .rr-single-option.is-selected svg { color:#927247; }
+body.beui-island .rr-single-navigation { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:19px; border-top:1px solid #eee5d7; padding-top:7px; }
+body.beui-island .rr-single-navigation button { gap:4px; height:40px; min-height:40px; padding:0 3px; font-size:12px; color:#9a886e; background:transparent; box-shadow:none; border:0; border-radius:9px; }
+body.beui-island .rr-single-navigation button:disabled { opacity:.3; }
+@media(max-width:350px) {
+  body.beui-island .rr-single-answer { padding:14px 16px 22px; }
+  body.beui-island .rr-single-paper { padding:18px 14px 8px; }
+  body.beui-island .rr-single-heading { margin-bottom:20px; }
+  body.beui-island .rr-single-options { gap:10px; }
+  body.beui-island .rr-single-options .rr-single-option { min-height:72px; height:72px; padding-inline:15px; }
+}
+
+/* 单题使用独立组件，隐藏列表不能被原型布局规则重新显示。 */
+.view[data-page=entry] > .answer-content[hidden], #single-answer-ui[hidden]{display:none!important}

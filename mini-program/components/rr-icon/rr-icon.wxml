@@ -1,0 +1,1 @@
+<image wx:if="{{src}}" class="rr-icon" src="{{src}}" mode="aspectFit" />

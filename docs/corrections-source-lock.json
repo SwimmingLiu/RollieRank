@@ -1,0 +1,16 @@
+{
+  "scope": "corrections module and its tests",
+  "sha256": {
+    "server/corrections.mjs": "0237d2f83b6ff536152a8cbe380abd9c179e39dc780eb098810ab9854dff4614",
+    "src/features/corrections.js": "826a3782a8b00e66ac61578188de165274053dd865f2d6ce3ef7540d07bb5acb",
+    "src/features/corrections.css": "9d2452a9379e56376d48985a2421cf687f5ac15929ad4a395b5f57e2aac8284c",
+    "test/corrections-service.test.js": "c68571c0f0bd740e7a3e18acf4f6cdc4421568f4293ee9a88f7fb9350dcc7e31",
+    "test/corrections-api.test.js": "8062814b1680588de38bd4d8c32bbd9ac6e9e824ea4eae8be74af42efb47f8c2",
+    "test/corrections-browser.test.js": "e17fbf4b510d5bd1d0450c2b019552270c8ccd7e118310e34d68b45f63006593"
+  },
+  "browserEvidence": "test-results/corrections/verification.json",
+  "browserBehaviorGroups": 5,
+  "sourceUnchangedSinceBrowserVerification": true,
+  "publicJourneyEvidence": "test-results/corrections-integrated/results.json",
+  "globalFingerprintReview": "Deferred to coordinating chat per explicit latest delegation; concurrent changes outside this module are not covered by the module evidence."
+}

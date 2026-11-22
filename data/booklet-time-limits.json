@@ -1,0 +1,501 @@
+{
+  "schema": 1,
+  "entries": [
+    {
+      "paperId": "sihai-2026-h2-01",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（1）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "4ebc347ff7d83cea29298201926b404632b9275250b078e6e0f314d4367ec75e",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "sihai-2026-h2-02",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（2）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "27dafaad64275b6a171c474997feba4b013b96bf5db6b77eee2e8ba843c1c23c",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "sihai-2026-h2-03",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（3）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "c09f7854e2e7d91ec5737c96dd6f764563103ade8e33b134d7f69f4bd6f4efc2",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-04",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（4）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "fe14932e2d8adc482989a7113d26566ccbc56dc0af2906e0b22276d443b635e7",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "sihai-2026-h2-05",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（5）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "6c63376325ad93b6a01186580e5022f8a8c8e84131695c7e826b8648b13e3145",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "sihai-2026-h2-06",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（6）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "ace57de69adf6239adb9daa3d49b25fb10d401f0f5c883097e3a8fa9ddb6ebe0",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "sihai-2026-h2-07",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（7）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "16670f9aa529474e953913d82fe4cfce0de3f5b44622828b3b6b640dd52148c0",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "sihai-2026-h2-08",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（8）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "83b7b09419d428a8c18ab792c04dc552358a5b1d28e0a6cd190ece3aeef05647",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-09",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（9）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "5a18d0177054146397b63c2256e7bd22c0b1fe6cb9c89ceec4a18ba9fc22a35a",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-10",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（10）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "4bf67c7ec21576d27996a28ede966e71c3b542c2af4975e76ce1d49fb254c232",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "sihai-2026-h2-11",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（11）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "67d4dc77c9bf442eb46764ac546cdb27047537914b805c256126090ec84f775c",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "sihai-2026-h2-12",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年一期花生十三行测套题/题本/（12）【四海】26下半年-1期套题班《行测》.pdf",
+      "sha256": "26c87b07a84fd77d352ffc168627501e48b87bad05acc736dd2aae3b495a65d8",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-city-01",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/地市/题本/地市（1）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "a61232504cf649fc2e12f06c093ec2b984c1fe7feefcdd8477249c1a143117c3",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-city-02",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/地市/题本/地市（2）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "264df6031ccf80e4657b006ed03a615f55befd920af1fc2e3df69881f7800572",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-city-03",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/地市/题本/地市（3）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "d2a83d492df13f6b98b33f79e0a0f2524981362dc7dcbec96e1a0a393bd16380",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-city-04",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/地市/题本/地市（4）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "49aed25788a5403b3008c7d17e4710f071d50d89254bb00bb47203431f5e37ea",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-city-05",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/地市/题本/地市（5）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "139017c8cb74186c15607725286ff642946900c30aed72427006c11914fafdc8",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-city-06",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/地市/题本/地市（6）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "3b6babc5bddbd64288c7c844df66dbfd07f7ffc4ea589d1d2d29eb308515c94c",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-city-07",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/地市/题本/地市（7）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "3419c22776951bf9c0f288a9a7533b94bbb9ba0259d3513aa875007367f88594",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-city-08",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/地市/题本/地市（8）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "4a97929a19f22f9ebe041c1a1a6561885bd0a8f7681cdca555a1d8b3515be18a",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-city-09",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/地市/题本/地市（9）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "a81c86deacdbf372d56f81bea52c726ea43f4d8bbb023505fe7a695640798020",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-city-10",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/地市/题本/地市（10）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "c6af961c2f134fbe4e8002dc25ebe5c1d1bd2d22d2651f5fc3cab62eec088813",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-city-11",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/地市/题本/地市（11）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "53b3aca146c5afaae3ea1d10d9c165de1246c50eb5c8a883e3835c3480976f4e",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-city-12",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/地市/题本/地市（12）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "0ad3beafbf49637bb16b83e846eb8f764a3417d7860e11167dd737d4e363033e",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-province-01",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/副省/题本/副省（1）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "46c74d681298931741423764cee48a6f94abfeec464c5a2e57e4957df3b6c066",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-province-02",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/副省/题本/副省（2）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "b4c65577132f2fcdeddeca1c691f6f5699b87377e2f00fa75a9b2d7d4c6c5cc7",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-province-03",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/副省/题本/副省（3）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "5c3842fe35c068b0d9a598f6209c0cbc0a8db6be87f21ea339062cde1a31deec",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-province-04",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/副省/题本/副省（4）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "49dfcc52e232b771fab0249a0633d0a6c02eadcf1d8975ce4cd1fc785a545493",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-province-05",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/副省/题本/副省（5）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "bfc9b54af0c582e49dc67f08a2cf01fa9183e5100b1d021140c600ccdfbd4801",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-province-06",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/副省/题本/副省（6）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "bbcd009f280c6654046b692b539b6b8bb8466831e1863123dec670f30a17a4b8",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-province-07",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/副省/题本/副省（7）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "fbbca26beae5a97f39b3c39a5c9e556235592f9772c40ac6d127528cfc6dc4ee",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-province-08",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/副省/题本/副省（8）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "6c2ad2683362f5eaa5b3cc7cd683857170c41931b192d6d1686b5a6686abeaa1",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-province-09",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/副省/题本/副省（9）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "cdf4ad101e0263e2e174c0438402b995aa2548b40aad3d0fba1b51813099d688",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-province-10",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/副省/题本/副省（10）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "a4a470935621dba8a859e62cb63b626463e6c362734895cfb0c7e38ab2fce52d",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-province-11",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/副省/题本/副省（11）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "4edfdb558c4a0c3940de0880680f4467be6dc4be97962e23a106faf129b65dae",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "sihai-2026-h2-p2-province-12",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "花生/2026下半年二期花生十三行测套题/副省/题本/副省（12）【四海】26下半年-2期套题班《行测》.pdf",
+      "sha256": "a667759aaf8712b4e8df3d6496305468e9306beb232af02ddaa533be481fe311",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "chaoge-2027-01",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "超格/2027超格公考10套卷/题本/行测套卷1_2026102111455119.pdf",
+      "sha256": "d329b26fd353cb145568c8b7087b88713c74ebbe3670fa70d8c549e45d399f30",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "chaoge-2027-02",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "超格/2027超格公考10套卷/题本/行测套卷2_2026102111460724.pdf",
+      "sha256": "daf388b4083a4a5eda7a8b730a456b696e8ed629fe7bdaa8671faaf016d38806",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "chaoge-2027-03",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "超格/2027超格公考10套卷/题本/行测套卷3_202610211146222.pdf",
+      "sha256": "3520c893a6279c86f02548e362f8ab8eaa29fded0e7e751ba542813d142206e5",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "chaoge-2027-04",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "超格/2027超格公考10套卷/题本/行测套卷4_2026102111464855.pdf",
+      "sha256": "293bccf0433a51abb04dfd440e451b82387cb81e15b1838ffe3ea565c0d14b15",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "chaoge-2027-05",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "超格/2027超格公考10套卷/题本/行测套卷5_2026102114495917.pdf",
+      "sha256": "9097f466b116fe6136720e7435fb7df1f039c27fa8acb9dfc009b223d3701cf2",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "chaoge-2027-06",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "超格/2027超格公考10套卷/题本/行测套卷6_2026102111471835.pdf",
+      "sha256": "1a115508a58bedfcd7e91f1e23ce04443dee26bb0b7512f462e08da88261b973",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "chaoge-2027-07",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "超格/2027超格公考10套卷/题本/行测套卷7_2026102111473266.pdf",
+      "sha256": "b1147a05db781def137e9248ae6c240b539cca34edbc6796cc694b5f80dbfb69",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "chaoge-2027-08",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "超格/2027超格公考10套卷/题本/行测套卷8_2026102111474924.pdf",
+      "sha256": "ca02dcdcbbbb949932dca8f872e7fa8101fa2be94bdb467c5ec132e1e8de40a0",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "chaoge-2027-09",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "超格/2027超格公考10套卷/题本/行测套卷9_2026102111480593.pdf",
+      "sha256": "38416080b9e26ad0a630a0cb7a1bc3a8bf7be1aec118f5d77b8377730c424849",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "chaoge-2027-10",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "超格/2027超格公考10套卷/题本/行测套卷10_2026102111481898.pdf",
+      "sha256": "6c2c609981538833b788a48760acc91de0d295d9c91e5590c7249715e8ba9fc0",
+      "pdfPage": 3
+    },
+    {
+      "paperId": "fenbi-2027-guokao-01",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "粉笔/2027国考极致模考6套卷/题本/极致模考卷一.pdf",
+      "sha256": "a212eb5b092a5b3d7aaa85a2f730042320103cf053511ae1dc8a14ad1ac7ff25",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "fenbi-2027-guokao-02",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "粉笔/2027国考极致模考6套卷/题本/极致模考卷二.pdf",
+      "sha256": "b980f6ab8094519e96f6ad9eb5d8ca31649a996c27c64f386d79ace0884b9a41",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "fenbi-2027-guokao-03",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "粉笔/2027国考极致模考6套卷/题本/极致模考卷三.pdf",
+      "sha256": "d80b1a49c1a2ef7df90420579f523c338ef57099a342348af1358e928f946b33",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "fenbi-2027-guokao-04",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "粉笔/2027国考极致模考6套卷/题本/极致模拟卷四.pdf",
+      "sha256": "97ee4858a2a65adddaf3c05d6f153ffc6fadddb61c751d4574fa0c6f5d6b427f",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "fenbi-2027-guokao-05",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "粉笔/2027国考极致模考6套卷/题本/极致模拟卷五.pdf",
+      "sha256": "8f40a690d006cf3927670a7467f3c93bb84bf66f3cda4ea63fc893825d3772e0",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "fenbi-2027-guokao-06",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "粉笔/2027国考极致模考6套卷/题本/极致模拟卷六.pdf",
+      "sha256": "58d93cd7926ded7ad94f70c99b2ce160a67be1a57b1701655682972e497e86e1",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "shangancun-2027-01",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "上岸村/2027上岸村公考10套卷/题本/【1】26国考卷-题本.pdf",
+      "sha256": "3442d816ea4219c43522f95903c108196c1dafc82365b47420cd7fa0ee923735",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "shangancun-2027-02",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "上岸村/2027上岸村公考10套卷/题本/【2】25国考卷-题本.pdf",
+      "sha256": "71cd1d66c53ca827349263e31a69f04ae9dc4e374ffc085c140c65335bfa1185",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "shangancun-2027-03",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "上岸村/2027上岸村公考10套卷/题本/【3】混合组卷1-题本.pdf",
+      "sha256": "8f797bc7fc60156852eef4bd25065a5c7693706e2a7cefaf38595b265928bb82",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "shangancun-2027-04",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "上岸村/2027上岸村公考10套卷/题本/【4】混合组卷2-题本.pdf",
+      "sha256": "995f580b21b7a20ccdd952c6da6ddc086e28fa34c8b64baff76a493c9489db0f",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "shangancun-2027-05",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "上岸村/2027上岸村公考10套卷/题本/【5】混合组卷3-题本.pdf",
+      "sha256": "cdfa07bcbe5e2fb030d6a58e7e9c0aa3021e3b78561d0c193bfe44fa92684042",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "shangancun-2027-06",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "上岸村/2027上岸村公考10套卷/题本/【6】混合组卷4-题本.pdf",
+      "sha256": "6e094f9070bc4e8fc266287b2448977338f0c3070c7dee55390f32c55ee2b23a",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "shangancun-2027-07",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "上岸村/2027上岸村公考10套卷/题本/【7】混合组卷5-题本.pdf",
+      "sha256": "5a4c9c6993157ba8f91c1fb24ee544a5dbaf148af1e517a232e6202a6c3f6029",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "shangancun-2027-08",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "上岸村/2027上岸村公考10套卷/题本/【8】混合组卷6-题本.pdf",
+      "sha256": "ad8966ec57577a0842796ec8c8427f498b0aaf824802299045a0e192f5563964",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "shangancun-2027-09",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "上岸村/2027上岸村公考10套卷/题本/【9】混合组卷7-题本.pdf",
+      "sha256": "b89cbed725679a5cfbbb18fa84d13c91ffea619fc81ec0049aa03bfdc8ac9065",
+      "pdfPage": 2
+    },
+    {
+      "paperId": "shangancun-2027-10",
+      "minutes": 120,
+      "kind": "publisher",
+      "file": "上岸村/2027上岸村公考10套卷/题本/【10】混合组卷8-题本.pdf",
+      "sha256": "650e2243ffbc188629244474bef227872dab805471c7dbc4abd0b9d30f8626f4",
+      "pdfPage": 2
+    }
+  ]
+}
