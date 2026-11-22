@@ -1,6 +1,7 @@
 const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
 const catalogUtil = require("../../utils/catalog.js");
+const tabSwipe = require("../../utils/tab-swipe.js");
 const { homeTimerView } = require("../../utils/timing.js");
 const { formatElapsed } = require("../../vendor/practice-timer.js");
 const { ASSET, WEB_APP_ORIGIN } = require("../../config.js");
@@ -8,6 +9,7 @@ const { ASSET, WEB_APP_ORIGIN } = require("../../config.js");
 Page({
   data: {
     loading: true,
+    refreshing: false,
     openingWeb: false,
     error: "",
     institutions: [],
@@ -18,12 +20,18 @@ Page({
     deckOffset: 0,
     deckScale: 1,
     deckDragging: false,
+    tabSwipeOffset: 0,
+    tabSwiping: false,
     timerOpen: false,
     timerStatus: "ready",
     timerText: "",
   },
 
-  onLoad() {
+  onLoad(options) {
+    const inviteCode = typeof options?.inviteCode === "string" ? options.inviteCode.trim() : "";
+    if (/^[a-zA-Z0-9_-]{16}$/.test(inviteCode)) {
+      getApp().globalData.pendingInviteCode = inviteCode;
+    }
     if (WEB_APP_ORIGIN && !getApp().globalData.openNativeHome) {
       // The native tab stays the launch page so existing WeChat versions can start the app normally.
       this.setData({ openingWeb: true });
@@ -37,6 +45,7 @@ Page({
   },
 
   onShow() {
+    this.resetTabSwipe();
     this.refreshTimer();
     this.timerTick = setInterval(() => this.refreshTimer(), 1000);
     // 从练习返回时刷新最近记录，不重新拉取目录缓存。
@@ -45,14 +54,17 @@ Page({
 
   onHide() {
     clearInterval(this.timerTick);
+    this.resetTabSwipe();
   },
 
   onUnload() {
     clearInterval(this.timerTick);
+    clearTimeout(this.tabSwipeClickTimer);
   },
 
-  onPullDownRefresh() {
-    this.load(true).finally(() => wx.stopPullDownRefresh());
+  onRefresherRefresh() {
+    this.setData({ refreshing: true });
+    this.load(true).finally(() => this.setData({ refreshing: false }));
   },
 
   async load(force) {
@@ -99,9 +111,10 @@ Page({
     const cards = recent.map(record => {
       const version = versions.find(candidate => candidate.id === record.versionId) || record;
       const institution = version.institution || "";
-      const edition = catalogUtil.periodLabel(version.period);
-      const number = String(version.number || "").padStart(2, "0");
-      const paperTitle = catalogUtil.numberedPaper(version) ? "行测 " + number + " 套" : record.title;
+      const projectHead = String(version.project || "").split(" · ")[0];
+      const edition = catalogUtil.cleanPeriod(projectHead, version.period);
+      const card = catalogUtil.paperCardParts({ ...version, title: version.title || record.title });
+      const paperTitle = card.shortTitle;
       const year = String(version.project || record.title).match(/20\d{2}/)?.[0] || "";
       const answered = record.draft
         ? record.answered || 0
@@ -122,12 +135,13 @@ Page({
   },
 
   openInstitution(event) {
+    if (this.tabSwipeMoved) return;
     const { name } = event.currentTarget.dataset;
     wx.navigateTo({ url: `/pages/catalog/catalog?institution=${encodeURIComponent(name)}` });
   },
 
   openRecent(event) {
-    if (this.deckMoved) return;
+    if (this.deckMoved || this.tabSwipeMoved) return;
     const { id, draft, versionId: version } = this.data.recent[event.currentTarget.dataset.index];
     if (draft) {
       wx.navigateTo({ url: `/pages/practice/practice?versionId=${version}&attemptId=${id}` });
@@ -145,28 +159,123 @@ Page({
     }
   },
 
+  resetTabSwipe() {
+    this.tabSwipeSession = null;
+    this.tabSwipeMoved = false;
+    clearTimeout(this.tabSwipeClickTimer);
+    if (this.data.tabSwipeOffset || this.data.tabSwiping) {
+      this.setData({ tabSwipeOffset: 0, tabSwiping: false });
+    }
+  },
+
+  startTabSwipe(event) {
+    if (this.data.timerOpen || this.data.openingWeb) return;
+    const point = event.touches?.[0];
+    if (!point || event.touches.length > 1) {
+      this.tabSwipeSession = null;
+      return;
+    }
+    this.tabSwipeMoved = false;
+    clearTimeout(this.tabSwipeClickTimer);
+    const width = (wx.getWindowInfo && wx.getWindowInfo().windowWidth) || 375;
+    this.tabSwipeSession = tabSwipe.createSwipeSession({
+      currentKey: "home",
+      x: point.clientX,
+      y: point.clientY,
+      now: Date.now(),
+      width,
+    });
+  },
+
+  moveTabSwipe(event) {
+    if (!this.tabSwipeSession || this.data.timerOpen) return;
+    const point = event.touches?.[0];
+    if (!point) return;
+    const state = tabSwipe.updateSwipeSession(this.tabSwipeSession, { x: point.clientX, y: point.clientY });
+    if (state.axis !== "x") return;
+    if (state.moved) this.tabSwipeMoved = true;
+    if (state.offset !== this.data.tabSwipeOffset || !this.data.tabSwiping) {
+      this.setData({ tabSwipeOffset: state.offset, tabSwiping: state.offset !== 0 });
+    }
+  },
+
+  endTabSwipe(event) {
+    const session = this.tabSwipeSession;
+    this.tabSwipeSession = null;
+    if (!session || this.data.timerOpen) {
+      if (this.data.tabSwipeOffset || this.data.tabSwiping) this.setData({ tabSwipeOffset: 0, tabSwiping: false });
+      return;
+    }
+    const point = event.changedTouches?.[0];
+    const result = point
+      ? tabSwipe.finishSwipeSession(session, { x: point.clientX, y: point.clientY, now: Date.now() })
+      : { switchTo: null, moved: session.moved };
+    if (result.moved) {
+      this.tabSwipeMoved = true;
+      clearTimeout(this.tabSwipeClickTimer);
+      this.tabSwipeClickTimer = setTimeout(() => { this.tabSwipeMoved = false; }, 120);
+    }
+    if (this.data.tabSwipeOffset || this.data.tabSwiping) {
+      this.setData({ tabSwipeOffset: 0, tabSwiping: false });
+    }
+    if (result.switchTo) {
+      wx.switchTab({ url: result.switchTo.url });
+    }
+  },
+
+  cancelTabSwipe() {
+    this.tabSwipeSession = null;
+    if (this.data.tabSwipeOffset || this.data.tabSwiping) {
+      this.setData({ tabSwipeOffset: 0, tabSwiping: false });
+    }
+  },
+
   startDeck(event) {
-    this.deckY = event.touches[0]?.clientY;
+    const point = event.touches[0];
+    this.deckX = point?.clientX;
+    this.deckY = point?.clientY;
+    this.deckAxis = null;
     this.deckMoved = false;
     this.setData({ deckDragging: true });
   },
 
   moveDeck(event) {
-    if (this.data.recent.length < 2 || !Number.isFinite(this.deckY)) return;
     const point = event.touches[0];
     if (!point) return;
-    const offset = Math.max(-84, Math.min(0, point.clientY - this.deckY));
+    if (!Number.isFinite(this.deckX) || !Number.isFinite(this.deckY)) return;
+    const dx = point.clientX - this.deckX;
+    const dy = point.clientY - this.deckY;
+    if (!this.deckAxis && Math.hypot(dx, dy) >= 8) {
+      this.deckAxis = Math.abs(dx) > Math.abs(dy) * 1.2 ? "x" : "y";
+      if (this.deckAxis === "x") {
+        this.deckMoved = true;
+        if (this.data.deckOffset || this.data.deckScale !== 1 || this.data.deckDragging) {
+          this.setData({ deckOffset: 0, deckScale: 1, deckDragging: false });
+        }
+      } else {
+        this.cancelTabSwipe();
+      }
+    }
+    if (this.deckAxis === "x") {
+      this.moveTabSwipe(event);
+      return;
+    }
+    if (this.data.recent.length < 2) return;
+    const offset = Math.max(-84, Math.min(0, dy));
     if (Math.abs(offset) >= 8) this.deckMoved = true;
     const progress = Math.abs(offset) / 84;
     this.setData({ deckOffset: offset, deckScale: 1 - progress * .025 });
   },
 
   flipDeck(event) {
+    const axis = this.deckAxis;
     const offset = Number.isFinite(this.deckY) ? event.changedTouches[0]?.clientY - this.deckY : 0;
     const length = this.data.recent.length;
+    this.deckX = undefined;
     this.deckY = undefined;
+    this.deckAxis = null;
     if (this.deckMoved) setTimeout(() => { this.deckMoved = false; }, 0);
-    if (length >= 2 && Number.isFinite(offset) && offset <= -38) {
+    if (axis !== "x" && length >= 2 && Number.isFinite(offset) && offset <= -38) {
       const next = (this.data.recentIndex + 1) % length;
       this.setData({ recentIndex: next, deckOffset: 42, deckScale: .975, deckDragging: false }, () => {
         setTimeout(() => this.setData({ deckOffset: 0, deckScale: 1 }), 16);
@@ -177,13 +286,16 @@ Page({
   },
 
   cancelDeck() {
+    this.deckX = undefined;
     this.deckY = undefined;
+    this.deckAxis = null;
     this.deckMoved = true;
     setTimeout(() => { this.deckMoved = false; }, 0);
     this.setData({ deckOffset: 0, deckScale: 1, deckDragging: false });
   },
 
   openTimer() {
+    if (this.tabSwipeMoved) return;
     // 原稿从首页打开计时抽屉，底下仍是当前练习卡片。
     this.setData({ timerOpen: true });
   },

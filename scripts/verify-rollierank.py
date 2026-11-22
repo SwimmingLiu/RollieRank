@@ -22,17 +22,20 @@ from urllib.request import Request, urlopen
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "test-results" / "verification"
 SCENARIOS = {
-    "miniprogram-ui": ("test/miniprogram-layout.test.js", "test/miniprogram-web.test.js", "test/miniprogram-timer.test.js", "test/wechat-profile.test.js"),
+    "miniprogram-ui": ("test/miniprogram-layout.test.js", "test/miniprogram-design-rationality.test.js", "test/miniprogram-web.test.js", "test/miniprogram-timer.test.js", "test/wechat-profile.test.js", "test/test-environment.test.js"),
+    "visual-design-audit": ("test/miniprogram-design-rationality.test.js", "test/miniprogram-layout.test.js"),
     "core": ("test/feature-integration.test.js",),
-    "catalog-admin": ("test/imported-papers.test.js", "test/booklet-time-limits.test.js", "test/positions-import.test.js"),
+    "tool-credits": ("test/tool-credits.test.js", "test/wechat-tool-payment.test.js", "test/tool-credits-ui.test.js", "test/test-environment.test.js"),
+    "catalog-admin": ("test/imported-papers.test.js", "test/booklet-time-limits.test.js", "test/positions-import.test.js", "test/admin-console.test.js"),
     "practice-history": ("test/prototype-state.test.js", "test/model.test.js", "test/ios-entry.test.js", "test/ios-preview-cleanup.test.js", "test/preview-history-recovery.test.js"),
     "positions-rank": ("test/positions.test.js", "test/leaderboard.test.js", "test/positions-hierarchy.test.js", "test/ios-positions-browser.test.js", "test/positions-feature.test.js", "test/miniprogram-layout.test.js"),
-    "discussion": ("test/discussions.test.js", "test/discussions-client.test.js", "test/discussions-interactions.test.js", "test/ios-discussions.test.js", "test/ios-discussions-interactions-browser.test.js", "test/ios-discussion-links.test.js"),
+    "discussion": ("test/discussions.test.js", "test/discussions-client.test.js", "test/discussions-interactions.test.js", "test/discussions-moderation.test.js", "test/ios-discussions.test.js", "test/ios-discussions-interactions-browser.test.js", "test/ios-discussion-links.test.js"),
     "analytics": ("test/analytics.test.js", "test/ios-analytics.test.js", "test/ios-analytics-components.test.js", "test/ios-analytics-browser.test.js"),
     "corrections": ("test/corrections-service.test.js", "test/corrections-api.test.js", "test/ios-corrections-browser.test.js", "test/ios-question-feedback-browser.test.js", "test/miniprogram-layout.test.js"),
     "sharing": ("test/ios-analytics-components.test.js", "test/ios-share-modes.test.js", "test/ios-sharing-browser.test.js"),
     "insights": ("test/positions-insights.test.js", "test/ios-insights-browser.test.js"),
     "timing-practice": ("test/practice-timer.test.js", "test/timer-paper-picker.test.js", "test/timer-configuration.test.js", "test/miniprogram-timer.test.js", "test/booklet-time-limits.test.js", "test/ios-timer-entry-feedback-browser.test.js", "test/ios-timer-latest-feedback-browser.test.js", "test/ios-practice-session-browser.test.js"),
+    "omr": ("test/omr.test.js",),
 }
 
 
@@ -68,6 +71,11 @@ def doctor() -> dict:
     # Browser tests used to skip when only Python's Playwright was installed.
     if node:
         required["playwright-node"] = subprocess.run([node, "--input-type=module", "-e", "import { chromium } from 'playwright'; const browser = await chromium.launch({headless:true}); await browser.close();"], cwd=ROOT, capture_output=True, check=False).returncode == 0
+        required["wallet-postgres"] = subprocess.run([node, "test/support/wallet-postgres.mjs"], cwd=ROOT, capture_output=True, check=False).returncode == 0
+        required["pg-driver"] = subprocess.run([node, "--input-type=module", "-e", "import pg from 'pg'; if (typeof pg.Pool !== 'function') process.exit(1);"], cwd=ROOT, capture_output=True, check=False).returncode == 0
+    else:
+        required["wallet-postgres"] = False
+        required["pg-driver"] = False
     if required["playwright-python"]:
         from playwright.sync_api import sync_playwright
         with sync_playwright() as playwright:
@@ -89,6 +97,8 @@ def doctor() -> dict:
             "chromium": "Run python -m playwright install --with-deps chromium.",
             "beui-dependencies": "Run npm ci --prefix docs/ui-exploration/ios-v3/ui.",
             "source": "Run from a complete RollieRank checkout.",
+            "wallet-postgres": "Install PostgreSQL server tools (initdb, pg_ctl, postgres), or set PG_BINDIR.",
+            "pg-driver": "Run npm ci to install the PostgreSQL driver.",
         }
     return report
 
@@ -99,10 +109,22 @@ def source_lock() -> dict:
         ROOT / "AGENTS.md",
         ROOT / "README.md",
         ROOT / "package.json",
+        ROOT / "package-lock.json",
+        ROOT / "scripts/migrate-tool-credits.mjs",
+        ROOT / "scripts/verify-test-wallet.mjs",
+        *sorted((ROOT / "server/migrations/wallet").glob("*.sql")),
         ROOT / "test/miniprogram-layout.test.js",
         ROOT / "test/miniprogram-timer.test.js",
         ROOT / "mini-program/tools/build-timer.mjs",
         ROOT / "mini-program/tools/flow.mjs",
+        ROOT / "mini-program/tools/e2e.mjs",
+        ROOT / "mini-program/tools/test-api.mjs",
+        ROOT / "test/test-environment.test.js",
+        ROOT / "deploy/install-test-api.sh",
+        ROOT / "deploy/nginx-rollie-rank-test.conf",
+        ROOT / "deploy/check-first-release.mjs",
+        ROOT / "deploy/rollierank-test.service",
+        ROOT / "deploy/rollierank-test.socket",
         ROOT / "mini-program/vendor/practice-timer.js",
         ROOT / "mini-program/utils/timing.js",
         ROOT / "mini-program/pages/home/home.js",
@@ -122,6 +144,7 @@ def source_lock() -> dict:
         ROOT / "server/wechat-profile.mjs",
         ROOT / "test/wechat-profile.test.js",
         ROOT / "mini-program/config.js",
+        ROOT / "mini-program/services/api.js",
         ROOT / "mini-program/services/profile.js",
         *sorted((ROOT / "mini-program/pages/profile").glob("profile.*")),
         *sorted((ROOT / "mini-program/pages/settings").glob("settings.*")),
@@ -229,11 +252,11 @@ def source_lock() -> dict:
     files = {}
     # New UI styles and test fixtures used to escape the hand-maintained list; bind all shipped runtime inputs too.
     runtime_paths = []
-    for directory in (ROOT / "src", ROOT / "server", ROOT / "test"):
-        runtime_paths.extend(path for path in directory.rglob("*") if path.is_file() and path.suffix in {".js", ".mjs", ".ts", ".css"})
+    for directory in (ROOT / "src", ROOT / "server", ROOT / "test", ROOT / "admin/src"):
+        runtime_paths.extend(path for path in directory.rglob("*") if path.is_file() and path.suffix in {".js", ".mjs", ".ts", ".tsx", ".css"})
     native = ROOT / "mini-program"
     runtime_paths.append(native / "app.json")
-    for name in ("components", "pages"):
+    for name in ("components", "pages", "services", "utils"):
         runtime_paths.extend(path for path in (native / name).rglob("*")
                              if path.is_file() and path.suffix in {".js", ".json", ".wxml", ".wxss"})
     ios = ROOT / "docs/ui-exploration/ios-v3"
@@ -278,6 +301,14 @@ def wait_ready(process: subprocess.Popen, base: str, deadline: float) -> dict:
             pass
         time.sleep(0.1)
     raise VerificationError("Service did not reach a usable catalog and official position source within 30 seconds.")
+
+
+def isolated_env(**overrides) -> dict:
+    env = dict(os.environ, **overrides)
+    for key in ("DATABASE_URL", "DATABASE_SCHEMA", "MIGRATION_DATABASE_URL",
+                "TEST_DATABASE_URL", "TEST_DATABASE_SCHEMA", "TEST_MIGRATION_DATABASE_URL"):
+        env.pop(key, None)
+    return env
 
 
 def run_command(command: list[str], output: Path, label: str, env: dict | None = None, require_test_summary: bool = False) -> dict:
@@ -413,15 +444,24 @@ def run_journeys(output: Path) -> dict:
     journeys = output / "journeys"
     journeys.mkdir(parents=True, exist_ok=True)
     python = sys.executable
-    env = dict(os.environ, ROLLIERANK_BROWSER_PYTHON=python, ROLLIERANK_BROWSER_TEST="1", POSITIONS_PYTHON=os.environ.get("POSITIONS_PYTHON") or sys.executable, ROLLIERANK_CORRECTIONS_OUTPUT=str(journeys / "corrections"))
-    commands = [
-        run_command([python, "scripts/verify-prototype.py", "--output", str(journeys / "prototype")], journeys / "prototype.log", "base-app-user-journey"),
-        run_command([python, "scripts/verify-features.py", "--output", str(journeys / "features")], journeys / "features.log", "connected-feature-journey"),
-        run_command([python, "scripts/verify-ios-features.py", "--output", str(journeys / "mobile")], journeys / "mobile.log", "mobile-user-journey"),
-        run_command([python, "scripts/verify-ios-features.py", "--wechat-host", "--output", str(journeys / "wechat")], journeys / "wechat.log", "wechat-hosted-ui-journey"),
-    ]
+    env = isolated_env(ROLLIERANK_BROWSER_PYTHON=python, ROLLIERANK_BROWSER_TEST="1", POSITIONS_PYTHON=os.environ.get("POSITIONS_PYTHON") or sys.executable, ROLLIERANK_CORRECTIONS_OUTPUT=str(journeys / "corrections"))
+    commands = []
+    failures = []
+
+    def run(command, log, label, require_test_summary=False):
+        try:
+            commands.append(run_command(command, journeys / log, label, env, require_test_summary=require_test_summary))
+        except VerificationError as error:
+            failures.append(str(error))
+
     try:
-        commands.append(run_command(["npm", "test"], journeys / "unit-and-service.log", "unit-and-service-suite", env, require_test_summary=True))
+        run([python, "scripts/verify-prototype.py", "--output", str(journeys / "prototype")], "prototype.log", "base-app-user-journey")
+        run([python, "scripts/verify-features.py", "--output", str(journeys / "features")], "features.log", "connected-feature-journey")
+        run([python, "scripts/verify-ios-features.py", "--output", str(journeys / "mobile")], "mobile.log", "mobile-user-journey")
+        run([python, "scripts/verify-ios-features.py", "--wechat-host", "--output", str(journeys / "wechat")], "wechat.log", "wechat-hosted-ui-journey")
+        # 独立场景均保存证据，识别失败仍会使全量门禁失败。
+        run([python, "scripts/verify-omr.py", "--repeat", "2", "--output", str(output / "omr")], "omr.log", "answer-sheet-recognition")
+        run(["npm", "test"], "unit-and-service.log", "unit-and-service-suite", require_test_summary=True)
     finally:
         # Browser tests own isolated servers; retain their original screenshots even when a test fails in CI.
         for source, name in [
@@ -435,7 +475,7 @@ def run_journeys(output: Path) -> dict:
         ]:
             if source.is_dir():
                 shutil.copytree(source, journeys / name, dirs_exist_ok=True)
-    return {"checks": [item["label"] for item in commands], "commands": commands}
+    return {"checks": [item["label"] for item in commands], "commands": commands, "failures": failures}
 
 
 def run_all(output: Path) -> dict:
@@ -455,7 +495,7 @@ def run_all(output: Path) -> dict:
     with tempfile.TemporaryDirectory(prefix="rollierank-verify-") as directory:
         port = free_port()
         base = f"http://127.0.0.1:{port}"
-        env = dict(os.environ, PORT=str(port), ROLLIERANK_DATA_DIR=directory, ROLLIERANK_REVIEW_TOKEN="verify-isolated-review-token", POSITIONS_PYTHON=os.environ.get("POSITIONS_PYTHON") or sys.executable)
+        env = isolated_env(PORT=str(port), ROLLIERANK_DATA_DIR=directory, ROLLIERANK_REVIEW_TOKEN="verify-isolated-review-token", POSITIONS_PYTHON=os.environ.get("POSITIONS_PYTHON") or sys.executable)
         log = output / "visual-server.log"
         with log.open("w") as stream:
             process = subprocess.Popen([shutil.which("node") or "node", "scripts/serve.mjs"], cwd=ROOT, env=env, stdout=stream, stderr=subprocess.STDOUT)
@@ -470,14 +510,16 @@ def run_all(output: Path) -> dict:
                     process.kill()
                     process.wait(timeout=5)
     journeys = run_journeys(output)
-    return {"checks": ["doctor", "build", "isolated-real-server", "visual"] + journeys["checks"], "doctor": report, "build": build, "server": ready, "visual": visual["visual"], "journeys": journeys}
+    return {"checks": ["doctor", "build", "isolated-real-server", "visual"] + journeys["checks"], "doctor": report, "build": build, "server": ready, "visual": visual["visual"], "journeys": journeys, "failures": journeys["failures"]}
 
 
 def run_unit(scenario: str, output: Path) -> dict:
     paths = SCENARIOS[scenario]
     log = output / f"{scenario}.log"
-    env = dict(os.environ, ROLLIERANK_BROWSER_PYTHON=sys.executable, ROLLIERANK_BROWSER_TEST="1", POSITIONS_PYTHON=os.environ.get("POSITIONS_PYTHON") or sys.executable)
+    env = isolated_env(ROLLIERANK_BROWSER_PYTHON=sys.executable, ROLLIERANK_BROWSER_TEST="1", POSITIONS_PYTHON=os.environ.get("POSITIONS_PYTHON") or sys.executable)
     result = run_command(["node", "--test", *paths], log, scenario, env, require_test_summary=True)
+    if scenario == "tool-credits":
+        return {"checks": [result["label"]], "commands": [result]}
     web_host = ["--wechat-host"] if scenario == "miniprogram-ui" else []
     live = run_command([sys.executable, "scripts/verify-ios-features.py", *web_host, "--output", str(output / f"{scenario}-live")], output / f"{scenario}-live.log", f"{scenario}-live-user-journey", env)
     commands = [result, live]
@@ -523,7 +565,7 @@ def main() -> int:
                 raise VerificationError("Doctor failed; run `npm run verify -- doctor` for exact setup steps.")
             with tempfile.TemporaryDirectory(prefix="rollierank-verify-visual-") as directory:
                 port = free_port(); base = f"http://127.0.0.1:{port}"
-                env = dict(os.environ, PORT=str(port), ROLLIERANK_DATA_DIR=directory)
+                env = isolated_env(PORT=str(port), ROLLIERANK_DATA_DIR=directory)
                 with (output / "visual-server.log").open("w") as log:
                     process = subprocess.Popen([shutil.which("node") or "node", "scripts/serve.mjs"], cwd=ROOT, env=env, stdout=log, stderr=subprocess.STDOUT)
                     try:
@@ -533,11 +575,12 @@ def main() -> int:
         else:
             result = run_unit(args.scenario, output)
         result.update({"scenario": args.scenario, "durationSeconds": round(time.monotonic() - started, 1), "startedAt": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "doctor": result.get("doctor", doctor())})
+        result["ok"] = not result.get("failures")
         result["sourceLock"] = source_lock()
         (output / "results.json").write_text(json.dumps(result, ensure_ascii=False, indent=2, default=str) + "\n")
         (output / "source-lock.json").write_text(json.dumps(result["sourceLock"], ensure_ascii=False, indent=2) + "\n")
-        print(json.dumps({"passed": len(result["checks"]), "scenario": args.scenario, "results": str(output / "results.json")}, ensure_ascii=False))
-        return 0
+        print(json.dumps({"passed": len(result["checks"]), "scenario": args.scenario, "results": str(output / "results.json"), "failures": result.get("failures", [])}, ensure_ascii=False))
+        return 0 if result["ok"] else 1
     except VerificationError as error:
         failure = {"scenario": args.scenario, "ok": False, "error": str(error), "output": str(output)}
         (output / "results.json").write_text(json.dumps(failure, ensure_ascii=False, indent=2) + "\n")

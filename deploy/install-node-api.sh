@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# RollieRank API for a small server. Keeps one process and one JSON data file.
+# RollieRank API for a small server. Practice data uses JSON; the wallet uses PostgreSQL.
 #
 #   ./deploy/install-node-api.sh            # install to /opt/rollierank and start
 #   ROLLIERANK_REVIEW_TOKEN=xxx ./deploy/install-node-api.sh
@@ -22,7 +22,12 @@ mkdir -p "$APP_DIR" "$DATA_DIR"
 rsync -a --delete \
   --exclude '.git' --exclude '.local' --exclude '.raw' --exclude 'dist' \
   --exclude 'node_modules' --exclude 'test-results' --exclude 'docs/ui-exploration/*/node_modules' \
-  "$SRC_DIR/server" "$SRC_DIR/src" "$SRC_DIR/scripts" "$SRC_DIR/package.json" "$APP_DIR/"
+  "$SRC_DIR/server" "$SRC_DIR/src" "$SRC_DIR/admin" "$SRC_DIR/scripts" "$SRC_DIR/package.json" \
+  "$SRC_DIR/package-lock.json" "$APP_DIR/"
+install -D -m 0644 "$SRC_DIR/deploy/check-first-release.mjs" "$APP_DIR/deploy/check-first-release.mjs"
+
+# 答题卡识别需要 jpeg-js；只装生产依赖，测试工具留在开发机。
+( cd "$APP_DIR" && npm ci --omit=dev --no-audit --no-fund )
 
 # 小程序 WebView 复用已经构建的手机页面。移除开发依赖和设计预览素材。
 MOBILE_DIR="$APP_DIR/docs/ui-exploration/ios-v3"
@@ -37,7 +42,16 @@ rsync -a --delete "$SRC_DIR/data/positions" "$APP_DIR/data/"
 
 # 答案订正审核页需要单独凭证；未配置时审核关闭，管理接口保持本机无凭证行为。
 if [ -n "${ROLLIERANK_REVIEW_TOKEN:-}" ]; then
-  (umask 077; printf 'ROLLIERANK_REVIEW_TOKEN=%s\n' "$ROLLIERANK_REVIEW_TOKEN" > /etc/rollierank.env)
+  # 重装时只更新审核口令，保留 PostgreSQL 等服务配置。
+  env_file=/etc/rollierank.env
+  env_temp=$(mktemp "$env_file.XXXXXX")
+  trap 'rm -f -- "$env_temp"' EXIT
+  if [ -f "$env_file" ]; then
+    awk '!/^[[:space:]]*ROLLIERANK_REVIEW_TOKEN[[:space:]]*=/' "$env_file" > "$env_temp"
+  fi
+  printf 'ROLLIERANK_REVIEW_TOKEN=%s\n' "$ROLLIERANK_REVIEW_TOKEN" >> "$env_temp"
+  mv -f -- "$env_temp" "$env_file"
+  trap - EXIT
 fi
 
 if ! id rollierank >/dev/null 2>&1; then

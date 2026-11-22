@@ -3,15 +3,22 @@ const storage = require("../../utils/storage.js");
 const profile = require("../../services/profile.js");
 
 Page({
-  data: { name: "", avatar: "", defaultAvatar: ASSET.profile, phoneEnabled: false, phoneLast4: "", busy: false },
+  data: { name: "", hasCustomName: false, avatar: "", defaultAvatar: ASSET.profile, phoneEnabled: false, phoneLast4: "", busy: false },
 
   async onShow() {
-    this.setData({ name: storage.name(), avatar: profile.avatarUrl() });
+    this.setData({ name: storage.name(), hasCustomName: storage.hasCustomName(), avatar: profile.avatarUrl() });
     try {
-      const { phoneEnabled } = await profile.capabilities();
-      if (!phoneEnabled) return;
-      const current = await profile.read();
-      this.setData({ phoneEnabled, phoneLast4: current?.phoneLast4 || "" });
+      const [cap, current] = await Promise.all([
+        profile.capabilities().catch(() => ({ phoneEnabled: false })),
+        profile.read().catch(() => null),
+      ]);
+      this.setData({
+        name: storage.name(),
+        hasCustomName: storage.hasCustomName(),
+        avatar: profile.avatarUrl(current?.avatarId, current?.avatarUrl),
+        phoneEnabled: Boolean(cap?.phoneEnabled),
+        phoneLast4: current?.phoneLast4 || "",
+      });
     } catch {
       this.setData({ phoneEnabled: false });
     }
@@ -30,7 +37,12 @@ Page({
     this.setData({ busy: true });
     try {
       const saved = await operation();
-      this.setData({ avatar: profile.avatarUrl(saved.avatarId), phoneLast4: saved.phoneLast4 });
+      this.setData({
+        name: storage.name(),
+        hasCustomName: storage.hasCustomName(),
+        avatar: profile.avatarUrl(saved.avatarId, saved.avatarUrl),
+        phoneLast4: saved.phoneLast4,
+      });
       wx.showToast({ title: "已保存", icon: "success" });
     } catch (error) {
       wx.showToast({ title: error.message || "资料保存失败，请重试", icon: "none" });
@@ -41,5 +53,9 @@ Page({
 
   openSettings() {
     wx.navigateTo({ url: "/pages/settings/settings" });
+  },
+
+  openFeedback() {
+    wx.navigateTo({ url: "/pages/feedback/feedback" });
   },
 });

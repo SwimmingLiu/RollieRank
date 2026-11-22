@@ -153,7 +153,8 @@ export function Home(props: HomeProps) {
   const onDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     // Depth follows the dragged paper itself; it settles without delaying the next card's state.
     animate(dragTilt, 0, { type: "spring", stiffness: 420, damping: 34 });
-    if (Math.abs(info.offset.y) > 32 || (Math.abs(info.velocity.y) > 280 && Math.abs(info.offset.y) > 10)) {
+    const vertical = Math.abs(info.offset.y) >= Math.abs(info.offset.x);
+    if (vertical && (Math.abs(info.offset.y) > 32 || (Math.abs(info.velocity.y) > 280 && Math.abs(info.offset.y) > 10))) {
       flip(info.offset.y < 0 ? 1 : -1);
     }
   };
@@ -186,7 +187,7 @@ export function Home(props: HomeProps) {
                   onDrag={(_event, info) => { if (!reduce) dragTilt.set(Math.max(-10, Math.min(10, -info.offset.y / 11))); }}
                   onDragEnd={onDragEnd}
                   onPointerCancel={() => { dragged.current = true; dragTilt.stop(); dragTilt.set(0); }}
-                  style={{ width: "100%", height: "100%", touchAction: active ? "pan-x" : "auto", rotateX: active ? dragTilt : 0, transformPerspective: 900 }}
+                  style={{ width: "100%", height: "100%", touchAction: active && recents.length > 1 ? "none" : "pan-y", rotateX: active ? dragTilt : 0, transformPerspective: 900 }}
                 >
                   {active ? <RecentFace recent={recent} logoSrc={publisherLogo(recent.institution, props)} onOpen={(event) => { if (event.detail === 0 || !dragged.current) onOpen(cardIndex); }} /> : <Card variant="muted" className="rr-back-card" data-institution={recent.institution}><span className="rr-peek"><span>{publisherName(recent.institution)} · {recent.editionLabel ?? `${twoDigits(recent.period)}期`} · {recent.paperTitle ?? `${twoDigits(recent.paper)}套`}</span><b>{recent.complete ? `${scoreLabel(recent.score)} 分` : `${recent.answered} / ${recent.totalQuestions ?? 130}`}</b></span></Card>}
 

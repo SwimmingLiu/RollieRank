@@ -1,13 +1,21 @@
 // 本机存储与身份：只保存公开练习数据，不保存参考答案。
+const { storageKey } = require("../config.js");
+
 const KEYS = {
-  guest: "rr:guest",
-  name: "rr:name",
-  avatar: "rr:avatar",
-  history: "rr:history",
-  draft: id => `rr:draft:${id}`,
-  marks: id => `rr:marks:${id}`,
-  position: "rr:position",
-  marksIndex: "rr:marks:index",
+  guest: storageKey("rr:guest"),
+  name: storageKey("rr:name"),
+  avatar: storageKey("rr:avatar"),
+  avatarUrl: storageKey("rr:avatar-url"),
+  history: storageKey("rr:history"),
+  draft: id => storageKey(`rr:draft:${id}`),
+  marks: id => storageKey(`rr:marks:${id}`),
+  position: storageKey("rr:position"),
+  marksIndex: storageKey("rr:marks:index"),
+  drafts: storageKey("rr:drafts"),
+  creditToken: storageKey("rr:credit-token"),
+  creditAccount: storageKey("rr:credit-account"),
+  creditUid: storageKey("rr:credit-uid"),
+  inviteClaim: storageKey("rr:invite-claim"),
 };
 
 function uuid() {
@@ -27,12 +35,36 @@ function guestId() {
   return id;
 }
 
+function defaultNickname(id = guestId()) {
+  const raw = String(id || "").trim();
+  if (!raw) return "卷友";
+  let hash = 2166136261;
+  for (let i = 0; i < raw.length; i += 1) {
+    hash ^= raw.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  const code = 1000 + ((hash >>> 0) % 9000);
+  return `卷友${code}`;
+}
+
+function isDefaultNickname(value) {
+  const text = String(value || "").trim();
+  return !text || text === "卷友" || /^卷友\d{4}$/.test(text);
+}
+
 function name() {
-  return wx.getStorageSync(KEYS.name) || "卷友";
+  const saved = String(wx.getStorageSync(KEYS.name) || "").trim();
+  return !isDefaultNickname(saved) ? saved : defaultNickname(guestId());
+}
+
+function hasCustomName() {
+  const saved = String(wx.getStorageSync(KEYS.name) || "").trim();
+  return !isDefaultNickname(saved);
 }
 
 function setName(value) {
-  const text = String(value || "").trim().slice(0, 12) || "卷友";
+  const raw = String(value || "").trim().slice(0, 12);
+  const text = !isDefaultNickname(raw) ? raw : defaultNickname(guestId());
   wx.setStorageSync(KEYS.name, text);
   return text;
 }
@@ -44,6 +76,21 @@ function avatarId() {
 
 function setAvatarId(id) {
   wx.setStorageSync(KEYS.avatar, id);
+}
+
+function avatarUrl() {
+  const url = wx.getStorageSync(KEYS.avatarUrl);
+  return typeof url === "string" && /^https?:\/\//i.test(url) ? url : "";
+}
+
+function setAvatarUrl(url) {
+  const clean = typeof url === "string" && /^https?:\/\//i.test(url) ? url : "";
+  wx.setStorageSync(KEYS.avatarUrl, clean);
+  return clean;
+}
+
+function hasWechatProfile() {
+  return Boolean(hasCustomName() || avatarId() || avatarUrl());
 }
 
 function history() {
@@ -121,7 +168,7 @@ function setPosition(value) {
 
 // 当前录入中的草稿索引，供套卷卡直接续录。
 function draftIndex() {
-  const index = wx.getStorageSync("rr:drafts") || {};
+  const index = wx.getStorageSync(KEYS.drafts) || {};
   return index && typeof index === "object" ? index : {};
 }
 
@@ -129,7 +176,7 @@ function setDraftEntry(versionId, entry) {
   const index = draftIndex();
   if (entry) index[versionId] = { ...entry, updatedAt: Date.now() };
   else delete index[versionId];
-  wx.setStorageSync("rr:drafts", index);
+  wx.setStorageSync(KEYS.drafts, index);
 }
 
 function bestAttempt(versionId) {
@@ -153,8 +200,70 @@ function clearPendingId(versionId, attemptId) {
   wx.setStorageSync(KEYS.marksIndex, index);
 }
 
+function toolCreditToken() {
+  const token = wx.getStorageSync(KEYS.creditToken);
+  return typeof token === "string" && /^[a-f0-9]{64}$/i.test(token) ? token : "";
+}
+
+function setToolCreditToken(token) {
+  if (typeof token === "string" && /^[a-f0-9]{64}$/i.test(token)) {
+    wx.setStorageSync(KEYS.creditToken, token);
+  } else {
+    wx.removeStorageSync(KEYS.creditToken);
+  }
+}
+
+function toolCreditAccountId() {
+  const id = wx.getStorageSync(KEYS.creditAccount);
+  return typeof id === "string" && /^[\w-]{10,80}$/.test(id) ? id : "";
+}
+
+function setToolCreditAccountId(id) {
+  if (typeof id === "string" && /^[\w-]{10,80}$/.test(id)) {
+    wx.setStorageSync(KEYS.creditAccount, id);
+  } else {
+    wx.removeStorageSync(KEYS.creditAccount);
+  }
+}
+
+function toolCreditUid() {
+  const uid = Number(wx.getStorageSync(KEYS.creditUid));
+  return Number.isInteger(uid) && uid >= 10000 ? uid : 0;
+}
+
+function setToolCreditUid(uid) {
+  const num = Number(uid);
+  if (Number.isInteger(num) && num >= 10000) {
+    wx.setStorageSync(KEYS.creditUid, num);
+  } else {
+    wx.removeStorageSync(KEYS.creditUid);
+  }
+}
+
+function clearToolCreditSession() {
+  wx.removeStorageSync(KEYS.creditToken);
+  wx.removeStorageSync(KEYS.creditAccount);
+  wx.removeStorageSync(KEYS.creditUid);
+}
+
+function inviteClaim() {
+  const claim = wx.getStorageSync(KEYS.inviteClaim);
+  return typeof claim === "string" && /^[a-f0-9]{48}$/i.test(claim) ? claim : "";
+}
+
+function setInviteClaim(claim) {
+  if (typeof claim === "string" && /^[a-f0-9]{48}$/i.test(claim)) {
+    wx.setStorageSync(KEYS.inviteClaim, claim);
+  } else {
+    wx.removeStorageSync(KEYS.inviteClaim);
+  }
+}
+
 module.exports = {
-  uuid, guestId, name, setName, avatarId, setAvatarId, history, saveHistory, upsertAttempt, getAttempt,
+  uuid, guestId, defaultNickname, isDefaultNickname, name, hasCustomName, setName, avatarId, setAvatarId, avatarUrl, setAvatarUrl, hasWechatProfile,
+  history, saveHistory, upsertAttempt, getAttempt,
   saveDraft, loadDraft, dropDraft, position, setPosition, pendingId, clearPendingId, KEYS,
   draftIndex, setDraftEntry, bestAttempt,
+  toolCreditToken, setToolCreditToken, toolCreditAccountId, setToolCreditAccountId, toolCreditUid, setToolCreditUid, clearToolCreditSession,
+  inviteClaim, setInviteClaim,
 };

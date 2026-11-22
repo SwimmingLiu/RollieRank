@@ -22,7 +22,7 @@ Preconditions: 已按主Skill安装依赖；CLI启动隔离服务并通过doctor
 
 编辑器使用已有昵称，无资料时为「卷友」。示例只提供「去练习」，不能调用正式讨论。总数包含评论与回复，根评论分页与回复分页独立；喜欢状态仅向当前身份返回 likedByMe。手机端暂缓语音，专项必须确认没有麦克风调用、录音控件或音频播放器；后端继续兼容已保存的媒体。
 
-专项为 `test/discussions-interactions.test.js`、`test/ios-discussions-interactions-browser.test.js` 与原评论回归。原尺寸证据覆盖 320／390／430，输入、发送和图片按钮须对齐，长回复不得越出纸卡。
+专项为 `test/discussions-interactions.test.js`、`test/discussions-moderation.test.js`、`test/ios-discussions-interactions-browser.test.js` 与原评论回归。原尺寸证据覆盖 320／390／430，输入、发送和图片按钮须对齐，长回复不得越出纸卡。评论审核管理位于桌面端运营后台（`#/admin`），支持微信小程序内容安全（文本 `msgSecCheck`、图片/语音含图中文字 `mediaCheckAsync` 及 `/api/wechat/sec-callback` 异步回调）、自定义敏感词、先审后发切换、评论通过/屏蔽/删除与配图核查。
 
 主评论、回复及回复他人的草稿须在真实整页刷新后恢复文字和照片，相同内容重试沿用幂等标识。检查存储被拒绝后的恢复提示，320×568 长目标内容的发送／取消边界，以及缩小视口后的照片移除和发送可达。缩小视口只是布局验证，不代表已测试实体系统软键盘。
 

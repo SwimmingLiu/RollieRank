@@ -1,0 +1,27 @@
+[Unit]
+Description=RollieRank test API
+Requires=rollierank-test.socket
+After=rollierank-test.socket
+
+[Service]
+Type=exec
+User=rollierank-test
+DynamicUser=yes
+WorkingDirectory=/opt/rollierank-test/current
+Environment=PATH=/opt/rollierank-test/positions-python/bin:/usr/local/bin:/usr/bin:/bin
+EnvironmentFile=/etc/rollierank-test.env
+ExecStart=/usr/bin/env node scripts/serve.mjs --test-environment --systemd-socket
+StateDirectory=rollierank-test
+StateDirectoryMode=0700
+UMask=0077
+# The inherited listener is loopback-only. WeChat login requires outbound HTTPS.
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+InaccessiblePaths=-/opt/rollierank -/var/lib/rollierank -/etc/rollierank.env
+NoNewPrivileges=true
+MemoryMax=384M
+CPUQuota=50%
+Restart=on-failure
+RestartSec=3

@@ -39,9 +39,21 @@ test("current national and public-exam mocks classify130 as city and135 as provi
 test("city growth includes different real signatures while every point keeps its own score and denominator", () => {
   const flower = catalogAttempt({ paperId: "sihai-2026-h2-p2-city-01", id: "flower", createdAt: 1 });
   const fenbi = catalogAttempt({ paperId: "fenbi-2027-guokao-01", id: "fenbi", createdAt: 2 });
-  const generic = catalogAttempt({ paperId: "chaoge-2027-01", id: "generic", createdAt: 3 });
+  const altCityQuestions = IMPORTED_PAPERS.find(p => p.id === "chaoge-2027-01").sections.flatMap(section =>
+    Array.from({ length: section.end - section.start + 1 }, (_, i) => ({
+      number: section.start + i, type: section.name, typeId: section.id, correctAnswer: "A",
+      cents: section.id === "politics" || section.id === "common" ? 70 : section.id === "analogy" ? 70 : 80,
+    }))
+  );
+  const altAnswers = altCityQuestions.map((_, i) => i % 2 === 0 ? "A" : "B");
+  const generic = {
+    id: "generic", paperId: "alt-city-130", versionId: "alt-city-130:v1", paperTitle: "自定义地市130题",
+    institution: "超格", project: "2027 公考 · 行测", period: "10套卷", variant: "130题版", versionLabel: "1.0",
+    createdAt: 3, answers: altAnswers, report: gradeVersion({ questions: altCityQuestions }, altAnswers),
+  };
   const province = catalogAttempt({ paperId: "sihai-2026-h2-p2-province-01", id: "province", createdAt: 4 });
-  assert.notEqual(signature(flower), signature(fenbi));
+  assert.equal(signature(flower), signature(fenbi));
+  assert.notEqual(signature(flower), signature(generic));
   const records = [flower, fenbi, generic, province];
   const model = buildAnalytics(records, { examCategory: "guokao-city", ruleSignature: signature(flower) });
   assert.equal(model.selected, null);

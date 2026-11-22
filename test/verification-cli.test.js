@@ -28,7 +28,7 @@ test("verification doctor reports every missing dependency instead of silently s
   const report = JSON.parse(await readFile(join(directory, "doctor.json"), "utf8"));
   assert.ok([0, 1].includes(result.code));
   assert.equal(typeof report.ok, "boolean");
-  for (const name of ["node", "npm", "python", "playwright-python", "playwright-node", "excel-python", "chromium", "beui-dependencies", "source"]) assert.equal(typeof report.checks[name], "boolean");
+  for (const name of ["node", "npm", "python", "playwright-python", "playwright-node", "excel-python", "chromium", "beui-dependencies", "source", "wallet-postgres", "pg-driver"]) assert.equal(typeof report.checks[name], "boolean");
   if (!report.ok) assert.ok(report.remediation && Object.keys(report.remediation).length > 0);
   assert.equal(result.stderr, "");
 });
@@ -59,10 +59,10 @@ test("verification feature map has readable live recipes for every mapped featur
   const directory = resolve(root, ".agents/skills/verify-rollierank/features");
   const index = await readFile(join(directory, "README.md"), "utf8");
   for (const [id, title] of [
-    ["catalog-admin", "套卷目录与管理"], ["practice-history", "录答、评分、复盘与本机记录"],
+    ["catalog-admin", "套卷目录与管理"], ["tool-credits", "卷豆账号和账本"], ["practice-history", "录答、评分、复盘与本机记录"],
     ["positions-rank", "报考岗位与练习榜"], ["discussion", "本卷交流与多媒体评论"],
     ["analytics", "二刷对比与成长分析"], ["corrections", "答案反馈、审核与重算"],
-    ["sharing", "成绩分享与导出"],
+    ["sharing", "成绩分享与导出"], ["visual-design-audit", "视觉渲染与 UI 设计合理性审查"],
   ]) {
     assert.match(index, new RegExp(`\\(${id}\\.md\\)`));
     const feature = await readFile(join(directory, `${id}.md`), "utf8");

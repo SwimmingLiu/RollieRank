@@ -17,8 +17,13 @@ function checkMarkup(file, markup) {
     if (/\bwx:for=/.test(tag) && /\bwx:(?:else\b|elif=)/.test(tag)) {
       problem(`${file} 的条件分支需用 block 包住 wx:for，以通过微信编译`);
     }
-    if (tag.startsWith("<scroll-view") && !/show-scrollbar\s*=\s*"\{\{false\}\}"/.test(tag)) {
-      problem(`${file} 的 scroll-view 必须隐藏视觉滚动条`);
+    if (tag.startsWith("<scroll-view")) {
+      if (!/show-scrollbar\s*=\s*"\{\{false\}\}"/.test(tag)) {
+        problem(`${file} 的 scroll-view 必须隐藏视觉滚动条`);
+      }
+      if (!/\benhanced(?:\s*=\s*"\{\{true\}\}")?(?=[\s/>])/.test(tag)) {
+        problem(`${file} 的 scroll-view 必须启用 enhanced 才能在各端隐藏滚动条`);
+      }
     }
   }
 }
@@ -47,7 +52,7 @@ for (const page of pages) {
   const js = readFileSync(path.join(root, `${page}.js`), "utf8");
   const config = JSON.parse(readFileSync(path.join(root, `${page}.json`), "utf8"));
   checkMarkup(page + ".wxml", wxml);
-  for (const match of wxml.matchAll(/bind:?(?:tap|input|confirm|blur|change|longpress)="([^"{}]*)"/g)) {
+  for (const match of wxml.matchAll(/(?:bind|catch):?(?:tap|input|confirm|blur|change|longpress|touchstart|touchmove|touchend|touchcancel)="([^"{}]*)"/g)) {
     const handler = match[1].split(":").pop();
     if (handler && !new RegExp(`\\b${handler}\\s*\\(`).test(js)) problem(`${page}.wxml 绑定的 ${handler} 在页面脚本中不存在`);
   }
@@ -61,6 +66,15 @@ for (const name of readdirSync(path.join(root, "components"), { recursive: true 
   if (!name.endsWith(".wxml")) continue;
   const wxml = readFileSync(path.join(root, "components", name), "utf8");
   checkMarkup("components/" + name, wxml);
+  if (wxml.includes("<scroll-view")) {
+    const wxssPath = path.join(root, "components", name.replace(/\.wxml$/, ".wxss"));
+    const wxss = existsSync(wxssPath) ? readFileSync(wxssPath, "utf8") : "";
+    if (!/::-webkit-scrollbar/.test(wxss)) problem(`components/${name.replace(/\.wxml$/, ".wxss")} 必须隐藏 scroll-view 视觉滑动块`);
+  }
+}
+const appWxss = readFileSync(path.join(root, "app.wxss"), "utf8");
+if (!/(?:^|[\s,}]) ::-webkit-scrollbar|^\s*::-webkit-scrollbar/m.test(appWxss)) {
+  problem("app.wxss 必须声明全局 ::-webkit-scrollbar 隐藏所有页面滑动块");
 }
 
 // 原生与网页端用同一份计时模型；直接打开小程序目录也能复现已提交的构建。

@@ -80,6 +80,25 @@ test("the actual iOS gallery iframe exposes the connected job and analysis contr
   await frame.locator('#top').getByRole('button',{name:'返回',exact:true}).click();
   await frame.locator('.view[data-page="home"]').waitFor();
 
+  // 首页与练习记录之间支持左右滑动切换，效果与底部菜单栏一致；边缘方向和弹层打开时不误切。
+  const phoneBox = await page.locator('#phone').boundingBox();
+  const swipePhone = async (startX, endX, y) => {
+    await page.mouse.move(phoneBox.x + startX, phoneBox.y + y);
+    await page.mouse.down();
+    await page.mouse.move(phoneBox.x + endX, phoneBox.y + y, { steps: 10 });
+    await page.mouse.up();
+  };
+  await swipePhone(phoneBox.width * 0.2, phoneBox.width * 0.8, phoneBox.height * 0.55);
+  await frame.locator('.view[data-page="home"]').waitFor();
+  await swipePhone(phoneBox.width * 0.82, phoneBox.width * 0.18, phoneBox.height * 0.55);
+  await frame.locator('.view[data-page="me"]').waitFor();
+  assert.equal(await frame.locator('.tabbar button[data-root="me"]').getAttribute('aria-current'), 'page');
+  await swipePhone(phoneBox.width * 0.82, phoneBox.width * 0.18, phoneBox.height * 0.55);
+  await frame.locator('.view[data-page="me"]').waitFor();
+  await swipePhone(phoneBox.width * 0.18, phoneBox.width * 0.82, phoneBox.height * 0.55);
+  await frame.locator('.view[data-page="home"]').waitFor();
+  assert.equal(await frame.locator('.tabbar button[data-root="home"]').getAttribute('aria-current'), 'page');
+
   // Reproduce the previous browser archive: recover authored offline work, keeping real receipts and exact demo seeds separate.
   await page.locator('.page-picker [data-page="me"]').click();
   await frame.locator('.view[data-page="me"]').waitFor();

@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { motion, Reorder, useDragControls, type PanInfo } from "motion/react";
-import { Bookmark, Check, ChevronDown, ChevronLeft, ChevronRight, Clock3, FileText, GripVertical, LayoutList, ListOrdered, Minus, Pause, Play, Plus, RotateCcw, Search, Square } from "lucide-react";
+import { Bookmark, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, Clock3, FileText, GripVertical, LayoutList, ListOrdered, Minus, Pause, Play, Plus, RotateCcw, Search, Square } from "lucide-react";
 import { Button } from "./components/motion/button/base";
 import { Card, CardContent } from "./components/motion/card";
 import { BottomSheet } from "./components/motion/bottom-sheet";
@@ -117,14 +117,15 @@ export type EntryToolsProps = {
   onMode: (mode: "list" | "single") => void;
   onJump: (question: number) => void;
   onTimer?: () => void;
+  onScan?: () => void;
 };
 
-export function EntryTools({ mode, sections, answers, current, marks, onMode, onJump, onTimer }: EntryToolsProps) {
+export function EntryTools({ mode, sections, answers, current, marks, onMode, onJump, onTimer, onScan }: EntryToolsProps) {
   const [panel, setPanel] = useState<"sections" | "marks" | null>(null);
   const section = sections.find(item => current >= item.start && current <= item.end);
   return <div className="rr-entry-tools">
     {/* Touch users need the uncertainty action's purpose in the visible label, not a hover title. */}
-    <div className="rr-entry-toolbar"><Button variant="ghost" className="rr-entry-section-picker" onClick={() => setPanel("sections")} aria-label="选择答题章节">{section?.name ?? "章节"}<ChevronDown size={13} /></Button><span className="rr-entry-toolbar-space" />{onTimer ? <Button variant="ghost" size="icon" onClick={onTimer} aria-label="做题计时"><Clock3 size={17} /></Button> : null}<Button variant="ghost" onClick={() => setPanel("marks")} aria-label={`查看待检查题，${marks.length}题`} title="集中检查存疑的题目" className="rr-entry-marks"><Bookmark size={16} />待检查{marks.length ? <b>{marks.length}</b> : null}</Button><Button variant="ghost" size="icon" onClick={() => onMode(mode === "list" ? "single" : "list")} aria-label={mode === "list" ? "切换单题模式" : "切换列表模式"}>{mode === "list" ? <Square size={17} /> : <LayoutList size={18} />}</Button></div>
+    <div className="rr-entry-toolbar"><Button variant="ghost" className="rr-entry-section-picker" onClick={() => setPanel("sections")} aria-label="选择答题章节">{section?.name ?? "章节"}<ChevronDown size={13} /></Button><span className="rr-entry-toolbar-space" />{onScan ? <Button variant="ghost" onClick={onScan} aria-label="扫描答题卡" title="拍照识别答题卡" className="rr-entry-scan"><Camera size={15} /><span>扫卡</span></Button> : null}{onTimer ? <Button variant="ghost" size="icon" onClick={onTimer} aria-label="做题计时"><Clock3 size={17} /></Button> : null}<Button variant="ghost" onClick={() => setPanel("marks")} aria-label={`查看待检查题，${marks.length}题`} title="集中检查存疑的题目" className="rr-entry-marks"><Bookmark size={16} />待检查{marks.length ? <b>{marks.length}</b> : null}</Button><Button variant="ghost" size="icon" onClick={() => onMode(mode === "list" ? "single" : "list")} aria-label={mode === "list" ? "切换单题模式" : "切换列表模式"}>{mode === "list" ? <Square size={17} /> : <LayoutList size={18} />}</Button></div>
     {/* 单题导航归属单题卡，工具栏只负责章节、待检查题和模式切换。 */}
     <BottomSheet open={panel !== null} onOpenChange={open => { if (!open) setPanel(null); }} title={panel === "marks" ? "待检查" : "选择章节"} labels={{ label: panel === "marks" ? "待检查" : "选择章节", close: "关闭章节面板" }} snapPoints={["auto"]} className="beui-island rr-session-sheet">
       {panel === "sections" ? <div className="rr-entry-chapter-list">{sections.map(item => <Button key={item.start} variant="ghost" onClick={() => { setPanel(null); onJump(item.start); }}><span>{item.name}</span><small>{item.start}–{item.end}</small><ChevronRight size={15} /></Button>)}</div> : <div className="rr-entry-review-list">{marks.length ? marks.map(number => <Button key={number} variant="secondary" onClick={() => { setPanel(null); onJump(number); }} aria-label={`查看存疑第 ${number} 题`}><Bookmark size={13} /><b>{number}</b><small>{answers[number - 1] || "未答"}</small></Button>) : <p>拿不准的题点“存疑”，稍后回看</p>}</div>}

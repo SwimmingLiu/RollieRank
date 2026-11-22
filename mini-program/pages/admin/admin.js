@@ -1,6 +1,7 @@
 const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
 const format = require("../../utils/format.js");
+const { createPageSheetDrag } = require("../../utils/sheet-gesture.js");
 
 const STATUS = {
   pending: "待审核",
@@ -18,6 +19,13 @@ function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
+const USER_FEEDBACK_STATUS_OPTIONS = [
+  { key: "pending", label: "待处理" },
+  { key: "processing", label: "处理中" },
+  { key: "replied", label: "已回复" },
+  { key: "closed", label: "已关闭" },
+];
+
 Page({
   data: {
     loading: true,
@@ -25,6 +33,19 @@ Page({
     error: "",
     reviewEnabled: false,
     pendingCount: 0,
+    userFeedbackPendingCount: 0,
+    userFeedbacks: [],
+    userFeedbackFilter: "pending",
+    userFeedbackSummary: { total: 0, pending: 0, processing: 0, replied: 0, closed: 0 },
+    feedbackNotify: { enabled: true, wechatReady: false, templateConfigured: false, templateId: "", subscriberCount: 0, totalQuota: 0 },
+    subscribingNotify: false,
+    testingNotify: false,
+    activeUserFeedback: null,
+    userFeedbackReplyText: "",
+    userFeedbackReplyStatus: "replied",
+    userFeedbackStatusOptions: USER_FEEDBACK_STATUS_OPTIONS,
+    userFeedbackError: "",
+    savingUserFeedback: false,
     credentialOpen: false,
     hasCredential: false,
     authorized: false,
@@ -42,26 +63,61 @@ Page({
     importFile: null,
     importExamOptions: ["国考", "省考"],
     importFields: { exam: "guokao", year: new Date().getFullYear(), region: "全国", label: "", publisher: "", sourcePage: "", downloadUrl: "", retrievedAt: today() },
+    sheetDragY: 0,
+    sheetDragging: false,
+    sheetClosing: false,
+    sheetShadeOpacity: 1,
     uiBase: "/assets/ui",
   },
 
-  onLoad() {
+  onLoad(query) {
+    this.targetFeedbackId = typeof query?.id === "string" ? query.id : "";
+    this.sheetDrag = createPageSheetDrag(this, {
+      onDismiss: () => {
+        if (this.data.activeUserFeedback) this.closeUserFeedback();
+        else if (this.data.review) this.closeReview();
+        else if (this.data.detail) this.closeDetail();
+        else if (this.data.credentialOpen) this.closeCredential();
+      },
+    });
     this.loadSummary();
     this.loadCatalog();
   },
 
+  onUnload() {
+    this.sheetDrag?.reset();
+  },
+
+  noopSheet() {},
+  onSheetScroll(event) { this.sheetDrag?.onScroll(event); },
+  startSheetDrag(event) { this.sheetDrag?.start(event); },
+  moveSheetDrag(event) { this.sheetDrag?.move(event); },
+  endSheetDrag(event) { this.sheetDrag?.end(event); },
+  cancelSheetDrag() { this.sheetDrag?.cancel(); },
+
   async loadSummary() {
     this.setData({ loading: true, error: "" });
     try {
-      const summary = await api.request("corrections/summary");
+      const [summary, fbSummary] = await Promise.all([
+        api.request("corrections/summary"),
+        api.request("feedback/summary").catch(() => ({ pendingCount: 0, reviewEnabled: false })),
+      ]);
       this.setData({
         loading: false,
-        reviewEnabled: Boolean(summary.reviewEnabled),
+        reviewEnabled: Boolean(summary.reviewEnabled || fbSummary.reviewEnabled),
         pendingCount: summary.pendingCount || 0,
+        userFeedbackPendingCount: fbSummary.pendingCount || 0,
       });
     } catch (error) {
       this.setData({ loading: false, error: error.message });
     }
+  },
+
+  decorateUserFeedback(item) {
+    return {
+      ...item,
+      createdAtText: dateText(item.createdAt),
+    };
   },
 
   decorateFeedback(feedback) {
@@ -81,9 +137,13 @@ Page({
     if (!token || this.data.adminLoading) return;
     this.setData({ adminLoading: true, error: "" });
     try {
-      const admin = await api.request("corrections/admin", { reviewToken: token });
+      const [admin, fbRes] = await Promise.all([
+        api.request("corrections/admin", { reviewToken: token }),
+        api.request("feedback/admin/list", { reviewToken: token, status: this.data.userFeedbackFilter }).catch(() => null),
+      ]);
       this.reviewToken = token;
       this.credential = "";
+      const userFeedbacks = (fbRes?.items || []).map(item => this.decorateUserFeedback(item));
       this.setData({
         adminLoading: false,
         credentialOpen: false,
@@ -93,7 +153,16 @@ Page({
         pendingCount: admin.pendingCount || 0,
         feedbacks: (admin.feedbacks || []).map(feedback => this.decorateFeedback(feedback)),
         versions: admin.versions || [],
+        userFeedbacks,
+        userFeedbackSummary: fbRes?.summary || this.data.userFeedbackSummary,
+        userFeedbackPendingCount: fbRes?.summary?.pending ?? this.data.userFeedbackPendingCount,
+        feedbackNotify: fbRes?.notify || this.data.feedbackNotify,
       });
+      if (this.targetFeedbackId) {
+        const target = userFeedbacks.find(item => item.id === this.targetFeedbackId);
+        this.targetFeedbackId = "";
+        if (target) this.openUserFeedbackItem(target);
+      }
     } catch (error) {
       this.setData({ adminLoading: false, error: error.message, authorized: false });
     }
@@ -110,6 +179,8 @@ Page({
 
   closeCredential() {
     if (this.data.adminLoading) return;
+    this.sheetDrag?.reset();
+    this._sheetScrollTop = 0;
     this.credential = "";
     this.setData({ credentialOpen: false, hasCredential: false, error: "" });
   },
@@ -121,12 +192,21 @@ Page({
     }
     this.setData({ adminLoading: true, error: "" });
     try {
-      const admin = await api.request("corrections/admin", { reviewToken: this.reviewToken });
+      const [admin, fbRes] = await Promise.all([
+        api.request("corrections/admin", { reviewToken: this.reviewToken }),
+        api.request("feedback/admin/list", { reviewToken: this.reviewToken, status: this.data.userFeedbackFilter }).catch(() => null),
+      ]);
       this.setData({
         adminLoading: false,
         pendingCount: admin.pendingCount || 0,
         feedbacks: (admin.feedbacks || []).map(feedback => this.decorateFeedback(feedback)),
         versions: admin.versions || [],
+        ...(fbRes ? {
+          userFeedbacks: (fbRes.items || []).map(item => this.decorateUserFeedback(item)),
+          userFeedbackSummary: fbRes.summary || this.data.userFeedbackSummary,
+          userFeedbackPendingCount: fbRes.summary?.pending ?? this.data.userFeedbackPendingCount,
+          feedbackNotify: fbRes.notify || this.data.feedbackNotify,
+        } : {}),
       });
     } catch (error) {
       this.setData({ adminLoading: false, error: error.message });
@@ -136,8 +216,152 @@ Page({
   lock() {
     if (this.data.adminLoading) return;
     this.reviewToken = "";
-    this.setData({ authorized: false, feedbacks: [], versions: [], detail: null, review: null });
+    this.setData({
+      authorized: false,
+      feedbacks: [],
+      versions: [],
+      userFeedbacks: [],
+      detail: null,
+      review: null,
+      activeUserFeedback: null,
+    });
     this.loadSummary();
+  },
+
+  async setUserFeedbackFilter(event) {
+    const status = event.currentTarget.dataset.status;
+    if (!status || status === this.data.userFeedbackFilter || !this.reviewToken) return;
+    this.setData({ userFeedbackFilter: status });
+    try {
+      const fbRes = await api.request("feedback/admin/list", { reviewToken: this.reviewToken, status });
+      this.setData({
+        userFeedbacks: (fbRes.items || []).map(item => this.decorateUserFeedback(item)),
+        userFeedbackSummary: fbRes.summary || this.data.userFeedbackSummary,
+        userFeedbackPendingCount: fbRes.summary?.pending ?? this.data.userFeedbackPendingCount,
+        feedbackNotify: fbRes.notify || this.data.feedbackNotify,
+      });
+    } catch (error) {
+      wx.showToast({ title: error.message || "读取失败", icon: "none" });
+    }
+  },
+
+  openUserFeedback(event) {
+    const item = this.data.userFeedbacks.find(entry => entry.id === event.currentTarget.dataset.id);
+    if (item) this.openUserFeedbackItem(item);
+  },
+
+  openUserFeedbackItem(item) {
+    this.setData({
+      activeUserFeedback: item,
+      userFeedbackReplyText: item.reply?.text || "",
+      userFeedbackReplyStatus: item.status === "pending" ? "replied" : item.status,
+      userFeedbackError: "",
+    });
+  },
+
+  closeUserFeedback() {
+    if (this.data.savingUserFeedback) return;
+    this.sheetDrag?.reset();
+    this._sheetScrollTop = 0;
+    this.setData({ activeUserFeedback: null, userFeedbackError: "" });
+  },
+
+  setUserFeedbackReplyStatus(event) {
+    const status = event.currentTarget.dataset.status;
+    if (status) this.setData({ userFeedbackReplyStatus: status, userFeedbackError: "" });
+  },
+
+  onUserFeedbackReplyInput(event) {
+    this.setData({ userFeedbackReplyText: event.detail.value || "", userFeedbackError: "" });
+  },
+
+  copyFeedbackContact() {
+    const contact = this.data.activeUserFeedback?.contact;
+    if (contact) wx.setClipboardData({ data: contact });
+  },
+
+  previewUserFeedbackImage(event) {
+    const index = Number(event.currentTarget.dataset.index) || 0;
+    const urls = (this.data.activeUserFeedback?.images || []).map(img => img.dataUri);
+    if (urls[index]) wx.previewImage({ current: urls[index], urls });
+  },
+
+  async submitUserFeedbackReply() {
+    const target = this.data.activeUserFeedback;
+    if (!target || !this.reviewToken || this.data.savingUserFeedback) return;
+    this.setData({ savingUserFeedback: true, userFeedbackError: "" });
+    try {
+      await api.request("feedback/admin/reply", {
+        reviewToken: this.reviewToken,
+        feedbackId: target.id,
+        status: this.data.userFeedbackReplyStatus,
+        replyText: String(this.data.userFeedbackReplyText || "").trim(),
+      });
+      this.setData({ savingUserFeedback: false, activeUserFeedback: null });
+      wx.showToast({ title: "已保存回复", icon: "success" });
+      await this.refreshAdmin();
+    } catch (error) {
+      this.setData({ savingUserFeedback: false, userFeedbackError: error.message || "保存失败" });
+    }
+  },
+
+  subscribeFeedbackNotify() {
+    const templateId = this.data.feedbackNotify?.templateId;
+    if (!templateId || !this.reviewToken || this.data.subscribingNotify) return;
+    this.setData({ subscribingNotify: true });
+    // 微信要求 requestSubscribeMessage 必须在点击事件内同步触发，不能放在 await 之后。
+    wx.requestSubscribeMessage({
+      tmplIds: [templateId],
+      success: async (subRes) => {
+        const accepted = subRes?.[templateId] === "accept";
+        if (!accepted) {
+          this.setData({ subscribingNotify: false });
+          wx.showToast({ title: "未允许接收提醒", icon: "none" });
+          return;
+        }
+        try {
+          const loginRes = await new Promise((resolve, reject) => wx.login({ success: resolve, fail: reject }));
+          const res = await api.request("feedback/admin/subscribe", {
+            reviewToken: this.reviewToken,
+            wxCode: loginRes.code,
+            label: storage.name(),
+            accepted: true,
+          });
+          this.setData({
+            subscribingNotify: false,
+            feedbackNotify: res.notify || this.data.feedbackNotify,
+          });
+          wx.showToast({ title: `已订阅，剩余 ${res.subscriber?.quota ?? 1} 次`, icon: "success" });
+        } catch (error) {
+          this.setData({ subscribingNotify: false });
+          wx.showToast({ title: error.message || "订阅绑定失败", icon: "none" });
+        }
+      },
+      fail: (error) => {
+        this.setData({ subscribingNotify: false });
+        const msg = String(error?.errMsg || "").includes("cancel") ? "已取消订阅" : "订阅窗口拉起失败";
+        wx.showToast({ title: msg, icon: "none" });
+      },
+    });
+  },
+
+  async testFeedbackNotify() {
+    if (!this.reviewToken || this.data.testingNotify) return;
+    this.setData({ testingNotify: true });
+    try {
+      const res = await api.request("feedback/admin/test-notify", { reviewToken: this.reviewToken });
+      this.setData({
+        testingNotify: false,
+        feedbackNotify: res.notify || this.data.feedbackNotify,
+      });
+      wx.showToast({
+        title: res.sent > 0 ? "测试提醒已发送" : (res.lastError || res.skippedReason || "未能发送"),
+        icon: res.sent > 0 ? "success" : "none",
+      });
+    } catch (error) {
+      this.setData({ testingNotify: false });
+      wx.showToast({ title: error.message || "发送失败", icon: "none" });
+    }
   },
 
   openDetail(event) {
@@ -146,6 +370,8 @@ Page({
   },
 
   closeDetail() {
+    this.sheetDrag?.reset();
+    this._sheetScrollTop = 0;
     this.setData({ detail: null });
   },
 
@@ -171,7 +397,10 @@ Page({
   },
 
   closeReview() {
-    if (!this.data.adminLoading) this.setData({ review: null, confirming: false, reviewError: "" });
+    if (this.data.adminLoading) return;
+    this.sheetDrag?.reset();
+    this._sheetScrollTop = 0;
+    this.setData({ review: null, confirming: false, reviewError: "" });
   },
 
   onQuestionSelection(event) {

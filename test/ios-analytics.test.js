@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { gradeVersion } from "../src/model.js";
+import { IMPORTED_PAPERS } from "../src/data/imported-papers.js";
 import { describeScoringRule } from "../src/analytics.js";
 import { catalogAttempt } from "./analytics-catalog-fixtures.mjs";
 import { buildIOSReportAnalysis, buildIOSStatsAnalysis, createIOSAnalyticsFeature } from "../docs/ui-exploration/ios-v3/features/analytics.js";
@@ -18,7 +19,20 @@ const filters = (extra = {}) => ({ dimension: "total", metric: "rate", sourceId:
 // 只选择卷型，花生与粉笔的不同真实权重也须全部进入地市成长记录。
 test("iOS city growth contains all130-question records and never restores a hidden signature subgroup", () => {
   const flower = catalogAttempt({ paperId: "sihai-2026-h2-p2-city-01", id: "flower", createdAt: 1 });
-  const fenbi = catalogAttempt({ paperId: "fenbi-2027-guokao-01", id: "fenbi", createdAt: 2 });
+  const fenbiBase = IMPORTED_PAPERS.find(item => item.id === "fenbi-2027-guokao-01");
+  const altQuestions = fenbiBase.sections.flatMap(section =>
+    Array.from({ length: section.end - section.start + 1 }, (_, i) => ({
+      number: section.start + i, type: section.name, typeId: section.id, correctAnswer: "A",
+      cents: section.id === "politics" || section.id === "common" || section.id === "analogy" ? 70 : 80,
+    }))
+  );
+  const altAnswers = altQuestions.map((_, i) => i % 2 === 0 ? "A" : "B");
+  const fenbi = {
+    id: "fenbi", paperId: fenbiBase.id, versionId: `${fenbiBase.id}:v1`, paperTitle: fenbiBase.title,
+    institution: fenbiBase.institution, project: fenbiBase.project, period: fenbiBase.period,
+    variant: fenbiBase.variant, versionLabel: "1.0", createdAt: 2, answers: altAnswers,
+    report: gradeVersion({ questions: altQuestions }, altAnswers),
+  };
   const province = catalogAttempt({ paperId: "sihai-2026-h2-p2-province-01", id: "province", createdAt: 3 });
   assert.notEqual(describeScoringRule(flower).signature, describeScoringRule(fenbi).signature);
   const records = [flower, fenbi, province];

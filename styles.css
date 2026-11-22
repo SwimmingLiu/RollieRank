@@ -2,6 +2,7 @@
 /* 新功能样式随现有入口发布，各自命名空间防止评论和分析控件影响答题页面。 */
 @import url("./src/features/analytics.css");
 @import url("./src/features/discussions.css");
+@import url("./src/features/discussions-admin.css");
 @import url("./src/features/corrections.css");
 @import url("./src/features/positions.css");
 

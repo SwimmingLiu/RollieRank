@@ -9,6 +9,7 @@ Page({
     publisher: "",
     projectsOpen: false,
     loading: true,
+    refreshing: false,
     error: "",
     projects: [],
     projectOptions: [],
@@ -26,8 +27,9 @@ Page({
     if (this.data.projects.length) this.load();
   },
 
-  onPullDownRefresh() {
-    this.load(true).finally(() => wx.stopPullDownRefresh());
+  onRefresherRefresh() {
+    this.setData({ refreshing: true });
+    this.load(true).finally(() => this.setData({ refreshing: false }));
   },
 
   async load(force) {
@@ -38,19 +40,19 @@ Page({
       if (!group) throw new Error("没有找到这个机构的已发布套卷。");
       // 每张卷卡显示本机真实状态：草稿、已提交或可开始。
       const drafts = storage.draftIndex();
-      const projects = group.projects.map(project => ({
-        ...project,
-        title: [project.project.split(" · ")[0], catalogUtil.periodLabel(project.period),
-          project.variant === "副省级" ? project.variant : ""].filter(Boolean).join(" · "),
-        versions: project.versions.map(version => {
+      const projects = group.projects.map(project => {
+        const versions = project.versions.map(version => {
           const draft = drafts[version.id] || null;
           const best = storage.bestAttempt(version.id);
           const answered = draft ? draft.answered || 0 : 0;
+          const card = catalogUtil.paperCardParts(version);
           return {
             id: version.id,
-            number: catalogUtil.numberedPaper(version) ? version.number : 0,
-            numberText: catalogUtil.numberedPaper(version) ? String(version.number).padStart(2, "0") : catalogUtil.versionTitle(version),
+            number: card.numeric ? version.number || 1 : 0,
+            numberText: card.primary,
+            unitText: card.unit,
             questionCount: version.questionCount,
+            timeLimitMinutes: Number(version.timeLimitMinutes) > 0 ? Math.round(Number(version.timeLimitMinutes)) : 0,
             draftAnswered: answered,
             submitted: Boolean(best),
             state: best ? "complete" : answered ? "draft" : "new",
@@ -60,8 +62,22 @@ Page({
             draftId: draft ? draft.id : "",
             bestScore: best ? formatScore(best.totalCents) : "",
           };
-        }),
-      }));
+        });
+        const counts = new Set(versions.map(v => v.questionCount).filter(Boolean));
+        const mins = new Set(versions.map(v => v.timeLimitMinutes).filter(Boolean));
+        const doneCount = versions.filter(v => v.submitted).length;
+        const metaParts = [`共 ${versions.length} 套`];
+        if (counts.size === 1) metaParts.push(`${[...counts][0]}题`);
+        if (mins.size === 1) metaParts.push(`${[...mins][0]}分钟`);
+        return {
+          ...project,
+          title: catalogUtil.projectTitle(project, group.projects),
+          metaText: metaParts.join(" · "),
+          doneCount,
+          doneProgress: versions.length ? Math.round(doneCount / versions.length * 100) : 0,
+          versions,
+        };
+      });
       const savedKey = getApp().globalData.catalogSelection?.[this.data.institution];
       const defaultProject = projects.findIndex(project => catalogUtil.periodLabel(project.period) === "第1期");
       const savedProject = projects.findIndex(project => project.key === savedKey);

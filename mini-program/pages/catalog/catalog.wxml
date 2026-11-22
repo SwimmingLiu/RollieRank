@@ -1,7 +1,9 @@
-<page-meta page-style="{{projectsOpen ? 'overflow: hidden;' : ''}}" />
+<page-meta page-style="overflow: hidden;" />
 <view class="screen">
   <rr-nav title="{{publisher}}套卷" />
 
+  <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}" refresher-enabled="{{true}}" refresher-triggered="{{refreshing}}" refresher-background="#fcf8f1" bindrefresherrefresh="onRefresherRefresh">
+  <view class="page-scroll__body">
   <view wx:if="{{loading}}" class="loading">正在读取套卷…</view>
   <view wx:elif="{{error}}" class="empty">
     <text>{{error}}</text>
@@ -12,30 +14,57 @@
     <view class="cat__library">
       <view class="cat__selector">
         <button wx:if="{{projects.length > 1}}" class="cat__hero {{institution === '超格' ? 'cat__hero--orange' : ''}}" bindtap="openProjects" hover-class="press">
-          <text>{{projects[activeProject].title}}</text>
-          <image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
+          <view class="cat__hero-row">
+            <view class="cat__hero-copy grow">
+              <text class="cat__hero-title ellipsis">{{projects[activeProject].title}}</text>
+              <text wx:if="{{projects[activeProject].metaText}}" class="cat__hero-meta ellipsis">{{projects[activeProject].metaText}}</text>
+            </view>
+            <text wx:if="{{projects[activeProject].doneCount}}" class="cat__hero-stat num">{{projects[activeProject].doneCount}}/{{projects[activeProject].versions.length}}</text>
+            <view class="cat__hero-chevron"><image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" /></view>
+          </view>
+          <view wx:if="{{projects[activeProject].doneCount}}" class="cat__hero-bar"><view style="width: {{projects[activeProject].doneProgress}}%;"></view></view>
         </button>
-        <view wx:else class="cat__hero {{institution === '超格' ? 'cat__hero--orange' : ''}}">{{projects[activeProject].title}}</view>
+        <view wx:else class="cat__hero {{institution === '超格' ? 'cat__hero--orange' : ''}}">
+          <view class="cat__hero-row">
+            <view class="cat__hero-copy grow">
+              <text class="cat__hero-title ellipsis">{{projects[activeProject].title}}</text>
+              <text wx:if="{{projects[activeProject].metaText}}" class="cat__hero-meta ellipsis">{{projects[activeProject].metaText}}</text>
+            </view>
+            <text wx:if="{{projects[activeProject].doneCount}}" class="cat__hero-stat num">{{projects[activeProject].doneCount}}/{{projects[activeProject].versions.length}}</text>
+          </view>
+          <view wx:if="{{projects[activeProject].doneCount}}" class="cat__hero-bar"><view style="width: {{projects[activeProject].doneProgress}}%;"></view></view>
+        </view>
       </view>
       <view class="cat__grid">
         <button wx:for="{{projects[activeProject].versions}}" wx:key="id" class="cat__paper cat__paper--{{item.state}}" data-id="{{item.id}}" data-action="{{item.actionType}}" bindtap="openPaper" hover-class="press"
-          aria-label="{{item.numberText}}{{item.number ? '套' : ''}}，{{item.submitted ? '查看成绩' : item.state === 'draft' ? '继续录答案' : '录答案'}}">
+          aria-label="{{item.numberText}}{{item.unitText}}，{{item.submitted ? '查看成绩' : item.state === 'draft' ? '继续录答案' : '录答案'}}">
           <view class="cat__paper-main">
-            <view class="cat__paper-copy">
-              <view class="cat__paper-title {{item.number ? 'cat__paper-title--number' : ''}}">
+            <view class="cat__paper-top">
+              <view class="cat__paper-title {{item.number ? 'cat__paper-title--number' : ''}} {{item.submitted || item.state === 'draft' ? 'cat__paper-stamp' : ''}}">
                 <text class="cat__paper-no {{item.number ? 'display-num num' : 'cat__paper-no--name'}}">{{item.numberText}}</text>
-                <text wx:if="{{item.number}}" class="cat__paper-unit">套</text>
+                <text wx:if="{{item.unitText && !item.submitted && item.state !== 'draft'}}" class="cat__paper-unit">{{item.unitText}}</text>
+                <image wx:if="{{item.submitted}}" class="cat__paper-badge" src="{{uiBase}}/check.svg" mode="aspectFit" />
               </view>
-              <view wx:if="{{item.submitted}}" class="cat__paper-state"><text class="display-num cat__paper-score">{{item.bestScore}}</text><text class="cat__paper-unit">分</text></view>
-              <view wx:elif="{{item.draftAnswered}}" class="cat__paper-state"><text class="num cat__paper-count">{{item.draftAnswered}}</text><text class="cat__paper-unit"> / {{item.questionCount}}</text></view>
             </view>
-            <image class="cat__paper-arrow" src="{{uiBase}}/arrow-right.svg" mode="aspectFit" />
+            <view class="cat__paper-foot">
+              <view wx:if="{{item.submitted}}" class="cat__paper-state grow">
+                <text class="display-num cat__paper-score">{{item.bestScore}}</text><text class="cat__paper-unit">分</text>
+              </view>
+              <view wx:elif="{{item.draftAnswered}}" class="cat__paper-draft grow">
+                <view class="cat__paper-state"><text class="num cat__paper-count">{{item.draftAnswered}}</text><text class="cat__paper-unit">/{{item.questionCount}}</text></view>
+                <view class="cat__progress"><view style="width: {{item.progress}}%;"></view></view>
+              </view>
+              <view wx:else class="cat__paper-action">
+                <image class="cat__paper-arrow" src="{{uiBase}}/arrow-right.svg" mode="aspectFit" />
+              </view>
+            </view>
           </view>
-          <view wx:if="{{item.state === 'draft'}}" class="cat__progress"><view style="width: {{item.progress}}%;"></view></view>
         </button>
       </view>
     </view>
   </block>
+  </view>
+  </scroll-view>
 
   <rr-tabbar active="home" />
 

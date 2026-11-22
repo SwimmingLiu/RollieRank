@@ -1,7 +1,10 @@
 import { createCipheriv, createHash, randomBytes } from "node:crypto";
+import { createQiniuAvatarStorage, readQiniuConfig } from "./qiniu-oss.mjs";
+import { createWechatModeration, matchKeywords, normalizeKeywords } from "./wechat-moderation.mjs";
 
 const PATH = "/api/miniprogram-profile";
 const AVATAR_ID = /^[a-f0-9]{48}$/;
+const GUEST_ID = /^[\w-]{10,80}$/;
 const WECHAT_CODE = /^[\w-]{1,256}$/;
 const MAX_AVATAR_BYTES = 256 * 1024;
 const PNG = Buffer.from("89504e470d0a1a0a", "hex");
@@ -13,6 +16,7 @@ function configuration(env) {
     appId: env.ROLLIERANK_WECHAT_APP_ID?.trim(),
     secret: env.ROLLIERANK_WECHAT_APP_SECRET?.trim(),
     phoneKey: env.ROLLIERANK_WECHAT_PHONE_ENABLED === "1" && key.length === 32 ? key : null,
+    qiniu: readQiniuConfig(env),
   };
 }
 
@@ -30,7 +34,46 @@ function avatarImage(data) {
   if (!mime || bytes.length < 24 || bytes.length > MAX_AVATAR_BYTES || bytes.toString("base64") !== data) {
     throw failure(400, "请选择有效的 PNG 或 JPEG 头像。");
   }
-  return { id: randomBytes(24).toString("hex"), mime, data };
+  return { id: randomBytes(24).toString("hex"), mime, bytes, data };
+}
+
+export function defaultNickname(guestId) {
+  const raw = String(guestId || "").trim();
+  if (!raw) return "卷友";
+  let hash = 2166136261;
+  for (let i = 0; i < raw.length; i += 1) {
+    hash ^= raw.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  const code = 1000 + ((hash >>> 0) % 9000);
+  return `卷友${code}`;
+}
+
+export function isDefaultNickname(value) {
+  const text = String(value || "").trim();
+  return !text || text === "卷友" || /^卷友\d{4}$/.test(text);
+}
+
+export function avatarUrlForProfile(profile) {
+  if (typeof profile?.avatar?.url === "string" && /^https?:\/\//i.test(profile.avatar.url)) {
+    return profile.avatar.url;
+  }
+  if (typeof profile?.avatar?.id === "string" && AVATAR_ID.test(profile.avatar.id)) {
+    return `${PATH}/avatar?id=${profile.avatar.id}`;
+  }
+  return "";
+}
+
+export function wechatProfilesByGuest(store) {
+  const byGuest = new Map();
+  for (const profile of Object.values(store?.features?.wechatProfiles ?? {})) {
+    if (!profile || typeof profile.guestId !== "string" || !GUEST_ID.test(profile.guestId)) continue;
+    const previous = byGuest.get(profile.guestId);
+    if (!previous || (profile.updatedAt || 0) >= (previous.updatedAt || 0)) {
+      byGuest.set(profile.guestId, profile);
+    }
+  }
+  return byGuest;
 }
 
 function protectPhone(info, key) {
@@ -46,15 +89,22 @@ function protectPhone(info, key) {
 }
 
 function profileView(profile) {
-  return { name: profile?.name ?? "", avatarId: profile?.avatar?.id ?? "", phoneLast4: profile?.phone?.last4 ?? "" };
+  return {
+    name: profile?.name ?? "",
+    avatarId: profile?.avatar?.id ?? "",
+    ...(profile?.avatar?.url ? { avatarUrl: profile.avatar.url } : {}),
+    phoneLast4: profile?.phone?.last4 ?? "",
+  };
 }
 
 // Device credentials protect editable profiles; phone changes also require WeChat verification.
-export function createWechatProfileService({ readCatalog, mutateCatalog }, {
-  config = configuration(process.env), fetchImpl = globalThis.fetch,
+export function createWechatProfileService({ readCatalog, mutateCatalog, moderation }, {
+  config = configuration(process.env), fetchImpl = globalThis.fetch, oss,
 } = {}) {
-  const { appId, secret, phoneKey } = config;
+  const { appId, secret, phoneKey, qiniu } = config;
   const phoneEnabled = Boolean(appId && secret && phoneKey);
+  const avatarStorage = oss ?? createQiniuAvatarStorage({ config: qiniu ?? {}, fetchImpl });
+  const sec = moderation ?? createWechatModeration({ fetchImpl });
   let accessToken = "";
   let accessTokenExpires = 0;
   let pendingToken;
@@ -102,19 +152,62 @@ export function createWechatProfileService({ readCatalog, mutateCatalog }, {
     return protectPhone(info, phoneKey);
   }
 
-  return async function handle({ pathname, method, input, query, response, send }) {
+  async function applyMediaCheckResult(payload) {
+    if (!payload?.traceId || payload.suggest !== "risky") return false;
+    let matched = false;
+    await mutateCatalog(({ features }) => {
+      const profiles = features.wechatProfiles ?? {};
+      for (const profile of Object.values(profiles)) {
+        if (profile?.avatar?.traceId === payload.traceId) {
+          matched = true;
+          delete profile.avatar;
+          break;
+        }
+      }
+    });
+    return matched;
+  }
+
+  async function handle({ pathname, method, input, query, response, send }) {
     if (!pathname.startsWith(PATH + "/")) return false;
     if (method === "GET" && pathname === PATH + "/capabilities") {
       send(200, { phoneEnabled });
     } else if (method === "POST" && pathname === PATH + "/session") {
       // Provision a random credential before writes so a lost save response can be retried.
       send(200, { token: randomBytes(24).toString("hex") });
+    } else if (method === "GET" && pathname === PATH + "/sec-avatar") {
+      const id = query.get("id") || "";
+      const kind = query.get("kind") || "";
+      const index = Number(query.get("index") ?? 0);
+      const exp = query.get("exp") || "";
+      const sig = query.get("sig") || "";
+      if (!sec.verifyMediaUrl({ targetType: "avatar", targetId: id, kind, index, exp, sig })) {
+        send(403, { error: "头像校验链接已失效。" });
+        return true;
+      }
+      const profile = AVATAR_ID.test(id) && Object.values(readCatalog().features.wechatProfiles ?? {})
+        .find(item => item.avatar?.id === id);
+      if (!profile) send(404, { error: "找不到头像。" });
+      else if (profile.avatar.url && !profile.avatar.data) {
+        response.writeHead(302, { Location: profile.avatar.url, "Cache-Control": "private, no-store" });
+        response.end();
+      } else {
+        const bytes = Buffer.from(profile.avatar.data, "base64");
+        response.writeHead(200, {
+          "Content-Type": profile.avatar.mime, "Content-Length": bytes.length,
+          "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff",
+        });
+        response.end(bytes);
+      }
     } else if (method === "GET" && pathname === PATH + "/avatar") {
       const id = query.get("id");
       const profile = AVATAR_ID.test(id ?? "") && Object.values(readCatalog().features.wechatProfiles ?? {})
         .find(profile => profile.avatar?.id === id);
       if (!profile) send(404, { error: "找不到头像。" });
-      else {
+      else if (profile.avatar.url) {
+        response.writeHead(302, { Location: profile.avatar.url, "Cache-Control": "public, max-age=86400" });
+        response.end();
+      } else {
         const bytes = Buffer.from(profile.avatar.data, "base64");
         response.writeHead(200, {
           "Content-Type": profile.avatar.mime, "Content-Length": bytes.length,
@@ -125,13 +218,32 @@ export function createWechatProfileService({ readCatalog, mutateCatalog }, {
     } else if (method === "POST" && pathname === PATH + "/profile") {
       if (typeof input.token !== "string" || !AVATAR_ID.test(input.token)) throw failure(401, "本机资料凭证无效。");
       const user = createHash("sha256").update(input.token).digest("hex");
+      const guestId = typeof input.guestId === "string" && GUEST_ID.test(input.guestId) ? input.guestId : "";
       const patch = {};
+      let resolvedOpenId = "";
       if (input.name !== undefined) {
         const name = typeof input.name === "string" ? input.name.trim() : "";
         if (!name || name.length > 12 || /[\u0000-\u001f\u007f]/.test(name)) throw failure(400, "请输入 1 到 12 字的昵称。");
+        const keywords = normalizeKeywords(readCatalog().features?.discussions?.settings?.blockedKeywords);
+        if (matchKeywords(name, keywords).length) throw failure(422, "昵称包含不允许的内容，请更换。");
+        if (sec.isEnabled()) {
+          resolvedOpenId = await sec.resolveOpenId({ openid: input.openid, wxCode: input.wxCode, guestId: user });
+          if (resolvedOpenId) {
+            const check = await sec.checkText({ content: name, openid: resolvedOpenId, scene: 1, nickname: name });
+            if (check.suggest === "risky") throw failure(422, "昵称未通过微信安全检测，请更换。");
+          }
+        }
         patch.name = name;
       }
-      if (input.avatar !== undefined) patch.avatar = avatarImage(input.avatar);
+      if (input.avatar !== undefined) {
+        const parsed = avatarImage(input.avatar);
+        if (avatarStorage.isEnabled()) {
+          const uploaded = await avatarStorage.uploadAvatar({ id: parsed.id, bytes: parsed.bytes, mime: parsed.mime });
+          patch.avatar = { id: parsed.id, mime: parsed.mime, url: uploaded.url, key: uploaded.key };
+        } else {
+          patch.avatar = { id: parsed.id, mime: parsed.mime, data: parsed.data };
+        }
+      }
       if (input.phoneCode !== undefined) {
         if (!phoneEnabled) throw failure(503, "手机号授权暂未启用。");
         if (typeof input.phoneCode !== "string" || !WECHAT_CODE.test(input.phoneCode) ||
@@ -145,6 +257,14 @@ export function createWechatProfileService({ readCatalog, mutateCatalog }, {
         if (previousOwner && previousOwner !== owner) throw failure(403, "请使用原微信账号更新手机号。");
         patch.phone = { ...await exchangePhone(input.phoneCode), owner };
       }
+      const existingProfile = readCatalog().features.wechatProfiles?.[user];
+      const shouldBindGuest = Boolean(guestId && (Object.keys(patch).length || existingProfile) && existingProfile?.guestId !== guestId);
+      if (guestId && (Object.keys(patch).length || shouldBindGuest)) {
+        patch.guestId = guestId;
+      }
+      if (Object.keys(patch).length) {
+        patch.updatedAt = Date.now();
+      }
       const profile = Object.keys(patch).length
         ? await mutateCatalog(({ features }) => {
           const profiles = features.wechatProfiles ??= {};
@@ -152,9 +272,25 @@ export function createWechatProfileService({ readCatalog, mutateCatalog }, {
           if (patch.phone && previousOwner && previousOwner !== patch.phone.owner) throw failure(403, "请使用原微信账号更新手机号。");
           return profiles[user] = { ...profiles[user], ...patch };
         })
-        : readCatalog().features.wechatProfiles?.[user];
+        : existingProfile;
+      if (patch.avatar && sec.isMediaCallbackReady()) {
+        resolvedOpenId ||= await sec.resolveOpenId({ openid: input.openid, wxCode: input.wxCode, guestId: user });
+        if (resolvedOpenId) {
+          const mediaUrl = patch.avatar.url || sec.buildMediaUrl({ targetType: "avatar", targetId: patch.avatar.id, kind: "avatar", index: 0 });
+          const check = await sec.checkMediaAsync({ mediaUrl, mediaType: 2, openid: resolvedOpenId, scene: 1 });
+          if (check?.traceId) {
+            await mutateCatalog(({ features }) => {
+              const target = features.wechatProfiles?.[user];
+              if (target?.avatar?.id === patch.avatar.id) target.avatar.traceId = check.traceId;
+            });
+          }
+        }
+      }
       send(200, { profile: profileView(profile) });
     } else send(404, { error: "没有找到这个资料接口。" });
     return true;
-  };
+  }
+
+  handle.applyMediaCheckResult = applyMediaCheckResult;
+  return handle;
 }

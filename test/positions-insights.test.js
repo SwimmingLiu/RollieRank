@@ -80,7 +80,7 @@ test("formal HTTP submissions automatically rank, retry once, keep the best and 
   const first = await app.submit(viewer, "automatic-first-attempt", answers(0, null));
   const profile = (await app.request("positions/profile?guestId=" + viewer)).data;
   assert.deepEqual(profile.participation.attemptIds, [first.id]);
-  assert.equal(profile.participation.name, "卷友");
+  assert.match(profile.participation.name, /^卷友\d{4}$/);
   assert.equal((await app.request(app.query("leaderboard"))).data.self.value, 0);
   const request = { guestId: viewer, versionId: app.version.id, attemptId: "automatic-best-attempt", answers: answers(8), name: "资料昵称" };
   assert.equal((await app.request("submit", request)).status, 200);

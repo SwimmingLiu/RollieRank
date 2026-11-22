@@ -50,21 +50,41 @@ npm --prefix mini-program run build:shared -- https://rollie-rank.swimmingliu.cn
 - 草稿与存疑标记在本机保存，重新进入会恢复。
 
 ## 开发
-1. 用微信开发者工具打开 `mini-program/` 目录（AppID 已写入 `project.config.json`）。
-2. 本地流程自检使用一份独立构建，将 `config.js` 的 `API_BASE` 指向隔离后端并设置 `urlCheck: false`。
-3. 本机校验：
-   ```bash
-   npm --prefix mini-program run check
-   npm run verify -- all
-   ```
 
-用微信开发者工具 CLI 启动自动化和手机预览。以下命令从仓库根目录运行：
+在微信开发者工具里打开下文生成的验收包。改完源码后重新生成验收包，再运行本机校验。
 
 ```sh
-cli auto --project "$PWD/test-results/wechat-local" --auto-port 9420
-MINIPROGRAM_AUTOMATION_PORT=9420 MINIPROGRAM_API_BASE=http://127.0.0.1:4173 \
-  MINIPROGRAM_REVIEW_TOKEN="$ROLLIERANK_LOCAL_REVIEW_TOKEN" node mini-program/tools/flow.mjs
-cli preview --project "$PWD/mini-program" --qr-format image --qr-output /tmp/rollierank-preview.png
+npm --prefix mini-program run check
+npm run verify -- all
+```
+
+## 测试环境
+
+开发版、体验版和真机预览访问 `https://rollie-rank-test.swimmingliu.cn` 的测试 API，无需输入网页测试站口令。测试身份、草稿和练习记录保存在独立的存储空间。正式版使用生产域名和正式存储空间。
+
+在微信公众平台的 `request` 和 `downloadFile` 合法域名中添加 `https://rollie-rank-test.swimmingliu.cn`。用微信开发者工具预览真机开发版，或在版本管理将上传的开发版本设为体验版。录答交卷后用测试库核对回执。
+
+### 本机自动化
+
+先按[测试后端部署说明](../deploy/README.md#测试后端)打开 SSH 隧道。也可以在本机用一个新目录启动一次性服务。
+
+```sh
+test_data=$(mktemp -d)
+ROLLIERANK_DATA_DIR="$test_data" PORT=4175 node scripts/serve.mjs --test-environment
+```
+
+用下面的命令生成独立的小程序验收包。验收包使用单独的本地存储，保存测试身份、草稿和练习记录。生成目录可用 `cli open --project` 手动验收，也可用 `cli auto` 跑完整流程。
+
+```sh
+npm --prefix mini-program run build:shared -- http://127.0.0.1:4175 test-results/wechat-test
+cli auto --project "$PWD/test-results/wechat-test" --auto-port 9420
+```
+
+在运行流程的终端设置测试审核口令。共享实例的口令由服务器 `/etc/rollierank-test.env` 保存。一次性实例需在启动前设置同一个 `ROLLIERANK_REVIEW_TOKEN`。
+
+```sh
+MINIPROGRAM_API_BASE=http://127.0.0.1:4175 MINIPROGRAM_AUTOMATION_PORT=9420 \
+  MINIPROGRAM_REVIEW_TOKEN="$ROLLIERANK_TEST_REVIEW_TOKEN" node mini-program/tools/flow.mjs
 ```
 
 ## 资源

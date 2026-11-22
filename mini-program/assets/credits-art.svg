@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <!-- 背景轻柔暖晕 -->
+  <circle cx="68" cy="68" r="40" fill="#FFF7E6" opacity="0.65"/>
+  <!-- 后方小卷豆 -->
+  <g transform="translate(18 10) rotate(22 36 42)">
+    <path d="M36 22C46 22 52 30 51 41c-1 10-8 17-16 17-9 0-15-6-14-16 1-10 7-20 15-20Z" fill="#F8D88E" stroke="#302F28" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M37 29c-3 2-5 7-4 12 1 4 3 7 6 8" stroke="#302F28" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M29 33c1.5-3 4-5 7-6" stroke="#FFFDF6" stroke-width="2.6" stroke-linecap="round"/>
+  </g>
+  <!-- 左下倾靠小卷豆 -->
+  <g transform="translate(-4 30) rotate(-30 42 52)">
+    <path d="M42 30C53 30 60 39 59 51c-1 12-9 20-19 20-10 0-17-7-16-18 1-12 8-23 18-23Z" fill="#F3A493" stroke="#302F28" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M43 38c-3.5 2.5-5.5 8-4.5 13.5 1 5 4 8.5 7.5 9.5" stroke="#302F28" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M34 42c1.8-3.5 4.5-6 8-7" stroke="#FFF5F2" stroke-width="2.8" stroke-linecap="round"/>
+  </g>
+  <!-- 前景主暖金卷豆 -->
+  <g transform="translate(16 18) rotate(-14 60 58)">
+    <path d="M61 28C77 28 86 41 85 58c-1 16-12 28-26 28-14 0-24-10-23-25 1-16 11-33 25-33Z" fill="#F6C973" stroke="#302F28" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M79 44c3.5 6 4.5 14 2.5 23-2.5 10-10 17-21 17-5 0-10-1.5-14-4 4 3.5 9 5.5 14 5.5 14 0 24-11 25-27.5 1-6-1.5-10.5-6.5-14Z" fill="#E39E3E" opacity="0.48"/>
+    <path d="M62 39c-5 4-7.5 11.5-6.5 19 1 7.5 6 12.5 11.5 14" stroke="#302F28" stroke-width="2.8" stroke-linecap="round"/>
+    <path d="M49 44c2.5-5 6.5-9 11.5-10.5" stroke="#FFFBF0" stroke-width="3.4" stroke-linecap="round"/>
+    <circle cx="46.5" cy="54.5" r="2.2" fill="#FFFBF0"/>
+  </g>
+  <!-- 珊瑚星光与纸卡手绘短线 -->
+  <path d="M98 22v10M93 27h10" stroke="#EF7D82" stroke-width="3" stroke-linecap="round"/>
+  <path d="M24 30v7M20.5 33.5h7" stroke="#D99B38" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M107 62l7-3M104 75l6 4M18 82l6-2" stroke="#302F28" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

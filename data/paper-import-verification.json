@@ -21,9 +21,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-city",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
           "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -47,9 +47,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-city",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
           "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -73,9 +73,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-city",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
           "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -99,9 +99,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-city",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
           "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -125,9 +125,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-city",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
           "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -151,9 +151,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-city",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
           "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -177,9 +177,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-city",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
           "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -203,9 +203,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-city",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
           "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -229,9 +229,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-city",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
           "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -255,9 +255,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-city",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
           "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -281,9 +281,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-city",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
           "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -307,9 +307,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-city",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
           "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -333,9 +333,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-province",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-province-135",
+        "label": "国考135题（副省级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
           "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -359,9 +359,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-province",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-province-135",
+        "label": "国考135题（副省级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
           "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -385,9 +385,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-province",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-province-135",
+        "label": "国考135题（副省级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
           "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -411,9 +411,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-province",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-province-135",
+        "label": "国考135题（副省级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
           "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -437,9 +437,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-province",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-province-135",
+        "label": "国考135题（副省级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
           "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -463,9 +463,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-province",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-province-135",
+        "label": "国考135题（副省级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
           "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -489,9 +489,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-province",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-province-135",
+        "label": "国考135题（副省级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
           "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -515,9 +515,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-province",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-province-135",
+        "label": "国考135题（副省级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
           "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -541,9 +541,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-province",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-province-135",
+        "label": "国考135题（副省级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
           "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -567,9 +567,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-province",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-province-135",
+        "label": "国考135题（副省级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
           "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -593,9 +593,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-province",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-province-135",
+        "label": "国考135题（副省级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
           "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -619,9 +619,9 @@
         }
       },
       "scoringRule": {
-        "kind": "publisher",
-        "id": "sihai-h2-p2-province",
-        "label": "按本套卷随附分值表计分",
+        "kind": "reference",
+        "id": "guokao-province-135",
+        "label": "国考135题（副省级）计分规则",
         "source": {
           "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
           "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -646,11 +646,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则"
       }
     },
     {
@@ -671,11 +668,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则"
       }
     },
     {
@@ -696,11 +690,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则"
       }
     },
     {
@@ -721,11 +712,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则"
       }
     },
     {
@@ -746,11 +734,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则"
       }
     },
     {
@@ -771,11 +756,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则"
       }
     },
     {
@@ -796,11 +778,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "liankao-120",
+        "label": "行测120题计分规则"
       }
     },
     {
@@ -821,11 +800,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "liankao-120",
+        "label": "行测120题计分规则"
       }
     },
     {
@@ -846,11 +822,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "liankao-120",
+        "label": "行测120题计分规则"
       }
     },
     {
@@ -871,11 +844,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "liankao-120",
+        "label": "行测120题计分规则"
       }
     },
     {
@@ -896,11 +866,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则"
       }
     },
     {
@@ -921,11 +888,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则"
       }
     },
     {
@@ -946,11 +910,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则"
       }
     },
     {
@@ -971,11 +932,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则"
       }
     },
     {
@@ -996,11 +954,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则"
       }
     },
     {
@@ -1021,11 +976,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则"
       }
     },
     {
@@ -1099,11 +1051,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则"
       }
     },
     {
@@ -1178,11 +1127,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则"
       }
     },
     {
@@ -1260,11 +1206,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-mixed-135",
+        "label": "国考135题（40判断）计分规则"
       }
     },
     {
@@ -1335,11 +1278,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-mixed-135",
+        "label": "国考135题（40判断）计分规则"
       }
     },
     {
@@ -1407,11 +1347,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-mixed-135",
+        "label": "国考135题（40判断）计分规则"
       }
     },
     {
@@ -1476,11 +1413,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则"
       }
     },
     {
@@ -1550,11 +1484,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则"
       }
     },
     {
@@ -1620,11 +1551,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则"
       }
     },
     {
@@ -1688,11 +1616,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则"
       }
     },
     {
@@ -1758,11 +1683,8 @@
       },
       "scoringRule": {
         "kind": "reference",
-        "id": "guokao-practice-v1",
-        "label": "平台国考参考估分",
-        "normalizationMaxCents": 10000,
-        "rounding": "half-up-after-total",
-        "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+        "id": "guokao-city-130",
+        "label": "国考130题（地市级）计分规则"
       }
     }
   ]

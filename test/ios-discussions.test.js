@@ -90,7 +90,7 @@ test("report is a real-count entry; independent list and lazy editor persist com
   assert.equal(tokens.length, 2); assert.equal(tokens[0], tokens[1]);
   assert.equal(await frame.evaluate(() => { const event=new Event('beforeunload',{cancelable:true});window.dispatchEvent(event);return event.defaultPrevented; }),false);
   assert.equal((await frame.evaluate(() => window.__iosDiscussions.list())).total, 1);
-  assert.equal((await frame.evaluate(() => window.__iosDiscussions.list())).comments[0].author.name, '卷友');
+  assert.match((await frame.evaluate(() => window.__iosDiscussions.list())).comments[0].author.name, /^卷友\d{4}$/);
   assert.equal(await frame.locator('.rr-discussion-text').innerText(), body);
   assert.equal(await frame.evaluate(() => window.__discussionXss), undefined);
   assert.equal(await frame.locator('.rr-discussion-post [data-slot=discussion-avatar]').count(), 1);
@@ -287,7 +287,7 @@ test("direct photo entry retains text and images across reload and recovers from
     await f.enter('report'); return result.comment;
   });
   await page.locator('#size').selectOption('320,568'); await discussion(frame);
-  await frame.locator(`[data-comment-id="${target.id}"]`).getByRole('button', { name: '回复卷友的评论', exact: true }).click();
+  await frame.locator(`[data-comment-id="${target.id}"]`).getByRole('button', { name: new RegExp(`^回复${target.author.name}的评论$`) }).click();
   await frame.locator('#discussion-text').fill('给这条原文的回复');
   assert.match(await frame.locator('.rr-discussion-reply-context').innerText(), /基数先化成整百/);
   const quoted = await frame.locator('.rr-discussion-editor').evaluate(form => ({

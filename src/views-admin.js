@@ -3,8 +3,76 @@ import { icon, esc, score, date, button, sectionHead, empty } from "./ui.js";
 export const templateCsv =
   "题号,题型,答案,分值\n1,政治理论,A,0.5\n2,政治理论,B,0.5\n3,言语理解,C,0.8\n4,言语理解,D,0.8\n5,数量关系,A,1\n6,资料分析,B,1";
 
-export function adminView({ admin }) {
-  return `<div class="page-title"><div><span class="eyebrow">让每一套练习，都有清晰的依据</span><h1>套卷管理</h1><p>导入、校验、试算，再将套卷发布到练习目录。</p></div><span class="tag">本机管理</span></div><div class="notice"><span>${icon("info")}仅管理当前本地服务的数据。</span><p>发布和下线会真实更新本机选卷目录；正式上线时需接入管理权限。</p></div><div class="admin-tabs line-tabs">${button("admin-tab", "套卷与版本", "selected", 'data-value="catalog"')}${button("admin-tab", "导入新套卷", "", 'data-value="import"')}${button("admin-tab", "操作记录", "", 'data-value="audit"')}</div><section id="admin-panel" class="card admin-panel">${adminCatalog(admin)}</section>`;
+export function adminView({ admin, authRequired = false, error = "" }) {
+  const publishedCount = admin ? admin.versions.filter((v) => v.status === "published").length : 0;
+  const totalVersions = admin ? admin.versions.length : 0;
+  const auditCount = admin ? admin.audit.length : 0;
+  return `<div class="admin-page">
+    <div class="admin-header">
+      <div>
+        <h1>运营管理后台</h1>
+        <p>集中管理评论审核、答案纠错、套卷发布与岗位目录。</p>
+      </div>
+      <div class="admin-header-actions">
+        ${authRequired ? button("admin-unlock", `${icon("lock")}输入维护者凭证`, "button primary compact") : ""}
+        ${admin ? button("admin-tab", `${icon("upload")}导入新套卷`, "button primary compact", 'data-value="import"') : ""}
+      </div>
+    </div>
+
+    <div class="admin-kpi-grid" data-admin-kpis>
+      <div class="admin-kpi-card">
+        <span>待复核评论</span>
+        <strong data-kpi="comments-queue">—</strong>
+        <small data-kpi="comments-meta">正在读取内容安全状态</small>
+      </div>
+      <div class="admin-kpi-card">
+        <span>待审核纠错</span>
+        <strong data-kpi="corrections-pending">—</strong>
+        <small data-kpi="corrections-meta">用户提交的参考答案反馈</small>
+      </div>
+      <div class="admin-kpi-card">
+        <span>已发布套卷</span>
+        <strong>${admin ? publishedCount : "—"}</strong>
+        <small>${admin ? `共 ${totalVersions} 个规则版本` : authRequired ? "解锁维护者凭证后查看" : "正在读取套卷目录"}</small>
+      </div>
+      <div class="admin-kpi-card">
+        <span>操作审计</span>
+        <strong>${admin ? auditCount : "—"}</strong>
+        <small>${admin && admin.audit[0] ? `最近：${esc(admin.audit[0].action)}` : "保留所有后台变更记录"}</small>
+      </div>
+    </div>
+
+    ${authRequired ? `<section class="admin-auth-banner">
+      <div>
+        <strong>套卷管理已开启维护者凭证保护</strong>
+        <p>输入一次维护者凭证，即可同步解锁套卷发布、评论审核与答案纠错。</p>
+      </div>
+      ${button("admin-unlock", `${icon("lock")}立即解锁`, "button primary compact")}
+    </section>` : ""}
+
+    <section id="admin-section-discussions" class="admin-section">
+      <div data-feature="discussions-admin"></div>
+    </section>
+
+    <section id="admin-section-corrections" class="admin-section">
+      <div data-feature="corrections-admin"></div>
+    </section>
+
+    <section id="admin-section-catalog" class="admin-section">
+      ${admin ? `
+        <div class="admin-tabs line-tabs">
+          ${button("admin-tab", "套卷与版本", "selected", 'data-value="catalog"')}
+          ${button("admin-tab", "导入新套卷", "", 'data-value="import"')}
+          ${button("admin-tab", "操作记录", "", 'data-value="audit"')}
+        </div>
+        <section id="admin-panel" class="card admin-panel">${adminCatalog(admin)}</section>
+      ` : error && !authRequired ? `<section class="card admin-panel">${empty("暂时没能读取套卷", esc(error), button("retry", "重新加载", "button primary"))}</section>` : ""}
+    </section>
+
+    <section id="admin-section-positions" class="admin-section">
+      <div data-feature="positions-admin"></div>
+    </section>
+  </div>`;
 }
 
 export function adminCatalog(admin) {
@@ -13,7 +81,7 @@ export function adminCatalog(admin) {
     draft: ["待复核", "warning"],
     offline: ["已下线", "muted"],
   };
-  return `${sectionHead("套卷与规则版本", button("admin-tab", `${icon("upload")}导入套卷`, "button primary compact", 'data-value="import"'))}<div class="admin-table"><div class="admin-table-head"><span>套卷 / 机构</span><span>版本</span><span>题量 / 满分</span><span>状态</span><span>操作</span></div>${admin.versions.map((v) => `<div class="admin-table-row"><span><b>${esc(v.title)}</b><small>${esc(v.institution)} · ${esc(v.period)} · ${esc(v.variant)}</small></span><span>v${esc(v.versionLabel)}</span><span>${v.questionCount} 题 / ${score(v.maxCents)} 分</span><span class="tag ${statuses[v.status][1]}">${statuses[v.status][0]}</span><span class="admin-row-actions">${button("admin-preview", "预览", "text-button", `data-id="${esc(v.id)}"`)}${button("admin-status", v.status === "published" ? "下线" : "发布", "text-button", `data-id="${esc(v.id)}" data-status="${v.status === "published" ? "offline" : "published"}"`)}${v.status !== "draft" ? button("admin-revise", "修订", "text-button muted", `data-id="${esc(v.id)}"`) : ""}</span></div>`).join("")}</div>`;
+  return `${sectionHead("套卷与规则版本", button("admin-tab", `${icon("upload")}导入套卷`, "button primary compact", 'data-value="import"'))}<div class="admin-table"><div class="admin-table-head"><span>套卷 / 机构</span><span>版本</span><span>题量 / 满分</span><span>状态</span><span>操作</span></div>${admin.versions.map((v) => `<div class="admin-table-row"><span><b>${esc(v.title)}</b><small>${esc(v.institution)} · ${esc(v.period)} · ${esc(v.variant)}</small></span><span class="mono">v${esc(v.versionLabel)}</span><span class="mono">${v.questionCount} 题 / ${score(v.maxCents)} 分</span><span class="tag ${statuses[v.status][1]}">${statuses[v.status][0]}</span><span class="admin-row-actions">${button("admin-preview", "预览", "text-button", `data-id="${esc(v.id)}"`)}${button("admin-status", v.status === "published" ? "下线" : "发布", "text-button", `data-id="${esc(v.id)}" data-status="${v.status === "published" ? "offline" : "published"}"`)}${v.status !== "draft" ? button("admin-revise", "修订", "text-button muted", `data-id="${esc(v.id)}"`) : ""}</span></div>`).join("")}</div>`;
 }
 
 export function adminImport(admin, revision = null) {
@@ -21,5 +89,5 @@ export function adminImport(admin, revision = null) {
 }
 
 export function adminAudit(admin) {
-  return `${sectionHead("每一次变更，都有记录")}<div class="audit-list">${admin.audit.map((row) => `<div><span class="audit-icon">${icon(row.action.includes("发布") ? "check" : row.action.includes("导入") ? "upload" : "clock")}</span><span><b>${esc(row.action)}</b><small>${esc(row.target)}</small></span><time>${date(row.createdAt, true)}</time></div>`).join("") || empty("还没有管理操作", "导入、发布和下线后，会在这里留下记录。")}</div>`;
+  return `${sectionHead("操作审计记录")}<div class="audit-list">${admin.audit.map((row) => `<div><span class="audit-icon">${icon(row.action.includes("发布") || row.action.includes("通过") ? "check" : row.action.includes("导入") ? "upload" : "clock")}</span><span><b>${esc(row.action)}</b><small>${esc(row.target)}</small></span><time>${date(row.createdAt, true)}</time></div>`).join("") || empty("还没有管理操作", "导入、发布、下线和评论审核后，会在这里留下记录。")}</div>`;
 }

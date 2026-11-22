@@ -2,6 +2,7 @@ const ACTIVE_GUEST = "rollierank:wechat:guest";
 const GUEST = /^[\w-]{10,80}$/;
 const ACTION_SENDER = "rollierank:wechat:sender";
 const ACTIVE_AVATAR = "rollierank:wechat:avatar";
+const ACTIVE_AVATAR_URL = "rollierank:wechat:avatar-url";
 
 async function request(path, body) {
   const response = await fetch("/api/miniprogram-web/" + path, {
@@ -30,6 +31,7 @@ export async function openWechatWebView() {
     sessionStorage.setItem(ACTIVE_GUEST, migration.guestId);
     sessionStorage.setItem(ACTION_SENDER, migration.sender);
     sessionStorage.setItem(ACTIVE_AVATAR, migration.avatarId || "");
+    sessionStorage.setItem(ACTIVE_AVATAR_URL, migration.avatarUrl || "");
     url.hash = "";
     history.replaceState(history.state, "", url);
   }
@@ -49,7 +51,10 @@ export async function openWechatWebView() {
   updateInset();
   window.addEventListener("resize", updateInset);
   const avatarId = sessionStorage.getItem(ACTIVE_AVATAR) || "";
-  const avatarSrc = /^[a-f0-9]{48}$/.test(avatarId) ? "/api/miniprogram-profile/avatar?id=" + avatarId : "";
+  const savedAvatarUrl = sessionStorage.getItem(ACTIVE_AVATAR_URL) || "";
+  const avatarSrc = /^https?:\/\//i.test(savedAvatarUrl)
+    ? savedAvatarUrl
+    : /^[a-f0-9]{48}$/.test(avatarId) ? "/api/miniprogram-profile/avatar?id=" + avatarId : "";
   return { guestId, migration, height, bottom, avatarSrc };
 }
 

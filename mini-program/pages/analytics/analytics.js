@@ -1,6 +1,7 @@
 const storage = require("../../utils/storage.js");
 const format = require("../../utils/format.js");
 const catalog = require("../../utils/catalog.js");
+const { createPageSheetDrag } = require("../../utils/sheet-gesture.js");
 const { ASSET } = require("../../config.js");
 
 const CATEGORIES = [
@@ -41,8 +42,27 @@ Page({
     page: 0,
     pages: 1,
     rangeText: "",
+    trendSrc: "",
+    sheetDragY: 0,
+    sheetDragging: false,
+    sheetClosing: false,
+    sheetShadeOpacity: 1,
     uiBase: "/assets/ui",
   },
+
+  onLoad() {
+    this.sheetDrag = createPageSheetDrag(this, { onDismiss: () => this.closeFilters() });
+  },
+
+  onUnload() {
+    this.sheetDrag?.reset();
+  },
+
+  noopSheet() {},
+  startSheetDrag(event) { this.sheetDrag?.start(event); },
+  moveSheetDrag(event) { this.sheetDrag?.move(event); },
+  endSheetDrag(event) { this.sheetDrag?.end(event); },
+  cancelSheetDrag() { this.sheetDrag?.cancel(); },
 
   onShow() {
     this.build();
@@ -65,13 +85,18 @@ Page({
         const score = format.score(record.totalCents);
         const rate = format.percent(record.maxCents ? record.totalCents / record.maxCents : null);
         const accuracy = format.percent(record.questionCount ? record.correct / record.questionCount : null);
+        const versions = getApp().globalData.versions || [];
+        const version = versions.find(item => item.id === record.versionId);
+        const card = catalog.paperCardParts({ ...(version || record), title: version?.title || record.title });
+        const publisher = catalog.publisherName(record.institution || version?.institution || "");
+        const label = [publisher, card.compactTitle].filter(Boolean).join(" · ") || record.title;
         return {
           id: record.id,
-          label: record.title,
+          label,
           logo: ASSET[catalog.LOGO[record.institution]] || "",
           dateText: format.dateTime(record.createdAt).slice(0, 10),
           score,
-          max: record.maxCents / 100,
+          max: format.score(record.maxCents),
           rate,
           accuracy,
           value: { rate, score, accuracy }[metric],
@@ -97,28 +122,51 @@ Page({
 
   drawTrend() {
     const points = this.data.points.filter(point => Number.isFinite(point.trendValue)).slice().reverse();
-    if (points.length < 2) return;
-    this.createSelectorQuery().select("#trend").fields({ node: true, size: true }).exec(([size]) => {
-      if (!size?.node || !size.width || !size.height) return;
-      const { node, width, height } = size;
-      const dpr = wx.getWindowInfo().pixelRatio || 1;
+    if (points.length < 2) {
+      if (this.data.trendSrc) this.setData({ trendSrc: "" });
+      return;
+    }
+    const ticket = (this.trendTicket || 0) + 1;
+    this.trendTicket = ticket;
+    const query = this.createSelectorQuery();
+    query.select(".analytics__trend-wrap").boundingClientRect();
+    query.select("#trend").fields({ node: true });
+    query.exec(([box, field]) => {
+      if (ticket !== this.trendTicket || !field?.node || !box?.width || !box?.height) return;
+      const node = field.node;
+      const width = Math.round(box.width);
+      const height = Math.round(box.height);
+      const dpr = wx.getWindowInfo?.().pixelRatio || 2;
       node.width = Math.round(width * dpr);
       node.height = Math.round(height * dpr);
       const ctx = node.getContext("2d");
+      ctx.clearRect(0, 0, node.width, node.height);
       ctx.scale(dpr, dpr);
-      const padding = 11;
+      const left = 34;
+      const right = 14;
+      const top = 14;
+      const bottom = 22;
+      const plotW = Math.max(10, width - left - right);
+      const plotH = Math.max(10, height - top - bottom);
       const max = Math.max(1, ...points.map(point => point.trendMax));
+      const unit = this.data.metric === "score" ? "" : "%";
       const map = points.map((point, index) => [
-        padding + (width - padding * 2) * index / (points.length - 1),
-        height - padding - (height - padding * 2) * point.trendValue / max,
+        left + plotW * index / (points.length - 1),
+        top + plotH - plotH * point.trendValue / max,
       ]);
-      ctx.strokeStyle = "#e9dfce";
-      for (const fraction of [0, .25, .5, .75, 1]) {
-        const y = padding + (height - padding * 2) * fraction;
+      ctx.strokeStyle = "#efe6d8";
+      ctx.lineWidth = 1;
+      ctx.font = "10px Nunito, sans-serif";
+      ctx.fillStyle = "#9c8d77";
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      for (const fraction of [0, .5, 1]) {
+        const y = top + plotH * (1 - fraction);
         ctx.beginPath();
-        ctx.moveTo(padding, y);
-        ctx.lineTo(width - padding, y);
+        ctx.moveTo(left, y);
+        ctx.lineTo(width - right, y);
         ctx.stroke();
+        ctx.fillText(Math.round(max * fraction) + unit, left - 6, y);
       }
       ctx.strokeStyle = "#b6874a";
       ctx.fillStyle = "#b6874a";
@@ -129,9 +177,29 @@ Page({
       ctx.stroke();
       for (const [x, y] of map) {
         ctx.beginPath();
-        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.arc(x, y, 3.2, 0, Math.PI * 2);
         ctx.fill();
+        ctx.strokeStyle = "#fffdf8";
+        ctx.lineWidth = 1.4;
+        ctx.stroke();
+        ctx.strokeStyle = "#b6874a";
+        ctx.lineWidth = 2;
       }
+      ctx.fillStyle = "#9c8d77";
+      ctx.textBaseline = "bottom";
+      ctx.textAlign = "left";
+      ctx.fillText(points[0].dateText.slice(5), left, height - 2);
+      ctx.textAlign = "right";
+      ctx.fillText(points[points.length - 1].dateText.slice(5), width - right, height - 2);
+      wx.canvasToTempFilePath({
+        canvas: node,
+        fileType: "png",
+        destWidth: node.width,
+        destHeight: node.height,
+        success: result => {
+          if (ticket === this.trendTicket) this.setData({ trendSrc: result.tempFilePath });
+        },
+      });
     });
   },
 
@@ -157,6 +225,7 @@ Page({
   },
 
   closeFilters() {
+    this.sheetDrag?.reset();
     this.setData({ filterOpen: false });
   },
 

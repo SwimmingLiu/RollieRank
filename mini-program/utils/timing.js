@@ -1,9 +1,10 @@
 const model = require("../vendor/practice-timer.js");
 const storage = require("./storage.js");
+const { storageKey } = require("../config.js");
 
-const TIMER_KEY = "rr:timer";
-const LEGACY_ENTRY_KEY = "rr:timing:pending";
-const entryKey = attemptId => `rr:timing:entry:${attemptId}`;
+const TIMER_KEY = storageKey("rr:timer");
+const LEGACY_ENTRY_KEY = storageKey("rr:timing:pending");
+const entryKey = attemptId => storageKey(`rr:timing:entry:${attemptId}`);
 const validMinutes = value => Number.isSafeInteger(value) && value >= 1 && value <= 720;
 
 function timerForPaper(version, attemptId) {

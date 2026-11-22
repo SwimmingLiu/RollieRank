@@ -36,6 +36,10 @@ const paths = {
   logout: '<path d="M9 3H4v18h5m-1-9h13m-5-5 5 5-5 5"/>',
   calendar:
     '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 11h18m-14 4h2m4 0h2m-8 3h2"/>',
+  comment:
+    '<path d="M21 12a8 8 0 0 1-8 8H6l-3 2 1-4a8 8 0 1 1 17-6z"/>',
+  compass:
+    '<circle cx="12" cy="12" r="9"/><path d="m16 8-2.5 5.5L8 16l2.5-5.5z"/>',
 };
 export const icon = (name, extra = "") =>
   `<svg class="icon ${extra}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] ?? paths.book}</svg>`;
@@ -81,8 +85,57 @@ export function studyArt() {
 
 export function shell(
   content,
-  { state, active = "home", focused = false } = {},
+  { state, active = "home", focused = false, adminLocked = false, adminAuthorized = false } = {},
 ) {
+  if (active === "admin") {
+    const adminNav = [
+      ["discussions", "评论管理", "comment"],
+      ["corrections", "答案纠错", "flag"],
+      ["catalog", "套卷与版本", "book"],
+      ["import", "导入新套卷", "upload"],
+      ["positions", "岗位目录", "compass"],
+      ["audit", "操作记录", "clock"],
+    ];
+    const adminNavHtml = adminNav
+      .map(
+        ([target, label, sym]) =>
+          `<button type="button" class="admin-nav-item" data-action="admin-jump" data-target="${target}">${icon(sym)}<span>${label}</span></button>`,
+      )
+      .join("");
+    return `<div class="app-shell admin-console">
+      <aside class="admin-sidebar">
+        <a href="#/admin" class="admin-brand">
+          <img src="/ios-v3/assets/brand/rollierank-logo-transparent.png" width="32" height="32" alt=""/>
+          <span><b>卷卷小榜</b><small>运营后台</small></span>
+        </a>
+        <div class="admin-nav-group">工作台</div>
+        <nav class="admin-nav" aria-label="后台导航">${adminNavHtml}</nav>
+        <div class="admin-sidebar-footer">
+          ${adminAuthorized
+            ? button("admin-logout", `${icon("lock")}<span>退出维护者凭证</span>`, "admin-nav-item")
+            : adminLocked
+              ? button("admin-unlock", `${icon("lock")}<span>输入维护者凭证</span>`, "admin-nav-item is-primary")
+              : `<div class="admin-mode-pill"><i></i>本机免密模式</div>`}
+          ${routeLink("home", `${icon("home")}<span>返回前台页面</span>`, "admin-nav-item")}
+        </div>
+      </aside>
+      <div class="app-main admin-main">
+        <header class="topbar admin-topbar">
+          <div class="breadcrumb"><span>卷卷小榜</span>${icon("right")}<b>运营管理后台</b></div>
+          <div class="topbar-tools">
+            <span class="admin-env-badge"><i></i>服务端已连接</span>
+            ${adminAuthorized
+              ? button("admin-logout", "退出凭证", "button outline compact")
+              : adminLocked
+                ? button("admin-unlock", `${icon("lock")}解锁后台`, "button primary compact")
+                : ""}
+            ${routeLink("home", "打开前台", "button outline compact")}
+          </div>
+        </header>
+        <main id="main" class="main-content admin-content">${content}</main>
+      </div>
+    </div>`;
+  }
   const nav = [
     ["home", "home", "选卷练习"],
     ["rank", "trophy", "同卷练习榜"],
@@ -97,5 +150,5 @@ export function shell(
       ),
     )
     .join("");
-  return `<div class="app-shell ${focused ? "focused" : ""}"><aside class="sidebar"><a href="#/home" class="brand"><img src="/ios-v3/assets/brand/rollierank-logo-transparent.png" width="42" height="42" alt=""/><span><b>卷卷小榜<span class="brand-petal">✦</span></b><small>ROLLIERANK</small></span></a><div class="sidebar-label">我的学习空间</div><nav aria-label="主导航">${navItems}</nav><div class="sidebar-note"><span class="note-spark">${icon("leaf")}</span><p>每一分努力，<br/>都离上岸更近一点。</p><span>把练习记下来。</span><svg viewBox="0 0 140 65" fill="none" aria-hidden="true"><path d="M5 62C42 62 36 38 67 38s32-26 64-26" stroke="#c5adc9" stroke-width="2" stroke-dasharray="4 5"/><path d="m122 9 13-5-4 15-3-7z" fill="#b899bf"/></svg></div><div class="sidebar-bottom">${button("help", `${icon("help")}<span>使用帮助</span>`, "nav-item")}${routeLink("admin", `${icon("settings")}<span>套卷管理</span><span class="tiny-label">本机</span>`, `nav-item ${active === "admin" ? "active" : ""}`)}<div class="sidebar-user">${button(state.profile ? "settings" : "login", `<span class="avatar small">${state.profile ? esc(state.profile.name[0]) : icon("user")}</span><span><b>${state.profile ? esc(state.profile.name) : "本机练习者"}</b><small>${state.profile ? "体验身份" : "你的练习会自动保存"}</small></span>${icon("right")}`, "profile-trigger")}</div></div></aside><div class="app-main"><header class="topbar"><div class="breadcrumb"><span>学习空间</span>${icon("right")}<b>${{ home: "选卷练习", rank: "同卷练习榜", me: "我的记录", admin: "套卷管理" }[active] ?? "练习报告"}</b></div><a href="#/home" class="mobile-brand"><img src="/ios-v3/assets/brand/rollierank-logo-transparent.png" width="31" height="31" alt=""/>卷卷小榜</a><div class="topbar-tools"><span class="local-status"><i></i>本机自动保存</span>${button("help", icon("help"), "icon-button", 'aria-label="使用帮助"')}${button(state.profile ? "settings" : "login", `<span class="avatar tiny">${state.profile ? esc(state.profile.name[0]) : icon("user")}</span>`, "icon-button", 'aria-label="账户设置"')}</div></header><main id="main" class="main-content">${content}</main><footer class="app-footer"><span>卷卷小榜 <i>·</i> 把每一次进步记下来</span><span>练习估分仅供参考</span></footer></div>${focused ? "" : `<nav class="mobile-nav" aria-label="移动端主导航">${navItems}</nav>`}</div>`;
+  return `<div class="app-shell ${focused ? "focused" : ""}"><aside class="sidebar"><a href="#/home" class="brand"><img src="/ios-v3/assets/brand/rollierank-logo-transparent.png" width="42" height="42" alt=""/><span><b>卷卷小榜<span class="brand-petal">✦</span></b><small>ROLLIERANK</small></span></a><div class="sidebar-label">我的学习空间</div><nav aria-label="主导航">${navItems}</nav><div class="sidebar-note"><span class="note-spark">${icon("leaf")}</span><p>每一分努力，<br/>都离上岸更近一点。</p><span>把练习记下来。</span><svg viewBox="0 0 140 65" fill="none" aria-hidden="true"><path d="M5 62C42 62 36 38 67 38s32-26 64-26" stroke="#c5adc9" stroke-width="2" stroke-dasharray="4 5"/><path d="m122 9 13-5-4 15-3-7z" fill="#b899bf"/></svg></div><div class="sidebar-bottom">${button("help", `${icon("help")}<span>使用帮助</span>`, "nav-item")}${routeLink("admin", `${icon("settings")}<span>运营后台</span><span class="tiny-label">管理</span>`, `nav-item ${active === "admin" ? "active" : ""}`)}<div class="sidebar-user">${button(state.profile ? "settings" : "login", `<span class="avatar small">${state.profile ? esc(state.profile.name[0]) : icon("user")}</span><span><b>${state.profile ? esc(state.profile.name) : "本机练习者"}</b><small>${state.profile ? "体验身份" : "你的练习会自动保存"}</small></span>${icon("right")}`, "profile-trigger")}</div></div></aside><div class="app-main"><header class="topbar"><div class="breadcrumb"><span>学习空间</span>${icon("right")}<b>${{ home: "选卷练习", rank: "同卷练习榜", me: "我的记录", admin: "运营后台" }[active] ?? "练习报告"}</b></div><a href="#/home" class="mobile-brand"><img src="/ios-v3/assets/brand/rollierank-logo-transparent.png" width="31" height="31" alt=""/>卷卷小榜</a><div class="topbar-tools"><span class="local-status"><i></i>本机自动保存</span>${button("help", icon("help"), "icon-button", 'aria-label="使用帮助"')}${button(state.profile ? "settings" : "login", `<span class="avatar tiny">${state.profile ? esc(state.profile.name[0]) : icon("user")}</span>`, "icon-button", 'aria-label="账户设置"')}</div></header><main id="main" class="main-content">${content}</main><footer class="app-footer"><span>卷卷小榜 <i>·</i> 把每一次进步记下来</span><span>练习估分仅供参考</span></footer></div>${focused ? "" : `<nav class="mobile-nav" aria-label="移动端主导航">${navItems}</nav>`}</div>`;
 }

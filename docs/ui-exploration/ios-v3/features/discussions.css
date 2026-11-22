@@ -51,7 +51,7 @@
 .rr-discussion-sample button { min-height: 44px; width: fit-content; padding-inline: 15px; color: #705c49; background: #f5e7d2; border: 1px solid #e9dac1; }
 /* The active editor is a chat bar; attachment actions no longer occupy a separate empty toolbar. */
 .rr-discussion-text a { color:#a76e56; text-decoration:underline; text-underline-offset:3px; overflow-wrap:anywhere; }
-.beui-island.rr-sheet:has(.rr-discussion-sheet) { background:#fffcf7!important; bottom:var(--rr-composer-keyboard-offset,0px)!important; max-height:calc(var(--rr-composer-viewport-height,100svh) - 12px)!important; }
+.beui-island.rr-sheet:has(.rr-discussion-sheet) { bottom:var(--rr-composer-keyboard-offset,0px)!important; max-height:calc(var(--rr-composer-viewport-height,100svh) - 12px)!important; }
 .rr-sheet:has(.rr-discussion-sheet) .sheet-heading { display:none!important; }
 .rr-sheet:has(.rr-discussion-sheet) > [data-slot=bottom-sheet-body] { padding:0!important; }
 /* The generic sheet's 70vh body clipped photo drafts above a keyboard; use this editor's visual viewport instead. */

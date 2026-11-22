@@ -3,6 +3,7 @@ const $=(s)=>document.querySelector(s);
 import "../../../src/scrollbars.js";
 import { openWechatWebView, saveWechatPoster, inviteWechatFriend, migrateWechatDrafts, setWechatViewTitle, openWechatProfile } from "./wechat-webview.js";
 import { prunePreviewHistory, recoverPreviewHistory } from "./preview-history.js";
+import { defaultNickname, isDefaultNickname } from "./service-client.js";
 import { selectPreviousAttempt } from "../../../src/analytics.js";
 import { createPracticeTimer, createCustomPracticeTimer, bindPracticeTimer, setTimerMode, reorderTimerModules, balanceTimerModules, resolveTimerLimit, restorePracticeTimer, timerSectionsForQuestions, timerView, changeTimerPlan, startPracticeTimer, pausePracticeTimer, switchTimerModule, finishPracticeTimer, resumeEntryTimer, pauseEntryTimer, timingSummary, validateTimingSummary } from "../../../src/practice-timer.js";
 // 页面与资源预览共享同一图标定义，避免重复维护造成线宽或造型漂移。
@@ -171,7 +172,7 @@ function top(){
 // 年份/期号常驻于卷组，行内套号只写一次；未开始与已录进度保持可辨。
 // Paper list, recents and history derive their action from the same submitted/draft state.
 // Covers show their unique identity/state; repeated exam specifications live once in the period header.
-function paperViewModels(){const c=collectionFor(state.institution,state.period);return papersFor(state.institution,state.period).map(number=>{const name=c?.paperNames?.[number];const r=latestAttempt(state.history,{...state,paper:number}),answered=r?.answers.filter(Boolean).length||0;return r?.complete?{number,name,status:'complete',score:score(r.answers,r).cents/100}:answered?{number,name,status:'draft',answered,totalQuestions:serviceBindings?.versionForScope(serviceClient.catalog(),{institution:state.institution,period:state.period,paper:number})?.questionCount||r?.answers.length||130}:{number,name,status:'new'}})}
+function paperViewModels(){const c=collectionFor(state.institution,state.period);return papersFor(state.institution,state.period).map(number=>{const name=c?.paperNames?.[number];const version=serviceBindings?.versionForScope(serviceClient?.catalog()||[],{institution:state.institution,period:state.period,paper:number});const questionCount=version?.questionCount||130;const timeLimitMinutes=Number(version?.timeLimitMinutes)>0?Math.round(Number(version.timeLimitMinutes)):120;const r=latestAttempt(state.history,{...state,paper:number}),answered=r?.answers.filter(Boolean).length||0;return r?.complete?{number,name,questionCount,timeLimitMinutes,status:'complete',score:score(r.answers,r).cents/100}:answered?{number,name,questionCount,timeLimitMinutes,status:'draft',answered,totalQuestions:version?.questionCount||r?.answers.length||130}:{number,name,questionCount,timeLimitMinutes,status:'new'}})}
 // 首页仅选择出版机构，套卷与期数进入机构后再呈现。
 // 三张近期练习以竖向叠卡呈现；仅当前卡可点击，手势与上下键负责翻页。
 // 首页用真实 beUI 组件承接手势；业务状态留在当前模块，避免组件重复维护答题草稿。
@@ -261,7 +262,7 @@ function mountInterfaces(root){
   const ui=window.RollieUI;if(!ui){const home=root.querySelector('#home-ui');if(home)home.innerHTML='<p class="empty">组件未能加载，请刷新页面</p>';return}
   const home=root.querySelector('#home-ui');if(home)mountHomeDashboard(home);
   const catalog=root.querySelector('#catalog-ui');if(catalog)ui.mountCatalog(catalog,{institution:state.institution,year:collectionFor(state.institution,state.period)?.year||2026,period:state.period,variant:state.variant,canSwitch:collectionsFor(state.institution).length>1,collectionTitle:(collectionFor(state.institution,state.period)?.displayPeriod?collectionFor(state.institution,state.period).meta:collectionFor(state.institution,state.period)?.title)||'行测套卷',collectionMeta:collectionFor(state.institution,state.period)?.displayPeriod?'':collectionFor(state.institution,state.period)?.meta||'',papers:paperViewModels(),onPeriods:()=>actions.periods(),onOpen:openPaper});
-  const records=root.querySelector('#records-ui');if(records)ui.mountRecords(records,{records:state.history.map(recordViewModel),onOpen:openHistory,viewState:state.recordsView,onViewStateChange:value=>{state.recordsView=value},user:{name:serviceClient?.state().profile?.name||'卷友',avatarSrc:wechatHost?.avatarSrc||'assets/avatars/rank-8.svg'},onEditProfile:wechatHost?()=>void openWechatProfile().catch(error=>toast(error.message)):undefined});
+  const records=root.querySelector('#records-ui');if(records){const rawProfileName=serviceClient?.state().profile?.name;const displayProfileName=rawProfileName&&!isDefaultNickname(rawProfileName)?rawProfileName:defaultNickname(serviceClient?.state().guestId);ui.mountRecords(records,{records:state.history.map(recordViewModel),onOpen:openHistory,viewState:state.recordsView,onViewStateChange:value=>{state.recordsView=value},user:{name:displayProfileName,avatarSrc:wechatHost?.avatarSrc||'assets/avatars/rank-8.svg'},onEditProfile:wechatHost?()=>void openWechatProfile().catch(error=>toast(error.message)):undefined});}
   const result=score(),standing=iosPositions?.standing?.()||{rank:null,count:0};const scoreHost=root.querySelector('#score-ui');if(scoreHost)ui.mountScore(scoreHost,{total:result.cents/100,maxScore:(result.maxCents||10000)/100,verification:scoreVerification(),correct:result.correct,wrong:result.wrong,blank:result.blank,rank:standing.rank,participants:standing.count,sections:result.types.map(t=>({name:t.name,earnedCents:t.earned,maxCents:t.max})),initialAll:state.allTypes,onAllChange:all=>{state.allTypes=all},onRank:()=>go('rank'),onReview:openReview});
   if(scoreHost){const timing=serviceClient?.currentAttempt()?.timing,card=scoreHost.querySelector('.rr3-report .rr3-score-card');if(timing&&card&&ui.mountTimingReport){const host=document.createElement('div');host.className='rr-session-report-host';card.after(host);ui.mountTimingReport(host,{timing});}}
   if(root.querySelector('#entry-tools-ui')){mountEntryTools();updateEntryVisibility();}
@@ -384,7 +385,7 @@ async function initializeFeatures(){
     const ctx={state:serviceClient.state,catalog:serviceClient.catalog,attempt:featureAttempt,version:serviceClient.currentVersion,
       route:()=>({page:state.page==='entry'?'practice':state.page,id:['entry','rank'].includes(state.page)?serviceClient.currentVersion()?.id:state.activeAttemptId}),
       dimension:()=>state.rankDimension||'total',setDimension:id=>{state.rankDimension=id},uiState:()=>state,feedbackQuestion:question=>iosCorrections?.openFeedback?.(question),
-      api:serviceClient.api,positionsSnapshot:()=>iosPositions?.snapshot(),persist:()=>{serviceClient.persist();persistServiceHistory()},render:renderFeatures,toast,
+      api:serviceClient.api,positionsSnapshot:()=>iosPositions?.snapshot(),avatarSrc:()=>wechatHost?.avatarSrc||'',persist:()=>{serviceClient.persist();persistServiceHistory()},render:renderFeatures,toast,
       openModal:(title,body,actions='',className='')=>openSheet(title,'<div class="ios-feature-host ios-feature-sheet '+esc(className)+'">'+body+(actions?'<div class="modal-actions">'+actions+'</div>':'')+'</div>'),closeModal:()=>closeSheet('complete'),onModalClose:callback=>{sheetCloseListeners.add(callback);return()=>sheetCloseListeners.delete(callback)},
       navigate:navigateFeature,refreshCatalog:serviceClient.refreshCatalog,syncAttempts:serviceClient.syncAttempts,submitAttempt:()=>actions.submit(),modalSelector:'.rr-sheet'};
     const definitions=[['positions','createIOSPositionsFeature'],['analytics','createIOSAnalyticsFeature'],['discussions','createIOSDiscussionsFeature'],['corrections','createIOSCorrectionsFeature'],['insights','createIOSInsightsFeature']];
@@ -410,7 +411,13 @@ function routeSnapshot(){return {page:state.page,institution:state.institution,p
 function routeUrl(){const q=new URLSearchParams({page:state.page,institution:state.institution,period:String(state.period),paper:String(state.paper)});if(state.activeAttemptId)q.set('attempt',state.activeAttemptId);if(state.page==='stats'&&state.statsVersionId)q.set('version',state.statsVersionId);if(testSession)q.set('session',testSession);if(designRevision)q.set('design',designRevision);if(wechatHost){q.set('embed','wechat');q.set('wxHeight',wechatHost.height);q.set('wxBottom',wechatHost.bottom)}return location.pathname+'?'+q}
 function rememberRoute(){rememberPosition();history.replaceState({rollie:true,route:routeSnapshot(),trail:routeTrail},'',routeUrl())}
 function focusRoute(label){requestAnimationFrame(()=>{const candidates=[...document.querySelectorAll('button')];const previous=label&&candidates.find(el=>el.getAttribute('aria-label')===label);const target=previous||$('#top h1')||$('.view h1')||$('.view');if(target){if(!previous)target.tabIndex=-1;target.focus({preventScroll:true})}})}
-function go(page,options={}){if(state.page===page&&!options.refresh)return;if(state.page==='entry'&&page!=='entry')pauseCurrentEntry();if(sheetState.open)closeSheet('dismiss');rememberRoute();const before=routeSnapshot();routeTrail=options.root?[]:options.replace?routeTrail:[...routeTrail,before];state.page=page;if(page==='entry')resumeCurrentEntry();render(true);if(page==='entry')requestAnimationFrame(()=>scrollToQuestion(state.current,true));else restorePosition();history[options.replace?'replaceState':'pushState']({rollie:true,route:routeSnapshot(),trail:routeTrail},'',routeUrl());focusRoute();void refreshFeatures()}
+const ROOT_TABS=['home','me'];
+function switchRootTab(page){
+ if(!ROOT_TABS.includes(page))return;
+ const fromIndex=ROOT_TABS.indexOf(state.page),toIndex=ROOT_TABS.indexOf(page);
+ go(page,{root:true,reverse:fromIndex!==-1&&toIndex<fromIndex});
+}
+function go(page,options={}){if(state.page===page&&!options.refresh)return;if(state.page==='entry'&&page!=='entry')pauseCurrentEntry();if(sheetState.open)closeSheet('dismiss');rememberRoute();const before=routeSnapshot();routeTrail=options.root?[]:options.replace?routeTrail:[...routeTrail,before];state.page=page;if(page==='entry')resumeCurrentEntry();render(true,Boolean(options.reverse));if(page==='entry')requestAnimationFrame(()=>scrollToQuestion(state.current,true));else restorePosition();history[options.replace?'replaceState':'pushState']({rollie:true,route:routeSnapshot(),trail:routeTrail},'',routeUrl());focusRoute();void refreshFeatures()}
 function applyRoute(route){pauseCurrentEntry();if(sheetState.open)closeSheet('dismiss');const r=state.history.find(r=>r.id===route.attemptId);Object.assign(state,{page:route.page,institution:route.institution,period:route.period,paper:route.paper,activeAttemptId:route.attemptId,detailFilter:route.detailFilter||'wrong',detailType:route.detailType||null,rankType:route.rankType||'总分',statsVersionId:route.statsVersionId||null});if(r){state.answers=[...r.answers];if(r.complete)state.report=[...r.answers]}if(r?.complete&&state.page==='entry')state.page='report';state.current=state.answers.findIndex(v=>!v)+1||Math.max(1,state.answers.length);if(state.page==='entry')resumeCurrentEntry();render(true,true);restorePosition(route.scroll);focusRoute(route.focus);void refreshFeatures()}
 window.addEventListener('popstate',event=>{if(event.state?.rollie&&views[event.state.route?.page]){routeTrail=event.state.trail||[];applyRoute(event.state.route)}else{location.reload()}});
 function newAttempt(n,attemptId=crypto.randomUUID()){pauseCurrentEntry();state.blankConsent=null;state.paper=n;state.activeAttemptId=attemptId;state.answers=Array(questionCount()).fill('');state.current=1;persist()}
@@ -462,7 +469,82 @@ function openRecord(r){if(!r)return;pauseCurrentEntry();state.activeAttemptId=r.
 function openRecent(index){state.recentIndex=index;openRecord(state.recents[index])}
 function openHistory(id){openRecord(state.history.find(r=>r.id===id))}
 
-document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;if(b.dataset.record){openRecent(Number(b.dataset.record));return}if(b.hasAttribute('data-record')){openRecent(Number(b.dataset.record));return}if(b.hasAttribute('data-review-section')){const type=b.dataset.reviewSection;if(type&&!viewTypes().some(item=>item[0]===type))return;state.detailType=type||null;closeSheet('complete');refreshReview();return}if(b.dataset.root){go(b.dataset.root,{root:true});return}if(b.dataset.page){go(b.dataset.page);return}if(b.dataset.institution){changeScope(b.dataset.institution,state.publisherPeriods[b.dataset.institution]||1);go('papers');return}if(b.dataset.paper){openPaper(Number(b.dataset.paper));return}if(b.dataset.mark){toggleReviewMark(Number(b.dataset.mark));return}if(b.dataset.option){recordAnswer(Number(b.dataset.n),b.dataset.option,e.detail===0);return}if(b.dataset.period){const n=Number(b.dataset.period);if(!isAvailablePeriod(state.institution,n))return;rememberPosition();changeScope(state.institution,n);closeSheet();render();restorePosition();rememberRoute();requestAnimationFrame(()=>$('#period-picker')?.focus({preventScroll:true}));return}if(b.dataset.paperFilter){state.paperFilter=b.dataset.paperFilter;render();return}if(b.dataset.detail){state.detailFilter=b.dataset.detail;render();return}if(b.dataset.rank){state.rankType=b.dataset.rank;render();return}if(b.dataset.action)actions[b.dataset.action]?.()});
+// 首页与练习记录之间支持左右滑动切换，与底部菜单栏切换共享同一路由和转场方向。
+let tabSwipe=null,suppressTabSwipeClick=false,suppressTabSwipeTimer=0;
+function isTabSwipeIgnored(target){
+ if(!(target instanceof Element))return true;
+ if(target.closest('input, textarea, select, [contenteditable="true"], [role="slider"]'))return true;
+ const stage=$('#stage');
+ for(let el=target;el&&el!==stage&&!el.classList.contains('view');el=el.parentElement){
+  if(el.scrollWidth>el.clientWidth+4){const ox=getComputedStyle(el).overflowX;if(ox==='auto'||ox==='scroll')return true;}
+ }
+ return false;
+}
+function resetTabSwipeTransform(view,animateBack=false){
+ if(!view?.isConnected||!view.style.transform)return;
+ const current=view.style.transform;
+ view.style.transform='';
+ if(animateBack&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
+  view.animate([{transform:current},{transform:'translateX(0)'}],{duration:160,easing:'cubic-bezier(.2,.8,.2,1)'});
+ }
+}
+function armTabSwipeClickSuppression(){
+ suppressTabSwipeClick=true;
+ clearTimeout(suppressTabSwipeTimer);
+ suppressTabSwipeTimer=setTimeout(()=>{suppressTabSwipeClick=false},80);
+}
+$('#stage')?.addEventListener('pointerdown',event=>{
+ suppressTabSwipeClick=false;
+ clearTimeout(suppressTabSwipeTimer);
+ if(!ROOT_TABS.includes(state.page)||sheetState.open)return;
+ if(!event.isPrimary||(event.pointerType==='mouse'&&event.button!==0))return;
+ if(isTabSwipeIgnored(event.target))return;
+ tabSwipe={pointerId:event.pointerId,x:event.clientX,y:event.clientY,startedAt:performance.now(),axis:null,view:$('.view[data-page="'+state.page+'"]')};
+});
+window.addEventListener('pointermove',event=>{
+ if(!tabSwipe||event.pointerId!==tabSwipe.pointerId)return;
+ if(sheetState.open||!ROOT_TABS.includes(state.page)){resetTabSwipeTransform(tabSwipe.view);tabSwipe=null;return;}
+ const dx=event.clientX-tabSwipe.x,dy=event.clientY-tabSwipe.y;
+ if(!tabSwipe.axis){
+  if(Math.hypot(dx,dy)<8)return;
+  tabSwipe.axis=Math.abs(dx)>Math.abs(dy)*1.2?'x':'y';
+ }
+ if(tabSwipe.axis!=='x')return;
+ const currentIndex=ROOT_TABS.indexOf(state.page),target=ROOT_TABS[currentIndex+(dx<0?1:-1)]||null;
+ if(target){
+  armTabSwipeClickSuppression();
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&tabSwipe.view?.isConnected){
+   tabSwipe.view.style.transform='translateX('+Math.max(-28,Math.min(28,dx*0.16))+'px)';
+  }
+ }else{
+  resetTabSwipeTransform(tabSwipe.view);
+ }
+},{passive:true});
+function finishTabSwipe(event,cancelled=false){
+ if(!tabSwipe||event.pointerId!==tabSwipe.pointerId)return;
+ const gesture=tabSwipe;tabSwipe=null;
+ if(cancelled||sheetState.open||!ROOT_TABS.includes(state.page)){resetTabSwipeTransform(gesture.view,true);return;}
+ const dx=event.clientX-gesture.x,dy=event.clientY-gesture.y;
+ const horizontal=Math.abs(dx)>Math.abs(dy)*1.2;
+ const currentIndex=ROOT_TABS.indexOf(state.page),target=ROOT_TABS[currentIndex+(dx<0?1:-1)]||null;
+ const width=$('#stage')?.clientWidth||360,distance=Math.abs(dx),velocity=distance/Math.max(1,performance.now()-gesture.startedAt);
+ const deliberate=distance>=Math.max(48,width*0.16)||(distance>=24&&velocity>=0.45);
+ if((gesture.axis==='x'||(!gesture.axis&&horizontal&&distance>=24))&&horizontal&&target&&deliberate){
+  armTabSwipeClickSuppression();
+  resetTabSwipeTransform(gesture.view);
+  switchRootTab(target);
+  return;
+ }
+ resetTabSwipeTransform(gesture.view,true);
+}
+window.addEventListener('pointerup',event=>finishTabSwipe(event,false),{passive:true});
+window.addEventListener('pointercancel',event=>finishTabSwipe(event,true),{passive:true});
+$('#stage')?.addEventListener('click',event=>{
+ if(!suppressTabSwipeClick)return;
+ event.preventDefault();event.stopPropagation();suppressTabSwipeClick=false;clearTimeout(suppressTabSwipeTimer);
+},true);
+
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;if(b.dataset.record){openRecent(Number(b.dataset.record));return}if(b.hasAttribute('data-record')){openRecent(Number(b.dataset.record));return}if(b.hasAttribute('data-review-section')){const type=b.dataset.reviewSection;if(type&&!viewTypes().some(item=>item[0]===type))return;state.detailType=type||null;closeSheet('complete');refreshReview();return}if(b.dataset.root){switchRootTab(b.dataset.root);return}if(b.dataset.page){go(b.dataset.page);return}if(b.dataset.institution){changeScope(b.dataset.institution,state.publisherPeriods[b.dataset.institution]||1);go('papers');return}if(b.dataset.paper){openPaper(Number(b.dataset.paper));return}if(b.dataset.mark){toggleReviewMark(Number(b.dataset.mark));return}if(b.dataset.option){recordAnswer(Number(b.dataset.n),b.dataset.option,e.detail===0);return}if(b.dataset.period){const n=Number(b.dataset.period);if(!isAvailablePeriod(state.institution,n))return;rememberPosition();changeScope(state.institution,n);closeSheet();render();restorePosition();rememberRoute();requestAnimationFrame(()=>$('#period-picker')?.focus({preventScroll:true}));return}if(b.dataset.paperFilter){state.paperFilter=b.dataset.paperFilter;render();return}if(b.dataset.detail){state.detailFilter=b.dataset.detail;render();return}if(b.dataset.rank){state.rankType=b.dataset.rank;render();return}if(b.dataset.action)actions[b.dataset.action]?.()});
 document.addEventListener('keydown',e=>{if(state.page==='entry'&&!sheetState.open&&!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)&&/^[abcd]$/i.test(e.key)){e.preventDefault();const row=e.target.closest('.answer-row');const question=row?Number(row.id.slice(9)):state.current;$('[data-n="'+question+'"][data-option="'+e.key.toUpperCase()+'"]')?.click()}});
 // A shared paper URL resolves the recipient's own saved state, never the sender's private report.
 if(params.get('open')==='paper'){const exact={institution:params.get('institution'),period:Number(params.get('period')),paper:Number(params.get('paper'))};if(isInstitution(exact.institution)&&isAvailablePeriod(exact.institution,exact.period)&&papersFor(exact.institution,exact.period).includes(exact.paper)){Object.assign(state,exact);const r=latestAttempt(state.history,exact);if(r){state.activeAttemptId=r.id;state.answers=[...r.answers];if(r.complete)state.report=[...r.answers];state.page=attemptTarget(r).page}else{newAttempt(exact.paper);state.page='entry'}}}

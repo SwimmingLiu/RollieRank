@@ -1,5 +1,5 @@
 /* 滚动仍支持滚轮、触控和键盘；所有页面只隐藏视觉滚动条。 */
 *{scrollbar-width:none!important;scrollbar-color:transparent transparent!important}
-*::-webkit-scrollbar,*::-webkit-scrollbar-thumb,*::-webkit-scrollbar-track,*::-webkit-scrollbar-corner{display:none!important;width:0!important;height:0!important;background:transparent!important}
+*::-webkit-scrollbar,*::-webkit-scrollbar-thumb,*::-webkit-scrollbar-track,*::-webkit-scrollbar-corner{display:none!important;width:0!important;height:0!important;color:transparent!important;background:transparent!important}
 /* 面板顶部拖动提示不属于滚动条；保留它，用户仍可下滑关闭。 */
 body.beui-island [role=dialog] .cursor-grab>div{width:28px;height:3px;background:rgba(146,126,94,.2)}

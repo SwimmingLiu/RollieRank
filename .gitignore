@@ -4,6 +4,9 @@ dist/
 node_modules/
 .DS_Store
 test-results/
+# 本机凭证（微信 AppSecret 等）不进版本库。
+.env
+
 # 本机套卷、提交凭证和管理审计含练习数据，不进入版本库。
 .local/
 
@@ -15,3 +18,6 @@ mini-program/project.private.config.json
 
 # WeChat DevTools private settings
 mini-program/project.private.config.json
+
+# SEO/GEO 站点上传包（由 site/ 生成）
+rank-site.zip

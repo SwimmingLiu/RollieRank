@@ -10,7 +10,7 @@
   letter-spacing: -.4px;
 }
 .nav__bar--action .nav__title {
-  --title-width: min(96px, calc(100% - var(--menu-clearance) - 112px));
+  --title-width: min(140px, calc(100% - var(--menu-clearance) - 112px));
   position: absolute;
   width: var(--title-width);
   left: min(50%, calc(100% - var(--menu-clearance) - 52px - var(--title-width) / 2));
@@ -19,6 +19,7 @@
   text-align: center;
 }
 .nav__bar--leading .nav__title {
+  position: absolute;
   left: 72px;
   width: auto;
   max-width: calc(100% - var(--menu-clearance) - 122px);
@@ -48,6 +49,7 @@
 .nav__pressed { opacity: .6; }
 .nav__back-icon { width: 20px; height: 20px; }
 .nav__icon { width: 19px; height: 19px; }
+.nav__dot { position: absolute; top: 9px; right: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--coral, #ef7d82); border: 1.5px solid #fcf8f1; }
 .nav__brand { display: flex; align-items: center; gap: 11px; flex: 1; min-width: 0; padding: 0 var(--menu-clearance) 0 22px; }
 .nav__logo { width: 44px !important; height: 44px; flex: none; }
 .nav__brand-title { font-size: 23px; font-weight: 750; line-height: 1.3; letter-spacing: -1.1px; white-space: nowrap; }
@@ -56,5 +58,5 @@
   .nav__bar--leading .nav__title { left: 58px; }
   .nav__brand { padding-left: 16px; gap: 9px; }
   .nav__brand-title { font-size: 21px; }
-  .nav__logo { width: 38px; height: 38px; }
+  .nav__logo { width: 38px !important; height: 38px; }
 }

@@ -1,6 +1,7 @@
 // 服务端接口封装：统一超时、错误文案与凭证。
-const { API_BASE } = require("../config.js");
+const { API_BASE, IS_TEST_ENVIRONMENT } = require("../config.js");
 const storage = require("../utils/storage.js");
+let testReady;
 
 function messageFor(error) {
   const text = String((error && (error.errMsg || error.message)) || "");
@@ -10,23 +11,51 @@ function messageFor(error) {
   return "练习服务暂时不可用，录入内容仍在本机，请稍后重试。";
 }
 
-function request(path, payload, timeout = 15000) {
+function send(options) {
   return new Promise((resolve, reject) => {
     wx.request({
-      url: `${API_BASE}/api/${path}`,
-      method: payload === undefined ? "GET" : "POST",
-      header: payload === undefined ? {} : { "Content-Type": "application/json" },
-      data: payload,
-      timeout,
-      success(res) {
-        const data = res.data && typeof res.data === "object" ? res.data : null;
-        if (res.statusCode >= 200 && res.statusCode < 300 && data) resolve(data);
-        else reject(Object.assign(new Error((data && data.error) || "操作未完成，请重试。"), { statusCode: res.statusCode }));
-      },
+      ...options,
+      success: resolve,
       fail(error) {
         reject(new Error(messageFor(error)));
       },
     });
+  });
+}
+
+function responseHeader(response, name) {
+  return Object.entries(response.header || {}).find(([key]) => key.toLowerCase() === name)?.[1];
+}
+
+function verifyTestResponse(response) {
+  if (responseHeader(response, "x-rollierank-environment") !== "test") {
+    testReady = undefined;
+    throw new Error("测试接口校验失败，请联系维护者。");
+  }
+}
+
+async function request(path, payload, timeout = 15000, extraHeader = {}) {
+  const writing = payload !== undefined;
+  if (IS_TEST_ENVIRONMENT && writing) {
+    // 测试客户端先用只读目录确认环境，避免配置错时把记录写到生产。
+    testReady ??= send({ url: `${API_BASE}/api/catalog`, method: "GET", timeout: 10000 })
+      .then(response => {
+        verifyTestResponse(response);
+        if (response.statusCode !== 200) throw new Error("测试套卷目录暂不可用，请重试。");
+      }).catch(error => { testReady = undefined; throw error; });
+    await testReady;
+  }
+  const header = { ...(writing ? { "Content-Type": "application/json" } : {}), ...extraHeader };
+  const response = await send({ url: `${API_BASE}/api/${path}`, method: payload === undefined ? "GET" : "POST", header, data: payload, timeout });
+  if (IS_TEST_ENVIRONMENT) {
+    verifyTestResponse(response);
+    if (path === "catalog" && !writing && response.statusCode === 200) testReady ??= Promise.resolve();
+  }
+  const data = response.data && typeof response.data === "object" ? response.data : null;
+  if (response.statusCode >= 200 && response.statusCode < 300 && data) return data;
+  throw Object.assign(new Error((data && data.error) || "操作未完成，请重试。"), {
+    statusCode: response.statusCode,
+    errorId: data && data.errorId ? data.errorId : "",
   });
 }
 
@@ -47,6 +76,8 @@ function versionForScope(versions, scope) {
 }
 
 async function submit({ version, answers, attemptId, timing }) {
+  const token = storage.toolCreditToken();
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
   return request("submit", {
     guestId: storage.guestId(),
     attemptId,
@@ -54,7 +85,7 @@ async function submit({ version, answers, attemptId, timing }) {
     name: storage.name(),
     answers,
     ...(timing ? { timing } : {}),
-  });
+  }, 15000, headers);
 }
 
 async function sync(attemptIds) {

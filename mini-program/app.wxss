@@ -26,6 +26,8 @@ page {
   font-variation-settings: "BEVL" 100;
   font-size: 15px;
   line-height: 1.5;
+  height: 100%;
+  overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -33,13 +35,31 @@ view, text, scroll-view, input, textarea, button, image { box-sizing: border-box
 button { max-width: none; min-width: 0; margin: 0; padding: 0; background: none; border-radius: 0; line-height: 1.5; font-size: inherit; font-weight: inherit; color: inherit; }
 button::after { border: none; }
 input, textarea { width: 100%; background: none; border: none; font-size: inherit; color: inherit; }
-/* 原生滚动仍然可用，视觉滚动条在每台设备上都隐藏。 */
-page, scroll-view, .screen, .sheet-scroll, .practice__scroller { scrollbar-width: none !important; }
-page::-webkit-scrollbar, scroll-view::-webkit-scrollbar, .screen::-webkit-scrollbar, .sheet-scroll::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+/* 原生滚动仍然可用，全站所有页面与容器都隐藏视觉滑动块（滚动条）。 */
+page, view, scroll-view, textarea { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+::-webkit-scrollbar,
+page::-webkit-scrollbar,
+view::-webkit-scrollbar,
+scroll-view::-webkit-scrollbar,
+textarea::-webkit-scrollbar,
+.wx-scroll-view::-webkit-scrollbar,
+::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  color: transparent !important;
+  background: transparent !important;
+}
 
-/* Fixed controls have the same footprint as the approved footer at each width. */
-.screen { min-height: 100vh; padding-bottom: calc(88px + env(safe-area-inset-bottom)); background: var(--paper); }
-.screen--plain { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+/* 所有页面锁定视口高度，内容走 enhanced show-scrollbar=false 的 scroll-view，彻底消除微信根页面滑动块。 */
+rr-nav { flex: none; }
+.screen { display: flex; flex-direction: column; height: 100vh; min-height: 0; overflow: hidden; padding-bottom: 0; background: var(--paper); }
+.screen--plain { padding-bottom: 0; }
+.page-scroll { flex: 1; min-height: 0; height: 0; width: 100%; }
+.page-scroll__body { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+.page-scroll__body--plain { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 
 /* 卡片 */
 .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); }
@@ -102,11 +122,18 @@ page::-webkit-scrollbar, scroll-view::-webkit-scrollbar, .screen::-webkit-scroll
 .progress { height: 12rpx; border-radius: 6rpx; background: #efd9d4; overflow: hidden; }
 .progress__fill { height: 100%; border-radius: 6rpx; background: var(--coral); }
 
+/* 全站统一底部抽屉主题：暖纸磨砂遮罩、暖象牙圆角外壳、统一顶边线与轻投影、居中 iPhone 拖动条。 */
 .sheet-layer { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; }
-.sheet-shade { position: absolute; inset: 0; background: rgba(41, 33, 27, .34); }
-.sheet-shade--blur { background: rgba(249, 246, 239, .48); backdrop-filter: blur(9px); }
-.sheet-panel { width: 100%; max-height: 86vh; position: relative; background: #fffdf8; border-radius: 24px 24px 0 0; padding: 8px 20px calc(18px + env(safe-area-inset-bottom)); }
-.sheet-head { position: relative; display: flex; align-items: center; justify-content: space-between; min-height: 48px; font-size: 20px; font-weight: 700; }
+.sheet-shade, .sheet-shade--blur { position: absolute; inset: 0; background: rgba(249, 246, 239, .46); -webkit-backdrop-filter: blur(9px); backdrop-filter: blur(9px); transition: opacity .28s cubic-bezier(.32, .72, 0, 1); }
+.sheet-panel { width: 100%; max-height: 86vh; position: relative; background: #fffdf8; border: 1px solid #ebe2d3; border-bottom: 0; border-radius: 24px 24px 0 0; box-shadow: 0 -10px 30px rgba(74, 58, 36, .08); padding: 4px 20px calc(18px + env(safe-area-inset-bottom)); transition: transform .34s cubic-bezier(.32, .72, 0, 1); will-change: transform; }
+.sheet-panel::after { content: ""; position: absolute; left: -1px; right: -1px; top: 100%; height: 96px; background: #fffdf8; border-left: 1px solid #ebe2d3; border-right: 1px solid #ebe2d3; pointer-events: none; }
+.sheet-layer--dragging .sheet-panel, .sheet-layer--dragging .sheet-shade { transition: none !important; }
+.sheet-layer--closing .sheet-panel { transform: translateY(100%) !important; transition: transform .26s cubic-bezier(.32, .72, 0, 1) !important; }
+.sheet-layer--closing .sheet-shade { opacity: 0 !important; transition: opacity .24s cubic-bezier(.32, .72, 0, 1) !important; }
+.sheet-grabber-zone { display: grid; place-items: center; flex: none; height: 24px; margin: 0 -20px; touch-action: none; }
+.sheet-grabber { width: 40px; height: 4px; border-radius: 999px; background: #d5cfc5; }
+.sheet-head { position: relative; display: flex; align-items: center; justify-content: space-between; min-height: 44px; font-size: 20px; font-weight: 700; }
+@media (max-width: 350px) { .sheet-panel { padding-inline: 16px; } .sheet-grabber-zone { margin-inline: -16px; } }
 .sheet-head:has(.sheet-close) { padding-right: 44px; }
 .sheet-close { position: absolute; top: 50%; right: 0; transform: translateY(-50%); display: grid; place-items: center; width: 44px !important; height: 44px; }
 .sheet-close image { width: 16px; height: 16px; }

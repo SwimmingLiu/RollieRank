@@ -38,6 +38,7 @@ import {
 import { drawPoster, downloadBlob } from "./poster.js";
 import { createAnalyticsFeature } from "./features/analytics.js";
 import { createDiscussionsFeature } from "./features/discussions.js";
+import { createDiscussionsAdminFeature } from "./features/discussions-admin.js";
 import { createCorrectionsFeature } from "./features/corrections.js";
 import { createPositionsFeature } from "./features/positions.js";
 import { subjectResponse, subjectVersion } from "./subjects.js";
@@ -49,7 +50,10 @@ let catalog = [],
   state,
   storage,
   saveWarning = false,
-  admin;
+  admin,
+  adminToken = "",
+  adminAuthRequired = false,
+  adminLoadError = "";
 let current = { page: "home" },
   sample,
   search = "",
@@ -87,9 +91,13 @@ try {
 async function api(path, data) {
   let response;
   try {
+    const headers = data ? { "Content-Type": "application/json" } : {};
+    if (adminToken && (path === "admin" || path.startsWith("admin/"))) {
+      headers.Authorization = `Bearer ${adminToken}`;
+    }
     response = await fetch(`/api/${path}`, {
       method: data ? "POST" : "GET",
-      headers: data ? { "Content-Type": "application/json" } : {},
+      headers,
       ...(data ? { body: JSON.stringify(data) } : {}),
       signal: AbortSignal.timeout(15000),
     });
@@ -240,15 +248,14 @@ function render() {
       statsView({ ...context, version, versionId: current.id });
     active = "me";
   } else if (current.page === "admin") {
-    content = admin
-      ? adminView({ admin }) + '<div data-feature="positions-admin"></div><div data-feature="corrections-admin"></div>'
-      : '<div class="boot-state">正在读取本机套卷…</div>';
+    content = adminView({ admin, authRequired: adminAuthRequired, error: adminLoadError });
     active = "admin";
   } else
     content = `<div class="card">${empty("这页练习暂时找不到了", "成绩保存在提交时使用的浏览器中，可以返回选卷继续。", routeLink("home", "返回选卷", "button primary"))}</div>`;
+  const hadMainFocus = !modal.open && Boolean($("#main")?.contains(document.activeElement) || document.activeElement?.id === "main");
   $("#app").innerHTML = shell(
     `${saveWarning ? '<p class="notice warning">本机保存不可用，请保持页面打开并及时导出记录。</p>' : ""}${content}`,
-    { state, active, focused },
+    { state, active, focused, adminLocked: adminAuthRequired, adminAuthorized: Boolean(adminToken) },
   );
   // 选岗放在身份之后，VS 紧接成绩摘要，避免新增功能被长历史或题型表挤到页尾。
   const moveSlotAfter = (name, selector) => {
@@ -260,8 +267,6 @@ function render() {
   moveSlotAfter("analytics-comparison", ".report-layout");
   const analyticsEntry = $('[data-feature="analytics-entry"]');
   if (analyticsEntry && $(".same-paper-card")) $(".same-paper-card").before(analyticsEntry);
-  moveSlotAfter("corrections-admin", ".admin-tabs");
-  moveSlotAfter("positions-admin", '[data-feature="corrections-admin"]');
   for (const feature of features) feature.afterRender?.();
   if (focusId) {
     const target = document.getElementById(focusId);
@@ -272,6 +277,13 @@ function render() {
     $(`[data-focuskey="${CSS.escape(focusKey)}"]`)?.focus({
       preventScroll: true,
     });
+  else if (hadMainFocus && (!document.activeElement || document.activeElement === document.body)) {
+    const main = $("#main");
+    if (main) {
+      main.setAttribute("tabindex", "-1");
+      main.focus({ preventScroll: true });
+    }
+  }
 }
 
 async function onRoute() {
@@ -304,16 +316,39 @@ async function onRoute() {
   const featureError = featureResults.find((result) => result.status === "rejected");
   if (featureError) toast(featureError.reason.message);
   if (current.page === "admin") {
-    try {
-      admin = await api("admin");
-      if (current.page === "admin") render();
-    } catch (error) {
-      toast(error.message);
-      if (current.page === "admin")
-        $("#main").innerHTML =
-          `<section class="card">${empty("暂时没能读取套卷", esc(error.message), button("retry", "重新加载", "button primary"))}</section>`;
-    }
+    await loadAdminData();
   }
+}
+
+async function loadAdminData() {
+  adminLoadError = "";
+  try {
+    admin = await api("admin");
+    adminAuthRequired = false;
+    if (current.page === "admin") render();
+  } catch (error) {
+    if (error.statusCode === 401) {
+      admin = null;
+      adminAuthRequired = true;
+      if (current.page === "admin") render();
+      return;
+    }
+    adminLoadError = error.message;
+    toast(error.message);
+    if (current.page === "admin") render();
+  }
+}
+
+function openAdminUnlockModal() {
+  openModal(
+    "解锁运营后台",
+    `<form id="admin-unlock-form">
+      <label class="field-label">维护者凭证<input name="reviewToken" type="password" autofocus required maxlength="4096" autocomplete="off" placeholder="输入 ROLLIERANK_REVIEW_TOKEN"/></label>
+      <p class="field-help">一次验证即可解锁套卷管理、评论审核与答案纠错，凭证仅保留在当前内存会话中。</p>
+      <p class="disc-admin-error" id="admin-unlock-error" role="alert"></p>
+    </form>`,
+    `${button("close-modal", "取消", "button outline")}<button type="submit" form="admin-unlock-form" class="button primary">验证并解锁</button>`,
+  );
 }
 
 function openModal(title, body, actions = "", className = "") {
@@ -930,6 +965,31 @@ const actions = {
     toast("本机练习记录已删除。");
   },
   "admin-tab": (b) => showAdminTab(b.dataset.value),
+  "admin-unlock": () => openAdminUnlockModal(),
+  "admin-logout": () => {
+    adminToken = "";
+    admin = null;
+    window.dispatchEvent(new CustomEvent("rr:admin-token-change", { detail: { token: "", source: "app" } }));
+    if (current.page === "admin") void loadAdminData();
+    toast("已退出维护者凭证。");
+  },
+  "admin-jump": (b) => {
+    const target = b.dataset.target;
+    if (["catalog", "import", "audit"].includes(target) && admin) {
+      showAdminTab(target);
+      $("#admin-section-catalog")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    const map = {
+      discussions: "#admin-section-discussions",
+      corrections: "#admin-section-corrections",
+      catalog: "#admin-section-catalog",
+      import: "#admin-section-catalog",
+      audit: "#admin-section-catalog",
+      positions: "#admin-section-positions",
+    };
+    $(map[target] || "#admin-section-discussions")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  },
   "csv-template": () =>
     downloadBlob(
       new Blob(["\uFEFF" + templateCsv], { type: "text/csv;charset=utf-8" }),
@@ -1067,10 +1127,32 @@ document.addEventListener("change", async (event) => {
 });
 
 document.addEventListener("submit", async (event) => {
-  if (!["jump-form", "login-form", "import-form"].includes(event.target.id))
+  if (!["jump-form", "login-form", "import-form", "admin-unlock-form"].includes(event.target.id))
     return;
   event.preventDefault();
   try {
+    if (event.target.id === "admin-unlock-form") {
+      const input = event.target.querySelector("[name=reviewToken]");
+      const tokenValue = input?.value ?? "";
+      if (!tokenValue) return;
+      input.value = "";
+      const errNode = $("#admin-unlock-error");
+      if (errNode) errNode.textContent = "";
+      const prev = adminToken;
+      adminToken = tokenValue;
+      try {
+        admin = await api("admin");
+        adminAuthRequired = false;
+        modal.close();
+        window.dispatchEvent(new CustomEvent("rr:admin-token-change", { detail: { token: tokenValue, source: "app" } }));
+        render();
+        toast("维护者凭证已验证。");
+      } catch (error) {
+        adminToken = prev;
+        if (errNode) errNode.textContent = error.statusCode === 401 ? "维护者凭证无效，请重新输入。" : error.message;
+      }
+      return;
+    }
     if (event.target.id === "jump-form")
       jump(Number(new FormData(event.target).get("question")));
     if (event.target.id === "login-form") {
@@ -1107,6 +1189,14 @@ document.addEventListener("submit", async (event) => {
   } catch (error) {
     toast(error.message);
   }
+});
+
+window.addEventListener("rr:admin-token-change", (event) => {
+  if (event.detail?.source === "app") return;
+  const next = typeof event.detail?.token === "string" ? event.detail.token : "";
+  if (next === adminToken) return;
+  adminToken = next;
+  if (current.page === "admin") void loadAdminData();
 });
 
 document.addEventListener("keydown", (event) => {
@@ -1174,7 +1264,7 @@ async function boot() {
     saveWarning = restored.warning;
     // 页面模块在状态恢复后初始化，事件监听在整个应用生命周期中只注册一次。
     features = [createPositionsFeature(featureContext), createAnalyticsFeature(featureContext), createDiscussionsFeature(featureContext),
-      createCorrectionsFeature(featureContext)];
+      createDiscussionsAdminFeature(featureContext), createCorrectionsFeature(featureContext)];
     try {
       sample = JSON.parse(
         sessionStorage.getItem("rollierank:sample") ?? "null",

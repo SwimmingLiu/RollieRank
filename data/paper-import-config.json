@@ -1,159 +1,115 @@
 {
   "publisherProfiles": {
     "地市": {
+      "ruleId": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则",
       "sourceFile": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
       "sourceSha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff",
       "sections": [
-        {
-          "id": "politics",
-          "name": "政治理论",
-          "start": 1,
-          "end": 20,
-          "cents": 70
-        },
-        {
-          "id": "common",
-          "name": "常识判断",
-          "start": 21,
-          "end": 35,
-          "cents": 70
-        },
-        {
-          "id": "language",
-          "name": "言语理解",
-          "start": 36,
-          "end": 65,
-          "cents": 80
-        },
-        {
-          "id": "quantity",
-          "name": "数量关系",
-          "start": 66,
-          "end": 75,
-          "cents": 80
-        },
-        {
-          "id": "graphic",
-          "name": "图形推理",
-          "start": 76,
-          "end": 85,
-          "cents": 80
-        },
-        {
-          "id": "definition",
-          "name": "定义判断",
-          "start": 86,
-          "end": 95,
-          "cents": 80
-        },
-        {
-          "id": "analogy",
-          "name": "类比推理",
-          "start": 96,
-          "end": 100,
-          "cents": 70
-        },
-        {
-          "id": "logic",
-          "name": "逻辑判断",
-          "start": 101,
-          "end": 110,
-          "cents": 80
-        },
-        {
-          "id": "data",
-          "name": "资料分析",
-          "start": 111,
-          "end": 130,
-          "cents": 80
-        }
+        { "id": "politics", "name": "政治理论", "start": 1, "end": 20, "cents": 50 },
+        { "id": "common", "name": "常识判断", "start": 21, "end": 35, "cents": 50 },
+        { "id": "language", "name": "言语理解", "start": 36, "end": 65, "cents": 80 },
+        { "id": "quantity", "name": "数量关系", "start": 66, "end": 75, "cents": 100 },
+        { "id": "graphic", "name": "图形推理", "start": 76, "end": 85, "cents": 80 },
+        { "id": "definition", "name": "定义判断", "start": 86, "end": 95, "cents": 80 },
+        { "id": "analogy", "name": "类比推理", "start": 96, "end": 100, "cents": 80 },
+        { "id": "logic", "name": "逻辑判断", "start": 101, "end": 110, "cents": 85 },
+        { "id": "data", "name": "资料分析", "start": 111, "end": 130, "cents": 100 }
       ]
     },
     "副省": {
+      "ruleId": "guokao-province-135",
+      "label": "国考135题（副省级）计分规则",
       "sourceFile": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
       "sourceSha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2",
       "sections": [
-        {
-          "id": "politics",
-          "name": "政治理论",
-          "start": 1,
-          "end": 20,
-          "cents": 70
-        },
-        {
-          "id": "common",
-          "name": "常识判断",
-          "start": 21,
-          "end": 35,
-          "cents": 70
-        },
-        {
-          "id": "language",
-          "name": "言语理解",
-          "start": 36,
-          "end": 65,
-          "cents": 70
-        },
-        {
-          "id": "quantity",
-          "name": "数量关系",
-          "start": 66,
-          "end": 80,
-          "cents": 70
-        },
-        {
-          "id": "graphic",
-          "name": "图形推理",
-          "start": 81,
-          "end": 90,
-          "cents": 80
-        },
-        {
-          "id": "definition",
-          "name": "定义判断",
-          "start": 91,
-          "end": 100,
-          "cents": 80
-        },
-        {
-          "id": "analogy",
-          "name": "类比推理",
-          "start": 101,
-          "end": 105,
-          "cents": 80
-        },
-        {
-          "id": "logic",
-          "name": "逻辑判断",
-          "start": 106,
-          "end": 115,
-          "cents": 80
-        },
-        {
-          "id": "data",
-          "name": "资料分析",
-          "start": 116,
-          "end": 135,
-          "cents": 80
-        }
+        { "id": "politics", "name": "政治理论", "start": 1, "end": 20, "cents": 50 },
+        { "id": "common", "name": "常识判断", "start": 21, "end": 35, "cents": 50 },
+        { "id": "language", "name": "言语理解", "start": 36, "end": 65, "cents": 80 },
+        { "id": "quantity", "name": "数量关系", "start": 66, "end": 80, "cents": 80 },
+        { "id": "graphic", "name": "图形推理", "start": 81, "end": 90, "cents": 80 },
+        { "id": "definition", "name": "定义判断", "start": 91, "end": 100, "cents": 80 },
+        { "id": "analogy", "name": "类比推理", "start": 101, "end": 105, "cents": 50 },
+        { "id": "logic", "name": "逻辑判断", "start": 106, "end": 115, "cents": 80 },
+        { "id": "data", "name": "资料分析", "start": 116, "end": 135, "cents": 100 }
       ]
     }
   },
-  "referenceRule": {
-    "id": "guokao-practice-v1",
-    "label": "平台国考参考估分",
-    "normalizationMaxCents": 10000,
-    "weights": {
-      "politics": 50,
-      "common": 50,
-      "language": 80,
-      "quantity": 100,
-      "reasoning": 80,
-      "graphic": 80,
-      "definition": 80,
-      "analogy": 80,
-      "logic": 85,
-      "data": 100
+  "guokaoRules": {
+    "city130": {
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则",
+      "weights": {
+        "politics": 50,
+        "common": 50,
+        "language": 80,
+        "quantity": 100,
+        "graphic": 80,
+        "definition": 80,
+        "analogy": 80,
+        "logic": 85,
+        "data": 100
+      },
+      "reasoningSplit": [
+        { "id": "graphic", "name": "图形推理", "count": 10, "cents": 80 },
+        { "id": "definition", "name": "定义判断", "count": 10, "cents": 80 },
+        { "id": "analogy", "name": "类比推理", "count": 5, "cents": 80 },
+        { "id": "logic", "name": "逻辑判断", "count": 10, "cents": 85 }
+      ]
+    },
+    "province135": {
+      "id": "guokao-province-135",
+      "label": "国考135题（副省级）计分规则",
+      "weights": {
+        "politics": 50,
+        "common": 50,
+        "language": 80,
+        "quantity": 80,
+        "graphic": 80,
+        "definition": 80,
+        "analogy": 50,
+        "logic": 80,
+        "data": 100
+      },
+      "reasoningSplit": [
+        { "id": "graphic", "name": "图形推理", "count": 10, "cents": 80 },
+        { "id": "definition", "name": "定义判断", "count": 10, "cents": 80 },
+        { "id": "analogy", "name": "类比推理", "count": 5, "cents": 50 },
+        { "id": "logic", "name": "逻辑判断", "count": 10, "cents": 80 }
+      ]
+    },
+    "mixed135": {
+      "id": "guokao-mixed-135",
+      "label": "国考135题（40判断）计分规则",
+      "weights": {
+        "politics": 50,
+        "common": 50,
+        "language": 80,
+        "quantity": 100,
+        "graphic": 70,
+        "definition": 70,
+        "analogy": 65,
+        "logic": 80,
+        "data": 100
+      },
+      "reasoningSplit": [
+        { "id": "graphic", "name": "图形推理", "count": 10, "cents": 70 },
+        { "id": "definition", "name": "定义判断", "count": 10, "cents": 70 },
+        { "id": "analogy", "name": "类比推理", "count": 10, "cents": 65 },
+        { "id": "logic", "name": "逻辑判断", "count": 10, "cents": 80 }
+      ]
+    },
+    "standard120": {
+      "id": "liankao-120",
+      "label": "行测120题计分规则",
+      "weights": {
+        "politics": 50,
+        "common": 50,
+        "language": 80,
+        "quantity": 100,
+        "reasoning": 90,
+        "data": 100
+      }
     }
   }
 }

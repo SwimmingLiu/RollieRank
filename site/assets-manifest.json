@@ -1,0 +1,20 @@
+{
+  "domain": "https://rollie-rank-oss.swimmingliu.cn",
+  "prefix": "static/rollierank-site/",
+  "files": [
+    {
+      "path": "site/assets/logo-256.png",
+      "key": "static/rollierank-site/logo-256.png",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank-site/logo-256.png",
+      "bytes": 42882,
+      "sha256": "92ac9eac0fc1b23e520c055f160a41dbcf486d92577ffa899c47af475d70525d"
+    },
+    {
+      "path": "site/assets/logo-64.png",
+      "key": "static/rollierank-site/logo-64.png",
+      "url": "https://rollie-rank-oss.swimmingliu.cn/static/rollierank-site/logo-64.png",
+      "bytes": 4456,
+      "sha256": "2895f206589d6fb001ce94bdcb25275ca8a2e5da44a39ba77d63a7c1084a5ffc"
+    }
+  ]
+}

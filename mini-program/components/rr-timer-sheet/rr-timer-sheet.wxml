@@ -5,12 +5,15 @@
   </button>
 </template>
 
-<view class="timer__layer" style="--timer-keyboard: {{keyboardHeight}}px;">
-  <view class="timer__shade" aria-role="button" aria-label="关闭计时面板" catchtap="dismissFromBackdrop"
+<view class="timer__layer {{dragging ? 'timer__layer--dragging' : ''}} {{closing ? 'timer__layer--closing' : ''}}" style="--timer-keyboard: {{keyboardHeight}}px;">
+  <view class="timer__shade" style="{{shadeOpacity < 1 ? 'opacity: ' + shadeOpacity + ';' : ''}}" aria-role="button" aria-label="关闭计时面板" catchtap="dismissFromBackdrop"
     data-zone="backdrop" bindtouchstart="startGesture" catchtouchmove="blockScroll" bindtouchend="endGesture" bindtouchcancel="cancelGesture" />
-  <view class="timer__sheet timer__sheet--{{expanded ? 'expanded' : 'collapsed'}}" aria-role="dialog" aria-label="{{heading}}"
-    data-zone="panel" bindtouchstart="startGesture" bindtouchend="endGesture" bindtouchcancel="cancelGesture">
-    <view class="timer__heading" data-zone="handle" bindtouchstart="startGesture" bindtouchend="endGesture" bindtouchcancel="cancelGesture">
+  <view class="timer__sheet timer__sheet--{{expanded ? 'expanded' : 'collapsed'}}" style="{{dragY ? 'transform: translateY(' + dragY + 'px);' : ''}}" aria-role="dialog" aria-label="{{heading}}"
+    data-zone="panel" bindtouchstart="startGesture" bindtouchmove="moveGesture" bindtouchend="endGesture" bindtouchcancel="cancelGesture">
+    <view class="timer__grabber-zone" data-zone="handle" catchtouchstart="startGesture" catchtouchmove="moveGesture" catchtouchend="endGesture" catchtouchcancel="cancelGesture">
+      <view class="timer__grabber"></view>
+    </view>
+    <view class="timer__heading" data-zone="handle" catchtouchstart="startGesture" catchtouchmove="moveGesture" catchtouchend="endGesture" catchtouchcancel="cancelGesture">
       <text>{{heading}}</text>
       <button class="timer__close" aria-label="关闭面板" bindtap="dismiss"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button>
     </view>
@@ -39,7 +42,7 @@
             confirm-type="search" adjust-position="{{false}}" bindinput="search" bindkeyboardheightchange="adjustKeyboard" />
         </view>
         <scroll-view wx:if="{{pickerLevel === 'institution'}}" class="timer__options timer__options--institutions" scroll-y enhanced show-scrollbar="{{false}}" bounces="{{false}}"
-          bindscroll="onPickerScroll" bindtouchstart="startGesture" bindtouchend="endGesture" bindtouchcancel="cancelGesture">
+          bindscroll="onPickerScroll">
           <button wx:for="{{publishers}}" wx:key="id" class="timer__publisher" data-id="{{item.id}}" bindtap="selectPublisher"
             aria-label="选择{{item.label}}计时套卷" hover-class="press">
             <image class="timer__publisher-icon" src="{{item.icon || uiBase + '/book.svg'}}" mode="aspectFit" />
@@ -49,7 +52,7 @@
           <view wx:if="{{!publishers.length}}" class="timer__notice" aria-role="status">暂无可选套卷</view>
         </scroll-view>
         <scroll-view wx:else class="timer__options {{institutionLabel ? 'timer__options--with-path' : ''}} {{expanded ? 'timer__options--expanded' : ''}}" scroll-y enhanced show-scrollbar="{{false}}" bounces="{{false}}"
-          bindscroll="onPickerScroll" bindtouchstart="startGesture" bindtouchend="endGesture" bindtouchcancel="cancelGesture">
+          bindscroll="onPickerScroll">
           <block wx:if="{{pickerLevel === 'collection'}}">
             <button wx:for="{{collections}}" wx:key="id" class="timer__collection" data-id="{{item.id}}" bindtap="selectCollection" hover-class="press">
               <text class="timer__publisher-label">{{item.label}}</text>
@@ -72,7 +75,7 @@
 
       <block wx:elif="{{plan}}">
         <scroll-view class="timer__plan-scroll {{plan.status === 'ready' && plan.modulesMode ? 'timer__plan-scroll--allocated' : ''}}"
-          scroll-y enhanced bounces="{{false}}" bindscrolltolower="expandTimerPlan" bindrefresherpulling="collapseTimerPlan"
+          scroll-y enhanced bounces="{{false}}" refresher-enabled="{{expanded}}" bindscrolltolower="expandTimerPlan" bindrefresherpulling="collapseTimerPlan"
           show-scrollbar="{{false}}" scroll-into-view="{{scrollTarget}}">
           <view id="timer-content-top" class="timer__plan-content">
             <block wx:if="{{plan.status === 'ready'}}">

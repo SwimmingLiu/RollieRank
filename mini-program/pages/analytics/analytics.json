@@ -3,5 +3,6 @@
     "rr-nav": "/components/rr-nav/rr-nav",
     "rr-tabbar": "/components/rr-tabbar/rr-tabbar"
   },
-  "navigationStyle": "custom"
+  "navigationStyle": "custom",
+  "disableScroll": true
 }

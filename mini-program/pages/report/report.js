@@ -1,18 +1,27 @@
 const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
 const format = require("../../utils/format.js");
-const { reportBands } = require("../../utils/report.js");
+const catalog = require("../../utils/catalog.js");
+const { reportBands, buildComparison } = require("../../utils/report.js");
+const { createPageSheetDrag } = require("../../utils/sheet-gesture.js");
 const { formatElapsed } = require("../../vendor/practice-timer.js");
 
 Page({
   data: {
     loading: true,
+    refreshing: false,
     error: "",
     summary: null,
     publicView: false,
     bands: [],
     shownBands: [],
     showBands: false,
+    comparison: null,
+    vsOpen: false,
+    sheetDragY: 0,
+    sheetDragging: false,
+    sheetClosing: false,
+    sheetShadeOpacity: 1,
     standing: null,
     correctionNotice: null,
     commentCount: null,
@@ -22,6 +31,7 @@ Page({
   },
 
   onLoad(query) {
+    this.sheetDrag = createPageSheetDrag(this, { onDismiss: () => this.closeVsDetail() });
     this.attemptId = query.attemptId || "";
     // 从同卷榜进入时只读展示他人公开的分数与题型，不加载其答卷。
     this.publicId = query.publicId || "";
@@ -70,17 +80,29 @@ Page({
     if (this.attempt) this.sync();
   },
 
-  onPullDownRefresh() {
-    (this.publicId ? this.loadPublic() : this.load()).finally(() => wx.stopPullDownRefresh());
+  onRefresherRefresh() {
+    this.setData({ refreshing: true });
+    (this.publicId ? this.loadPublic() : this.load()).finally(() => this.setData({ refreshing: false }));
+  },
+
+  syncIds() {
+    const local = storage.getAttempt(this.attemptId);
+    const others = local
+      ? storage.history()
+          .filter(item => item.id !== this.attemptId && (local.paperId && item.paperId ? item.paperId === local.paperId : item.versionId === local.versionId))
+          .slice(0, 6)
+          .map(item => item.id)
+      : [];
+    return [this.attemptId, ...others];
   },
 
   async load() {
     this.setData({ loading: true, error: "" });
     try {
-      const attempts = await api.sync([this.attemptId]);
-      const attempt = attempts[0];
+      const attempts = await api.sync(this.syncIds());
+      attempts.forEach(item => storage.upsertAttempt(item));
+      const attempt = attempts.find(item => item.id === this.attemptId) || attempts[0];
       if (!attempt) throw new Error("这份成绩不在当前身份下，请回到练习记录查看。");
-      storage.upsertAttempt(attempt);
       this.apply(attempt);
       this.refreshExtras(attempt);
     } catch (error) {
@@ -98,11 +120,12 @@ Page({
   async sync() {
     if (this.publicId) return;
     try {
-      const attempts = await api.sync([this.attemptId]);
-      if (attempts[0]) {
-        storage.upsertAttempt(attempts[0]);
-        this.apply(attempts[0]);
-        this.refreshExtras(attempts[0]);
+      const attempts = await api.sync(this.syncIds());
+      attempts.forEach(item => storage.upsertAttempt(item));
+      const attempt = attempts.find(item => item.id === this.attemptId) || attempts[0];
+      if (attempt) {
+        this.apply(attempt);
+        this.refreshExtras(attempt);
       }
     } catch {
       // 静默失败：成绩已在本机，联网后再次进入即可更新。
@@ -113,14 +136,17 @@ Page({
     this.attempt = attempt;
     const report = attempt.report;
     const timing = attempt.timing;
+    const version = getApp().globalData.versions.find(item => item.id === attempt.versionId);
+    const comparison = this.publicId ? null : buildComparison(attempt, storage.history());
     this.setData({
       loading: false,
       error: "",
+      comparison,
       summary: {
         id: attempt.id,
         versionId: attempt.versionId,
         title: attempt.paperTitle,
-        identity: [attempt.institution, attempt.period, attempt.variant].filter(Boolean).join(" · "),
+        identity: catalog.attemptIdentity(version, attempt),
         score: format.scoreCard(report.totalCents),
         max: format.score(report.maxCents),
         correct: report.correct,
@@ -130,11 +156,11 @@ Page({
         createdAt: format.dateTime(attempt.createdAt),
         answerRevision: attempt.answerRevision || 0,
       },
-      timing: timing?.modules ? {
+      timing: timing && timing.actualMs != null ? {
         actual: formatElapsed(timing.actualMs),
         planned: timing.plannedMs / 60000,
-        entry: formatElapsed(timing.entryMs),
-        modules: timing.modules.map(module => ({
+        entry: formatElapsed(timing.entryMs || 0),
+        modules: (timing.modules || []).map(module => ({
           id: module.id, name: module.name, planned: module.plannedMs / 60000,
           actual: formatElapsed(module.actualMs),
           difference: (module.actualMs > module.plannedMs ? "+" : "−") + formatElapsed(Math.abs(module.actualMs - module.plannedMs)),
@@ -181,9 +207,10 @@ Page({
       this.setData({
         correctionNotice: notice ? {
           ...notice,
-          beforeText: format.score(notice.before.totalCents),
-          afterText: format.score(notice.after.totalCents),
-          deltaText: `${notice.deltaCents > 0 ? "+" : ""}${format.score(notice.deltaCents)}`,
+          beforeText: format.scoreCard(notice.before.totalCents),
+          afterText: format.scoreCard(notice.after.totalCents),
+          deltaText: notice.deltaCents === 0 ? "不变" : `${notice.deltaCents > 0 ? "+" : "−"}${format.scoreCard(Math.abs(notice.deltaCents))}`,
+          deltaTone: notice.deltaCents > 0 ? "up" : notice.deltaCents < 0 ? "down" : "same",
         } : null,
       });
     } catch {
@@ -259,6 +286,42 @@ Page({
 
   share() {
     wx.navigateTo({ url: `/pages/share/share?attemptId=${this.attemptId}` });
+  },
+
+  openVsDetail() {
+    if (!this.data.comparison) return;
+    this.sheetDrag?.reset();
+    this._sheetScrollTop = 0;
+    this.setData({ vsOpen: true });
+  },
+
+  closeVsDetail() {
+    this.sheetDrag?.reset();
+    this._sheetScrollTop = 0;
+    this.setData({ vsOpen: false });
+  },
+
+  noopSheet() {},
+  onSheetScroll(event) { this.sheetDrag?.onScroll(event); },
+  startSheetDrag(event) { this.sheetDrag?.start(event); },
+  moveSheetDrag(event) { this.sheetDrag?.move(event); },
+  endSheetDrag(event) { this.sheetDrag?.end(event); },
+  cancelSheetDrag() { this.sheetDrag?.cancel(); },
+
+  onUnload() {
+    this.sheetDrag?.reset();
+  },
+
+  openPrevious() {
+    const id = this.data.comparison?.previousId;
+    if (!id) return;
+    this.setData({ vsOpen: false });
+    wx.navigateTo({ url: `/pages/report/report?attemptId=${id}` });
+  },
+
+  openAnalytics() {
+    this.setData({ vsOpen: false });
+    wx.navigateTo({ url: "/pages/analytics/analytics" });
   },
 
   practiceAgain() {

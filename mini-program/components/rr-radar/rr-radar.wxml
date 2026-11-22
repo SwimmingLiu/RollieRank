@@ -1,1 +1,4 @@
-<canvas type="2d" id="plot" class="radar" aria-label="各板块得分率雷达图" />
+<view class="radar__wrap">
+  <image wx:if="{{src}}" class="radar" src="{{src}}" mode="aspectFit" aria-label="各板块得分率雷达图" />
+  <canvas type="2d" id="plot" class="radar__canvas" />
+</view>

@@ -78,10 +78,25 @@ export function createCorrectionsFeature(ctx) {
   }
 
   function afterRender() {
+    let lostFocus = false;
     for (const [slot, render] of [["corrections-report", reportHtml], ["corrections-user", userHtml], ["corrections-admin", adminHtml]]) {
       const node = document.querySelector(`[data-feature="${slot}"]`);
-      if (node) node.innerHTML = render();
+      if (node) {
+        if (document.activeElement && node.contains(document.activeElement)) lostFocus = true;
+        node.innerHTML = render();
+      }
     }
+    if (lostFocus && (!document.activeElement || document.activeElement === document.body)) {
+      const main = document.getElementById("main");
+      if (main) {
+        main.setAttribute("tabindex", "-1");
+        main.focus({ preventScroll: true });
+      }
+    }
+    const kpiCount = document.querySelector('[data-kpi="corrections-pending"]');
+    const kpiMeta = document.querySelector('[data-kpi="corrections-meta"]');
+    if (kpiCount && summary) kpiCount.textContent = String(summary.pendingCount ?? 0);
+    if (kpiMeta && summary) kpiMeta.textContent = `${summary.pendingQuestionCount ?? 0} 道题等待核对`;
   }
 
   function captureDraft() {
@@ -191,6 +206,9 @@ export function createCorrectionsFeature(ctx) {
       admin = result;
       summary = result;
       adminError = "";
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("rr:admin-token-change", { detail: { token: credential, source: "corrections" } }));
+      }
       close();
       rerender();
     });
@@ -291,7 +309,13 @@ export function createCorrectionsFeature(ctx) {
       else if (action === "preview") await showPreview(button.dataset.feedbackId);
       else if (action === "refresh") await refresh();
       else if (action === "unlock") unlock();
-      else if (action === "lock") { reviewToken = ""; admin = null; reviewDraft = null; rerender(); }
+      else if (action === "lock") {
+        reviewToken = ""; admin = null; reviewDraft = null;
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("rr:admin-token-change", { detail: { token: "", source: "corrections" } }));
+        }
+        rerender();
+      }
       else if (action === "review") openReview(button.dataset.feedbackId);
       else if (action === "back-review") openReview(reviewDraft.feedbackId, true);
       else if (action === "confirm-review") await saveReview();
@@ -322,12 +346,22 @@ export function createCorrectionsFeature(ctx) {
       row.querySelector("[data-correction-reference]").textContent = referenceFor(findAttempt(draft.attemptId), event.target.value);
     }
   }
+  function onAdminTokenChange(event) {
+    if (event.detail?.source === "corrections") return;
+    const nextToken = typeof event.detail?.token === "string" ? event.detail.token : "";
+    if (nextToken === reviewToken) return;
+    reviewToken = nextToken;
+    if (!reviewToken) { admin = null; reviewDraft = null; }
+    if (ctx.route().page === "admin") void refresh();
+  }
   document.addEventListener("click", click);
   document.addEventListener("submit", submit);
   document.addEventListener("input", change);
+  if (typeof window !== "undefined") window.addEventListener("rr:admin-token-change", onAdminTokenChange);
   // 包装层只读取本答卷的通知副本，不能修改原缓存或另建分数状态。
   const reportNotifications = () => reportAttempt()?.isSample ? [] : structuredClone(personal.notifications.filter((notice) => notice.attemptId === reportAttempt()?.id));
   return { afterRender, onRoute: refresh, afterSubmit: refresh, openFeedback, reportNotifications,
     dispose() { generation++; reviewToken = ""; document.removeEventListener("click", click);
-      document.removeEventListener("submit", submit); document.removeEventListener("input", change); } };
+      document.removeEventListener("submit", submit); document.removeEventListener("input", change);
+      if (typeof window !== "undefined") window.removeEventListener("rr:admin-token-change", onAdminTokenChange); } };
 }

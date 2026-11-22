@@ -1,6 +1,7 @@
 const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
 const timing = require("../../utils/timing.js");
+const sheetGesture = require("../../utils/sheet-gesture.js");
 const timer = require("../../vendor/practice-timer.js");
 const { groupByInstitution, publisherName, practiceIdentity } = require("../../utils/catalog.js");
 const { ASSET } = require("../../config.js");
@@ -40,6 +41,10 @@ Component({
     openingEntry: false,
     keyboardHeight: 0,
     scrollTarget: "",
+    dragY: 0,
+    dragging: false,
+    closing: false,
+    shadeOpacity: 1,
     uiBase: "/assets/ui",
   },
   lifetimes: {
@@ -51,6 +56,8 @@ Component({
     detached() {
       this.mounted = false;
       clearInterval(this.ticker);
+      clearTimeout(this.closeTimer);
+      clearTimeout(this.suppressTapTimer);
     },
   },
   pageLifetimes: {
@@ -376,33 +383,95 @@ Component({
       });
     },
 
+    resetDrag() {
+      clearTimeout(this.closeTimer);
+      this.closeTimer = null;
+      if (this.data.dragY || this.data.dragging || this.data.closing || this.data.shadeOpacity !== 1) {
+        this.setData({ dragY: 0, dragging: false, closing: false, shadeOpacity: 1 });
+      }
+    },
+
+    animateDismiss() {
+      clearTimeout(this.closeTimer);
+      this.setData({ dragging: false, closing: true, shadeOpacity: 0 });
+      this.closeTimer = setTimeout(() => {
+        this.closeTimer = null;
+        this.setData({ dragY: 0, dragging: false, closing: false, shadeOpacity: 1 });
+        this.dismiss();
+      }, sheetGesture.CLOSE_DURATION);
+    },
+
     startGesture(event) {
+      clearTimeout(this.closeTimer);
+      if (this.data.closing) this.setData({ closing: false, dragging: true });
       const point = event.touches.length === 1 && event.touches[0];
-      this.gesture = point ? {
+      const zone = event.currentTarget?.dataset?.zone || "";
+      if (!point) {
+        this.gesture = null;
+        return;
+      }
+      this.suppressTap = false;
+      const winHeight = (wx.getWindowInfo && wx.getWindowInfo().windowHeight) || 720;
+      const fromHandle = zone === "handle";
+      this.gesture = {
+        zone,
+        session: zone === "backdrop" ? null : sheetGesture.createSheetSession({
+          x: point.clientX,
+          y: point.clientY,
+          now: Date.now(),
+          panelHeight: Math.round(winHeight * (this.data.expanded ? 0.86 : 0.62)),
+          expanded: Boolean(this.data.expanded),
+          canExpand: true,
+          canDismiss: true,
+          atTop: fromHandle || (this.pickerScrollTop || 0) <= 1,
+          fromHandle,
+        }),
         x: point.clientX,
         y: point.clientY,
-        zone: event.currentTarget?.dataset?.zone || "",
-      } : null;
-      this.suppressTap = false;
+      };
+    },
+
+    moveGesture(event) {
+      if (!this.gesture?.session || !event.touches?.[0]) return;
+      const point = event.touches[0];
+      const state = sheetGesture.updateSheetSession(this.gesture.session, { x: point.clientX, y: point.clientY, now: Date.now() });
+      if (!state.active) return;
+      this.suppressTap = true;
+      if (state.offsetY !== this.data.dragY || !this.data.dragging || state.shadeOpacity !== this.data.shadeOpacity) {
+        this.setData({ dragY: state.offsetY, dragging: true, closing: false, shadeOpacity: state.shadeOpacity });
+      }
     },
 
     endGesture(event) {
       const from = this.gesture;
       this.gesture = null;
       const to = event.changedTouches[0];
-      if (!from || !to) return;
+      if (!from || !to) {
+        this.resetDrag();
+        return;
+      }
       const dx = to.clientX - from.x, dy = to.clientY - from.y;
-      this.suppressTap = Math.hypot(dx, dy) >= 8;
-      if (from.zone === "handle" && dy < -38 && dy < -Math.abs(dx)) this.setData({ expanded: true });
-      else if (from.zone === "handle" && dy > 52 && dy > Math.abs(dx)) {
-        if (this.data.expanded) this.setData({ expanded: false });
-        else this.dismiss();
+      if (from.zone === "backdrop") {
+        this.suppressTap = Math.hypot(dx, dy) >= 8;
+        if (this.data.picking && dx < -Math.max(56, (wx.getWindowInfo?.().windowWidth || 390) * .18) && Math.abs(dx) > Math.abs(dy) * 1.5) this.backPicker();
+      } else if (from.session) {
+        const result = sheetGesture.finishSheetSession(from.session, { x: to.clientX, y: to.clientY, now: Date.now() });
+        this.suppressTap = result.moved;
+        if (this.data.picking && result.dx < -Math.max(56, (wx.getWindowInfo?.().windowWidth || 390) * .18) && Math.abs(result.dx) > Math.abs(result.dy) * 1.5) {
+          this.resetDrag();
+          this.backPicker();
+        } else if (result.action === "expand") {
+          this.resetDrag();
+          this.setData({ expanded: true });
+        } else if (result.action === "collapse") {
+          this.resetDrag();
+          this.setData({ expanded: false });
+        } else if (result.action === "dismiss") {
+          this.animateDismiss();
+        } else {
+          this.resetDrag();
+        }
       }
-      if (from.zone === "panel" && this.data.picking) {
-        if (dy < -38 && dy < -Math.abs(dx)) this.setData({ expanded: true });
-        else if (dy > 42 && dy > Math.abs(dx) && this.pickerScrollTop <= 1 && this.data.expanded) this.setData({ expanded: false });
-      }
-      if (this.data.picking && dx < -Math.max(56, (wx.getWindowInfo?.().windowWidth || 390) * .18) && Math.abs(dx) > Math.abs(dy) * 1.5) this.backPicker();
       if (this.suppressTap) {
         clearTimeout(this.suppressTapTimer);
         this.suppressTapTimer = setTimeout(() => { this.suppressTap = false; }, 0);
@@ -412,6 +481,7 @@ Component({
     cancelGesture() {
       this.gesture = null;
       this.suppressTap = true;
+      this.resetDrag();
     },
 
     dismissFromBackdrop() {

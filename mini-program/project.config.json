@@ -9,7 +9,7 @@
     "postcss": true,
     "minified": true,
     "minifyWXML": true,
-    "urlCheck": false,
+    "urlCheck": true,
     "checkSiteMap": true,
     "uglifyFileName": false,
     "compileHotReLoad": true,

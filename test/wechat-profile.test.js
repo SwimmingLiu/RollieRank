@@ -8,6 +8,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { pathToFileURL } from "node:url";
 import { createApi } from "../server/api.mjs";
+import { createDiscussionsService } from "../server/discussions.mjs";
 import { createWechatProfileService } from "../server/wechat-profile.mjs";
 
 const pixel = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+AvX8AAAAASUVORK5CYII=";
@@ -85,4 +86,149 @@ test("optional phone authorization verifies WeChat and persists an encrypted val
   const decrypt = createDecipheriv("aes-256-gcm", phoneKey, Buffer.from(saved.iv, "base64"));
   decrypt.setAuthTag(Buffer.from(saved.tag, "base64"));
   assert.equal(decrypt.update(saved.encrypted, "base64", "utf8") + decrypt.final("utf8"), "+86" + phone);
+});
+
+test("avatars upload to Qiniu OSS instead of storing base64 in catalog.json and stay in sync with discussions", async t => {
+  const uploads = [];
+  const ossFetch = async (url, options) => {
+    assert.equal(String(url), "https://up-z0.qiniup.com");
+    assert.equal(options.method, "POST");
+    const token = options.body.get("token");
+    const key = options.body.get("key");
+    const file = options.body.get("file");
+    assert.match(token, /^test-ak:[^:]+:[^:]+$/);
+    assert.match(key, /^avatars\/[a-f0-9]{48}\.png$/);
+    assert.equal(file.type, "image/png");
+    uploads.push({ key, size: file.size });
+    return Response.json({ key, hash: "mock-hash" });
+  };
+
+  const directory = await mkdtemp(join(tmpdir(), "rollierank-oss-profile-"));
+  const qiniu = {
+    ak: "test-ak",
+    sk: "test-sk",
+    bucket: "rollie-rank",
+    domain: "https://rollie-rank-oss.swimmingliu.cn",
+    upHost: "https://up-z0.qiniup.com",
+    avatarPrefix: "avatars/",
+  };
+  const api = await createApi({
+    dataDirectory: pathToFileURL(directory + "/"),
+    featureFactories: [
+      createDiscussionsService,
+      (dependencies) => createWechatProfileService(dependencies, { config: { qiniu }, fetchImpl: ossFetch }),
+    ],
+  });
+  const server = createServer((req, res) => api(req, res, new URL(req.url, "http://localhost").pathname));
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  t.after(async () => {
+    server.closeAllConnections();
+    await new Promise(resolve => server.close(resolve));
+    await rm(directory, { force: true, recursive: true });
+  });
+  const base = `http://127.0.0.1:${server.address().port}/api/`;
+  const post = (path, body) => fetch(base + path, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+
+  // 1. 先交卷取得合法评论凭证，发表一条默认身份评论与一条回复
+  const { versions } = await (await fetch(base + "catalog")).json();
+  const version = versions.find(item => item.status === "published");
+  const authorGuest = "guest-author-0001";
+  const replierGuest = "guest-replier-0002";
+  const submit = async (guestId, attemptId) => {
+    const res = await post("submit", {
+      guestId,
+      attemptId,
+      versionId: version.id,
+      answers: Array(version.questionCount).fill("A"),
+    });
+    assert.equal(res.status, 200);
+    return res.json();
+  };
+  const authorAttempt = await submit(authorGuest, "attempt-author-0001");
+  const replierAttempt = await submit(replierGuest, "attempt-replier-0002");
+
+  const firstCommentRes = await post("discussions", {
+    paperId: version.paperId,
+    attemptId: authorAttempt.id,
+    guestId: authorGuest,
+    clientId: "comment-client-0001",
+    nickname: "卷友",
+    text: "先用默认身份占楼",
+  });
+  assert.equal(firstCommentRes.status, 201);
+  const firstComment = (await firstCommentRes.json()).comment;
+
+  const replyRes = await post("discussions", {
+    paperId: version.paperId,
+    attemptId: replierAttempt.id,
+    guestId: replierGuest,
+    clientId: "comment-client-0002",
+    nickname: "同桌考生",
+    parentId: firstComment.id,
+    text: "回复一下楼主",
+  });
+  assert.equal(replyRes.status, 201);
+
+  // 2. 用户同步微信头像与微信昵称（上传七牛 OSS，并绑定 guestId）
+  const { token } = await (await post("miniprogram-profile/session", {})).json();
+  const saveRes = await post("miniprogram-profile/profile", {
+    token,
+    guestId: authorGuest,
+    name: "微信小明",
+    avatar: pixel,
+  });
+  assert.equal(saveRes.status, 200);
+  const { profile } = await saveRes.json();
+  assert.equal(profile.name, "微信小明");
+  assert.equal(uploads.length, 1);
+  assert.equal(profile.avatarUrl, `https://rollie-rank-oss.swimmingliu.cn/${uploads[0].key}`);
+
+  // 校验 catalog.json 未落盘 base64 头像数据，且 /avatar 接口 302 跳转到 OSS
+  const catalogRaw = await readFile(join(directory, "catalog.json"), "utf8");
+  assert.equal(catalogRaw.includes(pixel), false);
+  const redirectRes = await fetch(`${base}miniprogram-profile/avatar?id=${profile.avatarId}`, { redirect: "manual" });
+  assert.equal(redirectRes.status, 302);
+  assert.equal(redirectRes.headers.get("location"), profile.avatarUrl);
+
+  // 3. 历史评论与回复目标名均实时同步为最新微信头像和微信昵称
+  const listRes = await fetch(`${base}discussions?paperId=${encodeURIComponent(version.paperId)}&guestId=${authorGuest}&attemptId=${authorAttempt.id}`);
+  const list = await listRes.json();
+  assert.equal(list.comments[0].author.name, "微信小明");
+  assert.equal(list.comments[0].author.avatarUrl, profile.avatarUrl);
+
+  const repliesRes = await fetch(`${base}discussions/replies?paperId=${encodeURIComponent(version.paperId)}&guestId=${authorGuest}&attemptId=${authorAttempt.id}&rootId=${firstComment.id}`);
+  const replies = await repliesRes.json();
+  assert.equal(replies.comments[0].replyTo.name, "微信小明");
+
+  // 4. 后续新评论自动使用最新微信昵称与微信头像
+  const secondCommentRes = await post("discussions", {
+    paperId: version.paperId,
+    attemptId: authorAttempt.id,
+    guestId: authorGuest,
+    clientId: "comment-client-0003",
+    nickname: "卷友",
+    text: "同步后的新评论",
+  });
+  assert.equal(secondCommentRes.status, 201);
+  const secondComment = (await secondCommentRes.json()).comment;
+  assert.equal(secondComment.author.name, "微信小明");
+  assert.equal(secondComment.author.avatarUrl, profile.avatarUrl);
+
+  // 5. 未改名用户按 guestId 自动生成稳定编号昵称“卷友XXXX”，避免评论区重名
+  assert.match(firstComment.author.name, /^卷友\d{4}$/);
+  const anotherCommentRes = await post("discussions", {
+    paperId: version.paperId,
+    attemptId: replierAttempt.id,
+    guestId: replierGuest,
+    clientId: "comment-client-0004",
+    nickname: "卷友",
+    text: "另一个未改名用户的评论",
+  });
+  assert.equal(anotherCommentRes.status, 201);
+  const anotherComment = (await anotherCommentRes.json()).comment;
+  assert.match(anotherComment.author.name, /^卷友\d{4}$/);
+  assert.notEqual(firstComment.author.name, anotherComment.author.name);
 });

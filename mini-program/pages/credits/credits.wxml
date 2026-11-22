@@ -1,0 +1,287 @@
+<page-meta page-style="overflow: hidden;" />
+<view class="screen screen--plain">
+  <rr-nav title="卷豆" />
+  <scroll-view
+    class="page-scroll"
+    scroll-y
+    enhanced
+    show-scrollbar="{{false}}"
+    refresher-enabled="{{true}}"
+    refresher-triggered="{{refreshing}}"
+    refresher-background="#fcf8f1"
+    bindrefresherrefresh="onRefresherRefresh"
+  >
+    <view class="{{signedIn ? 'credits__scroll-body' : 'page-scroll__body--plain'}}">
+      <view class="credits">
+        <view wx:if="{{loading}}" class="credits__loading">正在读取…</view>
+
+        <view wx:elif="{{error && !signedIn}}" class="credits__card credits__error-card">
+          <image class="credits__state-icon" src="{{uiBase}}/warn.svg" mode="aspectFit" />
+          <text class="credits__error-text">{{error}}</text>
+          <button class="credits__retry-btn" bindtap="reload">重新读取</button>
+        </view>
+
+        <block wx:else>
+          <!-- 未登录态 -->
+          <view wx:if="{{!signedIn}}" class="credits__hero">
+            <view class="credits__hero-main">
+              <view class="credits__hero-copy grow">
+                <view class="credits__eyebrow">
+                  <image class="credits__eyebrow-icon" src="{{uiBase}}/bean-ochre.svg" mode="aspectFit" />
+                  <text>卷豆</text>
+                  <text class="credits__pill credits__pill--coral">首登送 3 颗</text>
+                </view>
+                <text class="credits__guest-title">登录领取卷豆</text>
+                <text class="credits__guest-desc">使用同一微信账号，换设备自动同步余额。</text>
+              </view>
+              <image class="credits__hero-art" src="/assets/credits-art.svg" mode="aspectFit" />
+            </view>
+
+            <button
+              wx:if="{{legacyEligible}}"
+              class="credits__bind-row {{bindLegacy ? 'credits__bind-row--on' : ''}}"
+              bindtap="toggleBindLegacy"
+              aria-pressed="{{bindLegacy}}"
+            >
+              <view class="credits__checkbox {{bindLegacy ? 'credits__checkbox--on' : ''}}">
+                <image wx:if="{{bindLegacy}}" class="credits__check-icon" src="{{uiBase}}/check-light.svg" mode="aspectFit" />
+              </view>
+              <view class="stack grow">
+                <text class="credits__bind-title">关联本机练习资料</text>
+                <text class="credits__bind-hint">核对既有资料或正式回执，领取首次绑定赠送</text>
+              </view>
+            </button>
+
+            <text wx:if="{{loginError}}" class="credits__inline-error" aria-role="alert">{{loginError}}</text>
+
+            <button
+              wx:if="{{capabilities.login}}"
+              class="credits__login-btn"
+              bindtap="onLogin"
+              loading="{{loggingIn}}"
+              disabled="{{loggingIn}}"
+            >
+              {{loggingIn ? '正在登录…' : '微信登录'}}
+            </button>
+            <view wx:else class="credits__closed-note">
+              <text>微信登录暂未开放</text>
+            </view>
+
+            <button
+              wx:if="{{canSkipBind}}"
+              class="credits__skip-bind"
+              bindtap="loginWithoutBind"
+              disabled="{{loggingIn}}"
+            >
+              取消关联并直接登录
+            </button>
+          </view>
+
+          <!-- 已登录态：余额画报卡 + 直接展开充值档位 + 明细入口 -->
+          <block wx:else>
+            <view class="credits__hero">
+              <view class="credits__hero-main">
+                <view class="credits__hero-copy grow">
+                  <view class="credits__eyebrow">
+                    <image class="credits__eyebrow-icon" src="{{uiBase}}/bean-ochre.svg" mode="aspectFit" />
+                    <text>可用卷豆</text>
+                    <text wx:if="{{held > 0}}" class="credits__pill credits__pill--ochre">占用 {{held}}</text>
+                  </view>
+                  <view class="credits__balance-main">
+                    <text class="display-num credits__balance-num">{{balance}}</text>
+                    <text class="credits__balance-unit">颗</text>
+                  </view>
+                </view>
+                <image class="credits__hero-art" src="/assets/credits-art.svg" mode="aspectFit" />
+              </view>
+
+              <view class="credits__hero-foot">
+                <button wx:if="{{uid}}" class="credits__uid-chip" bindtap="copyUid" aria-label="复制 UID {{uid}}">
+                  <text class="num">UID {{uid}}</text>
+                  <image class="credits__uid-copy" src="{{uiBase}}/copy.svg" mode="aspectFit" />
+                </button>
+                <text wx:else class="credits__sync-text">微信账号已同步</text>
+
+                <button class="credits__ledger-link" bindtap="openLedger">
+                  <text>卷豆明细</text>
+                  <image class="credits__ledger-arrow" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+                </button>
+              </view>
+            </view>
+
+            <text wx:if="{{error}}" class="credits__inline-error" aria-role="alert">{{error}}</text>
+
+            <!-- 直接在主页面展开的充值卷豆区块 -->
+            <view class="credits__section">
+              <view class="credits__section-head">
+                <text class="credits__section-title">充值卷豆</text>
+                <text class="credits__section-sub">{{purchaseReady ? '即时到账' : '渠道即将开放'}}</text>
+              </view>
+
+              <view class="credits__pack-grid">
+                <button
+                  wx:for="{{packages}}"
+                  wx:key="credits"
+                  class="credits__pack {{item.featured ? 'credits__pack--featured' : ''}} {{selectedPackIndex === index ? 'credits__pack--on' : ''}}"
+                  data-index="{{index}}"
+                  bindtap="selectPackage"
+                >
+                  <block wx:if="{{item.featured}}">
+                    <view class="credits__pack-left">
+                      <view class="credits__pack-title-row">
+                        <text class="credits__pack-count num">{{item.credits}}<text class="credits__pack-unit"> 颗</text></text>
+                        <text wx:if="{{item.recommended}}" class="credits__pack-tag">常用</text>
+                      </view>
+                      <text class="credits__pack-unit-price num">约 {{item.unitText}}</text>
+                    </view>
+                    <text class="credits__pack-price credits__pack-price--lg num">{{item.yuanText}}</text>
+                  </block>
+                  <block wx:else>
+                    <view class="credits__pack-head">
+                      <text class="credits__pack-count num">{{item.credits}}<text class="credits__pack-unit"> 颗</text></text>
+                      <text wx:if="{{item.recommended}}" class="credits__pack-tag">常用</text>
+                    </view>
+                    <view class="credits__pack-foot">
+                      <text class="credits__pack-price num">{{item.yuanText}}</text>
+                      <text class="credits__pack-unit-price num">{{item.unitText}}</text>
+                    </view>
+                  </block>
+                </button>
+              </view>
+
+              <text class="credits__recharge-note">卷豆长期可用，充值与赠送共用余额，优先消耗赠送。</text>
+            </view>
+
+            <!-- 其他已开通的获取渠道（未开通自动隐藏） -->
+            <view wx:if="{{capabilities.invite || capabilities.ads}}" class="credits__menu">
+              <button wx:if="{{capabilities.invite}}" class="credits__menu-row" bindtap="openInvite">
+                <text class="credits__menu-label">邀请好友</text>
+                <text class="credits__menu-value credits__menu-value--accent grow">领卷豆</text>
+                <image class="credits__menu-arrow" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+              </button>
+              <view wx:if="{{capabilities.ads}}" class="credits__menu-row">
+                <text class="credits__menu-label">看视频领卷豆</text>
+                <text class="credits__menu-value grow">每日限量</text>
+                <image class="credits__menu-arrow" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+              </view>
+            </view>
+          </block>
+        </block>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部固定充值栏（仅已登录态） -->
+  <view wx:if="{{!loading && signedIn}}" class="credits__footer">
+    <view class="credits__footer-info">
+      <text class="credits__footer-label">已选 {{packages[selectedPackIndex].credits}} 颗</text>
+      <text class="display-num credits__footer-price">{{packages[selectedPackIndex].yuanText}}</text>
+    </view>
+    <button
+      class="credits__footer-btn {{purchaseReady ? '' : 'credits__footer-btn--soon'}}"
+      bindtap="submitRecharge"
+    >
+      {{purchaseReady ? '立即充值' : '支付即将开放'}}
+    </button>
+  </view>
+
+  <!-- 底部抽屉：卷豆明细 / 邀请好友（点击空白遮罩或下拉均可关闭） -->
+  <view
+    wx:if="{{sheet}}"
+    class="sheet-layer {{sheetDragging ? 'sheet-layer--dragging' : ''}} {{sheetClosing ? 'sheet-layer--closing' : ''}}"
+  >
+    <view
+      class="sheet-shade"
+      style="{{sheetShadeOpacity < 1 ? 'opacity: ' + sheetShadeOpacity + ';' : ''}}"
+      catchtap="closeSheet"
+      catchtouchmove="noopSheet"
+    ></view>
+    <view
+      class="sheet-panel credits__sheet"
+      style="{{sheetDragY ? 'transform: translateY(' + sheetDragY + 'px);' : ''}}"
+      aria-role="dialog"
+      aria-label="{{sheet === 'ledger' ? '卷豆明细' : '邀请好友'}}"
+      bindtouchstart="startSheetDrag"
+      bindtouchmove="moveSheetDrag"
+      bindtouchend="endSheetDrag"
+      bindtouchcancel="cancelSheetDrag"
+    >
+      <view
+        class="sheet-grabber-zone"
+        data-sheet-zone="handle"
+        catchtouchstart="startSheetDrag"
+        catchtouchmove="moveSheetDrag"
+        catchtouchend="endSheetDrag"
+        catchtouchcancel="cancelSheetDrag"
+      >
+        <view class="sheet-grabber"></view>
+      </view>
+
+      <view class="sheet-head">
+        <text>{{sheet === 'ledger' ? '卷豆明细' : '邀请好友'}}</text>
+        <button class="sheet-close" bindtap="closeSheet" aria-label="关闭">
+          <image src="{{uiBase}}/close.svg" mode="aspectFit" />
+        </button>
+      </view>
+
+      <!-- 卷豆明细抽屉 -->
+      <scroll-view
+        wx:if="{{sheet === 'ledger'}}"
+        class="sheet-scroll"
+        scroll-y
+        enhanced
+        show-scrollbar="{{false}}"
+        bindscroll="onSheetScroll"
+      >
+        <view wx:if="{{records.length}}" class="credits__list">
+          <view wx:for="{{records}}" wx:key="id" class="credits__item">
+            <view class="credits__item-main grow">
+              <view class="credits__item-head">
+                <text class="credits__item-title ellipsis">{{item.title}}</text>
+                <text wx:if="{{item.tool}}" class="credits__item-tag">{{item.tool}}</text>
+              </view>
+              <text class="credits__item-time">{{item.timeText}}</text>
+            </view>
+            <view class="credits__item-right">
+              <text class="num credits__item-amount {{item.positive ? 'credits__item-amount--pos' : 'credits__item-amount--neg'}}">{{item.amountText}}</text>
+              <text wx:if="{{item.balanceText}}" class="credits__item-balance">{{item.balanceText}}</text>
+            </view>
+          </view>
+        </view>
+        <view wx:else class="credits__empty">暂无明细</view>
+
+        <button
+          wx:if="{{nextBefore !== null}}"
+          class="credits__more-btn"
+          bindtap="loadMore"
+          loading="{{loadingMore}}"
+          disabled="{{loadingMore}}"
+        >
+          {{loadingMore ? '加载中…' : '加载更多'}}
+        </button>
+        <view wx:elif="{{records.length}}" class="credits__end-note">已显示全部明细</view>
+      </scroll-view>
+
+      <!-- 邀请好友抽屉 -->
+      <view wx:elif="{{sheet === 'invite'}}" class="credits__invite-sheet">
+        <block wx:if="{{invite}}">
+          <text class="credits__invite-desc">
+            新卷友 {{invite.useDays}} 天内完成首次有效使用，你可获 {{invite.reward}} 颗卷豆，每月最多 {{invite.monthlyLimit}} 位。
+          </text>
+          <view class="credits__invite-code-box">
+            <text class="credits__invite-code">{{invite.code}}</text>
+            <button class="credits__copy-btn" bindtap="copyInviteCode">
+              <image class="credits__copy-icon" src="{{uiBase}}/copy.svg" mode="aspectFit" />
+              <text>复制</text>
+            </button>
+          </view>
+          <button class="credits__share-btn" open-type="share">
+            <image class="credits__share-icon" src="{{uiBase}}/share-light.svg" mode="aspectFit" />
+            <text>分享到微信群</text>
+          </button>
+        </block>
+        <view wx:else class="credits__empty">{{inviteLoading ? '正在生成邀请码…' : '暂无法获取邀请码'}}</view>
+      </view>
+    </view>
+  </view>
+</view>

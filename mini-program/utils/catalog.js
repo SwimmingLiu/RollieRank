@@ -83,8 +83,60 @@ function versionTitle(version) {
   return version.title || number;
 }
 
+function stripPublisherPrefix(title, institution) {
+  let value = String(title || "").trim();
+  const names = [publisherName(institution), institution, "花生十三", "花生", "四海", "超格", "粉笔", "上岸村"].filter(Boolean);
+  for (const name of names) {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    value = value.replace(new RegExp(`^${escaped}\\s*[·\\-—]?\\s*`), "");
+  }
+  return value.trim() || String(title || "").trim();
+}
+
+function cleanPeriod(projectHead, period) {
+  const head = String(projectHead || "").trim();
+  let label = periodLabel(period);
+  const tail = head.split(/\s+/).pop();
+  if (tail && tail.length >= 2 && label.startsWith(tail) && label.length > tail.length) {
+    label = label.slice(tail.length).replace(/^[·\s]+/, "");
+  }
+  return label;
+}
+
+function projectTitle(project, siblings = []) {
+  const head = String(project.project || "").split(" · ")[0].trim();
+  const period = cleanPeriod(head, project.period);
+  const samePeriod = siblings.filter(item =>
+    String(item.project || "").split(" · ")[0].trim() === head &&
+    periodLabel(item.period) === periodLabel(project.period));
+  const hasMultipleVariants = samePeriod.length > 1;
+  let suffix = "";
+  if (project.variant === "副省级") suffix = "（副省）";
+  else if (hasMultipleVariants && /地市/.test(project.variant || "")) suffix = "（地市）";
+  const base = [head, period].filter(Boolean).join(" · ");
+  return base + suffix;
+}
+
+function paperCardParts(version) {
+  if (numberedPaper(version)) {
+    const pad = String(version.number).padStart(2, "0");
+    return { numeric: true, primary: pad, unit: "套", shortTitle: "行测 " + pad + " 套", compactTitle: pad + "套" };
+  }
+  const clean = stripPublisherPrefix(versionTitle(version), version.institution);
+  const yearExam = clean.match(/^(\d{2,4})(国考卷|省考卷|联考卷|真题卷)$/);
+  if (yearExam) {
+    return { numeric: true, primary: yearExam[1], unit: yearExam[2], shortTitle: clean, compactTitle: clean };
+  }
+  const mixed = clean.match(/^(混合组卷|模拟卷|押题卷|冲刺卷)\s*(\d+)$/);
+  if (mixed) {
+    const pad = String(Number(mixed[2])).padStart(2, "0");
+    return { numeric: true, primary: pad, unit: mixed[1], shortTitle: mixed[1] + " " + pad, compactTitle: mixed[1] + " " + pad };
+  }
+  return { numeric: false, primary: clean, unit: "", shortTitle: clean, compactTitle: clean };
+}
+
 function identity(version) {
-  return [version.institution, version.period, version.variant].filter(Boolean).join(" · ");
+  return [publisherName(version.institution), periodLabel(version.period), version.variant].filter(Boolean).join(" · ");
 }
 
 function publisherName(name) {
@@ -101,19 +153,25 @@ function numberedPaper(version) {
 }
 
 function practiceIdentity(version) {
-  const paper = numberedPaper(version) ? "行测" + String(version.number).padStart(2, "0") + "套" : versionTitle(version);
-  return [publisherName(version.institution), String(version.project || "").split(" · ")[0],
-    periodLabel(version.period), paper].filter(Boolean).join(" · ");
+  const head = String(version.project || "").split(" · ")[0].trim();
+  const period = cleanPeriod(head, version.period);
+  const paper = numberedPaper(version)
+    ? "行测" + String(version.number).padStart(2, "0") + "套"
+    : stripPublisherPrefix(versionTitle(version), version.institution);
+  return [publisherName(version.institution), head, period, paper].filter(Boolean).join(" · ");
 }
 
 // 答卷可能来自已下线或改名的套卷；优先用目录里的展示名，目录缺失时退回答卷自带字段。
 function attemptIdentity(version, attempt) {
   if (version) return practiceIdentity(version);
-  return [publisherName(attempt.institution), String(attempt.project || "").split(" · ")[0],
-    periodLabel(attempt.period), attempt.paperTitle].filter(Boolean).join(" · ");
+  const head = String(attempt.project || "").split(" · ")[0].trim();
+  const period = cleanPeriod(head, attempt.period);
+  const paper = stripPublisherPrefix(attempt.paperTitle || attempt.title, attempt.institution);
+  return [publisherName(attempt.institution), head, period, paper].filter(Boolean).join(" · ");
 }
 
 module.exports = {
-  groupByInstitution, versionTitle, identity, numberedPaper, practiceIdentity, attemptIdentity,
+  groupByInstitution, versionTitle, stripPublisherPrefix, cleanPeriod, projectTitle, paperCardParts,
+  identity, numberedPaper, practiceIdentity, attemptIdentity,
   publisherName, periodLabel, LOGO, subjectName, subjectId,
 };

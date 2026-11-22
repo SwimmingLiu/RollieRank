@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import nativeTimer from "../mini-program/vendor/practice-timer.js";
 import timing from "../mini-program/utils/timing.js";
+import config from "../mini-program/config.js";
 import { validateTimingSummary } from "../src/practice-timer.js";
 
 const version = {
@@ -57,7 +58,7 @@ test("native modules time actual switches and submit only the owning attempt's e
 test("native timer preserves legacy paused totals and pending receipts across upgrade", t => {
   const legacy = { source: "paper", selectedId: version.id, wholeMinutes: 90, plannedMinutes: 90, startedAt: 1000, running: true, paused: true, elapsedMs: 800 };
   const olderReceipt = { attemptId: "old-attempt", versionId: version.id, whole: { actualMs: 400 } };
-  const saved = storage(t, [[timing.TIMER_KEY, legacy], ["rr:timing:pending", olderReceipt]]);
+  const saved = storage(t, [[timing.TIMER_KEY, legacy], [config.storageKey("rr:timing:pending"), olderReceipt]]);
   assert.deepEqual(timing.homeTimerView(5000), { status: "paused", actualMs: 800 });
   const restored = timing.loadTimerRecord([version], 5000);
   assert.equal(restored.plans.paper.status, "paused");

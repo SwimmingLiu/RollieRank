@@ -34,15 +34,18 @@ body.beui-island .rr-sheet > [data-slot="bottom-sheet-body"] { padding:0 !import
 body.beui-island .rr-sheet .sheet-heading { padding-inline:20px; }
 body.beui-island .rr-sheet #sheet-content { padding-inline:20px; }
 /* Simple choices keep the same sheet and native scrolling without the visual controls. */
-.rr-options-shade { background: rgba(41, 33, 27, .34); }
-.rr-options-sheet.rr-sheet { background: #fffdf8 !important; border-color: #ede2d1 !important; }
+.rr-options-shade { background: rgba(249, 246, 239, .46); -webkit-backdrop-filter: blur(9px); backdrop-filter: blur(9px); }
+body.beui-island .rr-sheet { background: #fffdf8 !important; border: 1px solid #ebe2d3 !important; border-bottom: 0 !important; border-radius: 24px 24px 0 0 !important; box-shadow: 0 -10px 30px rgba(74, 58, 36, .08) !important; }
+.rr-options-sheet.rr-sheet { background: #fffdf8 !important; border-color: #ebe2d3 !important; }
 html[data-host=wechat] .rr-options-sheet.rr-sheet { padding-bottom: var(--wx-bottom-extra); }
 .rr-options-sheet[data-expanded=false] { max-height: min(52svh, calc(100svh - var(--wx-bottom-extra, 0px) - 12px)) !important; }
 .rr-options-sheet[data-expanded=true] { max-height: min(86svh, calc(100svh - var(--wx-bottom-extra, 0px) - 12px)) !important; }
-.rr-options-drag-zone { flex: none; }
-.rr-options-drag-target { height: 18px; cursor: grab; }
+.rr-options-drag-zone { flex: none; padding-top: 2px; }
+.rr-options-drag-target { display: flex; align-items: center; justify-content: center; height: 24px; cursor: grab; touch-action: none; }
 html body .rr-options-sheet [data-slot=bottom-sheet-body] { scrollbar-width: none; }
 html body .rr-options-sheet [data-slot=bottom-sheet-body]::-webkit-scrollbar { display: none; }
+html, body, #app, .view, .rr-sheet, .rr-sheet * { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+html::-webkit-scrollbar, body::-webkit-scrollbar, #app::-webkit-scrollbar, .view::-webkit-scrollbar, .rr-sheet::-webkit-scrollbar, .rr-sheet *::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
 .rr-options-sheet .rr5-collection-option { min-height: 62px; }
 .rr2-profile-identity { position: relative; }
 /* 原岗位模块的 dialog 宽度不能套到 BottomSheet 的内层内容，否则会挤出右侧操作。 */

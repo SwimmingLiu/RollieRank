@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { subjectAttempt, subjectId, subjectName } from "../src/subjects.js";
+import { defaultNickname, isDefaultNickname } from "./wechat-profile.mjs";
 
 export const SCORE_BANDS = [
   { id: "lt60", label: "60 以下", from: 0, to: .6 },
@@ -11,7 +12,7 @@ export const MIN_SAMPLE_SIZE = 5;
 
 // Identifiers are version-specific and never reveal the guest capability or private receipt ID.
 const publicId = (versionId, identity) => "public-" + createHash("sha256").update(versionId + "\0" + identity).digest("hex").slice(0, 24);
-const anonymous = () => "卷友";
+const anonymous = (id) => defaultNickname(id);
 const answerOptions = ["A", "B", "C", "D"];
 const inBand = (rate, band) => band === "all" || SCORE_BANDS.some((item) => item.id === band && rate >= item.from && rate < item.to);
 // Empty cohorts have no observed distribution; null prevents a misleading zero-percent measurement.
@@ -36,7 +37,7 @@ export function publicParticipants({ store, members, version, positionId = null,
       const metric = dimension === "total" ? value : value / maxCents;
       if (!best || metric > best.metric || (metric === best.metric && (receipt.createdAt < best.receipt.createdAt ||
         (receipt.createdAt === best.receipt.createdAt && receipt.id.localeCompare(best.receipt.id) < 0))))
-        best = { identity, name: member.name || anonymous(identity), receipt, report, metric, value, maxCents, rate: value / maxCents };
+        best = { identity, name: !isDefaultNickname(member.name) ? member.name : anonymous(identity), receipt, report, metric, value, maxCents, rate: value / maxCents };
     }
     if (best) participants.push(best);
   }

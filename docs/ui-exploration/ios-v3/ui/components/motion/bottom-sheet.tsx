@@ -2,13 +2,16 @@
 // beui.dev/components/motion/bottom-sheet
 
 import {
+  animate,
   AnimatePresence,
   motion,
   type PanInfo,
   useDragControls,
+  useMotionValue,
   useReducedMotion,
+  useTransform,
 } from "motion/react";
-import { type ReactNode, type TouchEvent, useEffect, useId, useRef, useState } from "react";
+import { type PointerEvent as ReactPointerEvent, type ReactNode, type TouchEvent, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { EASE_DRAWER } from "@/lib/ease";
 import { useFocusTrap } from "@/lib/hooks/use-focus-trap";
@@ -64,9 +67,12 @@ export function BottomSheet({
   const [snap, setSnap] = useState(defaultSnap);
   const [mounted, setMounted] = useState(false);
   const dragControls = useDragControls();
+  const dragOffset = useMotionValue(0);
+  const scrimOpacity = useTransform(dragOffset, [0, 320], [1, 0], { clamp: true });
   const sheetRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const listTouch = useRef<{ x: number; y: number; atTop: boolean } | null>(null);
+  const bodyPull = useRef<{ pointerId: number; x: number; y: number; atTop: boolean } | null>(null);
   const reduce = useReducedMotion();
   const uid = useId();
   const titleId = `${uid}-title`;
@@ -77,8 +83,11 @@ export function BottomSheet({
   }, []);
 
   useEffect(() => {
-    if (open) setSnap(defaultSnap);
-  }, [open, defaultSnap]);
+    if (open) {
+      setSnap(defaultSnap);
+      dragOffset.set(0);
+    }
+  }, [open, defaultSnap, dragOffset]);
 
   // Focus moves into the sheet on open, Tab stays inside it, and focus returns
   // to the opener on close. `mounted` gates it because the sheet only exists
@@ -118,35 +127,79 @@ export function BottomSheet({
     };
   }, [open]);
 
+  const onDrag = (_: unknown, info: PanInfo) => {
+    dragOffset.set(Math.max(0, info.offset.y));
+  };
+
   const onDragEnd = (_: unknown, info: PanInfo) => {
     const velocity = info.velocity.y;
     const offset = info.offset.y;
-    if (optionList && snap === 0 && offset < 0 && !listOverflows()) return;
+    const sheetHeight = sheetRef.current?.clientHeight || 360;
+    const effectiveDismiss = Math.min(dismissThreshold, Math.max(84, sheetHeight * 0.34));
+    const restoreScrim = () => {
+      animate(dragOffset, 0, reduce
+        ? { duration: 0.14, ease: EASE_DRAWER }
+        : { duration: 0.36, ease: EASE_DRAWER });
+    };
+    if (optionList && snap === 0 && offset < 0 && !listOverflows()) {
+      restoreScrim();
+      return;
+    }
 
-    // Strong downward fling or large drag → dismiss.
-    if (velocity > 600 || offset > dismissThreshold) {
+    // Distance OR velocity dismisses; fast flicks feel immediate like iOS sheets.
+    if ((velocity > 500 && offset > 28) || offset > effectiveDismiss) {
       const smaller = snapPoints.map((_, i) => i).filter((i) => i < snap);
-      if (smaller.length && velocity < 800 && offset < dismissThreshold * 1.6) {
+      if (smaller.length && velocity < 850 && offset < effectiveDismiss * 1.65) {
         setSnap(smaller[smaller.length - 1]);
+        restoreScrim();
       } else {
         onOpenChange(false);
       }
       return;
     }
 
-    // Strong upward fling → next snap.
-    if (velocity < -500) {
+    // Strong upward fling or pull → next snap.
+    if ((velocity < -450 && offset < -20) || (offset < -64 && snap < snapPoints.length - 1)) {
       setSnap((current) => Math.min(snapPoints.length - 1, current + 1));
+      restoreScrim();
       return;
     }
 
     // Otherwise snap to nearest by current offset.
     setSnap((current) => {
-      if (offset > 80 && current > 0) return current - 1;
-      if (offset < -80 && current < snapPoints.length - 1) return current + 1;
+      if (offset > 72 && current > 0) return current - 1;
+      if (offset < -72 && current < snapPoints.length - 1) return current + 1;
       return current;
     });
+    restoreScrim();
   };
+
+  function startHeaderDrag(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.target instanceof Element && event.target.closest('button, input, textarea, select, a, [data-vaul-no-drag]')) return;
+    listTouch.current = null;
+    dragControls.start(event);
+  }
+
+  function startBodyPointer(event: ReactPointerEvent<HTMLDivElement>) {
+    if (!event.isPrimary || (event.pointerType === "mouse" && event.button !== 0)) return;
+    if (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable="true"], [data-vaul-no-drag]')) return;
+    const atTop = event.currentTarget.scrollTop <= 1;
+    bodyPull.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, atTop };
+  }
+
+  function moveBodyPointer(event: ReactPointerEvent<HTMLDivElement>) {
+    const start = bodyPull.current;
+    if (!start || start.pointerId !== event.pointerId) return;
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+    if (Math.hypot(dx, dy) < 8) return;
+    bodyPull.current = null;
+    // Scroll-to-drag handoff: pulling down while at the top of the list drags the sheet 1:1.
+    if (start.atTop && dy > 0 && dy > Math.abs(dx) * 1.25) {
+      listTouch.current = null;
+      dragControls.start(event);
+    }
+  }
 
   function listOverflows() {
     const body = bodyRef.current;
@@ -207,11 +260,15 @@ export function BottomSheet({
               transition={DRAWER}
               {...gate}
               onClick={() => onOpenChange(false)}
-              // A dim scrim with a light blur. backdrop-blur is GPU-expensive and
-              // re-rasterizes every frame the sheet drags over it; a small radius
-              // plus more opacity keeps the glass look without the jank.
-              className={cn("pointer-events-auto fixed inset-0 z-50", optionList ? "rr-options-shade" : "bg-background/40 backdrop-blur-sm")}
-            />
+              className="pointer-events-auto fixed inset-0 z-50 bg-transparent p-0"
+            >
+              {/* Inner layer drives drag-linked scrim fade without clobbering enter/exit opacity or button identity. */}
+              <motion.span
+                aria-hidden="true"
+                style={{ opacity: scrimOpacity }}
+                className="pointer-events-none block h-full w-full rr-options-shade"
+              />
+            </motion.button>
           )}
         </PresenceGate>
       ) : null}
@@ -224,8 +281,10 @@ export function BottomSheet({
               dragControls={dragControls}
               dragListener={false}
               dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={{ top: 0.02, bottom: 0.4 }}
+              dragElastic={{ top: 0.18, bottom: 1 }}
               dragMomentum={false}
+              dragSnapToOrigin
+              onDrag={onDrag}
               onDragEnd={onDragEnd}
               initial={reduce ? { y: 0, opacity: 0 } : { y: "100%" }}
               animate={reduce ? { y: 0, opacity: 1 } : { y: 0 }}
@@ -246,7 +305,10 @@ export function BottomSheet({
               aria-label={title ? undefined : t("label")}
               data-expanded={optionList ? snap > 0 : undefined}
             >
-              <div className={optionList ? "rr-options-drag-zone" : "flex flex-col items-center px-4 pb-2 pt-3"}>
+              <div
+                onPointerDown={startHeaderDrag}
+                className={optionList ? "rr-options-drag-zone" : "flex flex-col items-center px-4 pb-2 pt-3"}
+              >
                 {/* Option lists keep a full-width gesture area without painting a drag marker. */}
                 <div
                   onPointerDown={(event) => dragControls.start(event)}
@@ -258,7 +320,7 @@ export function BottomSheet({
                   )}
                 >
                   {/* Keep every sheet's grab marker quiet and consistent with the paper theme. */}
-                  {!optionList && <div data-slot="sheet-handle" style={{ height: 3, width: 26, borderRadius: 99, background: "#b9ad9d66" }} />}
+                  <div data-slot="sheet-handle" style={{ height: 4, width: 40, borderRadius: 999, background: "#d5cfc5" }} />
                 </div>
                 {title || description ? (
                   <div className="mt-2 w-full">
@@ -283,6 +345,10 @@ export function BottomSheet({
               </div>
               {/* overscroll-contain stops boundary scrolls from chaining to the page. */}
               <div ref={bodyRef} data-slot="bottom-sheet-body" className="flex-1 overflow-y-auto overscroll-contain px-4 pb-6"
+                onPointerDown={startBodyPointer}
+                onPointerMove={moveBodyPointer}
+                onPointerUp={() => { bodyPull.current = null; }}
+                onPointerCancel={() => { bodyPull.current = null; }}
                 onTouchStart={optionList ? startListTouch : undefined}
                 onTouchEnd={optionList ? endListTouch : undefined}
                 onTouchCancel={optionList ? () => { listTouch.current = null; } : undefined}

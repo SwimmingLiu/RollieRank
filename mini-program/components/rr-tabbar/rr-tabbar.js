@@ -3,7 +3,7 @@ Component({
   data: {
     items: [
       { key: "home", label: "首页", url: "/pages/home/home" },
-      { key: "records", label: "练习记录", url: "/pages/records/records" },
+      { key: "records", label: "个人中心", url: "/pages/records/records" },
     ],
     base: "/assets",
   },

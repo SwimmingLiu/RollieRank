@@ -12,9 +12,11 @@ function localSession() {
   const keys = wx.getStorageInfoSync().keys;
   const drafts = [];
   const marks = [];
+  const draftPrefix = storage.KEYS.draft("");
+  const markPrefix = storage.KEYS.marks("");
   for (const key of keys) {
-    if (key.startsWith("rr:draft:")) {
-      const versionId = key.slice("rr:draft:".length);
+    if (key.startsWith(draftPrefix)) {
+      const versionId = key.slice(draftPrefix.length);
       const draft = storage.loadDraft(versionId);
       if (!Array.isArray(draft?.answers) || !draft.answers.length) continue;
       drafts.push({
@@ -26,12 +28,15 @@ function localSession() {
         single: Boolean(draft.single),
         updatedAt: Number(draft.updatedAt) || 0,
       });
-    } else if (key.startsWith("rr:marks:")) {
-      const id = key.slice("rr:marks:".length);
+    } else if (key.startsWith(markPrefix)) {
+      const id = key.slice(markPrefix.length);
       if (/^[\w-]{10,80}$/.test(id)) marks.push([id, markedNumbers(wx.getStorageSync(key))]);
     }
   }
-  return { guestId: storage.guestId(), name: storage.name(), avatarId: storage.avatarId(), drafts, marks };
+  return {
+    guestId: storage.guestId(), name: storage.name(), avatarId: storage.avatarId(), avatarUrl: storage.avatarUrl(),
+    drafts, marks,
+  };
 }
 
 Page({
@@ -53,7 +58,7 @@ Page({
       const { ticket, receiver } = await api.request("miniprogram-web/bootstrap", session);
       if (this.destroyed) return;
       this.receiver = receiver;
-      this.profile = session.name + ":" + session.avatarId;
+      this.profile = [session.name, session.avatarId, session.avatarUrl].join(":");
       const window = wx.getWindowInfo();
       const screenBottom = window.screenTop + window.windowHeight;
       const nativeTop = Math.max(window.screenTop, (window.statusBarHeight || 0) + 44);
@@ -73,7 +78,7 @@ Page({
 
   onShow() {
     this.visible = true;
-    if (this.data.src && this.profile !== storage.name() + ":" + storage.avatarId()) {
+    if (this.data.src && this.profile !== [storage.name(), storage.avatarId(), storage.avatarUrl()].join(":")) {
       // Returning from native profile editing restores records under the same practice identity.
       this.resumeRecords = true;
       this.start();

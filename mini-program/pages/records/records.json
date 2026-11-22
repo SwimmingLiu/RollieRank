@@ -5,5 +5,5 @@
     "rr-position-picker": "/components/rr-position-picker/rr-position-picker"
   },
   "navigationStyle": "custom",
-  "enablePullDownRefresh": true
+  "disableScroll": true
 }

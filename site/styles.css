@@ -1,0 +1,285 @@
+/* 卷卷小榜 SEO/GEO 站点：沿用 paper-cards-1114-v3 的暖纸、珊瑚与赭石配色。 */
+:root {
+  --paper: #fcf8f1;
+  --surface: #fffdf8;
+  --ink: #302b29;
+  --muted: #79767d;
+  --line: #e7dece;
+  --coral: #f27076;
+  --coral-soft: #f6cbd2;
+  --ochre: #b87569;
+  --cover: #f4e3be;
+  --radius: 18px;
+  --ui-font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--ui-font);
+  font-size: 16px;
+  line-height: 1.75;
+  letter-spacing: 0.01em;
+}
+
+.wrap { width: min(720px, calc(100% - 40px)); margin: 0 auto; }
+
+a { color: var(--ochre); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--coral); }
+
+header.site {
+  padding: 28px 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+header.site img { width: 34px; height: 34px; border-radius: 10px; }
+
+header.site .name { font-weight: 600; letter-spacing: 0.02em; }
+
+header.site nav { margin-left: auto; font-size: 14px; color: var(--muted); }
+header.site nav a { margin-left: 14px; color: var(--muted); }
+
+main { padding: 20px 0 64px; }
+
+h1 {
+  font-size: clamp(26px, 5vw, 34px);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  margin: 18px 0 14px;
+  font-weight: 650;
+}
+
+h2 {
+  font-size: 20px;
+  line-height: 1.5;
+  margin: 44px 0 12px;
+  font-weight: 620;
+}
+
+h3 { font-size: 17px; margin: 24px 0 6px; font-weight: 600; }
+
+p { margin: 0 0 14px; }
+
+.lead { font-size: 17px; color: #4a4440; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin: 18px 0;
+}
+
+.card.accent { background: var(--cover); border-color: #e6d3a8; }
+
+ol.steps, ul.plain { padding-left: 20px; margin: 0 0 14px; }
+ol.steps li, ul.plain li { margin-bottom: 8px; }
+
+.grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 16px 0 8px;
+}
+
+@media (max-width: 560px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  background: #f4ece1;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 5px;
+  white-space: nowrap;
+}
+
+/* 窄屏允许长公式换行，避免把页面顶出横向滚动条 */
+@media (max-width: 480px) {
+  code { white-space: normal; overflow-wrap: anywhere; }
+}
+
+.grid .cell {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.grid .cell strong { display: block; font-weight: 600; margin-bottom: 4px; }
+.grid .cell span { color: var(--muted); font-size: 14px; line-height: 1.65; }
+
+.faq h3 { margin-top: 22px; }
+.faq p { color: #4a4440; margin-bottom: 0; }
+
+.cta {
+  display: inline-block;
+  margin-top: 6px;
+  background: var(--ink);
+  color: #fff;
+  text-decoration: none;
+  padding: 11px 20px;
+  border-radius: 999px;
+  font-size: 15px;
+}
+.cta:hover { color: #fff; background: #443b38; }
+
+.note { color: var(--muted); font-size: 14px; }
+
+/* 手机访问时的小程序引导层 */
+.mini-entry {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(48, 43, 41, 0.42);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+}
+
+.mini-entry__card {
+  width: min(420px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 22px 20px 16px;
+  box-shadow: 0 18px 60px rgba(48, 43, 41, 0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mini-entry__card strong { font-size: 17px; font-weight: 620; }
+.mini-entry__card p { margin: 0 0 4px; color: #4a4440; font-size: 14.5px; line-height: 1.65; }
+
+.mini-entry__primary,
+.mini-entry__ghost,
+.mini-entry__close {
+  display: block;
+  width: 100%;
+  text-align: center;
+  border-radius: 999px;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.mini-entry__primary {
+  background: var(--ink);
+  color: #fff;
+  border: 1px solid var(--ink);
+}
+.mini-entry__primary:hover { color: #fff; background: #443b38; }
+
+.mini-entry__ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.mini-entry__close {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 13.5px;
+  padding: 8px;
+  margin-top: 2px;
+}
+
+/* 小程序码：长按识别入口 */
+.mini-entry__code {
+  display: flex;
+  justify-content: center;
+  padding: 6px 0 2px;
+}
+
+.mini-entry__code img {
+  width: 200px;
+  height: 200px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.mini-entry__hint {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.6;
+  margin: 0 0 4px;
+}
+
+footer.site {
+  border-top: 1px solid var(--line);
+  padding: 22px 0 40px;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+footer.site a { color: var(--muted); }
+
+table { width: 100%; border-collapse: collapse; margin: 12px 0 18px; font-size: 15px; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 500; font-size: 14px; }
+
+/* 面包屑：专题页返回首页 */
+.crumbs { font-size: 13.5px; color: var(--muted); margin: 10px 0 0; }
+.crumbs a { color: var(--muted); text-decoration: none; }
+.crumbs a:hover { color: var(--coral); }
+
+/* 宽表（分值表）：窄屏横向滚动，不拆成卡片，保留列对齐 */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 12px 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.table-wrap table { margin: 0; font-size: 14.5px; }
+.table-wrap th, .table-wrap td { padding: 8px 11px; }
+.table-wrap tr:last-child td { border-bottom: none; }
+
+/* 纯数字表（题量/分值）不换行，保证列对齐 */
+.table-wrap--num th,
+.table-wrap--num td { white-space: nowrap; }
+
+/* 窄屏把对比表拆成两行卡片，避免列被压成一条竖线。 */
+@media (max-width: 560px) {
+  table, thead, tbody, tr, th, td { display: block; }
+  thead { display: none; }
+  tr { border-bottom: 1px solid var(--line); padding: 10px 0; }
+  td { border: none; padding: 2px 0; }
+  td:first-child { color: var(--muted); font-size: 13.5px; }
+
+  /* 宽表例外：保持表格结构，靠横向滚动看完整列 */
+  .table-wrap table { display: table; }
+  .table-wrap thead { display: table-header-group; }
+  .table-wrap tbody { display: table-row-group; }
+  .table-wrap tr { display: table-row; border: none; padding: 0; }
+  .table-wrap th,
+  .table-wrap td { display: table-cell; border-bottom: 1px solid var(--line); padding: 8px 11px; }
+  .table-wrap td:first-child { color: var(--ink); font-size: 14.5px; }
+  .table-wrap tr:last-child td { border-bottom: none; }
+}
+
+@media (max-width: 420px) {
+  body { font-size: 15.5px; }
+  .wrap { width: calc(100% - 32px); }
+  .card { padding: 16px 16px; }
+  header.site nav { display: none; }
+}

@@ -221,18 +221,35 @@
 @media(max-width:350px){.rr6-ranking{padding-inline:16px;gap:12px}.rr6-winners{gap:7px}.rr6-winner-score{font-size:25px}.rr6-winner-card.place-1 .rr6-winner-score{font-size:29px}.rr6-winner-name{font-size:11px}.rr6-winner-avatar{width:46px!important;height:46px!important;min-width:46px!important}.rr6-winner-card.place-1 .rr6-winner-avatar{width:56px!important;height:56px!important;min-width:56px!important}.rr6-self-score{font-size:25px}.rr6-row-score{font-size:21px}.rr6-row-name{font-size:13px}.rr6-rank-row{gap:8px}.rr6-rank-context>[data-slot=card-content]{gap:7px 9px;font-size:12px}}
 @media(max-width:280px){.rr6-winners{grid-template-columns:1fr}.rr6-winner-wrap,.rr6-winner-wrap.place-1{height:auto}.rr6-winner-card>[data-slot=card-content],.rr6-winner-card.place-1>[data-slot=card-content]{padding:14px!important;display:grid;grid-template-columns:46px 1fr;gap:6px 12px}.rr6-winner-avatar{grid-row:1/3}.rr6-place,.rr6-crown{display:none}.rr6-winner-card{transform:none!important}.rr6-self-copy>strong{font-size:22px}.rr6-self-score{font-size:22px}}
 
-/* Paper identity is secondary to the result or saved progress; new papers use a compact start action. */
-.rr3-paper-cover{min-height:100px;border-radius:18px!important}
-.rr3-paper-cover>[data-slot=card-content]{padding:13px 14px!important;gap:10px}
-.rr3-paper-top>strong{font:650 14px/1.4 var(--ui-font);letter-spacing:0;color:#84755d}
-.rr3-paper-top small{font-size:11px;margin-left:2px}
-.rr3-paper-state{width:15px;height:15px;margin-top:0}
-.rr3-paper-score{font:750 34px/1.1 var(--display-font);font-variation-settings:"SOFT" 100,"WONK" 1;letter-spacing:-.8px}
-.rr3-paper-progress-label{font:750 30px/1.1 var(--ui-font);letter-spacing:-.8px}
-.rr3-paper-score small,.rr3-paper-progress-label small{font:450 11px/1.4 var(--ui-font);letter-spacing:0;color:#8a7b64}
-.rr6-paper-new{font-size:14px;font-weight:550;color:#6c6253}
-.rr3-paper-cover.new{min-height:84px}
-.rr5-collection-face h2{font-size:20px;line-height:1.5}
+/* Paper cards use full-card balance: large serif issue number + compact real spec for new papers, score/progress hero for active ones. */
+.rr3-paper-grid{gap:11px}
+.rr3-paper-cover{position:relative;min-height:66px;border-radius:17px!important;border-color:#e8dfd0!important;box-shadow:0 3px 0 #ebe1d0!important}
+.rr3-paper-cover.complete{background:#f3e6cb!important;border-color:#e3d2b0!important;box-shadow:0 3px 0 #e4d4b4!important}
+.rr3-paper-cover.draft{background:#fff1e3!important;border-color:#efd4b9!important;box-shadow:0 3px 0 #eed4ba!important}
+.rr3-paper-cover>[data-slot=card-content]{padding:12px 13px!important;flex-direction:row!important;align-items:center;justify-content:space-between;gap:10px}
+.rr3-paper-top{align-items:center;flex:none}
+.rr3-paper-cover.new .rr3-paper-top>strong{font:750 26px/1 var(--display-font);font-variation-settings:"SOFT" 100,"WONK" 1;letter-spacing:-.7px;color:#2f261d}
+.rr6-paper-stamp{position:relative;display:grid!important;place-items:center;width:38px;height:38px;border-radius:12px;background:#e7d5b1;font:750 17px/1 var(--display-font)!important;letter-spacing:-.4px!important;color:#56442c!important}
+.rr3-paper-cover.draft .rr6-paper-stamp{background:#f7dbc0}
+.rr6-paper-badge{position:absolute;right:-4px;top:-4px;display:grid;place-items:center;width:15px;height:15px;border-radius:50%;background:#fffdf8;border:1px solid #d9c6a0;color:#5c6e44}
+.rr3-paper-top small{font-size:11px;margin-left:2px;color:#8c7b63;font-weight:450}
+.rr3-paper-state{width:10px;height:10px;margin-top:0;color:currentColor}
+.rr3-paper-foot{margin-top:0!important;flex:1;min-width:0;align-items:center;justify-content:flex-end}
+.rr3-paper-score{font:750 22px/1 var(--display-font);font-variation-settings:"SOFT" 100,"WONK" 1;letter-spacing:-.6px;color:#2f261d;white-space:nowrap}
+.rr6-paper-draft-col{display:flex;flex-direction:column;gap:5px;width:100%;min-width:0}
+.rr6-paper-draft-col [data-slot=progress-bar]{margin-top:0!important}
+.rr3-paper-progress-label{font:750 17px/1 var(--ui-font);letter-spacing:-.4px;color:#5f4a32}
+.rr3-paper-score small,.rr3-paper-progress-label small{font:450 11px/1.3 var(--ui-font);letter-spacing:0;color:#8c7b63}
+.rr6-paper-action{display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:50%;background:#f4ece0;color:#74644e}
+.rr3-paper-cover.new{min-height:66px}
+.rr6-collection-copy{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.rr6-collection-meta{font-size:12px;line-height:1.3;color:#7e694d;font-weight:500}
+.rr6-collection-stat{flex:none;padding:3px 8px;border-radius:999px;background:rgba(255,253,248,.62);color:#5f4c32;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.rr6-collection-chevron{display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:50%;background:rgba(255,253,248,.5);color:#5f4c32}
+.rr6-collection-bar{width:100%;height:4px;margin-top:10px;border-radius:99px;background:rgba(126,105,77,.16);overflow:hidden}
+.rr6-collection-bar>span{display:block;height:100%;border-radius:99px;background:#8c6e43}
+.rr5-collection-face{gap:8px}
+.rr5-collection-face h2{font-size:19px;line-height:1.45}
 .rr5-collection-option{min-height:70px!important;padding:17px 18px!important}
 /* The radar compares the same nine earned/max values as the subject cards. */
 .rr6-radar-card{padding:0!important;gap:0!important;border:1px solid #e9dfce!important;background:#fffdf8!important;border-radius:23px!important;box-shadow:none!important}
@@ -242,7 +259,7 @@
 .rr6-radar-card>[data-slot=card-content]{position:relative;padding:6px 8px 10px!important}
 .rr6-radar-plot{height:267px;position:relative}.rr6-radar-plot canvas{font-family:var(--ui-font)}
 .rr6-radar-data{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);padding:0;margin:0;list-style:none}
-@media(max-width:350px){.rr3-paper-cover>[data-slot=card-content]{padding:12px!important}.rr3-paper-score{font-size:31px}.rr3-paper-progress-label{font-size:27px}.rr5-collection-face h2{font-size:18px}.rr6-radar-plot{height:250px}}
+@media(max-width:350px){.rr3-paper-grid{gap:9px}.rr3-paper-cover,.rr3-paper-cover.new{min-height:60px;border-radius:15px!important}.rr3-paper-cover>[data-slot=card-content]{padding:10px!important;gap:7px}.rr6-paper-stamp{width:34px;height:34px;border-radius:10px;font-size:15px!important}.rr3-paper-cover.new .rr3-paper-top>strong{font-size:23px}.rr3-paper-score{font-size:19px}.rr3-paper-progress-label{font-size:15px}.rr6-paper-action{width:25px;height:25px}.rr5-collection-face h2{font-size:17px}.rr6-radar-plot{height:250px}}
 
 /* TiltCard's default crop hides paper thickness; these two composed cards need their edges visible. */
 .rr2-share-tilt,.rr6-winner-tilt{overflow:visible!important}
@@ -327,6 +344,7 @@
 
 /* The answer sheet and comparison table use the same paper surface as the result and saved cards. */
 #app,#stage,#top,#bottom,.view{background:var(--paper)}
+.view[data-page=home],.view[data-page=me]{touch-action:pan-y}
 .tabbar{background:transparent;border-color:#e9e1d4}
 .entry-sticky,.type-heading{background:var(--paper)}
 .answer-row{border-color:#ece3d4}

@@ -7,6 +7,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { resolveSubjectDimension, subjectDimensions } from "../src/subjects.js";
 import { buildInsights, publicLeaderboardRow, publicParticipants, publicResult, SCORE_BANDS } from "./insights.mjs";
+import { defaultNickname, isDefaultNickname } from "./wechat-profile.mjs";
 
 const run = promisify(execFile);
 const guestPattern = /^[\w-]{10,80}$/;
@@ -131,7 +132,7 @@ const memberFor = (store, id) => {
   const members = readNamespace(store).members ?? {};
   return Object.hasOwn(members, id) ? members[id] : undefined;
 };
-const anonymous = () => "卷友";
+const anonymous = (id) => defaultNickname(id);
 
 // 正式提交在同一落盘事务内默认入榜；明确撤回的成员保持退出，重试不会复制回执。
 export function includeSubmittedAttempt(store, { guestId, attempt, name }) {
@@ -142,7 +143,10 @@ export function includeSubmittedAttempt(store, { guestId, attempt, name }) {
   const previous = memberFor(store, id) ?? {};
   if (previous.participationOptOut === true) return false;
   const suppliedName = typeof name === "string" ? name.normalize("NFKC").trim().replace(/\s+/g, " ") : "";
-  const displayName = suppliedName && suppliedName.length <= 16 && !/[\x00-\x1f]/.test(suppliedName) ? suppliedName : previous.name || "卷友";
+  const validSupplied = suppliedName && suppliedName.length <= 16 && !/[\x00-\x1f]/.test(suppliedName) && !isDefaultNickname(suppliedName);
+  const displayName = validSupplied
+    ? suppliedName
+    : (!isDefaultNickname(previous.name) ? previous.name : anonymous(id));
   const attemptIds = [...new Set([...(previous.attemptIds ?? []), attempt.id])];
   if (previous.name === displayName && previous.attemptIds?.length === attemptIds.length && previous.attemptIds?.includes(attempt.id)) return false;
   members[id] = { ...previous, name: displayName, attemptIds, participationOptOut: false, updatedAt: Date.now() };
@@ -278,7 +282,7 @@ export async function createPositionsService({ readCatalog, mutateCatalog, dataD
     const member = memberFor(store, id);
     const attempts = (member?.attemptIds ?? []).filter((aid) => store.receipts?.[`${id}:${aid}`] && !store.receipts[`${id}:${aid}`].isSample);
     return { positionId: member?.positionId ?? null, position: findPosition(store, member?.positionId),
-      participation: { name: member?.name ?? anonymous(id), attemptIds: attempts }, updatedAt: member?.updatedAt ?? null };
+      participation: { name: !isDefaultNickname(member?.name) ? member.name : anonymous(id), attemptIds: attempts }, updatedAt: member?.updatedAt ?? null };
   };
   // 榜单、群体统计和公开详情共用范围校验，避免岗位切换后出现跨范围的数据。
   const rankingScope = (store, query, requireViewer = false) => {

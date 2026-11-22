@@ -16,17 +16,17 @@
   ],
   "errors": [],
   "gif": "motion/interaction-current.gif",
-  "gifSha256": "4f876672f666196b72b98c2a2db4f6b7de8a2ef3f7893595fdb092a5d8729d0d",
+  "gifSha256": "0651ff1914e7166ef0d7bd6c5322f64763cf247329977cbe88589941497cf801",
   "sources": {
     "scripts/record-ios-preview.mjs": "c27b23f8a0462a7dc449c0966c76698051a11414ca228781e6d7bf98c20d09d5",
-    "docs/ui-exploration/ios-v3/app.js": "d498f11806ba2470a9bd068e60b3bd690f4e8f731110b0386b2138bdfdd64efc",
+    "docs/ui-exploration/ios-v3/app.js": "2b01dc9a93ab6d0cbe5a1fc1f600448b14096ce181d077232a01c5f5992ac6f2",
     "docs/ui-exploration/ios-v3/app.html": "2c75fac7d5e4120f90418456226b789f4fef0e315bec58ef01d5ac5d7ee4b32c",
-    "docs/ui-exploration/ios-v3/vendor/beui.js": "a013a141b929708054ded41b19d502350c0de9aba707527219f3ae310c54ae32",
-    "docs/ui-exploration/ios-v3/features/base.css": "9f4d3502d4e039c5f88950dda83ac3e05e42a650cfc5df417fd7ae14aea7ac00",
+    "docs/ui-exploration/ios-v3/vendor/beui.js": "8f92ac2f30d0a12157763c8cfa8ec57b99ae9874b5f30e55b5272d6435e82aaf",
+    "docs/ui-exploration/ios-v3/features/base.css": "2bcb03b7e37d6b96941aa4e2e5b2719ff0c2d4d3c5fdc81183fe1ab48ade59f3",
     "docs/ui-exploration/ios-v3/features/practice-session.css": "72e70af43fdb74796bf090894a6f0f609c5627a85a3e104aef921d01bed4f5da",
     "docs/ui-exploration/ios-v3/features/timer-configuration.css": "8df783850517b54b8da7f65bc7fe2bde4d3ae826f496907cd58290cd7e6ca185",
     "docs/ui-exploration/ios-v3/features/single-answer.css": "895cdba173cb53540d78a44b947e29f94dc96e8a9f8aa264be1da1e9817ca633",
     "docs/ui-exploration/ios-v3/assets/brand/rollierank-logo-transparent.png": "6bd654d51d8b0b1ce538ce83c65fd0c5e2e109e02839a4d0538fc638199a3020"
   },
-  "evidence": "/Users/swimmingliu/.codex/worktrees/miniprogram-ui-parity/RollieRank/test-results/release-0.1.1-feedback-20261121-002606/preview-motion"
+  "evidence": "/Users/swimmingliu/data/github-proj/RollieRank/test-results/preview-motion"
 }

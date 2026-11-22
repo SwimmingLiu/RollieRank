@@ -2,6 +2,7 @@ const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
 const format = require("../../utils/format.js");
 const { subjectName } = require("../../utils/catalog.js");
+const { createPageSheetDrag } = require("../../utils/sheet-gesture.js");
 
 const FILTERS = [
   { key: "wrong", label: "错题" },
@@ -36,12 +37,24 @@ Page({
     feedbackDetail: null,
     feedbackPreview: null,
     copyCount: 0,
+    sheetDragY: 0,
+    sheetDragging: false,
+    sheetClosing: false,
+    sheetShadeOpacity: 1,
     uiBase: "/assets/ui",
   },
 
   onLoad(query) {
+    this.sheetDrag = createPageSheetDrag(this, {
+      onDismiss: () => {
+        if (this.data.historyOpen) this.closeFeedbackHistory();
+        else if (this.data.feedbackOpen) this.closeFeedback();
+      },
+    });
     this.attemptId = query.attemptId || "";
-    this.setData({ filter: query.filter === "wrong" ? "wrong" : "all", activeType: query.type || "" });
+    let activeType = "";
+    try { activeType = decodeURIComponent(query.type || ""); } catch { activeType = query.type || ""; }
+    this.setData({ filter: query.filter === "wrong" ? "wrong" : "all", activeType });
     this.load();
   },
 
@@ -190,6 +203,8 @@ Page({
 
   closeFeedback() {
     if (this.data.submittingFeedback) return;
+    this.sheetDrag?.reset();
+    this._sheetScrollTop = 0;
     this.setData({ feedbackOpen: false });
   },
 
@@ -294,6 +309,8 @@ Page({
   },
 
   closeFeedbackHistory() {
+    this.sheetDrag?.reset();
+    this._sheetScrollTop = 0;
     this.setData({ historyOpen: false });
   },
 
@@ -318,7 +335,35 @@ Page({
   },
 
   openAdmin() {
+    this.sheetDrag?.reset();
+    this._sheetScrollTop = 0;
     this.setData({ historyOpen: false, feedbackOpen: false });
     wx.navigateTo({ url: "/pages/admin/admin" });
+  },
+
+  onUnload() {
+    this.sheetDrag?.reset();
+  },
+
+  noopSheet() {},
+
+  onSheetScroll(event) {
+    this._sheetScrollTop = event.detail?.scrollTop || 0;
+  },
+
+  startSheetDrag(event) {
+    this.sheetDrag?.start(event, { atTop: (this._sheetScrollTop || 0) <= 1 });
+  },
+
+  moveSheetDrag(event) {
+    this.sheetDrag?.move(event);
+  },
+
+  endSheetDrag(event) {
+    this.sheetDrag?.end(event);
+  },
+
+  cancelSheetDrag() {
+    this.sheetDrag?.cancel();
   },
 });

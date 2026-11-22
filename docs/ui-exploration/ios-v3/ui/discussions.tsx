@@ -8,7 +8,7 @@ import { mountRoot } from "./root-registry";
 export type DiscussionImage = { id: string; src: string; alt: string };
 type ActionState = { kind: "idle" } | { kind: "busy" } | { kind: "error"; message: string };
 export type DiscussionPost = {
-  id: string; name: string; text: string; time: string; datetime: string;
+  id: string; name: string; avatarUrl?: string; text: string; time: string; datetime: string;
   version: string; textParts: ({ kind: "text"; text: string } | { kind: "link"; text: string; href: string })[]; images: DiscussionImage[]; links: string[];
   parentId: string | null; rootId: string; replyTo: { id: string; name: string; excerpt: string | null } | null;
   likeCount: number; likedByMe: boolean; replyCount: number; action: ActionState;
@@ -18,7 +18,7 @@ type ReadState = { kind: "loading" } | { kind: "ready"; total: number } | { kind
 export type DiscussionEntryProps = { read: ReadState; sample: boolean; compact?: boolean; onOpen: () => void };
 export type DiscussionPageProps = {
   title: string; read: ReadState; posts: DiscussionPost[]; access: "real" | "sample" | "missing";
-  loadingMore: boolean; hasMore: boolean; hasDraft: boolean; name: string;
+  loadingMore: boolean; hasMore: boolean; hasDraft: boolean; name: string; avatarSrc?: string;
   threads: DiscussionThread[];
   onWrite: () => void; onPhotoFiles: (files: File[]) => void; onMore: () => void; onRetry: () => void; onGrade: () => void;
   onLike: (post: DiscussionPost) => void; onReply: (post: DiscussionPost) => void;
@@ -54,7 +54,7 @@ export function DiscussionReportEntry({ read, sample, compact = false, onOpen }:
 const compactCount = (count: number) => count >= 10000 ? `${Number((count / 10000).toFixed(1))}万` : String(count);
 function CommentPost({ post, nested, onImage, onLike, onReply }: { post: DiscussionPost; nested: boolean; onImage: DiscussionPageProps["onImage"]; onLike: DiscussionPageProps["onLike"]; onReply: DiscussionPageProps["onReply"] }) {
   return <article className={`rr-discussion-post ${nested ? "rr-discussion-reply" : ""}`} data-comment-id={post.id}>
-    <DiscussionAvatar name={post.name} />
+    <DiscussionAvatar name={post.name} src={post.avatarUrl} />
     <div className="rr-discussion-post-body"><header><strong title={post.name}>{post.name}</strong>{nested && post.replyTo ? <><small>回复</small><span className="rr-discussion-reply-target" title={post.replyTo.name}>{post.replyTo.name}</span></> : null}</header>
       {/* Default names can be identical; quote the specific parent when replying inside a thread. */}
       {nested && post.parentId !== post.rootId && post.replyTo?.excerpt ? <p className="rr-discussion-parent-excerpt">{post.replyTo.excerpt}</p> : null}
@@ -83,7 +83,7 @@ export function DiscussionPage(props: DiscussionPageProps) {
         {props.hasMore ? <Button variant="ghost" className="rr-discussion-more" onClick={props.onMore} disabled={props.loadingMore}>{props.loadingMore ? "正在读取…" : "更早的讨论"}</Button> : null}
       </div>
       {/* Separate sibling buttons keep photo selection visible and inside the original user gesture. */}
-      <div className="rr-discussion-compose-dock"><div className="rr-discussion-compose-bar"><DiscussionAvatar name={props.name} /><Button variant="ghost" className="rr-discussion-compose" onClick={props.onWrite}><span>{props.hasDraft ? "继续编辑草稿" : "说点什么…"}</span>{props.hasDraft ? <small>草稿</small> : null}</Button><Button variant="ghost" size="icon" className="rr-discussion-compose-photo" aria-label="添加图片" title="添加图片" onClick={() => photoInput.current?.click()}><ImagePlus size={21} /></Button><input ref={photoInput} type="file" accept="image/png,image/jpeg,image/webp" multiple hidden tabIndex={-1} aria-label="选择讨论图片" onChange={event => { const files = Array.from(event.target.files || []); event.target.value = ""; if (files.length) props.onPhotoFiles(files); }} /></div></div>
+      <div className="rr-discussion-compose-dock"><div className="rr-discussion-compose-bar"><DiscussionAvatar name={props.name} src={props.avatarSrc} /><Button variant="ghost" className="rr-discussion-compose" onClick={props.onWrite}><span>{props.hasDraft ? "继续编辑草稿" : "说点什么…"}</span>{props.hasDraft ? <small>草稿</small> : null}</Button><Button variant="ghost" size="icon" className="rr-discussion-compose-photo" aria-label="添加图片" title="添加图片" onClick={() => photoInput.current?.click()}><ImagePlus size={21} /></Button><input ref={photoInput} type="file" accept="image/png,image/jpeg,image/webp" multiple hidden tabIndex={-1} aria-label="选择讨论图片" onChange={event => { const files = Array.from(event.target.files || []); event.target.value = ""; if (files.length) props.onPhotoFiles(files); }} /></div></div>
     </>}
   </div>;
 }

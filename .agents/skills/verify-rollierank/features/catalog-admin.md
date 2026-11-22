@@ -20,4 +20,4 @@ Preconditions: 已按主Skill安装依赖；CLI启动隔离服务并通过doctor
 
 ## Gotchas
 
-公开目录不包含参考答案；手机审核页的岗位导入与基础入口的套卷CSV导入是不同入口。
+公开目录不包含参考答案。手机审核页负责岗位导入，`/#/admin` 的套卷管理负责套卷 CSV。独立运营后台 `/admin/` 提供管理员登录、运营总览、评论审查、用户、积分、答案纠错和操作日志。套卷维护 API 仍供维护者调用。运行 `node --test test/admin-console.test.js` 检查独立后台。

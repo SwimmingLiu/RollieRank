@@ -4,6 +4,23 @@ import { subjectAttempt, subjectResponse } from "../../../src/subjects.js";
 const validId = value => typeof value === "string" && /^[\w-]{10,80}$/.test(value);
 const scopeKey = scope => [scope.institution, scope.period, scope.paper].join("|");
 
+export function defaultNickname(guestId) {
+  const raw = String(guestId || "").trim();
+  if (!raw) return "卷友";
+  let hash = 2166136261;
+  for (let i = 0; i < raw.length; i += 1) {
+    hash ^= raw.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  const code = 1000 + ((hash >>> 0) % 9000);
+  return `卷友${code}`;
+}
+
+export function isDefaultNickname(value) {
+  const text = String(value || "").trim();
+  return !text || text === "卷友" || /^卷友\d{4}$/.test(text);
+}
+
 // Preview collection keys are existing saved identities, not an inferred examination year.
 export function versionForScope(versions, scope) {
   if (scope.versionId) return versions.find(version => version.id === scope.versionId);
@@ -64,7 +81,7 @@ export function createIOSServiceClient({ storage, storageName, getUIState, persi
     try {
       response = await fetchImpl("/api/" + path, { method: input === undefined ? "GET" : "POST",
         ...(input === undefined ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) }),
-        signal: AbortSignal.timeout(path === "positions/import/finish" ? 75000 : 15000) });
+        signal: AbortSignal.timeout(path === "positions/import/finish" ? 75000 : path === "omr/recognize" ? 45000 : 15000) });
     } catch { throw new Error("练习服务暂时不可用，录入内容仍在本机，请稍后重试。"); }
     let result;
     try { result = await response.json(); } catch { throw new Error("练习服务返回了无效内容，请稍后重试。"); }
@@ -136,7 +153,7 @@ export function createIOSServiceClient({ storage, storageName, getUIState, persi
     if (ui.answers.length !== version.questionCount) throw new Error(`当前套卷为 ${version.questionCount} 题，请先核对并补齐答题卡。`);
     const draft = prepareDraft();
     const attempt = await api("submit", { guestId: rootState.guestId, attemptId: draft.id,
-      versionId: version.id, name: rootState.profile?.name || "卷友", answers: draft.answers, ...(draft.timing ? { timing: draft.timing } : {}) });
+      versionId: version.id, name: !isDefaultNickname(rootState.profile?.name) ? rootState.profile.name.trim() : defaultNickname(rootState.guestId), answers: draft.answers, ...(draft.timing ? { timing: draft.timing } : {}) });
     if (!attempt?.report || attempt.id !== draft.id || attempt.versionId !== version.id)
       throw new Error("提交结果无法确认，原答案保留，请重试。");
     recordAttempt(rootState, attempt); persist();
@@ -147,7 +164,9 @@ export function createIOSServiceClient({ storage, storageName, getUIState, persi
     catch (error) { failure = error.message; }
     return status === "ready";
   };
-  return { api, persist, initialize, refreshCatalog, syncAttempts, prepareDraft, submit,
+  const recognizeAnswerSheet = ({ image, expectedQuestions }) =>
+    api("omr/recognize", { image, ...(Number.isInteger(expectedQuestions) ? { expectedQuestions } : {}) });
+  return { api, persist, initialize, refreshCatalog, syncAttempts, prepareDraft, submit, recognizeAnswerSheet,
     state: () => rootState, catalog: () => versions, currentAttempt, currentVersion, mergeHistory,
     forRecord: record => rootState.attempts.find(attempt => attempt.id === record?.id),
     scoreForRecord: record => { const attempt = rootState.attempts.find(item => item.id === record?.id); return attempt ? iosScore(attempt) : null; },

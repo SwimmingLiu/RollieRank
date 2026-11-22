@@ -8,7 +8,7 @@
 .review__tab--on { background: #18181b; color: #fffdf8; }
 .review__columns { display: grid; grid-template-columns: 44px 1fr 1fr 42px minmax(64px, 1fr); align-items: center; text-align: center; gap: 3px; }
 .review__labels { min-height: 42px; color: #7e725e; background: #f3eee5; border-bottom: 1px solid #e6ddce; font-size: 12px; }
-.review__group-label { margin: 0; width: 100% !important; min-height: 56px; border-bottom: 1px solid #e7dece; border-radius: 0; }
+.review__group-label { margin: 0; width: 100%; min-height: 46px; padding-left: 2px; border-bottom: 1px solid #e7dece; border-radius: 0; font-weight: 600; }
 .review__row { min-height: 55px; border-bottom: 1px solid #e9e1d4; }
 .review__number { color: #71717a; font-size: 13px; }
 .review__answer, .review__reference { font-size: 18px; font-weight: 650; }
@@ -21,6 +21,7 @@
 .review__copy { width: 100% !important; min-height: 38px; }
 .review__copy image { filter: invert(1); }
 .review__copy[disabled] { opacity: .5; background: #d9cfbe; color: #625846; }
+.review__copy[disabled] image { filter: none; opacity: .65; }
 .review__feedback-sheet { display: flex; flex-direction: column; max-height: 86vh; padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
 .review__feedback-sheet .sheet-head, .review__feedback-actions { flex: none; }
 .review__feedback-scroll { width: 100%; min-height: 0; max-height: 54vh; }
@@ -28,7 +29,7 @@
 .review__feedback-card-head { min-height: 32px; color: #544534; font-size: 15px; font-weight: 650; }
 .review__reference-line { display: block; margin: 0 0 12px; color: #906e51; font-size: 12px; }
 .review__add-feedback { display: grid; place-items: center; min-height: 44px; width: 100% !important; margin-bottom: 4px; border-radius: 12px; background: #f2e5d0; color: #765c3d; font-size: 13px; }
-.review__add-question { font-size: 21px; }
+.review__add-question { font-size: 13px; font-weight: 600; }
 .review__field { display: grid; gap: 7px; margin-bottom: 14px; color: #6f5c43; font-size: 13px; }
 .review__field input, .review__field textarea { width: 100%; min-height: 44px; padding: 10px 11px; border: 1px solid #e8ddcb; border-radius: 11px; background: #fffdf8; color: #332e2c; font-size: 14px; }
 .review__field textarea { height: 72px; min-height: 72px; }

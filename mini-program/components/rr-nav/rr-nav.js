@@ -6,6 +6,7 @@ Component({
     action: { type: String, value: "" },
     actionIcon: { type: String, value: "" },
     actionLabel: { type: String, value: "" },
+    actionDot: { type: Boolean, value: false },
     logo: { type: String, value: "" },
     leading: { type: Boolean, value: false },
   },

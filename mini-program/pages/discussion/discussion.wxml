@@ -1,17 +1,19 @@
+<page-meta page-style="overflow: hidden;" />
 <view class="screen">
   <rr-nav title="本卷交流" back="{{true}}" />
 
+  <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}" lower-threshold="120" bindscrolltolower="onReachBottom">
   <view wx:if="{{loading}}" class="loading">正在读取讨论…</view>
   <view wx:elif="{{error}}" class="empty">
     <text>{{error}}</text>
+    <button class="chip" bindtap="retry">重新读取</button>
   </view>
 
-  <block wx:else>
-    <view class="disc__list {{replyTarget || images.length ? 'disc__list--extended' : ''}}" aria-label="共 {{total}} 条评论">
+  <view wx:else class="disc__list {{replyTarget || images.length || !hasWechatProfile ? 'disc__list--extended' : ''}}" aria-label="共 {{total}} 条评论">
       <view wx:for="{{comments}}" wx:key="id" class="disc__comment">
         <image class="disc__avatar" src="{{item.avatar}}" mode="aspectFill" aria-label="{{item.author.name}}的头像" />
         <view class="grow">
-          <text class="disc__name">{{item.author.name}}</text>
+          <text class="disc__name">{{item.author.name}}<text wx:if="{{item.moderationText}}" class="disc__mod-badge">{{item.moderationText}}</text></text>
           <text wx:if="{{item.target}}" class="text-xs disc__target">回复 {{item.target}}</text>
           <text wx:if="{{item.text}}" class="disc__text">{{item.text}}</text>
           <view wx:if="{{item.links.length}}" class="disc__links">
@@ -27,8 +29,8 @@
               <button class="disc__reply-action" data-id="{{item.id}}" data-name="{{item.author.name}}" bindtap="startReply" aria-label="回复 {{item.author.name}}">回复</button>
             </view>
             <button class="disc__like {{item.likedByMe ? 'disc__like--on' : ''}}" data-id="{{item.id}}" data-liked="{{item.likedByMe}}" bindtap="toggleLike" aria-label="{{item.likedByMe ? '取消点赞' : '点赞'}}">
-              <image src="{{uiBase}}/like.svg" mode="aspectFit" />
-              <text>{{item.likeCount || ''}}</text>
+              <image src="{{uiBase}}/{{item.likedByMe ? 'like-on' : 'like'}}.svg" mode="aspectFit" />
+              <text wx:if="{{item.likeCount}}">{{item.likeCount}}</text>
             </button>
           </view>
           <button wx:if="{{item.replyCount}}" class="disc__expand" data-id="{{item.id}}" bindtap="toggleReplies"
@@ -47,8 +49,12 @@
               <view wx:if="{{reply.links.length}}" class="disc__links"><text wx:for="{{reply.links}}" wx:for-item="link" wx:key="*this" data-link="{{link}}" bindtap="copyExternalLink">{{link}}</text></view>
               <view wx:if="{{reply.images.length}}" class="disc__images"><image wx:for="{{reply.images}}" wx:for-item="photo" wx:key="*this" class="disc__image" src="{{photo}}" mode="aspectFill" data-src="{{photo}}" bindtap="previewImage" /></view>
               <view class="disc__reply-meta">
-                <text>{{reply.timeText}}</text><text>·</text>
+                <text>{{reply.timeText}}</text><text class="disc__meta-dot">·</text>
                 <button class="disc__reply-action" data-id="{{reply.id}}" data-root="{{item.id}}" data-name="{{reply.author.name}}" bindtap="startReply" aria-label="回复 {{reply.author.name}}">回复</button>
+                <button class="disc__like {{reply.likedByMe ? 'disc__like--on' : ''}}" data-id="{{reply.id}}" data-liked="{{reply.likedByMe}}" bindtap="toggleLike" aria-label="{{reply.likedByMe ? '取消点赞' : '点赞'}}">
+                  <image src="{{uiBase}}/{{reply.likedByMe ? 'like-on' : 'like'}}.svg" mode="aspectFit" />
+                  <text wx:if="{{reply.likeCount}}">{{reply.likeCount}}</text>
+                </button>
               </view>
               </view>
             </view>
@@ -61,10 +67,14 @@
         <image class="disc__empty-icon" src="{{uiBase}}/comment.svg" mode="aspectFit" />
         <text>暂无评论</text>
       </view>
-    </view>
+  </view>
+  </scroll-view>
 
-
-    <view class="disc__footer" style="bottom: {{keyboardHeight}}px;">
+    <view wx:if="{{!loading && !error}}" class="disc__footer" style="bottom: {{keyboardHeight}}px;">
+      <button wx:if="{{!hasWechatProfile && !replyTarget}}" class="disc__profile-tip" bindtap="openProfile">
+        <text class="grow ellipsis">同步微信头像与昵称，评论区实时展示</text>
+        <image src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+      </button>
       <view wx:if="{{replyTarget}}" class="disc__reply-bar">
         <text class="grow ellipsis">回复 {{replyTarget.name}}</text>
         <button class="icon-button" bindtap="cancelReply" aria-label="取消回复"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button>
@@ -76,14 +86,13 @@
         </view>
       </view>
       <view class="disc__composer">
-        <textarea class="disc__input grow" auto-height maxlength="2000" value="{{replyTarget ? replyDraft : draft}}" placeholder="{{replyTarget ? '回复' : '评论'}}" placeholder-class="disc__placeholder" bindinput="onComposerInput" confirm-type="send" bindconfirm="sendComposer" adjust-position="{{false}}" bindkeyboardheightchange="keyboard"></textarea>
+        <textarea class="disc__input grow" auto-height maxlength="2000" value="{{replyTarget ? replyDraft : draft}}" placeholder="{{replyTarget ? '回复 ' + replyTarget.name : '说点什么…'}}" placeholder-class="disc__placeholder" focus="{{composerFocus}}" bindinput="onComposerInput" bindblur="onComposerBlur" confirm-type="send" bindconfirm="sendComposer" adjust-position="{{false}}" bindkeyboardheightchange="keyboard"></textarea>
         <button wx:if="{{images.length < 3}}" class="disc__compose-icon" bindtap="pickImage" aria-label="添加照片">
           <image src="{{uiBase}}/image.svg" mode="aspectFit" />
         </button>
-        <button class="disc__compose-icon disc__send" bindtap="sendComposer" disabled="{{sending}}" aria-label="发送">
-          <image src="{{uiBase}}/send-light.svg" mode="aspectFit" />
+        <button class="disc__compose-icon disc__send {{canSend ? 'disc__send--ready' : ''}}" bindtap="sendComposer" disabled="{{sending}}" aria-label="发送">
+          <image src="{{uiBase}}/{{canSend ? 'send-light' : 'send'}}.svg" mode="aspectFit" />
         </button>
       </view>
     </view>
-  </block>
 </view>

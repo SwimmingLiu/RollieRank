@@ -54,7 +54,8 @@ function sessionData(input) {
   if (!marks.every(pair => Array.isArray(pair) && pair.length === 2 && ID.test(pair[0]) &&
     Array.isArray(pair[1]) && pair[1].length <= 300 && pair[1].every(n => Number.isInteger(n) && n > 0 && n <= 300))) return null;
   const avatarId = typeof input.avatarId === "string" && TICKET.test(input.avatarId) ? input.avatarId : "";
-  return { guestId: input.guestId, name, drafts, marks, ...(avatarId ? { avatarId } : {}) };
+  const avatarUrl = typeof input.avatarUrl === "string" && /^https?:\/\/[^\s<>"']{1,500}$/i.test(input.avatarUrl) ? input.avatarUrl : "";
+  return { guestId: input.guestId, name, drafts, marks, ...(avatarId ? { avatarId } : {}), ...(avatarUrl ? { avatarUrl } : {}) };
 }
 
 const INSTITUTIONS = new Set(["四海", "超格", "粉笔", "上岸村"]);

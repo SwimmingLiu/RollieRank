@@ -5,5 +5,5 @@
     "rr-option-sheet": "/components/rr-option-sheet/rr-option-sheet"
   },
   "navigationStyle": "custom",
-  "enablePullDownRefresh": true
+  "disableScroll": true
 }

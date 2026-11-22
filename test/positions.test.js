@@ -330,7 +330,7 @@ test("one-time default migration includes real receipts, preserves opt-out and i
   assert.deepEqual(store.features.positions.members[selectedOnly].attemptIds, [first.id]);
   assert.equal(store.features.positions.members[selectedOnly].positionId, "existing-job");
   assert.deepEqual(store.features.positions.members[fresh].attemptIds, [third.id]);
-  assert.equal(store.features.positions.members[fresh].name, "卷友");
+  assert.match(store.features.positions.members[fresh].name, /^卷友\d{4}$/);
   assert.deepEqual(store.features.positions.members[optedOut].attemptIds, []);
   assert.equal(store.features.positions.members[optedOut].participationOptOut, true);
   assert.equal(initializeDefaultParticipation(store), false);

@@ -4,14 +4,13 @@ import automator from "miniprogram-automator";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { requireTestApi } from "./test-api.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const out = resolve(process.env.MINIPROGRAM_FLOW_OUTPUT || resolve(here, "../../test-results/miniprogram/flow"));
-const apiBase = String(process.env.MINIPROGRAM_API_BASE || "").replace(/\/$/, "");
 const reviewToken = process.env.MINIPROGRAM_REVIEW_TOKEN;
-if (!apiBase || new URL(apiBase).hostname !== "127.0.0.1" || !reviewToken) {
-  throw new Error("原生流程需要隔离的本机接口和测试审核凭证。");
-}
+if (!reviewToken) throw new Error("原生流程需要测试审核凭证。");
+const apiBase = await requireTestApi(process.env.MINIPROGRAM_API_BASE);
 await mkdir(out, { recursive: true });
 
 const mini = await automator.connect({ wsEndpoint: "ws://127.0.0.1:" + (process.env.MINIPROGRAM_AUTOMATION_PORT || "9420") });
@@ -103,8 +102,10 @@ async function dragGrabber(grabber, distance) {
 }
 
 async function readApi(path, payload) {
-  const response = await fetch(apiBase + "/api/" + path, payload === undefined ? {} : {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+  const response = await fetch(apiBase + "/api/" + path, {
+    redirect: "error",
+    signal: AbortSignal.timeout(15_000),
+    ...(payload === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }),
   });
   if (!response.ok) throw new Error(`读取本机接口失败 ${response.status} ${path.split("?")[0]}`);
   return response.json();
@@ -112,7 +113,26 @@ async function readApi(path, payload) {
 
 let attemptId, guestId, failure;
 try {
-// 0. 空记录
+// wx.request 取运行包里的配置，脚本参数正确仍可能连到了错误的小程序。
+const loaded = await mini.evaluate(() => ({
+  apiBase: getApp().globalData.apiBase,
+  storageNamespace: getApp().globalData.storageNamespace,
+}));
+if (loaded.apiBase !== apiBase || !loaded.storageNamespace?.startsWith("rr-test:")) {
+  throw new Error("开发者工具里运行的小程序未连接此测试接口，请打开隔离构建目录。");
+}
+const guestKey = loaded.storageNamespace + "rr:guest";
+const historyKey = loaded.storageNamespace + "rr:history";
+// 0. 清理残留本机存储，确保每次自检从干净状态开始
+// 开发工具可能与正式包共用 AppID，只清理验收包自己的记录。
+await mini.evaluate(namespace => {
+  for (const key of wx.getStorageInfoSync().keys) {
+    if (key.startsWith(namespace)) wx.removeStorageSync(key);
+  }
+}, loaded.storageNamespace);
+await mini.reLaunch("/pages/home/home");
+await wait(600);
+// 空记录
 await mini.switchTab("/pages/records/records");
 await wait(1200);
 let emptyRecords = await current();
@@ -138,8 +158,9 @@ await wait(2000);
 page = await current();
 check("进入套卷页", page.path === "pages/catalog/catalog", page.path);
 const catalog = await waitForData(page, data => !data.loading && data.projects.length);
-const firstOptions = ["第1期", "第2期", "第2期 · 副省级"];
-check("花生期数按实际期号排，副省级在同一期之后", firstOptions.every((label, i) => catalog.projectOptions[i]?.label.endsWith(label)));
+const firstOptions = ["第1期", "第2期（地市）", "第2期（副省）"];
+check("花生期数按实际期号排，区分地市与副省", firstOptions.every((label, i) => catalog.projectOptions[i]?.label.endsWith(label)),
+  catalog.projectOptions.slice(0, 3).map(o => o.label).join(" | "));
 await tap(page, ".cat__hero", "打开期数面板");
 let options = await waitForSelector(page, "rr-option-sheet");
 const optionRows = await options.$$(".options-row");
@@ -193,14 +214,18 @@ check("关闭弹层时保留所选期数", (await page.data()).activeProject ===
 const papers = await page.$$(".cat__paper");
 check("套卷列表", papers.length > 0, `${papers.length} 套`);
 const compactPaperHeight = papers[0] && (await papers[0].size()).height;
-check("套卷卡压缩内部空白", compactPaperHeight > 0 && compactPaperHeight <= 78, compactPaperHeight + "px");
+check("套卷卡适配12套紧凑水平布局", compactPaperHeight >= 58 && compactPaperHeight <= 92 &&
+  Boolean(await papers[0].$(".cat__paper-top")) && Boolean(await papers[0].$(".cat__paper-foot")), compactPaperHeight + "px");
 await shot("02-catalog");
 // 已交卷的卡片会直接进成绩页；这里挑一张还没交过的卷，走完整录答案流程。
 const versions = catalog.projects?.[catalog.activeProject]?.versions || [];
 const freshIndex = versions.findIndex(item => item.actionType === "practice");
 check("有可开始的新卷", freshIndex >= 0, `共 ${versions.length} 套`);
 const freshPaper = papers[freshIndex];
-check("未开始的套卷只显示卷号和箭头", freshPaper && (await freshPaper.text()).replace(/\s/g, "") === `${versions[freshIndex].numberText}${versions[freshIndex].number ? "套" : ""}`
+const freshTitle = freshPaper && (await (await freshPaper.$(".cat__paper-title"))?.text() || "").replace(/\s/g, "");
+const heroMeta = ((await (await page.$(".cat__hero-meta"))?.text()) || "").replace(/\s/g, "");
+check("未开始的套卷保持极简排印且顶部统一展示套卷规格", freshPaper && freshTitle === `${versions[freshIndex].numberText}${versions[freshIndex].unitText || ""}`
+  && Boolean(heroMeta)
   && Boolean(await freshPaper.$(".cat__paper-arrow")));
 const paperNumber = await freshPaper?.$(".cat__paper-no");
 check("套卷编号使用主标题字号", paperNumber && Number.parseFloat(await paperNumber.style("font-size")) >= 20);
@@ -213,8 +238,10 @@ if (modeToggle) {
   await modeToggle.tap();
   await waitForData(page, data => data.single === true);
   const singleCard = await waitForSelector(page, ".practice__single-card");
-  const mark = await waitForSelector(page, ".practice__single-head .practice__filter");
+  const mark = await waitForSelector(page, ".practice__single-mark");
   const choices = await waitForSelector(page, ".practice__single-choices");
+  const badges = await page.$$(".practice__single-badge");
+  const navButtons = await page.$$(".practice__single-nav");
   const cardBox = await elementBox(singleCard);
   const markBox = await elementBox(mark);
   const choicesBox = await elementBox(choices);
@@ -224,11 +251,14 @@ if (modeToggle) {
     markRight: markBox ? markBox.left + markBox.width : null,
     markTop: markBox?.top ?? null,
     choicesTop: choicesBox?.top ?? null,
+    badges: badges.length,
+    navs: navButtons.length,
   };
-  check("单题录入充分利用窗口且存疑靠右", singleLayout.height >= 360 &&
+  check("单题录入选项对称且含存疑与上下题文字", singleLayout.height >= 350 &&
     singleLayout.markTop < singleLayout.choicesTop &&
     singleLayout.markRight !== null && singleLayout.cardRight !== null &&
-    singleLayout.markRight > singleLayout.cardRight - 70,
+    singleLayout.markRight > singleLayout.cardRight - 70 &&
+    singleLayout.badges === 4 && singleLayout.navs === 2,
   JSON.stringify(singleLayout));
   await shot("03a-single");
   await (await page.$('[aria-label="切换列表录入"]')).tap();
@@ -300,20 +330,27 @@ page = await waitForPath("pages/report/report", 12000);
 check("进入成绩页", page.path === "pages/report/report", page.path);
 const report = await waitForData(page, data => data.summary && data.loading === false);
 check("成绩已核分", report.summary && report.summary.score !== undefined, JSON.stringify(report.summary || {}).slice(0, 120));
+check("成绩页显示当前试卷身份", Boolean(await page.$(".report__paper-label")) && Boolean(report.summary?.identity));
+const radarComponent = await page.$("rr-radar");
+check("报告雷达以图片渲染避免穿层", Boolean(radarComponent) && Boolean(await waitForSelector(radarComponent, "image.radar", 4000)));
 check("纸卡主成绩保留两位小数", /^\d+\.\d{2}$/.test(report.summary.score));
 check("成绩卡显示未答题数", report.summary.blank > 0 && Boolean(await page.$(".report__stat--blank")));
 check("正确与错误", report.summary && report.summary.correct + report.summary.wrong > 0, `${report.summary?.correct}/${report.summary?.wrong}`);
 check("能力概览", Array.isArray(report.bands) && report.bands.length >= 3, `${report.bands?.length} 项`);
+check("板块得分保留干净小数无浮点长尾巴", (report.bands || []).every(b => !/\.\d{3,}/.test(String(b.earned)) && !/\.\d{3,}/.test(String(b.max))),
+  (report.bands || []).map(b => `${b.earned}/${b.max}`).join(", "));
 await shot("07-report");
 attemptId = report.summary?.id;
-guestId = await mini.callWxMethod("getStorageSync", "rr:guest");
+guestId = await mini.callWxMethod("getStorageSync", guestKey);
 const original = (await readApi("attempts/sync", { guestId, attemptIds: [attemptId] })).attempts[0];
 if (report.bands && report.bands[0]) {
   const band = await page.$$(".report__band");
   if (band[0]) {
     await band[0].tap();
     const reviewPage = await waitForPath("pages/review/review", 8000);
-    check("从板块进入复盘", reviewPage.path === "pages/review/review", reviewPage.path);
+    const reviewBandData = await waitForData(reviewPage, data => !data.loading);
+    check("从板块进入复盘并按该板块筛选", reviewPage.path === "pages/review/review" && reviewBandData.activeType === report.bands[0].name,
+      `expected=${report.bands[0].name}, actual=${reviewBandData.activeType}`);
     await shot("08-review-band");
     await waitBack("pages/report/report");
     page = await current();
@@ -486,6 +523,13 @@ if (ghosts[0]) {
   const like = await tap(page, ".disc__like", "点赞入口");
   const liked = like && await waitForData(page, data => data.comments[0]?.likedByMe);
   check("点赞已写入", liked?.comments[0]?.likedByMe === true);
+  const timeBox = await elementBox(await page.$(".disc__time"));
+  const replyActionBox = await elementBox(await page.$(".disc__reply-action"));
+  const actionsBox = await elementBox(await page.$(".disc__actions"));
+  const likeBox = await elementBox(await page.$(".disc__like"));
+  check("评论时间与回复垂直对齐且点赞贴右", Boolean(timeBox && replyActionBox && actionsBox && likeBox) &&
+    Math.abs((timeBox.top + timeBox.height / 2) - (replyActionBox.top + replyActionBox.height / 2)) <= 4 &&
+    Math.abs((actionsBox.left + actionsBox.width) - (likeBox.left + likeBox.width)) <= 8);
   await shot("11-discussion");
   await tap(page, ".disc__actions button:first-of-type", "打开评论回复");
   const replyRoot = liked?.comments[0]?.id;
@@ -535,7 +579,67 @@ if (shareEntry) {
     await shot(`12-share-${index + 1}`);
   }
   check("分享底栏保留邀请好友文字", (await (await page.$(".share__invite")).text()).includes("邀请好友"));
+  // 验证多风格切换：默认票根（A1），支持圆环/珊瑚/墨纸并导出 900px PNG
+  const styleChips = await page.$$(".share__style-chip");
+  check("分享支持 4 种风格且默认选中票根", styleChips.length === 4 && (await page.data()).style === "ticket",
+    `count=${styleChips.length}, style=${(await page.data()).style}`);
+  if (modes[1]) {
+    await modes[1].tap();
+    await waitForData(page, data => data.mode === "score" && data.ready && data.previewSrc);
+  }
+  for (const [sIdx, sKey, sName] of [[1, "rings", "圆环"], [2, "coral", "珊瑚"], [3, "ink", "墨纸"], [0, "ticket", "票根"]]) {
+    if (!styleChips[sIdx]) continue;
+    await styleChips[sIdx].tap();
+    const styled = await waitForData(page, data => data.style === sKey && data.ready && data.previewSrc, 9000);
+    const sImg = await mini.evaluate(path => wx.getFileSystemManager().readFileSync(path, "base64"), styled.previewSrc);
+    const sPng = Buffer.from(sImg, "base64");
+    const sW = sPng.length > 24 && sPng.readUInt32BE(16);
+    const sH = sPng.length > 24 && sPng.readUInt32BE(20);
+    check(`分享风格 ${sName}`, Boolean(await page.$(".share__style--" + sKey)) && sW === 900 && sH >= 400, `${sW}×${sH}`);
+    if (sKey !== "ticket") {
+      await writeFile(resolve(out, `poster-style-${sKey}.png`), sPng);
+      await shot(`12-share-style-${sKey}`);
+    }
+  }
   await waitBack("pages/report/report");
+  page = await current();
+}
+
+// 7b. 同卷二次练习：验证成绩页“上次 VS 本次”对比卡
+if (page.path === "pages/report/report") {
+  await page.callMethod("practiceAgain");
+  page = await waitForPath("pages/practice/practice", 8000);
+  await waitForData(page, data => !data.loading && data.questions?.length > 0, 8000);
+  const againChoices = await page.$$(".practice__choice");
+  if (againChoices[0]) await againChoices[0].tap();
+  if (againChoices[4]) await againChoices[4].tap();
+  if (againChoices[8]) await againChoices[8].tap();
+  if (againChoices[12]) await againChoices[12].tap();
+  await wait(500);
+  await tap(page, ".practice__submit", "二次提交估分");
+  const confirmAgain = await waitForSelector(page, ".practice__confirm", 5000);
+  if (confirmAgain) await confirmAgain.tap();
+  const skipPos = await waitForSelector(page, ".practice__skip", 5000);
+  if (skipPos) await skipPos.tap();
+  page = await waitForPath("pages/report/report", 12000);
+  const report2 = await waitForData(page, data => data.summary && !data.loading && data.comparison, 10000);
+  if (report2?.summary?.id) attemptId = report2.summary.id;
+  check("同卷二刷显示精简对比卡且点击展开详情", Boolean(await page.$(".report__vs--compact")) &&
+    report2.comparison?.attemptCount >= 2 &&
+    /^\d+\.\d{2}$/.test(report2.comparison?.previousScore || "") &&
+    /^\d+\.\d{2}$/.test(report2.comparison?.currentScore || "") &&
+    (report2.comparison?.subjects?.length || 0) >= 6,
+  JSON.stringify({ attemptCount: report2.comparison?.attemptCount, prev: report2.comparison?.previousScore, curr: report2.comparison?.currentScore, delta: report2.comparison?.deltaText }));
+  await mini.callWxMethod("pageScrollTo", { scrollTop: 260, duration: 0 });
+  await wait(500);
+  await shot("12b-report-vs");
+  await tap(page, ".report__vs--compact", "打开本次对比详情");
+  const vsSheet = await waitForSelector(page, ".report__vs-sheet", 4000);
+  check("本次对比详情抽屉展示完整板块变化", Boolean(vsSheet) && (await page.$$(".report__vs-sub")).length >= 6);
+  await shot("12c-report-vs-detail");
+  const vsClose = await page.$(".report__vs-sheet .sheet-close");
+  if (vsClose) await vsClose.tap();
+  await wait(300);
 }
 
 // 8. 记录、成长分析、选岗、计时、设置
@@ -562,14 +666,21 @@ if (cells[1]) {
     await filter.tap();
     const filterSheet = await waitForSelector(page, ".analytics__filter-sheet", 4000);
     const sourceChips = await page.$$(".analytics__source-chip");
-    check("成长分析来源日期筛选", Boolean(filterSheet) && sourceChips.length >= 2);
+    const dateFields = await page.$$(".analytics__date-field");
+    const firstChip = sourceChips[0] && await elementBox(sourceChips[0]);
+    const secondChip = sourceChips[1] && await elementBox(sourceChips[1]);
+    check("成长分析来源日期筛选", Boolean(filterSheet) && sourceChips.length >= 2 && dateFields.length === 2 &&
+      Boolean(firstChip && secondChip) && firstChip.width < 150 && Math.abs(firstChip.top - secondChip.top) <= 4);
+    await shot("14b-analytics-filter");
     const clear = await page.$(".analytics__filter-actions button");
     if (clear) await clear.tap();
     const apply = await page.$(".analytics__filter-actions button:last-child");
     if (apply) await apply.tap();
     await wait(500);
   }
-  check("成长分析有数据", (analytics.points || []).length > 0, `${analytics.points?.length} 次`);
+  check("成长分析有数据且不泄露内部代号", (analytics.points || []).length > 0 &&
+    Boolean(await page.$(".analytics__hero-label")) &&
+    (analytics.points || []).every(item => !/四海/.test(item.label || "")), `${analytics.points?.length} 次`);
   await shot("14-analytics");
   await waitBack("pages/records/records");
   page = await current();
@@ -588,7 +699,10 @@ if (cells[0]) {
   await waitForData(picker, data => !data.loading);
   await tap(picker, '.positions__exam[data-exam="shengkao"]', "切换省考来源");
   const provincial = await waitForData(picker, data => !data.loading);
-  check("省考目录为空时显示空态", !provincial.options.length && provincial.emptyText === "暂无省考岗位目录");
+  const examTrack = await elementBox(await picker.$(".positions__exam-tabs"));
+  const examTab = await elementBox(await picker.$('.positions__exam[data-exam="shengkao"]'));
+  check("省考目录为空时显示空态且标签不溢出", !provincial.options.length && provincial.emptyText === "暂无省考岗位目录" &&
+    examTrack && examTab && examTab.left + examTab.width <= examTrack.left + examTrack.width + 1);
   await shot("16a-positions-provincial");
   await tap(picker, '.positions__exam[data-exam="guokao"]', "切换国考来源");
   let positions = await waitForData(picker, data => !data.loading && data.options.length);
@@ -618,6 +732,13 @@ if (cells[0]) {
   let pickerSurface = await waitForSelector(page, "rr-position-picker");
   let pickerData = await waitForData(pickerSurface, data => !data.loading && data.options.length);
   check("岗位面板默认收起且无标题栏", !pickerData.expanded && !await pickerSurface.$(".positions__heading"));
+  const clearBtn = await pickerSurface.$(".positions__clear");
+  const panelEl = await pickerSurface.$(".positions__panel");
+  const clearBox = clearBtn && await elementBox(clearBtn);
+  const panelBox = panelEl && await elementBox(panelEl);
+  check("清除选岗按钮满宽居中且在底栏内", Boolean(clearBox && panelBox) && clearBox.width >= panelBox.width - 48,
+    JSON.stringify({ clearW: clearBox?.width, panelW: panelBox?.width }));
+  await shot("16e-positions-clear");
   const departmentCrumb = pickerData.breadcrumbs.findIndex(crumb => crumb.level === "department");
   if (departmentCrumb >= 0) {
     await (await pickerSurface.$(`.positions__crumb[data-index="${departmentCrumb}"]`)).tap();
@@ -667,6 +788,20 @@ await tap(bar, '.tabbar__item[data-key="home"]', "通过底栏返回首页");
 page = await waitForPath("pages/home/home", 10000);
 const recents = await waitForData(page, data => data.recent?.some(item => item.id === attemptId));
 check("首页显示本次最近练习", recents.recent?.some(item => item.id === attemptId), page.path);
+// 检查上岸村套卷去冗余与统一纸卡排版
+const homeInsts = await page.$$(".home__inst");
+if (homeInsts[3]) {
+  await homeInsts[3].tap();
+  page = await waitForPath("pages/catalog/catalog", 8000);
+  const shangancun = await waitForData(page, data => !data.loading && data.projects.length);
+  const scTitle = shangancun.projects[0]?.title || "";
+  const scCards = shangancun.projects[0]?.versions || [];
+  check("上岸村套卷去重且统一数字卡片格式", !/公考\s*·\s*公考/.test(scTitle) &&
+    scCards.every(item => !/上岸村/.test(item.numberText) && Boolean(item.number)),
+    `${scTitle} | ${scCards.slice(0, 3).map(i => i.numberText + i.unitText).join(",")}`);
+  await shot("02c-shangancun");
+  page = await waitBack("pages/home/home");
+}
 const deck = await page.$(".home__deck");
 const nextSection = (await page.$$(".home__section"))[1];
 const deckBottom = deck && (await deck.offset()).top + (await deck.size()).height;
@@ -688,6 +823,21 @@ check("计时期数按编号顺序显示", collectionData.collections.slice(0, 3
 const breadcrumb = await timerSheet.$(".timer__breadcrumb");
 check("计时路径只有图标返回", breadcrumb && Boolean(await breadcrumb.$("image")) && !/机构/.test(await breadcrumb.text()));
 await shot("18-timer");
+const firstCollection = await timerSheet.$(".timer__collection");
+if (firstCollection) {
+  await firstCollection.tap();
+  await waitForData(timerSheet, data => data.pickerLevel === "paper", 5000);
+  const backBtn = await timerSheet.$(".timer__back");
+  const crumbBtns = await timerSheet.$$(".timer__breadcrumb button");
+  const instBtn = crumbBtns[1];
+  const backBox = backBtn && await elementBox(backBtn);
+  const instBox = instBtn && await elementBox(instBtn);
+  check("计时三级面包屑按钮紧凑且垂直居中对齐", Boolean(backBox && instBox) &&
+    instBox.width < 120 &&
+    Math.abs((backBox.top + backBox.height / 2) - (instBox.top + instBox.height / 2)) <= 4,
+  JSON.stringify({ backBox, instBox }));
+  await shot("18b-timer-papers");
+}
 if (timerSheet) await (await timerSheet.$(".timer__close")).tap();
 await tap(page, ".home__cover-face", "打开首页最近练习");
 page = await waitForPath("pages/report/report", 10000);
@@ -701,11 +851,12 @@ check("个人资料入口", page.path === "pages/profile/profile");
 await shot("19-profile");
 await tap(page, ".profile__row:nth-child(2)", "进入昵称设置");
 page = await waitForPath("pages/settings/settings", 8000);
+await waitForSelector(page, "input", 5000);
 check("设置页仅有昵称", page.path === "pages/settings/settings" && (await page.$$("input")).length === 1);
 await shot("20-settings");
 await mini.navigateBack();
 await wait(500);
-const history = await mini.callWxMethod("getStorageSync", "rr:history");
+const history = await mini.callWxMethod("getStorageSync", historyKey);
 const savedHistory = Array.isArray(history) ? history : [];
 const synthetic = {
   ...savedHistory[0],
@@ -715,7 +866,7 @@ const synthetic = {
   createdAt: (savedHistory[0]?.createdAt || Date.now()) - 1000,
   updatedAt: (savedHistory[0]?.updatedAt || Date.now()) - 1000,
 };
-await mini.callWxMethod("setStorageSync", "rr:history", [synthetic, ...savedHistory]);
+await mini.callWxMethod("setStorageSync", historyKey, [synthetic, ...savedHistory]);
 await mini.reLaunch("/pages/home/home");
 await wait(1800);
 page = await current();
@@ -736,7 +887,7 @@ check("上滑时最近练习卡跟随手势", draggedDeck.deckOffset < 0 && drag
 await page.callMethod("flipDeck", { changedTouches: [{ clientY: 40 }] });
 const switched = await waitForData(page, data => data.recentIndex !== beforeRecent);
 check("滑动切换到下一条最近练习", switched.recentIndex !== beforeRecent);
-await mini.callWxMethod("setStorageSync", "rr:history", savedHistory);
+await mini.callWxMethod("setStorageSync", historyKey, savedHistory);
 } catch (error) {
   failure = error.message;
   await mini.screenshot({ path: resolve(out, "failure.png") }).catch(() => {});

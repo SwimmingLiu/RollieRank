@@ -1,5 +1,7 @@
 const api = require("../../services/api.js");
+const profile = require("../../services/profile.js");
 const storage = require("../../utils/storage.js");
+const { IS_TEST_ENVIRONMENT, storageKey } = require("../../config.js");
 
 function avatarFor(seed) {
   const value = String(seed || "卷友");
@@ -22,6 +24,17 @@ function relativeTime(timestamp) {
   return date.getFullYear() === now.getFullYear()
     ? date.getMonth() + 1 + "月" + date.getDate() + "日"
     : date.getFullYear() + "年" + (date.getMonth() + 1) + "月" + date.getDate() + "日";
+}
+
+async function quietWxCode() {
+  // 验收包的评论直接交给隔离后端。
+  if (IS_TEST_ENVIRONMENT) return "";
+  try {
+    const res = await new Promise((resolve, reject) => wx.login({ success: resolve, fail: reject }));
+    return typeof res?.code === "string" ? res.code : "";
+  } catch {
+    return "";
+  }
 }
 
 async function photoAsPng(tempFilePath) {
@@ -55,21 +68,61 @@ Page({
     replyDraft: "",
     images: [],
     sending: false,
+    canSend: false,
+    composerFocus: false,
     keyboardHeight: 0,
+    hasWechatProfile: false,
     uiBase: "/assets/ui",
   },
 
   onLoad(query) {
     this.paperId = query.paperId || "";
     this.attemptId = query.attemptId || "";
-    this.draftKey = "rr:discussion:" + this.paperId;
+    this.draftKey = storageKey("rr:discussion:" + this.paperId);
+    this.profileSignature = this.currentProfileSignature();
     const saved = wx.getStorageSync(this.draftKey);
     const draft = typeof saved === "string" ? saved : saved?.draft || "";
+    const replyDraft = saved?.replyDraft || "";
+    const replyTarget = saved?.replyTarget || null;
     this.setData({
       draft,
-      replyDraft: saved?.replyDraft || "",
-      replyTarget: saved?.replyTarget || null,
+      replyDraft,
+      replyTarget,
+      hasWechatProfile: storage.hasWechatProfile(),
+      canSend: Boolean((replyTarget ? replyDraft : draft).trim()),
     });
+    this.load();
+  },
+
+  onShow() {
+    const nextSignature = this.currentProfileSignature();
+    const hasWechatProfile = storage.hasWechatProfile();
+    if (hasWechatProfile !== this.data.hasWechatProfile) {
+      this.setData({ hasWechatProfile });
+    }
+    if (this.profileSignature && nextSignature !== this.profileSignature) {
+      this.profileSignature = nextSignature;
+      this.refreshAfterProfileChange();
+    }
+  },
+
+  currentProfileSignature() {
+    return [storage.name(), storage.avatarId(), storage.avatarUrl()].join("|");
+  },
+
+  async refreshAfterProfileChange() {
+    if (!this.paperId || this.data.loading) return;
+    await this.load();
+    const expandedIds = Object.keys(this.data.expandedReplies).filter(id => this.data.expandedReplies[id]);
+    await Promise.all(expandedIds.map(id => this.loadReplies(id)));
+  },
+
+  openProfile() {
+    wx.navigateTo({ url: "/pages/profile/profile" });
+  },
+
+  retry() {
+    this.setData({ loading: true, error: "" });
     this.load();
   },
 
@@ -107,9 +160,10 @@ Page({
   decorate(comment) {
     return {
       ...comment,
-      avatar: avatarFor(comment.author?.avatarSeed || comment.author?.name),
+      avatar: profile.authorAvatarUrl(comment.author) || avatarFor(comment.author?.avatarSeed || comment.author?.name),
       timeText: relativeTime(comment.createdAt),
       target: comment.replyTo?.name || "",
+      moderationText: comment.moderationStatus === "pending" || comment.moderationStatus === "flagged" ? "审核中" : "",
       images: (comment.images || []).map(image => image.dataUri),
     };
   },
@@ -122,8 +176,13 @@ Page({
 
   onComposerInput(event) {
     const field = this.data.replyTarget ? "replyDraft" : "draft";
-    this.setData({ [field]: event.detail.value });
+    const value = event.detail.value;
+    this.setData({ [field]: value, canSend: Boolean(value.trim() || this.data.images.length) });
     this.saveDraft();
+  },
+
+  onComposerBlur() {
+    if (this.data.composerFocus) this.setData({ composerFocus: false });
   },
 
   keyboard(event) {
@@ -136,14 +195,17 @@ Page({
     try {
       const batch = await wx.chooseMedia({ count, mediaType: ["image"], sourceType: ["album", "camera"] });
       const images = await Promise.all(batch.tempFiles.map(file => photoAsPng(file.tempFilePath)));
-      this.setData({ images: [...this.data.images, ...images].slice(0, 3) });
+      const nextImages = [...this.data.images, ...images].slice(0, 3);
+      this.setData({ images: nextImages, canSend: Boolean(nextImages.length || (this.data.replyTarget ? this.data.replyDraft : this.data.draft).trim()) });
     } catch (error) {
       if (!String(error.errMsg || "").includes("cancel")) wx.showToast({ title: "图片读取失败，请重试", icon: "none" });
     }
   },
 
   removeImage(event) {
-    this.setData({ images: this.data.images.filter((_, index) => index !== Number(event.currentTarget.dataset.index)) });
+    const images = this.data.images.filter((_, index) => index !== Number(event.currentTarget.dataset.index));
+    const active = this.data.replyTarget ? this.data.replyDraft : this.data.draft;
+    this.setData({ images, canSend: Boolean(images.length || active.trim()) });
   },
 
   async sendComposer() {
@@ -158,6 +220,7 @@ Page({
     }
     this.setData({ sending: true });
     try {
+      const wxCode = await quietWxCode();
       const result = await api.request("discussions", {
         paperId: this.paperId,
         attemptId: this.attemptId,
@@ -167,12 +230,17 @@ Page({
         text,
         links,
         images: images.map(({ dataUri }) => ({ dataUri })),
+        ...(wxCode ? { wxCode } : {}),
         ...(replyTarget ? { parentId: replyTarget.id } : {}),
       });
       this.identity = null;
-      this.setData({ images: [], ...(replyTarget ? { replyDraft: "", replyTarget: null } : { draft: "" }) });
+      const nextDraft = replyTarget ? this.data.draft : "";
+      this.setData({ images: [], canSend: Boolean(nextDraft.trim()), composerFocus: false, ...(replyTarget ? { replyDraft: "", replyTarget: null } : { draft: "" }) });
       this.saveDraft();
       wx.hideKeyboard();
+      if (result.comment?.moderationStatus === "pending" || result.comment?.moderationStatus === "flagged") {
+        wx.showToast({ title: "已提交，审核通过后公开", icon: "none" });
+      }
       if (replyTarget) {
         await this.loadReplies(replyTarget.rootId || replyTarget.id);
         await this.load();
@@ -230,12 +298,21 @@ Page({
 
   startReply(event) {
     const { id, name, root } = event.currentTarget.dataset;
-    this.setData({ replyTarget: { id, name, rootId: root || id } });
+    this.setData({
+      replyTarget: { id, name, rootId: root || id },
+      composerFocus: true,
+      canSend: Boolean(this.data.replyDraft.trim() || this.data.images.length),
+    });
     this.saveDraft();
   },
 
   cancelReply() {
-    this.setData({ replyTarget: null, replyDraft: "", images: [] });
+    this.setData({
+      replyTarget: null,
+      replyDraft: "",
+      composerFocus: false,
+      canSend: Boolean(this.data.draft.trim() || this.data.images.length),
+    });
     this.saveDraft();
   },
 

@@ -98,11 +98,48 @@ def checked_source(path, pages=None):
     return result
 
 
-def reference_sections(booklet, count, rule):
-    sections = booklet_sections(booklet, count)
-    for section in sections:
-        section['cents'] = rule['weights'][section['id']]
-    return sections
+def select_guokao_rule(sections, count, rules):
+    counts = {s['id']: s['end'] - s['start'] + 1 for s in sections}
+    if count == 130 and counts.get('reasoning', 0) == 35:
+        return rules['city130']
+    if count == 135 and counts.get('quantity', 0) == 15 and counts.get('reasoning', 0) == 35:
+        return rules['province135']
+    if count == 135 and counts.get('quantity', 0) == 10 and counts.get('reasoning', 0) == 40:
+        return rules['mixed135']
+    if count == 120 and counts.get('reasoning', 0) == 40:
+        return rules['standard120']
+    raise ValueError(f'Unsupported paper structure for exact 100-point scoring: count={count}, sections={counts}')
+
+
+def reference_sections(booklet, count, rules):
+    raw_sections = booklet_sections(booklet, count)
+    rule = select_guokao_rule(raw_sections, count, rules)
+    sections = []
+    for section in raw_sections:
+        if section['id'] == 'reasoning' and 'reasoningSplit' in rule:
+            cursor = section['start']
+            for part in rule['reasoningSplit']:
+                end = cursor + part['count'] - 1
+                sections.append({
+                    'id': part['id'],
+                    'name': part['name'],
+                    'start': cursor,
+                    'end': end,
+                    'cents': part['cents'],
+                    'pdfPage': section['pdfPage'],
+                })
+                cursor = end + 1
+            if cursor != section['end'] + 1:
+                raise ValueError(f'Reasoning split mismatch in {booklet.name}')
+        else:
+            item = dict(section)
+            item['cents'] = rule['weights'][section['id']]
+            sections.append(item)
+    total_cents = sum((s['end'] - s['start'] + 1) * s['cents'] for s in sections)
+    if total_cents != 10000:
+        raise ValueError(f'Sections must sum to exactly 10000 cents, got {total_cents} for {booklet.name}')
+    scoring_rule = {'kind': 'reference', 'id': rule['id'], 'label': rule['label']}
+    return sections, scoring_rule
 
 
 def make_paper(paper_id, number, title, institution, project, period, variant,
@@ -149,19 +186,15 @@ def additional_papers():
                 supplement_count = max(int(n) for n in re.findall(r'--?\s*(\d+)', parts[1]))
                 supplements.append({'label': '差异题', 'answerKey': complete_groups(parts[1], supplement_count),
                                     'pdfPage': parts[0].count('\f') + 1})
-            scoring = {'kind': 'publisher', 'id': f'sihai-h2-p2-{code}',
-                       'label': '按本套卷随附分值表计分',
+            scoring = {'kind': 'reference', 'id': profile['ruleId'],
+                       'label': profile['label'],
                        'source': {'file': profile['sourceFile'], 'sha256': profile['sourceSha256']}}
             result.append(make_paper(f'sihai-2026-h2-p2-{code}-{number:02d}', number,
                 f'花生十三 · 二期{variant} · 第 {number:02d} 套', '四海',
                 '2026 下半年 · 国考行测', '二期', '副省级' if variant == '副省' else '地市级 / 行政执法类',
                 key, sections, checked_source(answer, [1]), booklet, scoring, supplements))
 
-    rule = config['referenceRule']
-    reference = {'kind': 'reference', 'id': rule['id'], 'label': rule['label'],
-                 'normalizationMaxCents': rule['normalizationMaxCents'],
-                 'rounding': 'half-up-after-total',
-                 'note': '采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。'}
+    rules = config['guokaoRules']
     base = RAW / '超格' / '2027超格公考10套卷'
     answer = next((base / '答案').glob('*.pdf'))
     for number in range(1, 11):
@@ -183,10 +216,11 @@ def additional_papers():
         booklet = one_file(base / '题本', r'套卷(\d+)_', number)
         supplements = [{'label': '附加题', 'answerKey': complete_groups(appendix[0], 5),
                         'pdfPage': page + 1}] if appendix else []
+        sections, scoring = reference_sections(booklet, count, rules)
         result.append(make_paper(f'chaoge-2027-{number:02d}', number,
             f'超格 · 2027 公考 · 第 {number:02d} 套', '超格', '2027 公考 · 行测',
-            '10套卷', f'{count}题版', key, reference_sections(booklet, count, rule),
-            checked_source(answer, [page + 1]), booklet, reference, supplements))
+            '10套卷', f'{count}题版', key, sections,
+            checked_source(answer, [page + 1]), booklet, scoring, supplements))
 
     base = RAW / '粉笔' / '2027国考极致模考6套卷'
     source = review['fenbi']
@@ -206,10 +240,11 @@ def additional_papers():
         if len(matches) != 1:
             raise ValueError(f'Fenbi booklet is ambiguous: {number}')
         booklet = matches[0]
+        sections, scoring = reference_sections(booklet, 130, rules)
         result.append(make_paper(f'fenbi-2027-guokao-{number:02d}', number,
             f'粉笔 · 国考极致模考 · 第 {number:02d} 套', '粉笔', '2027 国考 · 行测',
-            '极致模考6套卷', '130题版', key, reference_sections(booklet, 130, rule),
-            checked_source(answer, [page + 1]), booklet, reference))
+            '极致模考6套卷', '130题版', key, sections,
+            checked_source(answer, [page + 1]), booklet, scoring))
 
     base = RAW / '上岸村' / '2027上岸村公考10套卷'
     for number in range(1, 11):
@@ -241,10 +276,11 @@ def additional_papers():
             raise ValueError(f'Missing answers in {answer.name}: {sorted(set(range(1,count+1))-set(found))}')
         key = ''.join(found[n] for n in range(1, count + 1))
         label = re.sub(r'^【\d+】|[-－]解析(?:[-－]新)?$', '', answer.stem)
+        sections, scoring = reference_sections(booklet, count, rules)
         result.append(make_paper(f'shangancun-2027-{number:02d}', number,
             f'上岸村 · {label}', '上岸村', '2027 公考 · 行测', '公考10套卷', f'{count}题版',
-            key, reference_sections(booklet, count, rule), checked_source(answer, sorted(source_pages)),
-            booklet, reference))
+            key, sections, checked_source(answer, sorted(source_pages)),
+            booklet, scoring))
     return result
 
 

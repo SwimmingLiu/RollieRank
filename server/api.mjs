@@ -5,9 +5,17 @@ import { IMPORTED_PAPERS } from "../src/data/imported-papers.js";
 import { DEFAULT_RULES } from "../src/scoring.js";
 import { createMiniprogramWebService } from "./miniprogram-web.mjs";
 import { createWechatProfileService } from "./wechat-profile.mjs";
+import { createMiniappLinkService } from "./miniapp-link.mjs";
+import { createRedisCache } from "./redis-cache.mjs";
 import { createDiscussionsService } from "./discussions.mjs";
 import { createCorrectionsService } from "./corrections.mjs";
+import { createFeedbackService } from "./feedback.mjs";
 import { createPositionsService, includeSubmittedAttempt, initializeDefaultParticipation } from "./positions.mjs";
+import { createWechatModeration } from "./wechat-moderation.mjs";
+import { createAdminConsoleService, resolveAdminBasePath } from "./admin-console.mjs";
+import { createOmrService } from "./omr.mjs";
+import { createOmrGradeService } from "./omr-grade.mjs";
+import { createToolCredits } from "./tool-credits.mjs";
 import { resolveTimerLimit, timerSectionsForQuestions, validateTimingSummary } from "../src/practice-timer.js";
 import {
   gradeVersion,
@@ -73,7 +81,12 @@ const builtins = () => [
 ];
 
 // 功能模块共用一个落盘事务，答案订正与成绩变化才能同时保存和回滚。
-export async function createApi({ dataDirectory, featureFactories = [createPositionsService, createDiscussionsService, createCorrectionsService, createMiniprogramWebService, createWechatProfileService] }) {
+export async function createApi({
+  dataDirectory, moderation = createWechatModeration(), localCliBypass = false,
+  featureFactories = [createPositionsService, createDiscussionsService, createCorrectionsService, createMiniprogramWebService, createWechatProfileService],
+  toolCreditOptions,
+  feedbackOptions,
+}) {
   let saved;
   try {
     saved = JSON.parse(
@@ -88,16 +101,53 @@ export async function createApi({ dataDirectory, featureFactories = [createPosit
   // 已有本机目录不能遮住新增内置卷，也不能覆盖自定义卷、下线状态或历史提交。
   const packaged = builtins();
   const missing = packaged.filter((v) => !saved?.versions.some((prior) => prior.id === v.id));
-  let timeMetadataUpdated = false;
-  // 补已核实的卷首时限；不覆盖自定义时限、答题内容、下线状态或答案订正。
+  let metadataUpdated = false;
+  const upgradedScoringIds = new Set();
+  // 补已核实的卷首时限并同步内置卷的国考标准计分权重；保留自定义卷、下线状态和已审核的标准答案。
   let versions = saved ? [...saved.versions.map(version => {
     const source = packaged.find(paper => paper.id === version.id);
-    if (!source?.timeLimitMinutes || version.timeLimitMinutes !== undefined) return version;
-    timeMetadataUpdated = true;
-    return { ...version, timeLimitMinutes: source.timeLimitMinutes, timeLimitKind: source.timeLimitKind, timeLimitSource: source.timeLimitSource };
+    if (!source) return version;
+    let next = version;
+    if (source.timeLimitMinutes && next.timeLimitMinutes === undefined) {
+      metadataUpdated = true;
+      next = { ...next, timeLimitMinutes: source.timeLimitMinutes, timeLimitKind: source.timeLimitKind, timeLimitSource: source.timeLimitSource };
+    }
+    const sourceRuleId = source.scoringRule?.id;
+    const priorRuleId = next.scoringRule?.id;
+    const weightsDiffer = Array.isArray(next.questions) && Array.isArray(source.questions) &&
+      next.questions.length === source.questions.length &&
+      next.questions.some((q, idx) => q.cents !== source.questions[idx].cents || q.typeId !== source.questions[idx].typeId);
+    if (sourceRuleId && (priorRuleId !== sourceRuleId || weightsDiffer)) {
+      metadataUpdated = true;
+      upgradedScoringIds.add(next.id);
+      next = {
+        ...next,
+        scoringRule: structuredClone(source.scoringRule),
+        questions: source.questions.map((q, idx) => ({
+          ...q,
+          correctAnswer: next.questions[idx]?.correctAnswer ?? q.correctAnswer,
+        })),
+      };
+    }
+    return next;
   }), ...missing] : packaged;
   let audit = saved?.audit ?? [];
   let receipts = saved?.receipts ?? {};
+  if (saved && upgradedScoringIds.size) {
+    const versionMap = new Map(versions.map(v => [v.id, v]));
+    for (const [key, receipt] of Object.entries(receipts)) {
+      if (!upgradedScoringIds.has(receipt?.versionId) || !Array.isArray(receipt?.answers)) continue;
+      const version = versionMap.get(receipt.versionId);
+      if (!version || receipt.answers.length !== version.questions.length) continue;
+      const report = gradeVersion(version, receipt.answers);
+      receipts[key] = {
+        ...receipt,
+        report,
+        ...(version.scoringRule ? { scoringRule: structuredClone(version.scoringRule) } : {}),
+      };
+      metadataUpdated = true;
+    }
+  }
   let features = saved?.features ?? {};
   let queue = Promise.resolve();
   const persist = async () => {
@@ -108,7 +158,7 @@ export async function createApi({ dataDirectory, featureFactories = [createPosit
     await writeFile(temp, content, { mode: 0o600 });
     await rename(temp, new URL("catalog.json", dataDirectory));
   };
-  if (saved && (missing.length || timeMetadataUpdated)) await persist();
+  if (saved && (missing.length || metadataUpdated)) await persist();
   // 文件写入失败时同步回滚内存；同一提交的并发重试必须等到前一次写入完成。
   const mutate = (operation) => {
     const task = queue
@@ -142,13 +192,75 @@ export async function createApi({ dataDirectory, featureFactories = [createPosit
   if (initializeDefaultParticipation(readCatalog())) await persist();
   const mutateCatalog = (operation) => mutate(() => operation(readCatalog()));
   const services = [];
-  for (const factory of featureFactories)
-    services.push(await factory({ readCatalog, mutateCatalog, dataDirectory }));
+  // 小程序链接缓存独立于业务数据：Redis 不可用时自动降级为进程内缓存。
+  const linkCache = await createRedisCache();
+  // 答题卡识别是纯计算：不进落盘事务，识别结果按图片摘要缓存，重复请求不重复计算。
+  const omrService = createOmrService();
+  services.push(await omrService);
+  services.push(await createOmrGradeService({ readCatalog }));
+  const toolCredits = createToolCredits({ readCatalog, mutateCatalog }, toolCreditOptions);
+  services.push(toolCredits.handle);
+  const flushInviteUses = () => toolCredits.flushInviteUses().catch(() => {
+    // 正式答卷已持久化，奖励事件在服务重启或下次提交时继续处理。
+  });
+  await flushInviteUses();
+  const featureContext = { readCatalog, mutateCatalog, dataDirectory, cache: linkCache, moderation, localCliBypass };
+  const feedbackService = createFeedbackService(featureContext, feedbackOptions);
+  services.push(feedbackService);
+  for (const factory of [...featureFactories, createMiniappLinkService])
+    services.push(await factory({ ...featureContext, billing: toolCredits.billing }));
+  services.push(createAdminConsoleService({ ...featureContext, toolCredits, feedbackService }));
+  const adminApiPrefix = `${resolveAdminBasePath()}/api/`;
   return async (request, response, pathname) => {
-    if (!pathname.startsWith("/api/")) return false;
+    if (!pathname.startsWith("/api/") && !pathname.startsWith(adminApiPrefix)) return false;
     try {
       if (request.method === "GET") await queue.catch(() => {});
       const query = new URL(request.url, "http://localhost").searchParams;
+      // 微信内容安全异步回调使用 GET 验签或 POST（JSON/XML），不走浏览器 JSON/Origin 校验。
+      if (pathname === "/api/wechat/sec-callback") {
+        const signature = query.get("signature") || "";
+        const timestamp = query.get("timestamp") || "";
+        const nonce = query.get("nonce") || "";
+        if (!moderation.verifyCallbackSignature({ signature, timestamp, nonce })) {
+          send(response, 403, { error: "微信回调签名校验失败。" });
+          return true;
+        }
+        if (request.method === "GET") {
+          const echostr = query.get("echostr") || "";
+          response.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" });
+          response.end(echostr);
+          return true;
+        }
+        if (request.method === "POST") {
+          const rawChunks = [];
+          let rawBytes = 0;
+          for await (const chunk of request) {
+            const buf = Buffer.from(chunk);
+            rawBytes += buf.length;
+            if (rawBytes > 256 * 1024) {
+              send(response, 413, { error: "回调内容过大。" });
+              return true;
+            }
+            rawChunks.push(buf);
+          }
+          const raw = Buffer.concat(rawChunks).toString("utf8");
+          if (await toolCredits.handleWechatPaymentPush(raw, response)) return true;
+          const payload = moderation.parseCallbackBody(raw);
+          if (payload?.event === "wxa_media_check" && payload.traceId) {
+            for (const service of services) {
+              if (typeof service.applyMediaCheckResult === "function") {
+                const handled = await service.applyMediaCheckResult(payload);
+                if (handled) break;
+              }
+            }
+          }
+          response.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" });
+          response.end("success");
+          return true;
+        }
+        send(response, 405, { error: "不支持的请求方法。" });
+        return true;
+      }
       const dispatchFeatures = async (input) => {
         for (const service of services)
           if (await service({ request, response, pathname, method: request.method,
@@ -198,9 +310,11 @@ export async function createApi({ dataDirectory, featureFactories = [createPosit
       }
       const chunks = [];
       let bodyBytes = 0;
-      // 音频和图片需允许有界的媒体请求，其余接口继续保持原来的 1 MB 限额。
-      const bodyLimit = (pathname.startsWith("/api/discussions") || pathname === "/api/miniprogram-web/poster")
-        ? 8 * 1024 * 1024 : 1024 * 1024;
+      // 音频、图片和答题卡拍照需允许有界的媒体请求，其余接口继续保持原来的 1 MB 限额。
+      const bodyLimit = pathname === "/api/omr/recognize"
+        ? 17 * 1024 * 1024
+        : (pathname.startsWith("/api/discussions") || pathname === "/api/miniprogram-web/poster")
+          ? 8 * 1024 * 1024 : 1024 * 1024;
       for await (const chunk of request) {
         // 逐块转字符串会损坏跨块的中文字符；先按字节计数，完整接收后再解码。
         const buffer = Buffer.from(chunk);
@@ -255,6 +369,7 @@ export async function createApi({ dataDirectory, featureFactories = [createPosit
       }
       if (pathname === "/api/submit" || pathname === "/api/sample") {
         const isSample = pathname === "/api/sample";
+        const invitedAccountId = isSample ? null : await toolCredits.invitedAccount(request, input.guestId);
         const createAttempt = () => {
           let version = versions.find((v) => v.id === input.versionId);
           if (!version)
@@ -329,6 +444,7 @@ export async function createApi({ dataDirectory, featureFactories = [createPosit
             // 上榜与计分在同一事务保存，避免交卷成功但榜单漏记或重复加入。
             includeSubmittedAttempt(readCatalog(), { guestId: input.guestId, attempt,
               ...(typeof input.name === "string" ? { name: input.name } : {}) });
+            toolCredits.stageInviteUse(invitedAccountId, key, attempt);
           }
           return attempt;
         };
@@ -336,6 +452,7 @@ export async function createApi({ dataDirectory, featureFactories = [createPosit
         const attempt = isSample
           ? createAttempt()
           : await mutate(createAttempt);
+        if (!isSample) await flushInviteUses();
         send(response, 200, attempt);
         return true;
       }
@@ -457,10 +574,13 @@ export async function createApi({ dataDirectory, featureFactories = [createPosit
       const message = error.code
         ? "本机数据保存失败，请检查磁盘空间后重试，原答卷仍保留。"
         : error.message;
-      // 授权审核等模块需保留 401/403/409 状态，不能把权限和冲突统一改成输入错误。
+      // 授权审核等模块需保留 401/403/409/429 状态，不能把权限和限流统一改成输入错误。
       const status = Number.isInteger(error.statusCode) && error.statusCode >= 400 &&
         error.statusCode <= 599 ? error.statusCode : 400;
-      send(response, status, { error: message });
+      if (status === 429 && Number.isInteger(error.retryAfterSeconds)) {
+        response.setHeader("Retry-After", String(error.retryAfterSeconds));
+      }
+      send(response, status, { error: message, ...(error.errorId ? { errorId: error.errorId } : {}) });
     }
     return true;
   };

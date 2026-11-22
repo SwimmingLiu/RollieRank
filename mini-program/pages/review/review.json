@@ -3,5 +3,6 @@
     "rr-nav": "/components/rr-nav/rr-nav",
     "rr-option-sheet": "/components/rr-option-sheet/rr-option-sheet"
   },
-  "navigationStyle": "custom"
+  "navigationStyle": "custom",
+  "disableScroll": true
 }

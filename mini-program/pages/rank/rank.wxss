@@ -7,10 +7,10 @@
 .rank__dimension { display: flex; align-items: center; justify-content: center; flex: 1; width: auto !important; padding: 0 5px; min-width: 39px; min-height: 44px; border-radius: 10px; color: #71717a; font-size: 11px; white-space: nowrap; }
 .rank__dimension--on { color: #fffaf0; background: #292a24; font-weight: 600; }
 .rank__scope { display: flex; padding: 3px; gap: 3px; background: #ebe4d9; border-radius: 12px; }
-.rank__scope-tab { display: flex; align-items: center; justify-content: center; flex: 1; width: 0 !important; min-height: 44px; border-radius: 9px; }
-.rank__scope-tab--on { background: #fffdf8; color: #2d2922; }
-.rank__scope-tab image, .rank__count image { width: 17px; height: 17px; opacity: .7; }
-.rank__position { margin-top: -5px; background: #fcf8ef; min-height: 58px; }
+.rank__scope-tab { display: flex; align-items: center; justify-content: center; gap: 5px; flex: 1; width: 0 !important; min-height: 44px; border-radius: 9px; color: #7b6c58; font-size: 12px; white-space: nowrap; }
+.rank__scope-tab--on { background: #fffdf8; color: #2d2922; font-weight: 600; }
+.rank__scope-tab image, .rank__count image { width: 15px; height: 15px; opacity: .72; }
+.rank__position { width: 100% !important; margin-top: -5px; background: #fcf8ef; min-height: 58px; text-align: left; }
 .rank__position-title { font-size: 13px; color: #4c4132; font-weight: 650; }
 .rank__muted { font-size: 10px; line-height: 1.4; color: #96836a; }
 .rank__percentile { display: flex; align-items: center; gap: 4px; color: #96836a; font-size: 11px; }

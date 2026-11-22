@@ -1,13 +1,15 @@
 <import src="../../templates/startup-card.wxml" />
-<page-meta page-style="{{timerOpen ? 'overflow: hidden;' : ''}}" />
+<page-meta page-style="overflow: hidden;" />
 <view wx:if="{{openingWeb}}" class="screen screen--plain">
   <rr-nav title="卷卷小榜" logo="{{asset.logo}}" back="{{false}}" />
   <view class="rr-startup-screen"><template is="startup-card" /></view>
 </view>
-<view wx:else class="screen">
+<view wx:else class="screen" bindtouchstart="startTabSwipe" bindtouchmove="moveTabSwipe" bindtouchend="endTabSwipe" bindtouchcancel="cancelTabSwipe">
   <rr-nav title="卷卷小榜" logo="{{asset.logo}}" back="{{false}}" />
 
-  <view class="home__body">
+  <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}" refresher-enabled="{{true}}" refresher-triggered="{{refreshing}}" refresher-background="#fcf8f1" bindrefresherrefresh="onRefresherRefresh">
+  <view class="page-scroll__body">
+  <view class="home__body {{tabSwiping ? 'home__body--swiping' : ''}}" style="{{tabSwipeOffset ? 'transform: translateX(' + tabSwipeOffset + 'px);' : ''}}">
     <button wx:if="{{timerStatus !== 'ready'}}" class="home__timer" bindtap="openTimer" hover-class="press"
       aria-label="{{timerStatus === 'finished' ? '查看计时记录' : timerStatus === 'paused' ? '继续已暂停的计时' : '打开进行中的计时'}}">
       <view class="home__timer-icon"><image src="{{uiBase}}/clock-ochre.svg" mode="aspectFit" /></view>
@@ -90,6 +92,8 @@
       <view class="home__timer-open"><image src="{{uiBase}}/play-light.svg" mode="aspectFit" /></view>
     </button>
   </view>
+  </view>
+  </scroll-view>
   <rr-tabbar active="home" />
 </view>
 <rr-timer-sheet wx:if="{{timerOpen}}" bind:change="refreshTimer" bind:dismiss="closeTimer" bind:entered="closeTimer" />

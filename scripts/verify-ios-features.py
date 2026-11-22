@@ -95,7 +95,8 @@ def check_choice_sheet(frame, title):
     panel = frame.get_by_role("dialog", name=title, exact=True)
     expect(panel).to_be_visible()
     expect(panel.get_by_role("heading")).to_have_count(0)
-    expect(panel.locator("#sheet-close,[data-slot='sheet-handle'],small")).to_have_count(0)
+    expect(panel.locator("#sheet-close,small")).to_have_count(0)
+    expect(panel.locator("[data-slot='sheet-handle']")).to_have_count(1)
     expect(panel.locator("[aria-pressed='true']")).to_have_count(1)
     body = panel.locator("[data-slot='bottom-sheet-body']")
     assert body.evaluate("node => getComputedStyle(node).scrollbarWidth") == "none"

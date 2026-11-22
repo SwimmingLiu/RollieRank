@@ -23,14 +23,14 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
@@ -44,7 +44,7 @@ export const IMPORTED_PAPERS = [
         "name": "数量关系",
         "start": 66,
         "end": 75,
-        "cents": 80
+        "cents": 100
       },
       {
         "id": "graphic",
@@ -67,7 +67,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 96,
         "end": 100,
-        "cents": 70,
+        "cents": 80,
         "pdfPage": 35
       },
       {
@@ -75,7 +75,7 @@ export const IMPORTED_PAPERS = [
         "name": "逻辑判断",
         "start": 101,
         "end": 110,
-        "cents": 80,
+        "cents": 85,
         "pdfPage": 35
       },
       {
@@ -83,13 +83,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 111,
         "end": 130,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-city",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
         "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -139,14 +139,14 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
@@ -160,7 +160,7 @@ export const IMPORTED_PAPERS = [
         "name": "数量关系",
         "start": 66,
         "end": 75,
-        "cents": 80
+        "cents": 100
       },
       {
         "id": "graphic",
@@ -183,7 +183,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 96,
         "end": 100,
-        "cents": 70,
+        "cents": 80,
         "pdfPage": 32
       },
       {
@@ -191,7 +191,7 @@ export const IMPORTED_PAPERS = [
         "name": "逻辑判断",
         "start": 101,
         "end": 110,
-        "cents": 80,
+        "cents": 85,
         "pdfPage": 32
       },
       {
@@ -199,13 +199,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 111,
         "end": 130,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-city",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
         "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -255,14 +255,14 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
@@ -276,7 +276,7 @@ export const IMPORTED_PAPERS = [
         "name": "数量关系",
         "start": 66,
         "end": 75,
-        "cents": 80
+        "cents": 100
       },
       {
         "id": "graphic",
@@ -299,7 +299,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 96,
         "end": 100,
-        "cents": 70,
+        "cents": 80,
         "pdfPage": 30
       },
       {
@@ -307,7 +307,7 @@ export const IMPORTED_PAPERS = [
         "name": "逻辑判断",
         "start": 101,
         "end": 110,
-        "cents": 80,
+        "cents": 85,
         "pdfPage": 31
       },
       {
@@ -315,13 +315,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 111,
         "end": 130,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-city",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
         "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -371,14 +371,14 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
@@ -392,7 +392,7 @@ export const IMPORTED_PAPERS = [
         "name": "数量关系",
         "start": 66,
         "end": 75,
-        "cents": 80
+        "cents": 100
       },
       {
         "id": "graphic",
@@ -415,7 +415,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 96,
         "end": 100,
-        "cents": 70,
+        "cents": 80,
         "pdfPage": 31
       },
       {
@@ -423,7 +423,7 @@ export const IMPORTED_PAPERS = [
         "name": "逻辑判断",
         "start": 101,
         "end": 110,
-        "cents": 80,
+        "cents": 85,
         "pdfPage": 32
       },
       {
@@ -431,13 +431,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 111,
         "end": 130,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-city",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
         "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -487,14 +487,14 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
@@ -508,7 +508,7 @@ export const IMPORTED_PAPERS = [
         "name": "数量关系",
         "start": 66,
         "end": 75,
-        "cents": 80
+        "cents": 100
       },
       {
         "id": "graphic",
@@ -531,7 +531,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 96,
         "end": 100,
-        "cents": 70,
+        "cents": 80,
         "pdfPage": 32
       },
       {
@@ -539,7 +539,7 @@ export const IMPORTED_PAPERS = [
         "name": "逻辑判断",
         "start": 101,
         "end": 110,
-        "cents": 80,
+        "cents": 85,
         "pdfPage": 32
       },
       {
@@ -547,13 +547,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 111,
         "end": 130,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-city",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
         "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -603,14 +603,14 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
@@ -624,7 +624,7 @@ export const IMPORTED_PAPERS = [
         "name": "数量关系",
         "start": 66,
         "end": 75,
-        "cents": 80
+        "cents": 100
       },
       {
         "id": "graphic",
@@ -647,7 +647,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 96,
         "end": 100,
-        "cents": 70,
+        "cents": 80,
         "pdfPage": 31
       },
       {
@@ -655,7 +655,7 @@ export const IMPORTED_PAPERS = [
         "name": "逻辑判断",
         "start": 101,
         "end": 110,
-        "cents": 80,
+        "cents": 85,
         "pdfPage": 32
       },
       {
@@ -663,13 +663,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 111,
         "end": 130,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-city",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
         "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -719,14 +719,14 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
@@ -740,7 +740,7 @@ export const IMPORTED_PAPERS = [
         "name": "数量关系",
         "start": 66,
         "end": 75,
-        "cents": 80
+        "cents": 100
       },
       {
         "id": "graphic",
@@ -763,7 +763,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 96,
         "end": 100,
-        "cents": 70,
+        "cents": 80,
         "pdfPage": 32
       },
       {
@@ -771,7 +771,7 @@ export const IMPORTED_PAPERS = [
         "name": "逻辑判断",
         "start": 101,
         "end": 110,
-        "cents": 80,
+        "cents": 85,
         "pdfPage": 33
       },
       {
@@ -779,13 +779,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 111,
         "end": 130,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-city",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
         "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -835,14 +835,14 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
@@ -856,7 +856,7 @@ export const IMPORTED_PAPERS = [
         "name": "数量关系",
         "start": 66,
         "end": 75,
-        "cents": 80
+        "cents": 100
       },
       {
         "id": "graphic",
@@ -879,7 +879,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 96,
         "end": 100,
-        "cents": 70,
+        "cents": 80,
         "pdfPage": 30
       },
       {
@@ -887,7 +887,7 @@ export const IMPORTED_PAPERS = [
         "name": "逻辑判断",
         "start": 101,
         "end": 110,
-        "cents": 80,
+        "cents": 85,
         "pdfPage": 31
       },
       {
@@ -895,13 +895,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 111,
         "end": 130,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-city",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
         "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -951,14 +951,14 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
@@ -972,7 +972,7 @@ export const IMPORTED_PAPERS = [
         "name": "数量关系",
         "start": 66,
         "end": 75,
-        "cents": 80
+        "cents": 100
       },
       {
         "id": "graphic",
@@ -995,7 +995,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 96,
         "end": 100,
-        "cents": 70,
+        "cents": 80,
         "pdfPage": 31
       },
       {
@@ -1003,7 +1003,7 @@ export const IMPORTED_PAPERS = [
         "name": "逻辑判断",
         "start": 101,
         "end": 110,
-        "cents": 80,
+        "cents": 85,
         "pdfPage": 32
       },
       {
@@ -1011,13 +1011,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 111,
         "end": 130,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-city",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
         "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -1067,14 +1067,14 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
@@ -1088,7 +1088,7 @@ export const IMPORTED_PAPERS = [
         "name": "数量关系",
         "start": 66,
         "end": 75,
-        "cents": 80
+        "cents": 100
       },
       {
         "id": "graphic",
@@ -1111,7 +1111,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 96,
         "end": 100,
-        "cents": 70,
+        "cents": 80,
         "pdfPage": 33
       },
       {
@@ -1119,7 +1119,7 @@ export const IMPORTED_PAPERS = [
         "name": "逻辑判断",
         "start": 101,
         "end": 110,
-        "cents": 80,
+        "cents": 85,
         "pdfPage": 34
       },
       {
@@ -1127,13 +1127,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 111,
         "end": 130,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-city",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
         "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -1183,14 +1183,14 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
@@ -1204,7 +1204,7 @@ export const IMPORTED_PAPERS = [
         "name": "数量关系",
         "start": 66,
         "end": 75,
-        "cents": 80
+        "cents": 100
       },
       {
         "id": "graphic",
@@ -1227,7 +1227,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 96,
         "end": 100,
-        "cents": 70,
+        "cents": 80,
         "pdfPage": 33
       },
       {
@@ -1235,7 +1235,7 @@ export const IMPORTED_PAPERS = [
         "name": "逻辑判断",
         "start": 101,
         "end": 110,
-        "cents": 80,
+        "cents": 85,
         "pdfPage": 34
       },
       {
@@ -1243,13 +1243,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 111,
         "end": 130,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-city",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
         "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -1299,14 +1299,14 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
@@ -1320,7 +1320,7 @@ export const IMPORTED_PAPERS = [
         "name": "数量关系",
         "start": 66,
         "end": 75,
-        "cents": 80
+        "cents": 100
       },
       {
         "id": "graphic",
@@ -1343,7 +1343,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 96,
         "end": 100,
-        "cents": 70,
+        "cents": 80,
         "pdfPage": 30
       },
       {
@@ -1351,7 +1351,7 @@ export const IMPORTED_PAPERS = [
         "name": "逻辑判断",
         "start": 101,
         "end": 110,
-        "cents": 80,
+        "cents": 85,
         "pdfPage": 31
       },
       {
@@ -1359,13 +1359,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 111,
         "end": 130,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-city",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/地市/各模块分值（地市卷）.png",
         "sha256": "9b5a1b0ece836342abce865f71fc031fa04f10eaaa8482bdd1f2a5242a970cff"
@@ -1415,28 +1415,28 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
         "name": "言语理解",
         "start": 36,
         "end": 65,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "quantity",
         "name": "数量关系",
         "start": 66,
         "end": 80,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "graphic",
@@ -1459,7 +1459,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 101,
         "end": 105,
-        "cents": 80,
+        "cents": 50,
         "pdfPage": 35
       },
       {
@@ -1475,13 +1475,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 116,
         "end": 135,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-province",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-province-135",
+      "label": "国考135题（副省级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
         "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -1531,28 +1531,28 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
         "name": "言语理解",
         "start": 36,
         "end": 65,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "quantity",
         "name": "数量关系",
         "start": 66,
         "end": 80,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "graphic",
@@ -1575,7 +1575,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 101,
         "end": 105,
-        "cents": 80,
+        "cents": 50,
         "pdfPage": 33
       },
       {
@@ -1591,13 +1591,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 116,
         "end": 135,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-province",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-province-135",
+      "label": "国考135题（副省级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
         "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -1647,28 +1647,28 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
         "name": "言语理解",
         "start": 36,
         "end": 65,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "quantity",
         "name": "数量关系",
         "start": 66,
         "end": 80,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "graphic",
@@ -1691,7 +1691,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 101,
         "end": 105,
-        "cents": 80,
+        "cents": 50,
         "pdfPage": 31
       },
       {
@@ -1707,13 +1707,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 116,
         "end": 135,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-province",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-province-135",
+      "label": "国考135题（副省级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
         "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -1763,28 +1763,28 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
         "name": "言语理解",
         "start": 36,
         "end": 65,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "quantity",
         "name": "数量关系",
         "start": 66,
         "end": 80,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "graphic",
@@ -1807,7 +1807,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 101,
         "end": 105,
-        "cents": 80,
+        "cents": 50,
         "pdfPage": 33
       },
       {
@@ -1823,13 +1823,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 116,
         "end": 135,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-province",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-province-135",
+      "label": "国考135题（副省级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
         "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -1879,28 +1879,28 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
         "name": "言语理解",
         "start": 36,
         "end": 65,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "quantity",
         "name": "数量关系",
         "start": 66,
         "end": 80,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "graphic",
@@ -1923,7 +1923,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 101,
         "end": 105,
-        "cents": 80,
+        "cents": 50,
         "pdfPage": 36
       },
       {
@@ -1939,13 +1939,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 116,
         "end": 135,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-province",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-province-135",
+      "label": "国考135题（副省级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
         "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -1995,28 +1995,28 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
         "name": "言语理解",
         "start": 36,
         "end": 65,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "quantity",
         "name": "数量关系",
         "start": 66,
         "end": 80,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "graphic",
@@ -2039,7 +2039,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 101,
         "end": 105,
-        "cents": 80,
+        "cents": 50,
         "pdfPage": 31
       },
       {
@@ -2055,13 +2055,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 116,
         "end": 135,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-province",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-province-135",
+      "label": "国考135题（副省级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
         "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -2111,28 +2111,28 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
         "name": "言语理解",
         "start": 36,
         "end": 65,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "quantity",
         "name": "数量关系",
         "start": 66,
         "end": 80,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "graphic",
@@ -2155,7 +2155,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 101,
         "end": 105,
-        "cents": 80,
+        "cents": 50,
         "pdfPage": 34
       },
       {
@@ -2171,13 +2171,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 116,
         "end": 135,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-province",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-province-135",
+      "label": "国考135题（副省级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
         "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -2227,28 +2227,28 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
         "name": "言语理解",
         "start": 36,
         "end": 65,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "quantity",
         "name": "数量关系",
         "start": 66,
         "end": 80,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "graphic",
@@ -2271,7 +2271,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 101,
         "end": 105,
-        "cents": 80,
+        "cents": 50,
         "pdfPage": 32
       },
       {
@@ -2287,13 +2287,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 116,
         "end": 135,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-province",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-province-135",
+      "label": "国考135题（副省级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
         "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -2343,28 +2343,28 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
         "name": "言语理解",
         "start": 36,
         "end": 65,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "quantity",
         "name": "数量关系",
         "start": 66,
         "end": 80,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "graphic",
@@ -2387,7 +2387,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 101,
         "end": 105,
-        "cents": 80,
+        "cents": 50,
         "pdfPage": 32
       },
       {
@@ -2403,13 +2403,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 116,
         "end": 135,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-province",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-province-135",
+      "label": "国考135题（副省级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
         "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -2459,28 +2459,28 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
         "name": "言语理解",
         "start": 36,
         "end": 65,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "quantity",
         "name": "数量关系",
         "start": 66,
         "end": 80,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "graphic",
@@ -2503,7 +2503,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 101,
         "end": 105,
-        "cents": 80,
+        "cents": 50,
         "pdfPage": 33
       },
       {
@@ -2519,13 +2519,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 116,
         "end": 135,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-province",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-province-135",
+      "label": "国考135题（副省级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
         "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -2575,28 +2575,28 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
         "name": "言语理解",
         "start": 36,
         "end": 65,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "quantity",
         "name": "数量关系",
         "start": 66,
         "end": 80,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "graphic",
@@ -2619,7 +2619,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 101,
         "end": 105,
-        "cents": 80,
+        "cents": 50,
         "pdfPage": 35
       },
       {
@@ -2635,13 +2635,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 116,
         "end": 135,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-province",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-province-135",
+      "label": "国考135题（副省级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
         "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -2691,28 +2691,28 @@ export const IMPORTED_PAPERS = [
         "name": "政治理论",
         "start": 1,
         "end": 20,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "common",
         "name": "常识判断",
         "start": 21,
         "end": 35,
-        "cents": 70
+        "cents": 50
       },
       {
         "id": "language",
         "name": "言语理解",
         "start": 36,
         "end": 65,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "quantity",
         "name": "数量关系",
         "start": 66,
         "end": 80,
-        "cents": 70
+        "cents": 80
       },
       {
         "id": "graphic",
@@ -2735,7 +2735,7 @@ export const IMPORTED_PAPERS = [
         "name": "类比推理",
         "start": 101,
         "end": 105,
-        "cents": 80,
+        "cents": 50,
         "pdfPage": 32
       },
       {
@@ -2751,13 +2751,13 @@ export const IMPORTED_PAPERS = [
         "name": "资料分析",
         "start": 116,
         "end": 135,
-        "cents": 80
+        "cents": 100
       }
     ],
     "scoringRule": {
-      "kind": "publisher",
-      "id": "sihai-h2-p2-province",
-      "label": "按本套卷随附分值表计分",
+      "kind": "reference",
+      "id": "guokao-province-135",
+      "label": "国考135题（副省级）计分规则",
       "source": {
         "file": "花生/2026下半年二期花生十三行测套题/副省/各模块分值（副省卷）.png",
         "sha256": "14e59eefc7804fcce466fc09236384a90ceb5a71f339237bb78add02016988a2"
@@ -2835,12 +2835,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 28,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 80,
+        "pdfPage": 28
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 80,
+        "pdfPage": 28
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 100,
+        "cents": 80,
+        "pdfPage": 28
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 101,
         "end": 110,
-        "cents": 80
+        "cents": 85,
+        "pdfPage": 28
       },
       {
         "id": "data",
@@ -2853,11 +2877,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则"
     },
     "sources": {
       "answers": {
@@ -2931,12 +2952,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 28,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 80,
+        "pdfPage": 28
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 80,
+        "pdfPage": 28
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 100,
+        "cents": 80,
+        "pdfPage": 28
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 101,
         "end": 110,
-        "cents": 80
+        "cents": 85,
+        "pdfPage": 28
       },
       {
         "id": "data",
@@ -2949,11 +2994,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则"
     },
     "sources": {
       "answers": {
@@ -3027,12 +3069,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 28,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 80,
+        "pdfPage": 28
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 80,
+        "pdfPage": 28
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 100,
+        "cents": 80,
+        "pdfPage": 28
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 101,
         "end": 110,
-        "cents": 80
+        "cents": 85,
+        "pdfPage": 28
       },
       {
         "id": "data",
@@ -3045,11 +3111,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则"
     },
     "sources": {
       "answers": {
@@ -3123,12 +3186,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 28,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 80,
+        "pdfPage": 28
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 80,
+        "pdfPage": 28
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 100,
+        "cents": 80,
+        "pdfPage": 28
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 101,
         "end": 110,
-        "cents": 80
+        "cents": 85,
+        "pdfPage": 28
       },
       {
         "id": "data",
@@ -3141,11 +3228,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则"
     },
     "sources": {
       "answers": {
@@ -3219,12 +3303,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 30,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 80,
+        "pdfPage": 30
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 80,
+        "pdfPage": 30
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 100,
+        "cents": 80,
+        "pdfPage": 30
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 101,
         "end": 110,
-        "cents": 80
+        "cents": 85,
+        "pdfPage": 30
       },
       {
         "id": "data",
@@ -3237,11 +3345,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则"
     },
     "sources": {
       "answers": {
@@ -3315,12 +3420,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 28,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 80,
+        "pdfPage": 28
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 80,
+        "pdfPage": 28
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 100,
+        "cents": 80,
+        "pdfPage": 28
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 101,
         "end": 110,
-        "cents": 80
+        "cents": 85,
+        "pdfPage": 28
       },
       {
         "id": "data",
@@ -3333,11 +3462,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则"
     },
     "sources": {
       "answers": {
@@ -3416,7 +3542,7 @@ export const IMPORTED_PAPERS = [
         "pdfPage": 23,
         "start": 61,
         "end": 100,
-        "cents": 80
+        "cents": 90
       },
       {
         "id": "data",
@@ -3429,11 +3555,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "liankao-120",
+      "label": "行测120题计分规则"
     },
     "sources": {
       "answers": {
@@ -3506,7 +3629,7 @@ export const IMPORTED_PAPERS = [
         "pdfPage": 24,
         "start": 61,
         "end": 100,
-        "cents": 80
+        "cents": 90
       },
       {
         "id": "data",
@@ -3519,11 +3642,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "liankao-120",
+      "label": "行测120题计分规则"
     },
     "sources": {
       "answers": {
@@ -3596,7 +3716,7 @@ export const IMPORTED_PAPERS = [
         "pdfPage": 25,
         "start": 61,
         "end": 100,
-        "cents": 80
+        "cents": 90
       },
       {
         "id": "data",
@@ -3609,11 +3729,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "liankao-120",
+      "label": "行测120题计分规则"
     },
     "sources": {
       "answers": {
@@ -3686,7 +3803,7 @@ export const IMPORTED_PAPERS = [
         "pdfPage": 24,
         "start": 61,
         "end": 100,
-        "cents": 80
+        "cents": 90
       },
       {
         "id": "data",
@@ -3699,11 +3816,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "liankao-120",
+      "label": "行测120题计分规则"
     },
     "sources": {
       "answers": {
@@ -3771,12 +3885,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 26,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 80,
+        "pdfPage": 26
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 80,
+        "pdfPage": 26
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 100,
+        "cents": 80,
+        "pdfPage": 26
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 101,
         "end": 110,
-        "cents": 80
+        "cents": 85,
+        "pdfPage": 26
       },
       {
         "id": "data",
@@ -3789,11 +3927,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则"
     },
     "sources": {
       "answers": {
@@ -3861,12 +3996,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 26,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 80,
+        "pdfPage": 26
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 80,
+        "pdfPage": 26
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 100,
+        "cents": 80,
+        "pdfPage": 26
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 101,
         "end": 110,
-        "cents": 80
+        "cents": 85,
+        "pdfPage": 26
       },
       {
         "id": "data",
@@ -3879,11 +4038,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则"
     },
     "sources": {
       "answers": {
@@ -3951,12 +4107,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 26,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 80,
+        "pdfPage": 26
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 80,
+        "pdfPage": 26
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 100,
+        "cents": 80,
+        "pdfPage": 26
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 101,
         "end": 110,
-        "cents": 80
+        "cents": 85,
+        "pdfPage": 26
       },
       {
         "id": "data",
@@ -3969,11 +4149,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则"
     },
     "sources": {
       "answers": {
@@ -4041,12 +4218,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 28,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 80,
+        "pdfPage": 28
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 80,
+        "pdfPage": 28
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 100,
+        "cents": 80,
+        "pdfPage": 28
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 101,
         "end": 110,
-        "cents": 80
+        "cents": 85,
+        "pdfPage": 28
       },
       {
         "id": "data",
@@ -4059,11 +4260,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则"
     },
     "sources": {
       "answers": {
@@ -4131,12 +4329,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 26,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 80,
+        "pdfPage": 26
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 80,
+        "pdfPage": 26
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 100,
+        "cents": 80,
+        "pdfPage": 26
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 101,
         "end": 110,
-        "cents": 80
+        "cents": 85,
+        "pdfPage": 26
       },
       {
         "id": "data",
@@ -4149,11 +4371,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则"
     },
     "sources": {
       "answers": {
@@ -4221,12 +4440,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 27,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 80,
+        "pdfPage": 27
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 80,
+        "pdfPage": 27
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 100,
+        "cents": 80,
+        "pdfPage": 27
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 101,
         "end": 110,
-        "cents": 80
+        "cents": 85,
+        "pdfPage": 27
       },
       {
         "id": "data",
@@ -4239,11 +4482,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则"
     },
     "sources": {
       "answers": {
@@ -4311,12 +4551,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 27,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 80,
+        "pdfPage": 27
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 80,
+        "pdfPage": 27
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 100,
+        "cents": 80,
+        "pdfPage": 27
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 101,
         "end": 110,
-        "cents": 80
+        "cents": 85,
+        "pdfPage": 27
       },
       {
         "id": "data",
@@ -4329,11 +4593,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则"
     },
     "sources": {
       "answers": {
@@ -4454,12 +4715,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 24,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 80,
+        "pdfPage": 24
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 80,
+        "pdfPage": 24
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 100,
+        "cents": 80,
+        "pdfPage": 24
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 101,
         "end": 110,
-        "cents": 80
+        "cents": 85,
+        "pdfPage": 24
       },
       {
         "id": "data",
@@ -4472,11 +4757,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则"
     },
     "sources": {
       "answers": {
@@ -4598,12 +4880,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 27,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 70,
+        "pdfPage": 27
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 70,
+        "pdfPage": 27
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 105,
+        "cents": 65,
+        "pdfPage": 27
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 106,
         "end": 115,
-        "cents": 80
+        "cents": 80,
+        "pdfPage": 27
       },
       {
         "id": "data",
@@ -4616,11 +4922,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-mixed-135",
+      "label": "国考135题（40判断）计分规则"
     },
     "sources": {
       "answers": {
@@ -4745,12 +5048,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 26,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 70,
+        "pdfPage": 26
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 70,
+        "pdfPage": 26
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 105,
+        "cents": 65,
+        "pdfPage": 26
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 106,
         "end": 115,
-        "cents": 80
+        "cents": 80,
+        "pdfPage": 26
       },
       {
         "id": "data",
@@ -4763,11 +5090,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-mixed-135",
+      "label": "国考135题（40判断）计分规则"
     },
     "sources": {
       "answers": {
@@ -4885,12 +5209,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 26,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 70,
+        "pdfPage": 26
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 70,
+        "pdfPage": 26
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 105,
+        "cents": 65,
+        "pdfPage": 26
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 106,
         "end": 115,
-        "cents": 80
+        "cents": 80,
+        "pdfPage": 26
       },
       {
         "id": "data",
@@ -4903,11 +5251,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-mixed-135",
+      "label": "国考135题（40判断）计分规则"
     },
     "sources": {
       "answers": {
@@ -5022,12 +5367,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 27,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 80,
+        "pdfPage": 27
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 80,
+        "pdfPage": 27
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 100,
+        "cents": 80,
+        "pdfPage": 27
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 101,
         "end": 110,
-        "cents": 80
+        "cents": 85,
+        "pdfPage": 27
       },
       {
         "id": "data",
@@ -5040,11 +5409,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则"
     },
     "sources": {
       "answers": {
@@ -5156,12 +5522,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 27,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 80,
+        "pdfPage": 27
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 80,
+        "pdfPage": 27
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 100,
+        "cents": 80,
+        "pdfPage": 27
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 101,
         "end": 110,
-        "cents": 80
+        "cents": 85,
+        "pdfPage": 27
       },
       {
         "id": "data",
@@ -5174,11 +5564,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则"
     },
     "sources": {
       "answers": {
@@ -5295,12 +5682,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 24,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 80,
+        "pdfPage": 24
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 80,
+        "pdfPage": 24
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 100,
+        "cents": 80,
+        "pdfPage": 24
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 101,
         "end": 110,
-        "cents": 80
+        "cents": 85,
+        "pdfPage": 24
       },
       {
         "id": "data",
@@ -5313,11 +5724,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则"
     },
     "sources": {
       "answers": {
@@ -5430,12 +5838,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 25,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 80,
+        "pdfPage": 25
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 80,
+        "pdfPage": 25
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 100,
+        "cents": 80,
+        "pdfPage": 25
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 101,
         "end": 110,
-        "cents": 80
+        "cents": 85,
+        "pdfPage": 25
       },
       {
         "id": "data",
@@ -5448,11 +5880,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则"
     },
     "sources": {
       "answers": {
@@ -5563,12 +5992,36 @@ export const IMPORTED_PAPERS = [
         "cents": 100
       },
       {
-        "id": "reasoning",
-        "name": "判断推理",
-        "pdfPage": 25,
+        "id": "graphic",
+        "name": "图形推理",
         "start": 76,
+        "end": 85,
+        "cents": 80,
+        "pdfPage": 25
+      },
+      {
+        "id": "definition",
+        "name": "定义判断",
+        "start": 86,
+        "end": 95,
+        "cents": 80,
+        "pdfPage": 25
+      },
+      {
+        "id": "analogy",
+        "name": "类比推理",
+        "start": 96,
+        "end": 100,
+        "cents": 80,
+        "pdfPage": 25
+      },
+      {
+        "id": "logic",
+        "name": "逻辑判断",
+        "start": 101,
         "end": 110,
-        "cents": 80
+        "cents": 85,
+        "pdfPage": 25
       },
       {
         "id": "data",
@@ -5581,11 +6034,8 @@ export const IMPORTED_PAPERS = [
     ],
     "scoringRule": {
       "kind": "reference",
-      "id": "guokao-practice-v1",
-      "label": "平台国考参考估分",
-      "normalizationMaxCents": 10000,
-      "rounding": "half-up-after-total",
-      "note": "采用平台国考练习参考权重，按本卷总权重折算至100分，不代表官方逐题分值。"
+      "id": "guokao-city-130",
+      "label": "国考130题（地市级）计分规则"
     },
     "sources": {
       "answers": {

@@ -36,7 +36,7 @@ export function reportView({ attempt, state, allTypes = false }) {
   // 新机构缺少出品方分值时采用明确的参考估分；结果页展示依据，折算分项避免被当作官方逐题分值。
   const scoringRule = attempt.scoringRule ?? report.scoringRule;
   const scoringNotice = scoringRule
-    ? `<p class="notice">${esc(scoringRule.label)}${scoringRule.kind === "reference" ? "。采用平台国考练习参考权重，按本卷总权重折算至 100 分，不代表官方逐题分值。" : "。"}${report.scoreScale ? "分项显示保留两位小数，总分按未舍入权重统一计算。" : ""}</p>`
+    ? `<p class="notice">${esc(scoringRule.label)}。${report.scoreScale ? "按本卷总权重折算至 100 分，分项显示保留两位小数，总分按未舍入权重统一计算。" : "按题型固定分值计分，满分 100 分。"}</p>`
     : "";
   // 总分和题型统一使用规则兼容的上一刷，避免旧同版本逻辑与 VS 卡选取不同答卷。
   const previous = selectPreviousAttempt(attempt, state.attempts);

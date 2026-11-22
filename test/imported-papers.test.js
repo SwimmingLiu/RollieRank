@@ -45,20 +45,31 @@ test("new source-linked catalog keeps all 62 paper identities and separates 450 
   }
 });
 
-test("publisher tables retain distinct city and province weights and printed reasoning boundaries", () => {
+test("guokao 130-question city and 135-question province papers use exact 100-point classic weights without normalization", () => {
   const city = versionOf(IMPORTED_PAPERS.find((p) => p.id === "sihai-2026-h2-p2-city-01"));
   const province = versionOf(IMPORTED_PAPERS.find((p) => p.id === "sihai-2026-h2-p2-province-01"));
+  const chaoge = versionOf(IMPORTED_PAPERS.find((p) => p.id === "chaoge-2027-02"));
   assert.equal(city.questions.length, 130);
   assert.equal(province.questions.length, 135);
   assert.equal(city.questions[95].type, "类比推理");
-  assert.equal(city.questions[95].cents, 70);
+  assert.equal(city.questions[95].cents, 80);
+  assert.equal(city.questions[100].type, "逻辑判断");
+  assert.equal(city.questions[100].cents, 85);
+  assert.equal(chaoge.questions[100].type, "逻辑判断");
+  assert.equal(chaoge.questions[100].cents, 85);
+  assert.equal(province.questions[65].cents, 80);
+  assert.equal(province.questions[80].type, "图形推理");
   assert.equal(province.questions[95].type, "定义判断");
   assert.equal(province.questions[95].cents, 80);
-  assert.equal(province.questions[65].cents, 70);
-  assert.equal(province.questions[80].type, "图形推理");
-  for (const v of [city, province]) {
-    assert.equal(v.scoringRule.kind, "publisher");
-    assert.equal(v.questions.reduce((n, q) => n + q.cents, 0), 10000);
+  assert.equal(province.questions[100].type, "类比推理");
+  assert.equal(province.questions[100].cents, 50);
+  for (const paper of IMPORTED_PAPERS) {
+    const v = versionOf(paper);
+    assert.equal(v.scoringRule.kind, "reference", paper.id);
+    assert.equal(v.scoringRule.normalizationMaxCents, undefined, paper.id);
+    assert.equal(v.questions.reduce((n, q) => n + q.cents, 0), 10000, paper.id);
+    const report = gradeVersion(v, [...paper.answerKey]);
+    assert.equal(report.scoreScale, undefined, paper.id);
   }
 });
 

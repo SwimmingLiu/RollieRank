@@ -1,13 +1,16 @@
 <view class="screen screen--plain">
   <rr-nav title="个人资料" />
+  <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="page-scroll__body--plain">
   <view class="profile__card">
     <button class="profile__row" open-type="chooseAvatar" bindchooseavatar="onAvatar" disabled="{{busy}}">
       <image class="profile__avatar" src="{{avatar || defaultAvatar}}" mode="aspectFill" />
-      <text class="grow">头像</text>
+      <text class="grow">微信头像</text>
+      <text wx:if="{{!avatar}}" class="profile__value">点击获取</text>
       <image class="profile__arrow" src="/assets/ui/camera.svg" />
     </button>
     <button class="profile__row" bindtap="openSettings">
-      <text>昵称</text><text class="profile__value grow ellipsis">{{name}}</text>
+      <text>微信昵称</text><text class="profile__value grow ellipsis">{{hasCustomName ? name : '点击获取'}}</text>
       <image class="profile__arrow" src="/assets/ui/chevron.svg" />
     </button>
     <button wx:if="{{phoneEnabled}}" class="profile__row" open-type="getPhoneNumber" bindgetphonenumber="onPhone" disabled="{{busy}}">
@@ -15,4 +18,12 @@
       <image class="profile__arrow" src="/assets/ui/chevron.svg" />
     </button>
   </view>
+  <view class="profile__card">
+    <button class="profile__row" bindtap="openFeedback">
+      <text class="grow">意见反馈</text>
+      <image class="profile__arrow" src="/assets/ui/chevron.svg" />
+    </button>
+  </view>
+  </view>
+  </scroll-view>
 </view>

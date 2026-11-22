@@ -21,6 +21,8 @@ export { mountDiscussionReportEntry, mountDiscussionPage, mountDiscussionEditor 
 export { mountAnswerSheet } from "./answer-sheet";
 export { mountInsightPanel, mountInsightEntry, mountInsightQuestionEntry, mountInsightQuestionStat } from "./insights";
 export { mountPracticeTimer, mountEntryTools, mountTimingReport, mountTimerPaperPicker } from "./practice-session";
+export { mountOmrScanner } from "./omr-scanner";
+export type { OmrScannerProps } from "./omr-scanner";
 export { mountSingleAnswer } from "./single-answer";
 export { mountShareStudio } from "./share-studio";
 export { createModeSharePoster, isShareMode } from "./results";

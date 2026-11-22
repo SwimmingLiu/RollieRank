@@ -7,12 +7,12 @@ const catalog = require("../../utils/catalog.js");
 const { placeLeaderboardRows } = require("../../utils/rank.js");
 const { publisherName, subjectName, subjectId, LOGO } = catalog;
 
-const SHORT_LABELS = { 政治理论: "政治", 常识判断: "常识", 言语理解: "言语", 数量关系: "数量", 资料分析: "资料" };
+const SHORT_LABELS = { 政治理论: "政治", 常识判断: "常识", 言语理解: "言语", 数量关系: "数量", 判断推理: "判断", 资料分析: "资料" };
 
 const SCOPES = [
-  { key: "selected", name: "我的岗位", icon: "map-pin" },
-  { key: "nationwide", name: "全国", icon: "globe" },
-  { key: "position", name: "其他岗位", icon: "search" },
+  { key: "selected", name: "我的岗位", short: "本岗", icon: "map-pin" },
+  { key: "nationwide", name: "全国", short: "全国", icon: "globe" },
+  { key: "position", name: "其他岗位", short: "查岗", icon: "search" },
 ];
 
 Page({
@@ -97,7 +97,7 @@ Page({
         ...row,
         scoreText: format.scoreCard(row.value),
         surpassed: format.percent((row.surpassedPercent || 0) / 100),
-        initials: Array.from(row.name || "卷友").slice(0, 2).join(""),
+        initials: /^卷友(\d{4})$/.test(row.name || "") ? row.name.slice(-2) : Array.from(row.name || "卷友").slice(0, 2).join(""),
       }));
       const position = result.position;
       const winners = more ? this.data.winners : rows.slice(0, 3);
@@ -139,6 +139,11 @@ Page({
 
   loadMore() {
     if (this.data.canLoadMore) this.fetchRanking(true);
+  },
+
+  changePosition() {
+    if (this.data.scope === "nationwide") return;
+    this.setData({ positionMode: this.data.scope === "position" ? "browse" : "select" });
   },
 
   closePosition() {

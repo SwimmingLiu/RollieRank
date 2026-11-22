@@ -1,0 +1,44 @@
+@import "../../docs/ui-exploration/ios-v3/ui/node_modules/tailwindcss";
+@source "./";
+@source "../../docs/ui-exploration/ios-v3/ui/components/motion/button";
+@source "../../docs/ui-exploration/ios-v3/ui/components/motion/input.tsx";
+@source "../../docs/ui-exploration/ios-v3/ui/components/motion/number-ticker.tsx";
+
+@theme inline {
+  --color-background: #f7f5f0;
+  --color-foreground: #1c1917;
+  --color-card: #ffffff;
+  --color-card-foreground: #1c1917;
+  --color-primary: #1c1917;
+  --color-primary-foreground: #faf9f6;
+  --color-muted: #f0ede7;
+  --color-muted-foreground: #6b645c;
+  --color-border: #e5e0d8;
+  --color-accent: #f3efe8;
+  --color-accent-foreground: #1c1917;
+  --color-destructive: #c4453a;
+  --color-input: #dcd6cc;
+  --color-ring: #1c1917;
+  --font-sans: "PingFang SC", "Inter", -apple-system, BlinkMacSystemFont, "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+@layer base {
+  html, body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

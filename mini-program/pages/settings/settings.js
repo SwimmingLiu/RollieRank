@@ -5,7 +5,7 @@ Page({
   data: { name: "", saving: false },
 
   onShow() {
-    this.setData({ name: storage.name() });
+    this.setData({ name: storage.hasCustomName() ? storage.name() : "" });
   },
 
   onName(event) {
@@ -14,7 +14,7 @@ Page({
 
   async saveName(event) {
     if (this.data.saving) return;
-    const name = String(event.detail.value.name || "").trim();
+    const name = String(event.detail.value.name || this.data.name || "").trim();
     if (!name) {
       wx.showToast({ title: "请输入昵称", icon: "none" });
       return;

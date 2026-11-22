@@ -29,7 +29,7 @@ For a complete proof, use the first command. A service that answers but cannot r
 npm run verify -- doctor
 ```
 
-This is read-only. It checks Node 20+, npm, Python 3.10+, both Node and Python Playwright with launched Chromium, beUI dependencies and source entrypoints. `doctor.json` lists false checks and remediation. The CLI rejects a successful test-process exit if its summary contains skips, cancellations, TODOs or no executed tests.
+This is read-only. It checks Node 20+, npm, Python 3.10+, both Node and Python Playwright with launched Chromium, beUI dependencies, PostgreSQL tools and source entrypoints. `doctor.json` lists false checks and remediation. The CLI rejects a successful test-process exit if its summary contains skips, cancellations, TODOs or no executed tests.
 
 Dependencies can be installed with:
 
@@ -50,7 +50,8 @@ Run `.agents/skills/verify-rollierank/scripts/verify.sh <scenario>` or `npm run 
 | `visual` | Real `/ios-v3/` pages at desktop, 430, 390 and 320 widths; screenshots, runtime errors, overflow, target sizes, theme font and hidden scrollbars. |
 | `journeys` | Base app, connected features, iOS user flows and the complete Node test suite. |
 | `feature <id>` | The matching feature id from the map. |
-| `core`, `catalog-admin`, `practice-history`, `positions-rank`, `discussion`, `analytics`, `corrections`, `sharing`, `insights`, `timing-practice` | Focused service, component and browser regressions. |
+| `core`, `catalog-admin`, `practice-history`, `positions-rank`, `discussion`, `analytics`, `corrections`, `sharing`, `insights`, `timing-practice`, `miniprogram-ui`, `visual-design-audit` | Focused service, component, browser and visual/UI-design rationality regressions. |
+| `tool-credits` | Wallet HTTP, PostgreSQL migrations and transactions across processes, administrator sessions and invite rules. |
 
 Stable handles are the gallery `.page-picker [data-page]`, the mobile iframe `.view[data-page]`, feature buttons' accessible names and the application routes. Feature files define exact preconditions and side effects. Do not replace a missing real entry with an internal setter, a temporary fixture page, or a direct local-storage write.
 
@@ -63,9 +64,11 @@ Default evidence is `test-results/verification/`:
 - `journeys/` contains the real browser result JSON, downloadable PNG/JSON artifacts, and stdout/stderr for every command.
 - `doctor.json`, `build.log`, typecheck/build logs and visual server logs support diagnosis.
 
-Every business journey checks visible state and the server or downloaded side effect. Inspect the new screenshots at the intrinsic phone size before claiming visual completion. Check the paper theme, hierarchy, spacing, text wrapping, type scale, redundant copy and controls, target sizes, icon clearance, hidden scrollbars and overflow. The automated probe detects measurable defects; its pass is not an aesthetic review. Use the user's approved design references and the current project screenshots for the human judgment.
+Every business journey checks visible state and the server or downloaded side effect. Inspect the new screenshots at the intrinsic phone size before claiming visual completion. Check BOTH **visual rendering defects** (canvas z-index bleed-through over nav/footer/sheets, button overflow/alignment, mark dots, 320px wrapping, preview-vs-exported PNG parity) AND **UI design rationality** (visible paper identity, non-redundant copy with zero internal name leaks, clear icon+label semantics, consistent sheet button hierarchy, scope-accurate empty states, parameter fidelity on cross-page links) as detailed in [features/visual-design-audit.md](features/visual-design-audit.md). The automated probe detects measurable defects; its pass is not a substitute for visual and design-rationality review.
 
 A failed command exits non-zero. Preserve its evidence, diagnose with the feature map, and re-run after a fix. Never delete a failed run to make the next run appear clean.
+
+The journey runner retains evidence from each independent check. The complete command exits non-zero when any journey fails.
 
 ## Cleanup
 

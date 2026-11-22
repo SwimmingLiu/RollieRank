@@ -10,7 +10,7 @@ export const SECTIONS = [
   { id: 'data', name: '资料分析', short: '资料', start: 111, end: 130 },
 ];
 
-// All 12 scanned booklets confirm these boundaries; evidence and source hashes are kept in data/.
+// 国考 130 题（地市级 / 行政执法）经典分值：满 100 分，无折算小数。
 export const DEFAULT_RULES = [
   { id: 'politics', name: '政治理论', start: 1, end: 20, count: 20, cents: 50 },
   { id: 'general', name: '常识判断', start: 21, end: 35, count: 15, cents: 50 },
@@ -21,6 +21,19 @@ export const DEFAULT_RULES = [
   { id: 'analogy', name: '类比推理', start: 96, end: 100, count: 5, cents: 80 },
   { id: 'logic', name: '逻辑判断', start: 101, end: 110, count: 10, cents: 85 },
   { id: 'data', name: '资料分析', start: 111, end: 130, count: 20, cents: 100 },
+];
+
+// 国考 135 题（副省级）经典分值：满 100 分，无折算小数。
+export const PROVINCIAL_RULES = [
+  { id: 'politics', name: '政治理论', start: 1, end: 20, count: 20, cents: 50 },
+  { id: 'common', name: '常识判断', start: 21, end: 35, count: 15, cents: 50 },
+  { id: 'language', name: '言语理解', start: 36, end: 65, count: 30, cents: 80 },
+  { id: 'quantity', name: '数量关系', start: 66, end: 80, count: 15, cents: 80 },
+  { id: 'graphic', name: '图形推理', start: 81, end: 90, count: 10, cents: 80 },
+  { id: 'definition', name: '定义判断', start: 91, end: 100, count: 10, cents: 80 },
+  { id: 'analogy', name: '类比推理', start: 101, end: 105, count: 5, cents: 50 },
+  { id: 'logic', name: '逻辑判断', start: 106, end: 115, count: 10, cents: 80 },
+  { id: 'data', name: '资料分析', start: 116, end: 135, count: 20, cents: 100 },
 ];
 
 export function validateRules(rules) {

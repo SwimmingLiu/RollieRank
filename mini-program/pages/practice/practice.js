@@ -2,6 +2,7 @@ const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
 const catalogUtil = require("../../utils/catalog.js");
 const timing = require("../../utils/timing.js");
+const { createPageSheetDrag } = require("../../utils/sheet-gesture.js");
 const { resumeEntryTimer, pauseEntryTimer } = require("../../vendor/practice-timer.js");
 
 const { ASSET } = require("../../config.js");
@@ -49,11 +50,19 @@ Page({
     answered: 0,
     uncertain: 0,
     submitting: false,
+    singleOffset: 0,
+    singleOpacity: 1,
+    singleDragging: false,
+    sheetDragY: 0,
+    sheetDragging: false,
+    sheetClosing: false,
+    sheetShadeOpacity: 1,
     uiBase: "/assets/ui",
     choices: CHOICES,
   },
 
   onLoad(query) {
+    this.sheetDrag = createPageSheetDrag(this, { onDismiss: () => this.closeSheet() });
     this.attemptId = query.attemptId || "";
     this.versionId = decodeURIComponent(query.versionId || "");
     this.retry();
@@ -146,6 +155,7 @@ Page({
   },
 
   choose(event) {
+    if (this.swipeMoved) return;
     const { number, choice } = event.currentTarget.dataset;
     const index = Number(number) - 1;
     const answers = this.data.answers.slice();
@@ -158,6 +168,7 @@ Page({
   },
 
   toggleMark(event) {
+    if (this.swipeMoved) return;
     const number = Number(event.currentTarget.dataset.number);
     const marks = this.data.marks.slice();
     marks[number - 1] = !marks[number - 1];
@@ -209,11 +220,23 @@ Page({
     this.jump(this.data.current);
   },
 
+  animateSingleTransition(direction) {
+    clearTimeout(this.singleAnimTimer);
+    this.setData({ singleOffset: direction > 0 ? 44 : -44, singleOpacity: 0.35, singleDragging: true }, () => {
+      this.singleAnimTimer = setTimeout(() => {
+        this.setData({ singleOffset: 0, singleOpacity: 1, singleDragging: false });
+      }, 16);
+    });
+  },
+
   moveQuestion(direction, keepVisible = false) {
-    const { questions, currentQuestion } = this.data;
+    const { questions, currentQuestion, single } = this.data;
     const position = questions.findIndex(question => question.number === currentQuestion?.number);
     const next = questions[position + direction];
-    if (next) this.jump(next.number, keepVisible);
+    if (!next) return false;
+    this.jump(next.number, keepVisible);
+    if (single) this.animateSingleTransition(direction);
+    return true;
   },
 
   previousQuestion() { this.moveQuestion(-1); },
@@ -221,17 +244,77 @@ Page({
   nextQuestion() { this.moveQuestion(1); },
 
   startSwipe(event) {
-    this.swipeStart = event.touches[0];
+    const point = event.touches?.[0];
+    if (!point || event.touches.length > 1) {
+      this.swipeStart = null;
+      return;
+    }
+    this.swipeStart = { x: point.clientX, y: point.clientY, startedAt: Date.now() };
+    this.swipeAxis = null;
+    this.swipeMoved = false;
+    clearTimeout(this.swipeClickTimer);
+  },
+
+  moveSwipe(event) {
+    const start = this.swipeStart;
+    const point = event.touches?.[0];
+    if (!start || !point) return;
+    const dx = point.clientX - start.x;
+    const dy = point.clientY - start.y;
+    if (!this.swipeAxis) {
+      if (Math.hypot(dx, dy) < 8) return;
+      this.swipeAxis = Math.abs(dx) > Math.abs(dy) * 1.2 ? "x" : "y";
+    }
+    if (this.swipeAxis !== "x") return;
+    this.swipeMoved = true;
+    const atEdge = (dx < 0 && this.data.current === this.data.lastQuestion)
+      || (dx > 0 && this.data.current === this.data.firstQuestion);
+    const offset = atEdge
+      ? Math.round(Math.max(-18, Math.min(18, dx * 0.12)))
+      : Math.round(Math.max(-56, Math.min(56, dx * 0.34)));
+    const opacity = atEdge ? 1 : Number(Math.max(0.76, 1 - Math.abs(offset) / 220).toFixed(2));
+    if (offset !== this.data.singleOffset || opacity !== this.data.singleOpacity || !this.data.singleDragging) {
+      this.setData({ singleOffset: offset, singleOpacity: opacity, singleDragging: true });
+    }
   },
 
   endSwipe(event) {
     const start = this.swipeStart;
-    const end = event.changedTouches[0];
-    if (!start || !end) return;
-    const horizontal = end.clientX - start.clientX;
-    const vertical = end.clientY - start.clientY;
-    if (Math.abs(horizontal) >= 35 && Math.abs(horizontal) > Math.abs(vertical)) {
-      this.moveQuestion(horizontal < 0 ? 1 : -1);
+    const end = event.changedTouches?.[0];
+    this.swipeStart = null;
+    const axis = this.swipeAxis;
+    this.swipeAxis = null;
+    if (this.swipeMoved) {
+      clearTimeout(this.swipeClickTimer);
+      this.swipeClickTimer = setTimeout(() => { this.swipeMoved = false; }, 120);
+    }
+    if (!start || !end) {
+      if (this.data.singleOffset || this.data.singleOpacity !== 1 || this.data.singleDragging) {
+        this.setData({ singleOffset: 0, singleOpacity: 1, singleDragging: false });
+      }
+      return;
+    }
+    const dx = end.clientX - start.x;
+    const dy = end.clientY - start.y;
+    const distance = Math.abs(dx);
+    const velocity = distance / Math.max(1, Date.now() - start.startedAt);
+    const horizontal = distance > Math.abs(dy) * 1.2;
+    const deliberate = distance >= 36 || (distance >= 22 && velocity >= 0.45);
+    if ((axis === "x" || (!axis && horizontal && distance >= 22)) && horizontal && deliberate) {
+      const moved = this.moveQuestion(dx < 0 ? 1 : -1);
+      if (moved) return;
+    }
+    if (this.data.singleOffset || this.data.singleOpacity !== 1 || this.data.singleDragging) {
+      this.setData({ singleOffset: 0, singleOpacity: 1, singleDragging: false });
+    }
+  },
+
+  cancelSwipe() {
+    this.swipeStart = null;
+    this.swipeAxis = null;
+    this.swipeMoved = false;
+    if (this.data.singleOffset || this.data.singleOpacity !== 1 || this.data.singleDragging) {
+      this.setData({ singleOffset: 0, singleOpacity: 1, singleDragging: false });
     }
   },
 
@@ -272,8 +355,17 @@ Page({
   },
 
   closeSheet() {
+    this.sheetDrag?.reset();
+    this._sheetScrollTop = 0;
     this.setData({ sheet: "" });
   },
+
+  noopSheet() {},
+  onSheetScroll(event) { this.sheetDrag?.onScroll(event); },
+  startSheetDrag(event) { this.sheetDrag?.start(event); },
+  moveSheetDrag(event) { this.sheetDrag?.move(event); },
+  endSheetDrag(event) { this.sheetDrag?.end(event); },
+  cancelSheetDrag() { this.sheetDrag?.cancel(); },
 
   submit() {
     if (!this.data.submitting) this.setData({ sheet: "submit" });
@@ -320,6 +412,9 @@ Page({
   },
 
   onUnload() {
+    this.sheetDrag?.reset();
+    clearTimeout(this.singleAnimTimer);
+    clearTimeout(this.swipeClickTimer);
     this.stopEntryClock();
     this.persist();
   },

@@ -13,12 +13,21 @@
     "start": "node scripts/serve.mjs",
     "test": "node --test test/*.test.js",
     "preview": "node scripts/serve.mjs --dist",
-    "build": "node scripts/build.mjs"
+    "build": "node scripts/build.mjs",
+    "build:admin": "node scripts/build-admin.mjs",
+    "admin": "node scripts/rollie-admin.mjs",
+    "db:migrate:wallet": "node scripts/migrate-tool-credits.mjs",
+    "omr": "node scripts/omr.mjs",
+    "verify:omr": "python3 scripts/verify-omr.py"
   },
   "engines": {
     "node": ">=20"
   },
   "devDependencies": {
     "playwright": "1.65.0"
+  },
+  "dependencies": {
+    "jpeg-js": "^0.4.4",
+    "pg": "8.23.1"
   }
 }

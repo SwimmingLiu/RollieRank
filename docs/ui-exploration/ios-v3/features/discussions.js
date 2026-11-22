@@ -3,6 +3,7 @@ import {
   normalizeDiscussionLink, safeDiscussionMedia,
 } from "../../../../src/features/discussions.js";
 import { esc, date } from "../../../../src/ui.js";
+import { defaultNickname, isDefaultNickname } from "../service-client.js";
 
 const uid = () => crypto.randomUUID();
 const DRAFT_STORAGE_PREFIX = "rollierank:discussion-drafts:v1:";
@@ -43,8 +44,11 @@ export function createIOSDiscussionsFeature(ctx) {
   let storageReadNotice = "";
   const ui = () => window.RollieUI;
   const validNickname = (value) => typeof value === "string" && value.trim().length > 0 && value.trim().length <= DISCUSSION_LIMITS.nickname && !/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/u.test(value);
-  // 评论直接使用已有身份；无资料时统一显示默认昵称，不再打断发言流程要求填写昵称。
-  const profileName = () => validNickname(ctx.state().profile?.name) ? ctx.state().profile.name.trim() : DEFAULT_NAME;
+  // 评论直接使用已有身份；无自定义昵称时统一按用户 ID 派生“卷友XXXX”以区分不同人，不打断发言流程。
+  const profileName = () => {
+    const raw = ctx.state().profile?.name;
+    return validNickname(raw) && !isDefaultNickname(raw) ? raw.trim() : defaultNickname(ctx.state().guestId);
+  };
   const currentScope = () => {
     const attempt = ctx.attempt();
     if (!attempt) return null;
@@ -154,7 +158,7 @@ export function createIOSDiscussionsFeature(ctx) {
     }))].filter((link) => !inline.has(link));
     const validTime = Number.isFinite(raw.createdAt) && Number.isFinite(new Date(raw.createdAt).getTime());
     const parentId = typeof raw.parentId === "string" ? raw.parentId : null;
-    return { id: raw.id, name: raw.author.name, text, textParts, createdAt: validTime ? raw.createdAt : 0,
+    return { id: raw.id, name: raw.author.name, avatarUrl: typeof raw.author?.avatarUrl === "string" ? raw.author.avatarUrl : "", text, textParts, createdAt: validTime ? raw.createdAt : 0,
       time: validTime ? date(raw.createdAt, true) : "", datetime: validTime ? new Date(raw.createdAt).toISOString() : "",
       version: typeof raw.versionLabel === "string" ? raw.versionLabel : "", images, links,
       parentId, rootId: typeof raw.rootId === "string" ? raw.rootId : raw.id,
@@ -204,7 +208,7 @@ export function createIOSDiscussionsFeature(ctx) {
         read: page ? readState(scope) : { kind: "ready", total: 0 }, posts: page?.posts || [], hasMore: Boolean(page?.nextCursor), loadingMore: Boolean(page?.loading),
         threads: page ? [...page.threads.values()].map(thread => ({ ...thread, hasMore: Boolean(thread.nextCursor),
           posts: thread.posts.map(post => ({ ...post, replyTo: post.replyTo ? { ...post.replyTo, excerpt: postExcerpt(findPost(page, post.parentId)) } : null })) })) : [],
-        hasDraft: scope ? hasDraft(scope) : false, name: profileName(), onWrite: () => openEditor(),
+        hasDraft: scope ? hasDraft(scope) : false, name: profileName(), avatarSrc: ctx.avatarSrc?.() || "", onWrite: () => openEditor(),
         onPhotoFiles: files => { openEditor(); if (editor) void addFiles(editor.scope, editor.target, files); },
         onMore: () => { if (scope) void load(scope, true); }, onRetry: () => { if (scope) void load(scope); }, onGrade: scope ? grade : () => ctx.navigate("me"), onImage: showImage,
         onLike: post => { if (scope) void setLike(scope, post.id); }, onReply: post => openEditor({ id: post.id, name: post.name, rootId: post.rootId, excerpt: postExcerpt(post) }),
