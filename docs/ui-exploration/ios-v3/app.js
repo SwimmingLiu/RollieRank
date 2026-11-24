@@ -533,8 +533,10 @@ $('#stage')?.addEventListener('pointerdown',event=>{
  if(!ROOT_TABS.includes(state.page)||sheetState.open)return;
  if(!event.isPrimary||(event.pointerType==='mouse'&&event.button!==0))return;
  if(isTabSwipeIgnored(event.target))return;
+ if(event.pointerType==='mouse')window.getSelection?.()?.removeAllRanges?.();
  tabSwipe={pointerId:event.pointerId,x:event.clientX,y:event.clientY,startedAt:performance.now(),axis:null,view:$('.view[data-page="'+state.page+'"]')};
 });
+$('#stage')?.addEventListener('dragstart',event=>{if(tabSwipe)event.preventDefault();});
 window.addEventListener('pointermove',event=>{
  if(!tabSwipe||event.pointerId!==tabSwipe.pointerId)return;
  if(sheetState.open||!ROOT_TABS.includes(state.page)){resetTabSwipeTransform(tabSwipe.view);tabSwipe=null;return;}
@@ -542,8 +544,10 @@ window.addEventListener('pointermove',event=>{
  if(!tabSwipe.axis){
   if(Math.hypot(dx,dy)<8)return;
   tabSwipe.axis=Math.abs(dx)>Math.abs(dy)*1.2?'x':'y';
+  if(tabSwipe.axis==='x')window.getSelection?.()?.removeAllRanges?.();
  }
  if(tabSwipe.axis!=='x')return;
+ if(event.pointerType==='mouse')window.getSelection?.()?.removeAllRanges?.();
  const currentIndex=ROOT_TABS.indexOf(state.page),target=ROOT_TABS[currentIndex+(dx<0?1:-1)]||null;
  if(target){
   armTabSwipeClickSuppression();

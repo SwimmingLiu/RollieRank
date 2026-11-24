@@ -103,13 +103,14 @@ def check_choice_sheet(frame, title):
     return panel, body
 
 
-def drag_sheet(page, panel, distance):
+def drag_sheet(page, panel, distance, steps=16):
+    panel.evaluate("node => Promise.all(node.getAnimations().map(anim => anim.finished.catch(() => {})))")
     box = panel.locator(".rr-options-drag-target").bounding_box()
     assert box is not None
     x, y = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
     page.mouse.move(x, y)
     page.mouse.down()
-    page.mouse.move(x, y + distance, steps=12)
+    page.mouse.move(x, y + distance, steps=steps)
     page.mouse.up()
 
 
@@ -145,10 +146,10 @@ def exercise_review_picker(page, frame, output):
     panel, list_body = check_choice_sheet(frame, "选择复盘板块")
     expect(panel).to_have_attribute("data-expanded", "false")
     assert list_body.evaluate("node => node.scrollHeight > node.clientHeight")
-    drag_sheet(page, panel, -105)
+    drag_sheet(page, panel, -120)
     expect(panel).to_have_attribute("data-expanded", "true")
     page.locator("#phone").screenshot(path=str(output / "review-picker-expanded-320.png"))
-    drag_sheet(page, panel, 96)
+    drag_sheet(page, panel, 125, steps=18)
     expect(panel).to_have_attribute("data-expanded", "false")
     list_body.hover()
     page.mouse.wheel(0, 350)

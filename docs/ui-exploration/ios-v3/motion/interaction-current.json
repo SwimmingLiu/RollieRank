@@ -16,10 +16,10 @@
   ],
   "errors": [],
   "gif": "motion/interaction-current.gif",
-  "gifSha256": "265b110f5c6500da8a41698fef5fed185f9760585446b7baa89611a6d52b9ef5",
+  "gifSha256": "ce256b267527b9a4cfdc7cadce32f79c267913dec25edccff9c90dd3fd34fe91",
   "sources": {
     "scripts/record-ios-preview.mjs": "c27b23f8a0462a7dc449c0966c76698051a11414ca228781e6d7bf98c20d09d5",
-    "docs/ui-exploration/ios-v3/app.js": "bb9721499f25c1ef9c88cdc0bbf6771abd01fbf343530f50b6e4d08c12849e9c",
+    "docs/ui-exploration/ios-v3/app.js": "eb0bfab355817bfdf49c7c20dfbdce7bc7a2c5fcc36015d9a99663902563ad37",
     "docs/ui-exploration/ios-v3/app.html": "2c75fac7d5e4120f90418456226b789f4fef0e315bec58ef01d5ac5d7ee4b32c",
     "docs/ui-exploration/ios-v3/vendor/beui.js": "73e973dad06f8e900e442ebcdde98fee5e07c6db311456eb1d8fdcae94ee4cda",
     "docs/ui-exploration/ios-v3/features/base.css": "2bcb03b7e37d6b96941aa4e2e5b2719ff0c2d4d3c5fdc81183fe1ab48ade59f3",
