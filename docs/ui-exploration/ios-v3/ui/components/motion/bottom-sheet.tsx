@@ -17,7 +17,7 @@ import { EASE_DRAWER } from "@/lib/ease";
 import { useFocusTrap } from "@/lib/hooks/use-focus-trap";
 import { useMessages } from "@/lib/i18n";
 import { PresenceGate } from "@/lib/presence-gate";
-import { TOUCH_GESTURE_CONTENT_CLASS } from "@/lib/touch";
+import { TOUCH_GESTURE_CLASS, TOUCH_GESTURE_CONTENT_CLASS } from "@/lib/touch";
 import { cn } from "@/lib/utils";
 
 // Vaul-style glide: a long, fully-damped tween reads smoother than a spring on
@@ -197,6 +197,10 @@ export function BottomSheet({
 
   function startHeaderDrag(event: ReactPointerEvent<HTMLDivElement>) {
     if (event.target instanceof Element && event.target.closest('button, input, textarea, select, a, [data-vaul-no-drag]')) return;
+    if (event.pointerType === "mouse") {
+      event.preventDefault();
+      window.getSelection?.()?.removeAllRanges();
+    }
     listTouch.current = null;
     if (optionList && event.isPrimary) {
       const start = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, handled: false };
@@ -359,7 +363,8 @@ export function BottomSheet({
             >
               <div
                 onPointerDown={startHeaderDrag}
-                className={optionList ? "rr-options-drag-zone" : "flex flex-col items-center px-4 pb-2 pt-3"}
+                onDragStart={(event) => event.preventDefault()}
+                className={optionList ? "rr-options-drag-zone select-none" : "flex flex-col items-center px-4 pb-2 pt-3"}
               >
                 {/* Option lists keep a full-width gesture area without painting a drag marker. */}
                 <div
@@ -367,7 +372,7 @@ export function BottomSheet({
                   // which would leave the sheet frozen mid-drag.
                   className={cn(
                     optionList ? "rr-options-drag-target touch-none" : "flex cursor-grab touch-none items-center justify-center py-1 active:cursor-grabbing",
-                    TOUCH_GESTURE_CONTENT_CLASS,
+                    optionList ? TOUCH_GESTURE_CLASS : TOUCH_GESTURE_CONTENT_CLASS,
                   )}
                 >
                   {/* Keep every sheet's grab marker quiet and consistent with the paper theme. */}

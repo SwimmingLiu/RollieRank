@@ -185,6 +185,25 @@ def exercise_review_picker(page, frame, output):
     expect(panel).to_have_attribute("data-expanded", "true")
     wait_sheet_settled(panel)
     page.locator("#phone").screenshot(path=str(output / "review-picker-expanded-320.png"))
+    frame.locator("body").evaluate("""() => {
+      window.__rrDragDiag = { events: [], moves: 0 };
+      const log = e => {
+        if (e.type === 'pointermove') { window.__rrDragDiag.moves += 1; return; }
+        window.__rrDragDiag.events.push({
+          t: e.type, x: Math.round(e.clientX), y: Math.round(e.clientY),
+          id: e.pointerId ?? null, p: e.isPrimary ?? null,
+          el: e.target?.tagName + '.' + String(e.target?.className || '').slice(0, 32),
+        });
+      };
+      for (const name of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'dragstart']) {
+        window.addEventListener(name, log, true);
+      }
+      window.__rrDragCleanup = () => {
+        for (const name of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'dragstart']) {
+          window.removeEventListener(name, log, true);
+        }
+      };
+    }""")
     drag_meta = drag_sheet(page, panel, 125, steps=18)
     try:
         expect(panel).to_have_attribute("data-expanded", "false")
@@ -192,16 +211,21 @@ def exercise_review_picker(page, frame, output):
         diag = frame.locator("body").evaluate("""() => {
           const dlg = document.querySelector('[role="dialog"]');
           const zone = dlg?.querySelector('.rr-options-drag-target');
+          const hit = zone ? document.elementFromPoint(zone.getBoundingClientRect().left + zone.getBoundingClientRect().width / 2, zone.getBoundingClientRect().top + zone.getBoundingClientRect().height / 2) : null;
           return dlg ? {
             expanded: dlg.getAttribute('data-expanded'),
             rect: dlg.getBoundingClientRect().toJSON(),
             zone: zone?.getBoundingClientRect().toJSON() || null,
+            hit: hit ? hit.tagName + '.' + String(hit.className || '').slice(0, 40) : null,
             transform: getComputedStyle(dlg).transform,
-            opacity: getComputedStyle(dlg).opacity,
-          } : { missing: true };
+            selection: String(window.getSelection?.() || ''),
+            dragLog: window.__rrDragDiag || null,
+          } : { missing: true, dragLog: window.__rrDragDiag || null };
         }""")
         print(f"exercise_review_picker collapse failed drag={drag_meta} diag={diag}", file=sys.stderr, flush=True)
         raise
+    finally:
+        frame.locator("body").evaluate("() => window.__rrDragCleanup?.()")
     list_body.hover()
     page.mouse.wheel(0, 350)
     expect(list_body).not_to_have_js_property("scrollTop", 0)
