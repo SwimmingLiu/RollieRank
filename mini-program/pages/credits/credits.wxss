@@ -228,10 +228,33 @@
 }
 
 .credits__payment-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 2px 2px 0;
   font-size: 12px;
   line-height: 1.5;
   color: #6b5839;
+}
+
+.credits__payment-text {
+  flex: 1;
+  min-width: 0;
+  word-break: break-all;
+}
+
+.credits__payment-reset {
+  flex: none;
+  width: auto !important;
+  margin: 0 !important;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #dfd0b1;
+  background: #fffdf8;
+  color: #6b5839;
+  font-size: 12px;
+  line-height: 1.3;
 }
 
 /* 底部固定结算栏 */

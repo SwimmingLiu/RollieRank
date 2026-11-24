@@ -190,7 +190,11 @@ test("positions work in Chromium with real persisted API scores, paging, explici
     assert.equal(await page.locator("#positions-search").evaluate((el) => document.activeElement === el), true);
     await page.locator("#positions-search").fill("税务");
     await page.locator("#positions-search").press("Enter");
-    await page.waitForLoadState("networkidle");
+    await page.waitForFunction(() => {
+      const busy = document.querySelector(".positions-empty[aria-busy='true']");
+      const input = document.querySelector("#positions-search");
+      return !busy && input && document.activeElement === input;
+    });
     assert.equal(await page.locator("#positions-search").evaluate((el) => document.activeElement === el), true);
     await page.locator(".positions-picker-row").last().scrollIntoViewIfNeeded();
     await capture("picker-last-row-320");

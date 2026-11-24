@@ -20,6 +20,7 @@ export function rechargeView(order, operator = false) {
   return {
     id, credits, cents, platform, state, createdAt, updatedAt,
     needsWechatCode: ["pending", "paid"].includes(state) && !order.debitSignature,
+    ...(order.wechatOrderMissing ? { wechatOrderMissing: true } : {}),
     ...(operator ? { accountId: order.accountId, wechatOrderId: order.wechatOrderId, env: order.env, issue: order.issue } : {}),
   };
 }

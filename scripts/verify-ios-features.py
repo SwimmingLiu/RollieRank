@@ -137,7 +137,10 @@ def drag_sheet(page, panel, distance, steps=16):
     x, y = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
     page.mouse.move(x, y)
     page.mouse.down()
+    # Allow React onPointerDown -> dragControls.start(event) to bind window pointermove listeners before dragging on loaded CI runners.
+    page.wait_for_timeout(40)
     page.mouse.move(x, y + distance, steps=steps)
+    page.wait_for_timeout(20)
     page.mouse.up()
 
 

@@ -126,7 +126,12 @@
               </view>
 
               <view wx:if="{{rechargeMessage || (!rechargeOrder && rechargeDeviceMessage && !rechargeTestGuide)}}" class="credits__payment-state">
-                <text aria-role="status">{{rechargeMessage || rechargeDeviceMessage}}</text>
+                <text class="credits__payment-text" aria-role="status">{{rechargeMessage || rechargeDeviceMessage}}</text>
+                <button
+                  wx:if="{{rechargeOrder && !rechargeAction}}"
+                  class="credits__payment-reset"
+                  bindtap="cancelPendingRecharge"
+                >重新选择</button>
               </view>
             </view>
 

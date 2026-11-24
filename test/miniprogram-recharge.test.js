@@ -79,7 +79,11 @@ async function fixture(t) {
             order_fee: cents, paid_fee: cents, left_fee: cents, wx_order_id: "wx-" + input.outTradeNo, update_time: 10 });
           if (notify) options.success();
         } else if (notify) {
-          options.fail({ errCode: -2 });
+          if (typeof scenario.cashier === "object" && scenario.cashier !== null) {
+            options.fail(scenario.cashier);
+          } else {
+            options.fail({ errCode: -2 });
+          }
         }
         if (notify) options.complete();
       };
@@ -284,6 +288,39 @@ test("测试包拒绝传入现网收银台参数", async t => {
   assert.equal(page.data.balance, 3);
 });
 
+test("安卓拉起支付失败即使 onShow 先触发也透出错误码并自动解锁档位", { timeout: 8000 }, async t => {
+  const { scenario, page, cashierReached, finishCashier, checkouts } = await fixture(t);
+  scenario.holdCashier = true;
+  scenario.cashier = { errCode: -15006, errMsg: "requestVirtualPayment:fail paySig invalid" };
+  const payment = page.submitRecharge();
+  await cashierReached;
+  // 模拟安卓切换回页面时 onShow 比 fail 回调更早触发。
+  page.onShow();
+  setTimeout(() => finishCashier(true), 40);
+  await payment;
+  assert.equal(checkouts.length, 1);
+  assert.equal(page.data.rechargeOrder, null);
+  assert.match(page.data.rechargeMessage, /签名校验失败/);
+  assert.match(page.data.rechargeMessage, /errCode=-15006/);
+  // 失败自动解锁后可正常切换档位并重新发起支付。
+  page.selectPackage({ currentTarget: { dataset: { index: 0 } } });
+  assert.equal(page.data.selectedPackIndex, 0);
+});
+
+test("无回调待确认单允许用户主动放弃并重新选择档位", { timeout: 8000 }, async t => {
+  const { scenario, page, cashierReached } = await fixture(t);
+  scenario.holdCashier = true;
+  const payment = page.submitRecharge();
+  await cashierReached;
+  page.onShow();
+  await payment;
+  assert.ok(page.data.rechargeOrder);
+  assert.match(page.data.rechargeMessage, /重新选择/);
+  page.cancelPendingRecharge();
+  assert.equal(page.data.rechargeOrder, null);
+  assert.equal(page.data.rechargeMessage, "");
+});
+
 test("正式版 iPhone 使用已开放的 Apple 支付渠道和现网签名", async t => {
   const originalWx = globalThis.wx;
   let opened = 0;
@@ -310,6 +347,6 @@ test("正式版 iPhone 使用已开放的 Apple 支付渠道和现网签名", as
   const result = await credits.payRecharge({ mode: "short_series_coin", signData: JSON.stringify({
     outTradeNo: order.id, buyQuantity: 1, env: 0, currencyType: "CNY",
   }), paySig: "fixture-pay-sign", signature: "fixture-session-sign" }, order);
-  assert.equal(result, "paid");
+  assert.equal(result.status, "paid");
   assert.equal(opened, 1);
 });

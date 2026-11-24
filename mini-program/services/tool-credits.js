@@ -201,6 +201,22 @@ async function confirmRecharge(id) {
   return (await authedRequest(path, { code: await wxLoginCode() }, 30_000, true, token)).order;
 }
 
+function formatRechargeFailure(errCode, errMsg) {
+  const code = Number(errCode);
+  let base = "未能调起微信支付，请稍后重试。";
+  if (code === -2) return "支付已取消。";
+  if (code === -4) base = "当前支付被微信风控拦截，请稍后再试。";
+  else if (code === 1001 || code === -15001) base = "微信支付参数有误，请稍后重试。";
+  else if (code === -15002) base = "这笔订单号已失效，请重新点击充值。";
+  else if (code === -15006 || code === -15011) base = "微信支付签名校验失败，请检查后台配置。";
+  if (!IS_TEST_ENVIRONMENT) return base;
+  const detail = [
+    Number.isFinite(code) ? `errCode=${code}` : "",
+    typeof errMsg === "string" && errMsg.trim() ? errMsg.trim() : "",
+  ].filter(Boolean).join(" ");
+  return detail ? `${base}（${detail}）` : base;
+}
+
 function payRecharge(payData, order) {
   const { mode, signData, paySig, signature } = payData;
   let sign;
@@ -212,11 +228,23 @@ function payRecharge(payData, order) {
     throw Object.assign(new Error("充值订单校验失败，请重试。"), { errorId: "recharge-signature" });
   }
   return new Promise(resolve => {
+    let settled = false;
+    const finish = result => {
+      if (settled) return;
+      settled = true;
+      resolve(result);
+    };
     wx.requestVirtualPayment({
       mode, signData, paySig, signature,
-      success: () => resolve("paid"),
-      fail: ({ errCode } = {}) => resolve(Number(errCode) === -2 ? "cancelled" : "unknown"),
-      complete: () => resolve("unknown"),
+      success: () => finish({ status: "paid", errCode: 0, errMsg: "" }),
+      fail: (err = {}) => {
+        const rawCode = err.errCode ?? err.errno;
+        const code = rawCode === undefined || rawCode === null || rawCode === "" ? NaN : Number(rawCode);
+        const errMsg = typeof err.errMsg === "string" ? err.errMsg.trim() : "";
+        if (code === -2) finish({ status: "cancelled", errCode: -2, errMsg });
+        else finish({ status: "failed", errCode: Number.isFinite(code) ? code : null, errMsg });
+      },
+      complete: () => finish({ status: "unknown", errCode: null, errMsg: "" }),
     });
   });
 }
@@ -315,6 +343,7 @@ module.exports = {
   paidRecharge,
   confirmRecharge,
   payRecharge,
+  formatRechargeFailure,
   hasSession,
   accountId,
   uid,

@@ -9,6 +9,7 @@ const rechargeStatus = {
   review: "这笔充值待运营核对。",
 };
 const activeRecharges = new Set();
+const CASHIER_RESUME_GRACE_MS = 500;
 
 Page({
   data: {
@@ -67,7 +68,9 @@ Page({
 
   onUnload() {
     this.unloaded = true;
-    this.resumeCashier?.();
+    clearTimeout(this.cashierResumeTimer);
+    this.cashierResumeTimer = null;
+    this.resumeCashier?.(true);
   },
 
   onRefresherRefresh() {
@@ -220,6 +223,13 @@ Page({
     }
   },
 
+  cancelPendingRecharge() {
+    if (this.data.rechargeAction || !this.data.rechargeOrder) return;
+    const owner = credits.accountId();
+    if (owner) storage.setToolCreditRecharge(owner, null);
+    this.setData({ rechargeOrder: null, rechargeMessage: "" });
+  },
+
   async submitRecharge() {
     if (this.data.rechargeAction || !credits.hasSession()) return;
     const owner = credits.accountId();
@@ -265,10 +275,28 @@ Page({
         storage.setToolCreditRecharge(owner, pending);
         this.setData({ rechargeOrder: pending, rechargeAction: payData ? "等待微信支付…" : "确认到账…" });
         if (payData) {
-          const returned = new Promise(resolve => { this.resumeCashier = () => resolve("unknown"); });
-          const paymentResult = await Promise.race([credits.payRecharge(payData, order), returned]);
+          // 安卓微信支付退出时 onShow 常比 fail/success 回调先到达，留短暂缓冲避免吞掉真实 errCode/errMsg。
+          const returned = new Promise(resolve => {
+            this.resumeCashier = (immediate = false) => {
+              clearTimeout(this.cashierResumeTimer);
+              if (immediate) {
+                resolve({ status: "unknown", errCode: null, errMsg: "" });
+                return;
+              }
+              this.cashierResumeTimer = setTimeout(() => {
+                this.cashierResumeTimer = null;
+                resolve({ status: "unknown", errCode: null, errMsg: "" });
+              }, CASHIER_RESUME_GRACE_MS);
+            };
+          });
+          const outcome = await Promise.race([credits.payRecharge(payData, order), returned]);
+          clearTimeout(this.cashierResumeTimer);
+          this.cashierResumeTimer = null;
           this.resumeCashier = null;
-          pending = { ...pending, paymentResult };
+          const paymentResult = typeof outcome === "string" ? outcome : (outcome?.status || "unknown");
+          const paymentErrCode = typeof outcome === "object" && outcome !== null ? outcome.errCode ?? null : null;
+          const paymentErrMsg = typeof outcome === "object" && outcome !== null ? outcome.errMsg || "" : "";
+          pending = { ...pending, paymentResult, paymentErrCode, paymentErrMsg };
           storage.setToolCreditRecharge(owner, pending);
         }
       }
@@ -288,6 +316,8 @@ Page({
         this.setData({ rechargeMessage: pending?.orderId ? "暂未查到结果，可稍后查询到账。" : error?.message || "暂时无法下单，请重试。" });
       }
     } finally {
+      clearTimeout(this.cashierResumeTimer);
+      this.cashierResumeTimer = null;
       this.resumeCashier = null;
       activeRecharges.delete(owner);
       if (!this.unloaded) this.setData({ rechargeAction: "" });
@@ -309,11 +339,24 @@ Page({
       this.setData({ rechargeOrder: null });
       await this.reload();
       wx.showToast({ title: `已到账 ${order.credits} 颗`, icon: "success" });
-    } else if (rechargeStatus[order.state] || (order.state === "pending" && pending.paymentResult === "cancelled")) {
+    } else if (rechargeStatus[order.state]) {
       storage.setToolCreditRecharge(owner, null);
-      this.setData({ rechargeOrder: null, rechargeMessage: rechargeStatus[order.state] || "支付已取消。" });
+      this.setData({ rechargeOrder: null, rechargeMessage: rechargeStatus[order.state] });
+    } else if (order.state === "pending" && pending.paymentResult === "cancelled") {
+      storage.setToolCreditRecharge(owner, null);
+      this.setData({ rechargeOrder: null, rechargeMessage: "支付已取消。" });
+    } else if (order.state === "pending" && pending.paymentResult === "failed") {
+      storage.setToolCreditRecharge(owner, null);
+      this.setData({
+        rechargeOrder: null,
+        rechargeMessage: credits.formatRechargeFailure(pending.paymentErrCode, pending.paymentErrMsg),
+      });
     } else {
-      this.setData({ rechargeMessage: "这笔充值正在确认，请稍后查询。" });
+      this.setData({
+        rechargeMessage: order.state === "pending" && order.wechatOrderMissing
+          ? "这笔充值正在确认，如未付款可点击重新选择。"
+          : "这笔充值正在确认，请稍后查询。",
+      });
     }
   },
 

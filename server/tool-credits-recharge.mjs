@@ -35,8 +35,10 @@ export function createToolCreditsRecharge({ payment, orders, requireAccount, get
     try {
       trade = await payment.query(order);
     } catch (error) {
-      // Cancelled checkouts may have never created a WeChat order. Keep the original ID for later recovery.
-      if (order.state === "pending" && error.wechatCode === missingWechatOrder) return order;
+      // Cancelled or failed checkouts may have never created a WeChat order. Report that explicitly so the UI can unlock.
+      if (order.state === "pending" && error.wechatCode === missingWechatOrder) {
+        return { ...order, wechatOrderMissing: true };
+      }
       throw error;
     }
     order = await orders.applyTrade(order, trade);
