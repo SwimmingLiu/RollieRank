@@ -91,8 +91,27 @@ export function createQiniuStorage({
     return { key, url: `${domain}/${key}` };
   }
 
+  async function deleteObject(key) {
+    if (!enabled || typeof key !== "string" || !key.trim()) return false;
+    const encodedEntry = urlSafeBase64(`${bucket}:${key.trim()}`);
+    const path = `/delete/${encodedEntry}`;
+    const digest = createHmac("sha1", sk).update(`${path}\n`).digest();
+    const auth = `QBox ${ak}:${urlSafeBase64(digest)}`;
+    try {
+      const response = await fetchImpl(`https://rs.qbox.me${path}`, {
+        method: "POST",
+        headers: { Authorization: auth },
+        signal: AbortSignal.timeout(6000),
+      });
+      return response.ok || response.status === 612;
+    } catch {
+      return false;
+    }
+  }
+
   return {
     isEnabled: () => enabled,
+    deleteObject,
     uploadImage: ({ prefix = "", id, bytes, mime, errorMessage }) =>
       uploadObject({ prefix, id, bytes, mime, errorMessage }),
     uploadAvatar: ({ id, bytes, mime }) =>

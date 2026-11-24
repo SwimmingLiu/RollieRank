@@ -59,6 +59,11 @@ if [[ ! -e "$env_file" ]]; then
   (umask 077; printf 'ROLLIERANK_REVIEW_TOKEN=%s\n' "$review_token" > "$env_file")
 fi
 
+# 已配置测试卷豆库时，切换版本前先执行幂等迁移，避免新增列（如 UID）导致接口报 503。
+if [[ -e "$env_file" ]] && grep -Eq '^(TEST_DATABASE_URL|TEST_MIGRATION_DATABASE_URL)=.+' "$env_file"; then
+  ( cd "$release" && /usr/bin/env node --env-file="$env_file" scripts/migrate-tool-credits.mjs --test-environment )
+fi
+
 activate_release() {
   ln -sfn "$1" "$release/.current"
   mv -Tf "$release/.current" "$app_dir/current"

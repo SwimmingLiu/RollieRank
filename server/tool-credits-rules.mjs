@@ -10,8 +10,8 @@ export const defaultCreditRules = {
   purchase: {
     directPurchase: false, tokenRecharge: false,
     packages: [
-      { credits: 1, cents: 100 }, { credits: 5, cents: 400 }, { credits: 10, cents: 600 },
-      { credits: 30, cents: 1500 }, { credits: 60, cents: 2700 },
+      { credits: 1, cents: 100 }, { credits: 5, cents: 500 }, { credits: 10, cents: 1000 },
+      { credits: 30, cents: 3000 }, { credits: 60, cents: 6000 },
     ],
   },
   ads: { enabled: false, reward: 1, dailyLimit: 2 },
@@ -30,7 +30,7 @@ export function usageDay(now) {
   return new Date(now + 8 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
-export function updateCreditRules(previous, input, { groupApproved, directPurchaseReady = false }) {
+export function updateCreditRules(previous, input, { groupApproved, directPurchaseReady = false, tokenRechargeReady = false }) {
   const integer = (value, min, max, label) => {
     if (!Number.isInteger(value) || value < min || value > max) {
       throw creditError(400, `${label}须为 ${min} 到 ${max} 的整数。`);
@@ -52,13 +52,21 @@ export function updateCreditRules(previous, input, { groupApproved, directPurcha
   if (!groupApproved && (input.invite?.enabled === true || input.invite?.groups === true)) {
     throw creditError(409, "微信群邀请待提审和渠道校验接入。");
   }
-  if ((!directPurchaseReady && input.purchase?.directPurchase === true) || purchase.tokenRecharge || ads.enabled) {
+  if ((!directPurchaseReady && input.purchase?.directPurchase === true) ||
+      (!tokenRechargeReady && input.purchase?.tokenRecharge === true) || ads.enabled) {
     throw creditError(409, "支付与广告渠道待微信开通和联调。");
   }
   if (!Array.isArray(purchase.packages) || purchase.packages.length > 20 ||
       new Set(purchase.packages.map(pack => pack?.credits)).size !== purchase.packages.length) {
     throw creditError(400, "套餐颗数必须唯一。");
   }
+  const packages = purchase.packages.map(pack => {
+    const credits = integer(pack?.credits, 1, 10000, "套餐颗数");
+    // The published WeChat coin rate fixes the price of every package.
+    if (pack.cents !== credits * 100) throw creditError(400, "卷豆充值为 1 元 1 颗。", "recharge-price");
+    return { credits, cents: credits * 100 };
+  }).sort((a, b) => a.credits - b.credits);
+  if (purchase.tokenRecharge && !packages.length) throw creditError(400, "请设置至少一个充值档位。");
   return {
     welcome: {
       newAccount: integer(welcome.newAccount, 0, 100, "新人赠送"),
@@ -74,10 +82,7 @@ export function updateCreditRules(previous, input, { groupApproved, directPurcha
     },
     purchase: {
       directPurchase: purchase.directPurchase, tokenRecharge: purchase.tokenRecharge,
-      packages: purchase.packages.map(pack => ({
-        credits: integer(pack?.credits, 1, 10000, "套餐颗数"),
-        cents: integer(pack?.cents, 1, 1000000, "套餐金额（分）"),
-      })).sort((a, b) => a.credits - b.credits),
+      packages,
     },
     ads: {
       enabled: ads.enabled, reward: integer(ads.reward, 1, 100, "广告奖励"),

@@ -224,6 +224,55 @@ ROLLIERANK_MINIPROGRAM_PAGE=pages/home/home
 
 「继续看网页」会在 `sessionStorage` 记一次，同一会话内不再打扰。
 
+## 自有短链（`/s/<code>`）
+
+分享用的短地址。它不替代微信短链，而是用自己的域名 + 个人主体可用的小程序码拼出等价能力。
+
+### 为什么不自建微信短链
+
+`wxaurl.cn/xxx` 的链路是：`302 → weixin://dl/business/?t=<token>`，由微信客户端拦截协议打开小程序。
+那个 `token` 由微信服务端签发并绑定 appid，**外部无法生成**。而个人主体拿不到签发权限：
+
+| 接口 | 结果 |
+| --- | --- |
+| `genwxashortlink` | ❌ 43104 |
+| `generate_urllink` | ❌ 85407 |
+| `generatescheme` | ❌ 85407 |
+| `getwxacodeunlimit` | ✅ 可用 |
+
+`getwxacodeunlimit` 之前报 41030，是因为默认 `check_path:true` 会校验页面已发布到线上版。
+**必须传 `check_path:false`**，这是个人主体在开发阶段拿到码的关键。
+
+### 接口
+
+| 接口 | 用途 | 需要口令 |
+| --- | --- | --- |
+| `POST /api/links` | 创建短链 `{page?, title?, channel?}` | ✅ |
+| `GET /api/links` | 列出全部短链 | ✅ |
+| `GET /api/links/<code>` | 单条详情，`?visit=1` 记一次点击 | ❌ |
+| `GET /api/links/<code>/qrcode` | 小程序码（base64 JPEG，缓存 24h） | ❌ |
+| `GET /s/<code>` | 落地页，按 UA 展示小程序码 | — |
+
+口令取自 `ROLLIERANK_SHORTLINK_TOKEN`，未设置时回退到 `ROLLIERANK_REVIEW_TOKEN`。
+未配口令时写接口直接 503 关闭，落地页不受影响。
+
+```sh
+curl -X POST https://rank.swimmingliu.cn/api/links \
+  -H "Content-Type: application/json" \
+  -H "x-rollierank-token: $ROLLIERANK_REVIEW_TOKEN" \
+  -d '{"page":"pages/home/home","title":"行测估分工具","channel":"wechat"}'
+```
+
+### 存储与配额
+
+短链存在 `catalog.json` 的 `features.shortLinks`。**不能放顶层字段**——`persist()` 只写
+`versions / audit / receipts / features` 四项，顶层字段重写后即丢失。上限 500 条，
+每条保留最近 50 条点击明细，累计数在 `clicks` 字段。
+
+### 索引
+
+落地页带 `noindex`，`robots.txt` 对 `/s/` 设 `Disallow`：短链是分享入口，内容与首页重复。
+
 ## 内容维护约定
 
 - 页面与 `llms.txt` 里不写会过期的数字（套数、题量、机构名单），这些放到产品内动态展示。

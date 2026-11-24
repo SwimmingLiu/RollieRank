@@ -29,7 +29,7 @@ OCR 只会把 `[A][B][C][D]` 这些印刷字读出来，读不出“哪一格被
   "recognized": 130,
   "blank": 10,
   "averageConfidence": 0.82,
-  "layout": { "engine": "omr-v2", "style": "column", "box": {}, "groups": 7 },
+  "layout": { "engine": "omr-v3", "style": "column", "box": {}, "groups": 7 },
   "warnings": [],
   "elapsedMs": 620,
   "imageDigest": "sha256…",
@@ -48,6 +48,11 @@ OCR 只会把 `[A][B][C][D]` 这些印刷字读出来，读不出“哪一格被
 `recognized` 直接传 `/api/omr/recognize` 的返回即可。题数须与套卷题数一致（答空题请传 `answer: null`，不要省略条目），否则返回 400；缺答按空题计分。
 
 返回 `answers`（按套卷题号排列，未识别为 null）、`report`（与正式交卷同一套 `gradeVersion` 计分）、`unrecognized`。
+
+## 前台入口
+
+- **手机 Web（`docs/ui-exploration/ios-v3/`）**：录答案页工具栏点击「扫卡」打开扫描弹层（`ui/omr-scanner.tsx`），选择照片后在浏览器端按需转码/缩放到 JPEG（长边 ≤ 2260px 且 ≤ 4 MB 的 JPEG 直传原字节，非 JPEG 或超大原图缩至 2048px 导出 JPEG），调用 `POST /api/omr/recognize`；确认后通过 `src/omr-draft.js` 合并进当前草稿，置信度低于 0.25 的题自动加入「待检查」存疑列表，已有手填草稿时默认「仅补空题」并支持切换「整份替换」。
+- **微信小程序（`mini-program/pages/practice/`）**：录答案页工具栏点击「扫卡」，使用 `wx.chooseMedia`（`sizeType: ["original"]`）选图，合规 JPEG 直接 `readFile(base64)` 上传，非 JPEG 或超大原图通过离屏 `#omr-canvas` 转码为 JPEG 后上传；结果通过 `mini-program/utils/omr.js` 按同一口径合并并标记低置信度题目。
 
 ## 命令行
 
@@ -97,4 +102,4 @@ CI 的 `RollieRank verification` 作业会跑这两条，证据随其他验证�
 - 行式版式要求题目行在照片上是水平方向可聚类的：倾斜超过约 6° 或强透视时，剪切校正只能还原一部分。
 - 白底卡上颜色很浅的涂痕可能漏检，整列空白的题位会保留为缺答，而不是顺次错位。
 - 涂得极淡、跨格涂改、折痕遮挡的题可能识别为空格，需要用 `warnings` 与低置信度提示人工复核。
-- 公开样张实测（2026-11）：三张官方回归图正确率 A 125/129、B 135/135、C 118/130。外部样张里，白底红字印刷格、空白卡、整页斜拍或只占画面一角时准确率明显下降：4K 手机原图（3120×4160）上的白底红字卡只能读出 10–20 题，空白卡会读入少量印刷框假答案。这类输入需要先修版式定位，不能靠调阈值硬凑。
+- 公开样张实测（2026-11，`omr-v3`）：三张官方回归图正确率 A 129/129（1 处底部边缘淡痕）、B 135/135（0 错）、C 130/130（0 错），冷启动约 350–470ms；满屏近拍行式卡（1920px / 3000px）、桌面远拍、52% 强阴影梯度与 EXIF 旋转原图均稳定通过；纯白图、书页文字、随机杂斑、规则网格、蓝白条纹与网页截图等非答题卡图片全部返回 422 拒收，不再硬凑假答案。

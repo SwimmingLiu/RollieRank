@@ -1,5 +1,6 @@
-import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { defaultNickname, wechatProfilesByGuest } from "./wechat-profile.mjs";
+import { createQiniuStorage, readQiniuConfig } from "./qiniu-oss.mjs";
 
 const WECHAT_API = "https://api.weixin.qq.com";
 const GUEST_ID_RE = /^[\w-]{10,80}$/;
@@ -104,6 +105,7 @@ function validateImage(image, index) {
   if (!isPng && !isJpeg) throw fault(400, "截图文件内容与格式不匹配，请重新选择。");
   return {
     dataUri: `data:${mime};base64,${base64}`,
+    buffer: bytes,
     mime,
     bytes: bytes.length,
     alt: cleanText(image.alt, "截图说明", 80) || `反馈截图 ${index + 1}`,
@@ -139,7 +141,7 @@ function defaultNotifyConfig(env = process.env) {
     enabled: true,
     templateId: env.ROLLIERANK_WECHAT_FEEDBACK_TEMPLATE_ID?.trim() || "",
     miniprogramState: defaultState,
-    page: "pages/admin/admin?tab=feedback",
+    page: "pages/admin/admin",
     fieldMap: { ...DEFAULT_FIELD_MAP },
     subscribers: [],
     logs: [],
@@ -262,7 +264,11 @@ function publicFeedbackView(item) {
     categoryLabel: FEEDBACK_CATEGORIES[item.category] || "其他",
     content: item.content,
     contact: item.contact || "",
-    images: (item.images || []).map((img) => ({ dataUri: img.dataUri, alt: img.alt || "" })),
+    images: (item.images || []).map((img) => ({
+      url: img.url || "",
+      dataUri: img.url || img.dataUri || "",
+      alt: img.alt || "",
+    })),
     status: item.status,
     statusLabel: FEEDBACK_STATUSES[item.status] || "待处理",
     reply: item.reply ? { text: item.reply.text, repliedAt: item.reply.repliedAt } : null,
@@ -310,11 +316,13 @@ export function createFeedbackService({ readCatalog, mutateCatalog }, {
   env = process.env,
   fetchImpl = globalThis.fetch,
   exchangeOpenId,
+  oss,
   now = () => Date.now(),
 } = {}) {
   const appId = env.ROLLIERANK_WECHAT_APP_ID?.trim() || "";
   const secret = env.ROLLIERANK_WECHAT_APP_SECRET?.trim() || "";
   const wechatReady = Boolean(appId && secret);
+  const imageStorage = oss ?? createQiniuStorage({ config: readQiniuConfig(env), fetchImpl });
   let accessToken = "";
   let accessTokenExpires = 0;
   let pendingToken = null;
@@ -433,17 +441,38 @@ export function createFeedbackService({ readCatalog, mutateCatalog }, {
     };
   }
 
+  async function recordSkipSummary(feedbackItem, skippedReason) {
+    if (!feedbackItem?.id) return;
+    await mutateCatalog((currentStore) => {
+      const data = writableFeedbackData(currentStore, env);
+      const saved = data.items.find((item) => item.id === feedbackItem.id);
+      if (saved) {
+        saved.notifySummary = {
+          attempted: 0,
+          sent: 0,
+          failed: 0,
+          skippedReason,
+          lastError: "",
+          at: now(),
+        };
+      }
+    });
+  }
+
   async function dispatchNotifications({ feedbackItem, isTest = false, targetSubscriberId = "" }) {
     const store = readCatalog();
     const { notify } = readFeedbackData(store, env);
+    let skippedReason = "";
     if (!isTest && !notify.enabled) {
-      return { attempted: 0, sent: 0, failed: 0, skippedReason: "提醒已关闭" };
+      skippedReason = "提醒已关闭";
+    } else if (!notify.templateId) {
+      skippedReason = "未配置微信订阅消息模板 ID";
+    } else if (!wechatReady) {
+      skippedReason = "未配置小程序 AppID / AppSecret";
     }
-    if (!notify.templateId) {
-      return { attempted: 0, sent: 0, failed: 0, skippedReason: "未配置微信订阅消息模板 ID" };
-    }
-    if (!wechatReady) {
-      return { attempted: 0, sent: 0, failed: 0, skippedReason: "未配置小程序 AppID / AppSecret" };
+    if (skippedReason) {
+      if (!isTest) await recordSkipSummary(feedbackItem, skippedReason);
+      return { attempted: 0, sent: 0, failed: 0, skippedReason };
     }
     const candidates = notify.subscribers.filter((sub) => {
       if (!sub?.openid) return false;
@@ -451,18 +480,17 @@ export function createFeedbackService({ readCatalog, mutateCatalog }, {
       return (Number(sub.quota) || 0) > 0;
     });
     if (!candidates.length) {
+      skippedReason = targetSubscriberId ? "找不到目标订阅管理员" : "当前没有可用订阅次数的管理员";
+      if (!isTest) await recordSkipSummary(feedbackItem, skippedReason);
       return {
         attempted: 0,
         sent: 0,
         failed: 0,
-        skippedReason: targetSubscriberId ? "找不到目标订阅管理员" : "当前没有可用订阅次数的管理员",
+        skippedReason,
       };
     }
 
-    const basePage = notify.page || "pages/admin/admin?tab=feedback";
-    const page = !isTest && feedbackItem?.id
-      ? `${basePage}${basePage.includes("?") ? "&" : "?"}id=${encodeURIComponent(feedbackItem.id)}`
-      : basePage;
+    const page = notify.page || "pages/admin/admin";
     const payloadData = buildSubscribeMessageData(notify.fieldMap, feedbackItem);
 
     const results = [];
@@ -659,7 +687,7 @@ export function createFeedbackService({ readCatalog, mutateCatalog }, {
     if (input.page !== undefined) {
       const raw = typeof input.page === "string" ? input.page.trim() : "";
       if (raw.length > 160 || INVALID_CONTROLS_RE.test(raw)) throw fault(400, "跳转页面路径无效。");
-      page = raw || "pages/admin/admin?tab=feedback";
+      page = raw || "pages/admin/admin";
     }
     let fieldMap;
     if (input.fieldMap !== undefined) {
@@ -811,6 +839,35 @@ export function createFeedbackService({ readCatalog, mutateCatalog }, {
       const clientMeta = normalizeClientMeta(input.clientMeta);
       const rawNickname = cleanText(input.nickname, "昵称", 40, false);
 
+      // 先做幂等与限流预检，避免重复请求或被拒请求浪费对象存储上传。
+      const initialData = readFeedbackData(readCatalog(), env);
+      const priorItem = initialData.items.find((entry) => entry.id === feedbackId);
+      if (priorItem) {
+        if (priorItem.guestId !== guestId) {
+          throw fault(409, "反馈编号冲突，请重新提交。");
+        }
+        send(200, { feedback: publicFeedbackView(priorItem), notified: { attempted: 0, sent: 0 } });
+        return true;
+      }
+      const preCutoff = now() - RATE_LIMIT_WINDOW_MS;
+      const preRecentCount = initialData.items.filter((entry) => entry.guestId === guestId && (entry.createdAt || 0) >= preCutoff).length;
+      if (preRecentCount >= RATE_LIMIT_MAX) {
+        throw fault(429, "提交过于频繁，请稍后再试。");
+      }
+
+      const storedImages = await Promise.all(images.map(async (img) => {
+        const { buffer, dataUri, ...meta } = img;
+        if (imageStorage.isEnabled()) {
+          const uploaded = await imageStorage.uploadFeedbackImage({
+            id: randomBytes(16).toString("hex"),
+            bytes: buffer,
+            mime: meta.mime,
+          });
+          return { ...meta, url: uploaded.url, key: uploaded.key };
+        }
+        return { ...meta, dataUri };
+      }));
+
       let isReplay = false;
       const savedItem = await mutateCatalog((store) => {
         const data = writableFeedbackData(store, env);
@@ -837,7 +894,7 @@ export function createFeedbackService({ readCatalog, mutateCatalog }, {
           category,
           content,
           contact,
-          images,
+          images: storedImages,
           clientMeta,
           status: "pending",
           reply: null,
@@ -891,30 +948,14 @@ export function createFeedbackService({ readCatalog, mutateCatalog }, {
       return true;
     }
 
-    // 4. 小程序端维护者：查看反馈列表 + 提醒配置状态
-    if (method === "POST" && pathname === "/api/feedback/admin/list") {
+    // 4. 小程序端维护者：仅读取微信推送订阅状态（反馈记录统一在网页管理后台查看处理）
+    if (method === "POST" && pathname === "/api/feedback/admin/notify-status") {
       authorizeReviewToken(input, env);
-      const status = typeof input.status === "string" && input.status ? input.status : "all";
-      if (status !== "all") validateStatus(status);
-      const result = listForAdmin(readCatalog(), { status, q: input.q || "", page: input.page, pageSize: input.pageSize || 50 });
-      send(200, result);
+      send(200, { ok: true, notify: buildNotifyView(readCatalog()) });
       return true;
     }
 
-    // 5. 小程序端维护者：回复或更新反馈状态
-    if (method === "POST" && pathname === "/api/feedback/admin/reply") {
-      authorizeReviewToken(input, env);
-      const updated = await updateFeedback({
-        feedbackId: input.feedbackId,
-        status: input.status,
-        replyText: input.replyText,
-        operator: "miniprogram-admin",
-      });
-      send(200, { ok: true, feedback: updated });
-      return true;
-    }
-
-    // 6. 小程序端维护者：绑定微信并累加订阅消息次数
+    // 5. 小程序端维护者：绑定微信并累加订阅消息次数
     if (method === "POST" && pathname === "/api/feedback/admin/subscribe") {
       authorizeReviewToken(input, env);
       const result = await subscribeAdmin({
@@ -926,7 +967,7 @@ export function createFeedbackService({ readCatalog, mutateCatalog }, {
       return true;
     }
 
-    // 7. 小程序端维护者：发送测试微信提醒
+    // 6. 小程序端维护者：发送测试微信提醒
     if (method === "POST" && pathname === "/api/feedback/admin/test-notify") {
       authorizeReviewToken(input, env);
       const result = await sendTestNotification({ subscriberId: typeof input.subscriberId === "string" ? input.subscriberId : "" });

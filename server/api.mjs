@@ -6,6 +6,7 @@ import { DEFAULT_RULES } from "../src/scoring.js";
 import { createMiniprogramWebService } from "./miniprogram-web.mjs";
 import { createWechatProfileService } from "./wechat-profile.mjs";
 import { createMiniappLinkService } from "./miniapp-link.mjs";
+import { createShortLinkService } from "./shortlink.mjs";
 import { createRedisCache } from "./redis-cache.mjs";
 import { createDiscussionsService } from "./discussions.mjs";
 import { createCorrectionsService } from "./corrections.mjs";
@@ -207,7 +208,8 @@ export async function createApi({
   const featureContext = { readCatalog, mutateCatalog, dataDirectory, cache: linkCache, moderation, localCliBypass };
   const feedbackService = createFeedbackService(featureContext, feedbackOptions);
   services.push(feedbackService);
-  for (const factory of [...featureFactories, createMiniappLinkService])
+  // 自有短链与微信短链共用同一个 Redis 缓存，短链表存在 features.shortLinks 里随业务数据落盘。
+  for (const factory of [...featureFactories, createMiniappLinkService, createShortLinkService])
     services.push(await factory({ ...featureContext, billing: toolCredits.billing }));
   services.push(createAdminConsoleService({ ...featureContext, toolCredits, feedbackService }));
   const adminApiPrefix = `${resolveAdminBasePath()}/api/`;

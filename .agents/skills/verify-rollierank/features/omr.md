@@ -4,26 +4,28 @@
 
 ## Sub-features
 
-- 图片受理：JPEG 校验、12 MB 上限、base64 与 data URL 两种投递方式、非法输入的可读错误
-- 版式定位：在三种真实拍照版式（蓝底/白底/带分隔线）上找出 140 题的选项网格
-- 涂黑判读：每题取填充率最高的选项，涂得过淡或空白时输出空值，不猜
+- 图片受理：JPEG 校验、EXIF Orientation 自动转正、12 MB 上限（HTTP 请求体 17 MB）、base64 与 data URL 两种投递方式、非法输入的可读错误
+- 版式定位与真伪门禁：在列式（蓝/白交替）与行式（白底横排）版式上做尺度无关的全局 2D 网格定位；书页文字、桌面杂斑、规则网格、蓝白条纹、二维码等非答题卡照片必须返回 422 拒收，绝不硬凑假答案
+- 涂黑判读：基于光照不变相对暗度图直接对 4 个选项格采样比对，兼容阴影、低对比、连续同选涂黑与整列留空，空白或模糊时输出空值，不猜
 - 结果契约：按套卷题数补齐、置信度、耗时、图片摘要、进程内缓存命中
 - 对照打分：识别结果按题号比对套卷参考答案，复用正式交卷的计分规则
+- 前台拍照填卡：手机 Web（`ios-v3`）与微信小程序录答案页工具栏「扫卡」入口，端侧按需转码/缩放到 JPEG、展示已识别/待核对/未填涂统计、支持「仅补空题 / 整份替换」、低置信度（`< 0.25`）自动标为存疑并落盘草稿，失败不破坏已有作答
 
 ## How to get to it (user POV)
 
-调用方把自己的答题卡照片转成 base64 调 `/api/omr/recognize`，拿到 1–140 题的答案；再把结果连同 `versionId` 交给 `/api/omr/grade` 得到分数。命令行等价入口是 `npm run omr -- <图片>`。
+- 手机 Web（`/ios-v3/app.html`）与微信小程序（`mini-program/pages/practice`）：进入任意套卷的「录答案」页，点工具栏「扫卡」打开扫描弹层，拍照或从相册选图；识别完成后查看已识别 / 待核对 / 未填涂数量，确认填入草稿并在原答题卡核对存疑题后再交卷。
+- 接口与命令行：把答题卡照片转成 base64 调 `/api/omr/recognize`（或图片地址调 `/api/omr/recognize-url`、健康检查 `/api/omr/health`），拿到按套卷题数补齐的答案；再把结果连同 `versionId` 交给 `/api/omr/grade` 得到分数。命令行等价入口是 `npm run omr -- <图片>`。
 
 ## Driving it with verification CLI
 
 Preconditions: Node 20+，`npm ci` 已安装（运行依赖只有 jpeg-js）。测试图在 `test/fixtures/omr/`，是三张真实拍照、三种版式、作答各不相同的答题卡。
 
 ```bash
-node --test test/omr.test.js
+npm run verify -- feature omr
 npm run verify:omr -- --repeat 3
 ```
 
-`verify-omr.py` 自己起一个隔离的 `scripts/serve.mjs`（临时数据目录 + 未占用回环端口），对三张图各请求 `--repeat` 次，记录每次的端到端请求耗时，然后关闭自己启动的进程。
+`npm run verify -- feature omr` 会运行 `test/omr.test.js`、`test/ios-omr-browser.test.js` 与手机端主流程；`verify-omr.py` 自己起一个隔离的 `scripts/serve.mjs`（临时数据目录 + 未占用回环端口），对三张图各请求 `--repeat` 次，记录每次的端到端请求耗时，然后关闭自己启动的进程。
 
 ## 通过标准
 
@@ -31,8 +33,9 @@ npm run verify:omr -- --repeat 3
 - 每张图的识别题数不少于实测基线（sheet-a 99、sheet-b 123、sheet-c 101）；余下允许是空白或涂得太淡
 - 与 `test/fixtures/omr/*.answers.json` 的人工答案键逐题比对：正确题数不低于 sheet-a 118 / sheet-b 132 / sheet-c 110，错判不超过 sheet-a 6 / sheet-b 2 / sheet-c 6。错判含「把空格读成答案」
 - 三张版式相同、作答不同的答题卡不能读出完全相同的答案串；相同即说明没有真正判读涂黑
+- 非答题卡图片（书页文字、规则网格、二维码等）必须返回 422 拒收，不得返回 200 或输出假答案
 - 平均请求耗时不超过 `--max-average-ms`（默认 8000）
-- `test/omr.test.js` 全部通过：非法输入、缓存命中、补齐缺答、对照打分、题数不符拒绝
+- `test/omr.test.js` 全部通过：非法输入、非答题卡拒收、EXIF 旋转、满屏近拍与阴影光照、缓存命中、补齐缺答、对照打分、题数不符拒绝
 
 ## Evidence
 

@@ -2,11 +2,20 @@
 <view class="screen">
   <rr-nav title="本卷交流" back="{{true}}" />
 
-  <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}" lower-threshold="120" bindscrolltolower="onReachBottom">
+  <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}" refresher-enabled="{{true}}" refresher-triggered="{{refreshing}}" refresher-background="#fcf8f1" bindrefresherrefresh="onRefresherRefresh" lower-threshold="120" bindscrolltolower="onReachBottom">
   <view wx:if="{{loading}}" class="loading">正在读取讨论…</view>
-  <view wx:elif="{{error}}" class="empty">
-    <text>{{error}}</text>
-    <button class="chip" bindtap="retry">重新读取</button>
+  <view wx:elif="{{error}}" class="state-wrap">
+    <view class="state-card">
+      <view class="state-card__badge">
+        <image class="state-card__icon" src="/assets/ui/warn-ochre.svg" mode="aspectFit" />
+      </view>
+      <text class="state-card__title">暂时无法连接</text>
+      <text class="state-card__desc">{{error}}</text>
+      <button class="state-card__btn" bindtap="retry" hover-class="press">
+        <image class="state-card__btn-icon" src="/assets/ui/refresh-light.svg" mode="aspectFit" />
+        <text>重新读取</text>
+      </button>
+    </view>
   </view>
 
   <view wx:else class="disc__list {{replyTarget || images.length || !hasWechatProfile ? 'disc__list--extended' : ''}}" aria-label="共 {{total}} 条评论">
@@ -43,7 +52,7 @@
             <view wx:for="{{replyByRoot[item.id]}}" wx:for-item="reply" wx:key="id" class="disc__reply">
               <image class="disc__avatar disc__avatar--reply" src="{{reply.avatar}}" mode="aspectFill" aria-label="{{reply.author.name}}的头像" />
               <view class="grow">
-              <text class="disc__name">{{reply.author.name}}</text>
+              <text class="disc__name">{{reply.author.name}}<text wx:if="{{reply.moderationText}}" class="disc__mod-badge">{{reply.moderationText}}</text></text>
               <text wx:if="{{reply.target}}" class="text-xs disc__target">回复 {{reply.target}}</text>
               <text class="disc__text">{{reply.text}}</text>
               <view wx:if="{{reply.links.length}}" class="disc__links"><text wx:for="{{reply.links}}" wx:for-item="link" wx:key="*this" data-link="{{link}}" bindtap="copyExternalLink">{{link}}</text></view>

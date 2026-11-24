@@ -37,6 +37,7 @@ Page({
     tabSwiping: false,
     creditSignedIn: false,
     creditLoginOpen: false,
+    creditUid: 0,
     creditBalance: 0,
     creditHeld: 0,
     feedbackHasReply: false,
@@ -44,6 +45,8 @@ Page({
 
   onShow() {
     this.resetTabSwipe();
+    const cachedUid = credits.uid();
+    if (cachedUid && cachedUid !== this.data.creditUid) this.setData({ creditUid: cachedUid });
     this.refresh();
     this.refreshProfile();
     this.refreshCredits();
@@ -163,6 +166,7 @@ Page({
         this.setData({
           creditSignedIn: false,
           creditLoginOpen: loginOpen,
+          creditUid: 0,
           creditBalance: 0,
           creditHeld: 0,
         });
@@ -172,12 +176,24 @@ Page({
       this.setData({
         creditSignedIn: true,
         creditLoginOpen: loginOpen,
+        creditUid: wallet.uid || credits.uid() || 0,
         creditBalance: wallet.balance,
         creditHeld: wallet.held,
       });
     } catch {
       this.setData({ creditSignedIn: false });
     }
+  },
+
+  copyUid() {
+    if (!this.data.creditUid) return;
+    const text = String(this.data.creditUid);
+    wx.setClipboardData({
+      data: text,
+      success() {
+        wx.showToast({ title: `已复制 UID ${text}`, icon: "success" });
+      },
+    });
   },
 
   applyFilter() {

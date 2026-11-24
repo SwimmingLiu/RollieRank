@@ -40,7 +40,8 @@ test("卷豆迁移接入现有 PostgreSQL schema，保留已有会话表及迁�
     process.execPath, ["scripts/migrate-tool-credits.mjs"], { env: migrationEnv },
   )));
   const applied = runs.flatMap(run => JSON.parse(run.stdout).applied);
-  assert.deepEqual(applied, ["wallet/001_initial.sql", "wallet/002_account_uid.sql", "wallet/003_wechat_tool_purchases.sql"]);
+  assert.deepEqual(applied, ["wallet/001_initial.sql", "wallet/002_account_uid.sql", "wallet/003_wechat_tool_purchases.sql",
+    "wallet/004_wechat_coin_recharges.sql", "wallet/005_wechat_coin_refund_polling.sql"]);
   assert.deepEqual(await migrateWalletDatabase(database), []);
   await database.transaction(async (client) => {
     assert.equal((await client.query("SELECT id FROM sessions")).rows[0].id, "existing-application-session");
@@ -51,10 +52,13 @@ test("卷豆迁移接入现有 PostgreSQL schema，保留已有会话表及迁�
       { name: "wallet/001_initial.sql" },
       { name: "wallet/002_account_uid.sql" },
       { name: "wallet/003_wechat_tool_purchases.sql" },
+      { name: "wallet/004_wechat_coin_recharges.sql" },
+      { name: "wallet/005_wechat_coin_refund_polling.sql" },
     ]);
   }, { readOnly: true });
   assert.deepEqual(await firstReleaseWalletCounts(database), {
     walletAccounts: 0, walletEntries: 0, walletOperations: 0, walletInvites: 0, walletPaymentOrders: 0, walletPaymentRefunds: 0,
+    walletCoinRecharges: 0,
   });
 });
 
@@ -125,6 +129,7 @@ test("微信账号在新设备找回同一余额，老练习首次关联也只�
   assert.deepEqual((await server.json("/api/points/me?guestId=" + guestId)).data.records, []);
   assert.deepEqual(await firstReleaseWalletCounts(server.database), {
     walletAccounts: 3, walletEntries: 3, walletOperations: 0, walletInvites: 0, walletPaymentOrders: 0, walletPaymentRefunds: 0,
+    walletCoinRecharges: 0,
   });
 });
 
@@ -241,7 +246,7 @@ test("购豆与广告关闭，邀请仅认可已获准渠道及首次有效使�
   assert.equal(defaultRules.invite.enabled, false);
   assert.deepEqual(defaultRules.purchase, {
     directPurchase: false, tokenRecharge: false,
-    packages: [100, 400, 600, 1500, 2700].map((cents, index) => ({ cents, credits: [1, 5, 10, 30, 60][index] })),
+    packages: [1, 5, 10, 30, 60].map(credits => ({ credits, cents: credits * 100 })),
   });
   assert.deepEqual(defaultRules.ads, { enabled: false, reward: 1, dailyLimit: 2 });
   for (const patch of [{ purchase: { tokenRecharge: true } }, { purchase: { directPurchase: true } }, {
@@ -351,4 +356,41 @@ test("运营接口配置工具价格、调整卷豆并保留内部审计", async
   assert.equal(state.records.find(row => row.reason === "试用补发").operator, "wallet-admin");
   const wallet = (await server.json(walletRoutes + "wallet", undefined, auth(session))).data;
   assert.deepEqual(wallet.records.map(row => row.reason), ["人工扣回", "人工补发", "首次登录赠送"]);
+});
+
+test("未执行 002_account_uid 迁移时，卷豆登录、余额、明细与后台仍可用且不报 503", async (t) => {
+  const { readFile } = await import("node:fs/promises");
+  const schema = `wallet_no_uid_${randomUUID().slice(0, 8)}`;
+  const database = createWalletDatabase({ env: { DATABASE_URL: postgres.url, DATABASE_SCHEMA: schema } });
+  t.after(() => database.close());
+  const initialSql = await readFile(new URL("../server/migrations/wallet/001_initial.sql", import.meta.url), "utf8");
+  await database.transaction(async (client) => {
+    await client.query(`CREATE SCHEMA "${schema}"`);
+    await client.query(`SET LOCAL search_path TO "${schema}", pg_catalog`);
+    await client.query(initialSql);
+  });
+
+  const store = createToolCreditStore({ database, groupApproved: false });
+  const loggedIn = await store.login({ wechatKey: "legacy-schema-user", visitorId: randomUUID() });
+  assert.equal(loggedIn.balance, 3);
+  assert.equal(loggedIn.uid, null);
+
+  const wallet = await store.wallet(loggedIn.accountId, 0);
+  assert.equal(wallet.balance, 3);
+  assert.equal(wallet.uid, null);
+  assert.equal(wallet.records.length, 1);
+
+  const admin = await store.adminView("");
+  assert.equal(admin.accounts.length, 1);
+  assert.equal(admin.accounts[0].uid, null);
+  assert.equal(admin.accounts[0].balance, 3);
+
+  const adjusted = await store.adjust({
+    accountId: loggedIn.accountId,
+    amount: 2,
+    reason: "兼容补发",
+    requestId: randomUUID(),
+    actor: "admin",
+  });
+  assert.equal(adjusted.balance, 5);
 });

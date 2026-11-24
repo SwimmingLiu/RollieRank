@@ -81,9 +81,16 @@
         <!-- 我的反馈 -->
         <view wx:else class="fb__mine">
           <view wx:if="{{loadingMine && !mine.length}}" class="fb__empty">读取中…</view>
-          <view wx:elif="{{mineError}}" class="fb__empty">
-            <text>{{mineError}}</text>
-            <button class="fb__empty-btn" bindtap="loadMine">重试</button>
+          <view wx:elif="{{mineError}}" class="state-card state-card--standalone">
+            <view class="state-card__badge">
+              <image class="state-card__icon" src="/assets/ui/warn-ochre.svg" mode="aspectFit" />
+            </view>
+            <text class="state-card__title">暂时无法读取</text>
+            <text class="state-card__desc">{{mineError}}</text>
+            <button class="state-card__btn" bindtap="loadMine" hover-class="press">
+              <image class="state-card__btn-icon" src="/assets/ui/refresh-light.svg" mode="aspectFit" />
+              <text>重新读取</text>
+            </button>
           </view>
           <view wx:elif="{{mine.length}}" class="fb__list">
             <view wx:for="{{mine}}" wx:key="id" class="fb__item">
@@ -122,13 +129,6 @@
           <view wx:else class="fb__empty">
             <text>还没有提交过反馈</text>
             <button class="fb__empty-btn fb__empty-btn--primary" bindtap="toggleTab">去写一条</button>
-          </view>
-
-          <view class="fb__foot-links">
-            <button class="fb__admin-link" bindtap="openAdmin">
-              <image src="{{uiBase}}/lock.svg" mode="aspectFit" />
-              <text>维护者</text>
-            </button>
           </view>
         </view>
       </view>

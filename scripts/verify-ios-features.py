@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import socket
 import subprocess
+import sys
 import tempfile
 import time
 from urllib.parse import urlencode
@@ -103,14 +104,49 @@ def check_choice_sheet(frame, title):
     return panel, body
 
 
-def drag_sheet(page, panel, distance):
+def wait_sheet_settled(panel):
+    # Motion's dragSnapToOrigin animates transform via rAF rather than CSS animations; wait until ty returns to 0 and rect stabilizes.
+    panel.evaluate("""node => new Promise((resolve, reject) => {
+      const deadline = Date.now() + 5000;
+      let stable = 0;
+      let prevTop = null;
+      const check = () => {
+        const rect = node.getBoundingClientRect();
+        const transform = getComputedStyle(node).transform;
+        const ty = transform && transform !== "none" ? new DOMMatrix(transform).m42 : 0;
+        if (Math.abs(ty) < 1 && prevTop !== null && Math.abs(rect.top - prevTop) < 0.5) {
+          stable += 1;
+          if (stable >= 2) { resolve(); return; }
+        } else {
+          stable = 0;
+        }
+        prevTop = rect.top;
+        if (Date.now() >= deadline) {
+          reject(new Error(`Sheet did not settle (ty=${ty.toFixed(1)}, top=${rect.top.toFixed(1)}, bottom=${rect.bottom.toFixed(1)})`));
+          return;
+        }
+        requestAnimationFrame(check);
+      };
+      check();
+    })""")
+
+
+def drag_sheet(page, panel, distance, steps=16):
+    wait_sheet_settled(panel)
     box = panel.locator(".rr-options-drag-target").bounding_box()
     assert box is not None
     x, y = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+    step1 = 10 if distance > 0 else -10
     page.mouse.move(x, y)
     page.mouse.down()
-    page.mouse.move(x, y + distance, steps=12)
+    panel.evaluate("() => new Promise(resolve => requestAnimationFrame(() => resolve()))")
+    # Cross Motion's 3px pan threshold and yield a frame so PanSession enters dragging before the main travel.
+    page.mouse.move(x, y + step1, steps=2)
+    panel.evaluate("() => new Promise(resolve => requestAnimationFrame(() => resolve()))")
+    page.mouse.move(x, y + distance, steps=steps)
+    panel.evaluate("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))")
     page.mouse.up()
+    return {"box": box, "start": [x, y], "end": [x, y + distance]}
 
 
 def exercise_collection_picker(page, frame, output):
@@ -145,11 +181,51 @@ def exercise_review_picker(page, frame, output):
     panel, list_body = check_choice_sheet(frame, "选择复盘板块")
     expect(panel).to_have_attribute("data-expanded", "false")
     assert list_body.evaluate("node => node.scrollHeight > node.clientHeight")
-    drag_sheet(page, panel, -105)
+    drag_sheet(page, panel, -120)
     expect(panel).to_have_attribute("data-expanded", "true")
+    wait_sheet_settled(panel)
     page.locator("#phone").screenshot(path=str(output / "review-picker-expanded-320.png"))
-    drag_sheet(page, panel, 96)
-    expect(panel).to_have_attribute("data-expanded", "false")
+    frame.locator("body").evaluate("""() => {
+      window.__rrDragDiag = { events: [], moves: 0 };
+      const log = e => {
+        if (e.type === 'pointermove') { window.__rrDragDiag.moves += 1; return; }
+        window.__rrDragDiag.events.push({
+          t: e.type, x: Math.round(e.clientX), y: Math.round(e.clientY),
+          id: e.pointerId ?? null, p: e.isPrimary ?? null,
+          el: e.target?.tagName + '.' + String(e.target?.className || '').slice(0, 32),
+        });
+      };
+      for (const name of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'dragstart']) {
+        window.addEventListener(name, log, true);
+      }
+      window.__rrDragCleanup = () => {
+        for (const name of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'dragstart']) {
+          window.removeEventListener(name, log, true);
+        }
+      };
+    }""")
+    drag_meta = drag_sheet(page, panel, 125, steps=18)
+    try:
+        expect(panel).to_have_attribute("data-expanded", "false")
+    except AssertionError:
+        diag = frame.locator("body").evaluate("""() => {
+          const dlg = document.querySelector('[role="dialog"]');
+          const zone = dlg?.querySelector('.rr-options-drag-target');
+          const hit = zone ? document.elementFromPoint(zone.getBoundingClientRect().left + zone.getBoundingClientRect().width / 2, zone.getBoundingClientRect().top + zone.getBoundingClientRect().height / 2) : null;
+          return dlg ? {
+            expanded: dlg.getAttribute('data-expanded'),
+            rect: dlg.getBoundingClientRect().toJSON(),
+            zone: zone?.getBoundingClientRect().toJSON() || null,
+            hit: hit ? hit.tagName + '.' + String(hit.className || '').slice(0, 40) : null,
+            transform: getComputedStyle(dlg).transform,
+            selection: String(window.getSelection?.() || ''),
+            dragLog: window.__rrDragDiag || null,
+          } : { missing: true, dragLog: window.__rrDragDiag || null };
+        }""")
+        print(f"exercise_review_picker collapse failed drag={drag_meta} diag={diag}", file=sys.stderr, flush=True)
+        raise
+    finally:
+        frame.locator("body").evaluate("() => window.__rrDragCleanup?.()")
     list_body.hover()
     page.mouse.wheel(0, 350)
     expect(list_body).not_to_have_js_property("scrollTop", 0)

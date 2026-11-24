@@ -2,7 +2,7 @@
 
 本次交付卷豆后端。小程序可按下文接入登录、余额和明细，运营后台可接入定价和人工调整。答题卡扫描是首个计划接入的付费工具，扫描、核对和交卷流程见产品方案，当前可调用的接口见[前端对接](#前端对接)。
 
-卷友拍一张答题卡，系统把识别出的选项填进现有答题卡，用户改一改存疑题就能交卷。注册送 3 颗**卷豆**，每张标准答题卡用 1 颗，新用户可以免费扫 3 张。扫描与后续开放的付费工具共用卷豆余额，通用购豆获准后，买来的卷豆也进这笔余额。手动录答、核对答案、交卷和看成绩继续免费。
+卷友拍一张答题卡，系统把识别出的选项填进现有答题卡，用户改一改存疑题就能交卷。注册送 3 颗**卷豆**，每张标准答题卡用 1 颗，新用户可以免费扫 3 张。扫描与后续开放的付费工具共用卷豆余额，充值按 1 元 1 颗进入同一个余额。手动录答、核对答案、交卷和看成绩继续免费。
 
 「卷豆」和「卷友」都沿用卷卷小榜的叫法。「送 3 颗」「用 1 颗」念得顺，也适合给后续工具用。「卷票」有纸卡感，更像扫描专用券。「卷粮」有备考补给感，要解释一份能用几次。评审稿暂用「卷豆」，扫描入口直接写「还可扫描 3 张」。
 
@@ -28,7 +28,7 @@
 | 老卷友体验 | 送同一份 3 颗 | 已有的卷友首次绑定正式账号时领取，同一账号只发一份首登赠送 |
 | 扫描答题卡 | 每张用 1 颗卷豆 | 可核对的识别结果保存成功时扣。每人同时 1 单，每天最多发起 20 次新识别，失败的任务也计入请求上限 |
 | 邀请奖励 | 每位有效新人给邀请人 2 颗，每月最多奖励 10 位 | 默认关闭。获准后，新人按规则完成首次有效使用即发 |
-| 购买卷豆 | 试价 1、5、10、30、60 颗五档，主推 10 颗 ¥6 | 默认关闭。开通通用购豆后，渠道确认支付才入账 |
+| 购买卷豆 | 1 元 1 颗，首发 1、5、10、30、60 颗五档 | 微信确认付款及代币兑换后入账。各环境分别开放 |
 | 激励视频 | 完整看完给 1 颗，每天最多领 2 颗 | 流量主开通后启用，通过完成校验才发放 |
 
 卷豆默认长期可用，仅限本人在卷卷小榜内使用。各付费功能分别设置每次用几颗，入口只显示该功能当前的用量。比如买了 10 颗，扫 3 张后剩下 7 颗，还能用于后续开放的付费工具。现有运营积分后台已配置交卷、纠错、精选评论奖励，卷豆单独记账，后台界面可以沿用已有的余额、流水、人工发放和审计入口。 [现有积分规则](../server/admin-console.mjs#L151)
@@ -47,19 +47,19 @@
 
 **个人主体可以申请道具直购。** 卷卷小榜当前为个人主体。微信开放文档要求个人开发者持中国大陆居民身份证、小程序服务类目含「工具」，且已完成认证和备案。符合条件可在「支付与交易 → 虚拟支付」申请，个人主体各终端合计月支付限额为 10 万元。 [微信个人主体接入指南](https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/virtual-payment/person.html) · [项目主体记录](../site/README.md#L170)
 
-**买来的卷豆用在多个付费功能，对应微信的代币充值模式。** 微信在企业、个体户的接入指南里列了这个模式。确认实际小程序账号可开通代币充值、可使用相应档位后，再开放下表的卷豆套餐。首版先用赠送卷豆做试用。 [微信企业和个体户接入指南](https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/virtual-payment.html) · [微信虚拟支付接口](https://developers.weixin.qq.com/miniprogram/dev/api/payment/wx.requestVirtualPayment.html)
+**卷豆充值按 1 元 1 颗。** 卷卷小榜的 AppID 已获微信确认可使用现网代币充值，微信代币名称为「卷豆」，使用 `short_series_coin` 拉起收银台。充值与赠送共用卷豆余额，可用于已开放的付费工具。 [微信虚拟支付开发流程](https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/virtual-payment.html) · [微信虚拟支付接口](https://developers.weixin.qq.com/miniprogram/dev/api/payment/wx.requestVirtualPayment.html)
 
-| 卷豆颗数 | 建议试价 | 每颗价格 |
-| --- | ---: | ---: |
-| 1 颗 | ¥1 | ¥1.00 |
-| 5 颗 | ¥4 | ¥0.80 |
-| **10 颗（常用）** | **¥6** | **¥0.60** |
-| 30 颗 | ¥15 | ¥0.50 |
-| 60 颗 | ¥27 | ¥0.45 |
+| 卷豆颗数 | 价格 |
+| ---: | ---: |
+| 1 颗 | ¥1 |
+| 5 颗 | ¥5 |
+| 10 颗 | ¥10 |
+| 30 颗 | ¥30 |
+| 60 颗 | ¥60 |
 
-正式售价按各工具的实测成本、支付费率和各终端可配置的档位确定。购买前显示人民币金额、卷豆颗数、适用功能和退款规则。服务端通过平台通知或查单确认付款，同一订单只入账一次，并跟平台发放记录核对。 [微信虚拟支付费率](https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/virtual-payment/devplan.html)
+购买前显示人民币金额、卷豆颗数、适用功能和退款规则。支付后显示确认进度，到账后从卷豆余额和明细读取结果。用户离开页面后可以用原订单查回到账状态。 [微信虚拟支付费率](https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/virtual-payment/devplan.html)
 
-用户看一个余额，明细可查每次领取、购买、使用和退款。后台记下每颗卷豆的来源。使用时先扣赠送的，不够再按购买顺序补足。退款按渠道规则走原订单，收到处理中状态时先暂停本单可退卷豆的使用，确认成功后回收对应的未用卷豆，退款失败就恢复可用。部分已使用或余额不足的订单，按购买前公示的规则和平台结果对账。
+用户看一个余额，明细可查每次领取、购买、使用和退款。使用时先扣赠送的卷豆，再按购买顺序扣购入卷豆。退款按原单走微信渠道，退款处理中冻结原单剩余卷豆，平台确认全额退款后扣回本单未使用的卷豆。部分退款和已用卷豆差额交运营按平台账单核对。
 
 **看广告领卷豆**放在「领卷豆」里，由用户主动选择。开通流量主后再接微信激励视频，按官方完成信号判断是否看完，服务端给每次观看发一次领取凭证，通过去重和限额校验才发放。中途关闭或广告加载失败，用户可以返回原页面。 [微信激励视频接口](https://developers.weixin.qq.com/miniprogram/dev/api/ad/wx.createRewardedVideoAd.html)
 
@@ -74,12 +74,12 @@
 ## 上线顺序和验收
 
 1. **先让卷友扫起来。** 完成微信账号、试用赠送、余额和明细、拍照识别、答题卡核对和运营补发。选少量真实卷友试用，收集便于核对的实拍样本，算清失败率和单张成本。
-2. **再开购买和邀请入口。** 通用购豆获准后，验证下单、余额到账、跨工具消费和退款，再开放购买。邀请奖励按渠道提审后打开，两者分别启用。普通分享和扫码进入可以先验证，体验额度用完后至少有一种自助补充方式，再扩大开放。
+2. **验证充值，再开购买入口。** 测试环境核对下单、余额到账、跨工具消费和退款。接入实际小程序后再开放正式版。邀请奖励按渠道提审后打开。普通分享和扫码进入可以先验证，体验额度用完后至少有一种自助补充方式，再扩大开放。
 3. **最后开广告。** 拿到流量主资格后测填充和收益，按实测收入调一次发多少、每天发几次。
 
 验收要用真实照片和真实入口。新账号首次拿 3 颗卷豆，换手机仍只有同一份。扫三张合格照片后余额归零，识别失败退回占用，同一任务重复请求只扣一次，手动录答仍能走通。识别草稿退出可恢复，确认交卷才生成成绩。邀请上线前验证新旧账号、重复事件、四种分享图、扫码归属及隐私字段。购买上线前验证订单去重和补查、赠送与购买进入同一余额、按功能扣各自的颗数，以及退款按原订单回收可退的卷豆。实现后跑 `npm run verify -- all` 和识别专项，检查手机端原始截图。
 
-体验阶段采用新账号和首次绑定的老卷友各送 3 颗、扫描试用每张 1 颗、邀请按首次有效使用发奖。卷豆试价和活动渠道在开通前复核。
+体验阶段采用新账号和首次绑定的老卷友各送 3 颗、扫描试用每张 1 颗、邀请按首次有效使用发奖。充值按微信发布的 1 元 1 颗执行。
 
 ## 后端实现
 
@@ -125,7 +125,16 @@ const settled = await billing.settle(key, deliveryRef);
 
 带卷豆 token 的正式交卷仍走 `POST /api/submit`。当答卷有至少一项选择，且 `guestId` 与登录时的 `visitorId` 对应时，服务端随正式回执保存邀请事件。奖励事务可以重放，重复收件只入一次账。手动录答、交卷与看成绩继续免费。
 
-道具直购、通用代币充值和激励视频留有独立规则。道具直购后端已接入，环境默认关闭。微信个人主体当前开放道具直购。通用购豆需实际 AppID 获准开通代币充值，激励视频需开通流量主。 [微信个人主体接入指引](https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/virtual-payment/person)
+道具直购、卷豆充值和激励视频各有独立开关。卷豆充值使用本 AppID 已获准的代币模式。激励视频需开通流量主。 [微信个人主体接入指引](https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/virtual-payment/person)
+
+### 微信代币充值
+
+1. 微信登录后，服务端校验买家的钱包归属和报价，用 PostgreSQL 保存订单号、档位、人民币金额和支付环境。`buyQuantity` 为卷豆颗数，`signData` 和双签名由服务端生成。首次下单用当次 `wx.login` 的会话密钥签署 checkout 和固定的代币扣减请求。数据库仅暂存这笔扣减的签名。 [微信虚拟支付签名](https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/virtual-payment.html)
+2. 收银台返回、微信推送和后台补查进入同一核对流程。服务端用 `query_order` 核对现金单、微信内部单号、实付金额、终端和环境。客户端提交的订单状态和金额只用于交互与报价确认。 [微信查询现金单](https://developers.weixin.qq.com/miniprogram/dev/server/API/VirtualPayment/api_query_order.html)
+3. 现金确认后，服务端以固定单号调用 `currency_pay` 兑换相同数量。微信确认扣减后再次核对现金单，再在账号锁内一次写入订单状态、`purchase` 流水和可用卷豆批次。网络丢回包沿用同一扣减单号，微信返回重复成功也可以恢复到账。这笔兑换使用已购代币，现金只收一次。 [微信扣减代币](https://developers.weixin.qq.com/miniprogram/dev/server/API/VirtualPayment/api_currency_pay.html)
+4. 微信确认退款处理中时，冻结原批次并释放使用该批次的待结算工具操作。签名查单确认原现金单已全额退款后，扣回这个批次的剩余卷豆。若已消费则标记 `review`，供运营处理差额。部分退款先保留冻结，交运营核对。退款由微信渠道发起。 [微信虚拟支付退款流程](https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/virtual-payment.html)
+
+充值单以 `RC` 开头，微信代币扣减单以 `RD` 开头。卷豆正常消费沿用现有的 `billing.reserve`、`billing.settle` 和 `billing.release`。运营积分继续独立记账。开发版、预览和体验版使用测试 API、测试 PostgreSQL 与微信沙箱 `env=1`。正式版使用生产 API 与现网 `env=0`。Apple IAP 需开通并单独启用，使用现网。 [微信代币充值后端部署](../deploy/README.md#微信代币充值) · [微信终端路由](https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/virtual-payment.html)
 
 ### 道具直购订单和退款
 
@@ -145,7 +154,7 @@ const settled = await billing.settle(key, deliveryRef);
 
 | 方法和路径 | 传参 | 返回和用法 |
 | --- | --- | --- |
-| `GET /capabilities` | 无 | `{ login, invite, purchase: { directPurchase, tokenRecharge }, ads }`。按能力开关显示入口 |
+| `GET /capabilities` | 无 | `{ login, invite, purchase: { directPurchase, tokenRecharge, tokenRechargeIos?, packages }, ads }`。按能力开关显示入口 |
 | `POST /login` | `{ code, visitorId?, bindLegacy?, profileToken?, attemptId?, inviteClaim? }` | `{ token, accountId, created, balance, held }`。小程序从 `wx.login` 取 code，`visitorId` 沿用现有 `guestId` |
 | `GET /wallet` | 可传 `before`，需 token | `{ accountId, balance, held, records, nextBefore }`。`balance` 是可用卷豆，`held` 是占用中的卷豆 |
 | `GET /quote?tool=answer-sheet` | 工具标识，需 token | `{ tool, cost }`。该值是当前单次用量，工具入口是否开放由工具自己决定 |
@@ -155,13 +164,28 @@ const settled = await billing.settle(key, deliveryRef);
 
 - 新设备用同一个微信账号重新调用 `wx.login` 即可找回余额。登录前若用户同意关联本机资料，传 `bindLegacy:true`，并带已有的 `profileToken` 或一个可核实的正式回执 `attemptId`。缺少可验证资料时可以取消关联后登录。
 - 明细每页最多 30 条。以 `nextBefore` 作为下一页的 `before`，为 `null` 时到末页。每条包括 `id`、`source`、`amount`、`balanceAfter`、`reason`、`tool`、`createdAt`。按原顺序显示。正负 `amount` 表示入账和扣减。`balanceAfter` 是该笔入账后余额，当前可用额度使用顶层 `balance`。`createdAt` 是 Unix 毫秒。
-- 明细中的来源为 `welcome`、`manual`、`tool`、`invite`。人工调整显示「人工补发」或「人工扣回」。运营填写的原因和账号审计只对管理员显示。
+- 明细中的来源为 `welcome`、`manual`、`tool`、`invite`、`purchase` 和 `refund`。充值和退款分别显示「微信充值」「微信充值退款」。人工调整显示「人工补发」或「人工扣回」。运营填写的原因和账号审计只对管理员显示。
 - 收到 `401` 时清除过期 token 并提示重新登录。需要邀请发奖的正式交卷请求附上同一个卷豆 token，原有游客交卷请求仍可照常发送。
 - 用 `accountId` 作为用户向运营提供的卷豆账号编号。用户不需要提供微信登录凭证或手机号。
 
+### 卷豆充值对接
+
+卷豆页使用 `purchase.packages` 的 `{ credits, cents }` 显示颗数和应付金额，默认选最小档。`purchase.tokenRecharge === true` 且设备支持时开放支付。iPhone 的开发版和体验版显示「iPhone 充值说明」。iPhone 付款使用现网 Apple IAP，正式版还要求 `purchase.tokenRechargeIos === true`。 [微信终端路由](https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/virtual-payment.html) · [微信收银台](https://developers.weixin.qq.com/miniprogram/dev/api/payment/wx.requestVirtualPayment.html)
+
+| 方法和路径 | 请求和返回 |
+| --- | --- |
+| `POST /recharges` | 传 `{ credits, quotedCents, requestId, platform, code }`，返回 `{ order, payData }`。`platform` 为 `ios` 或微信支付侧的 `android`，`code` 来自新的 `wx.login` |
+| `GET /recharges` | 返回当前账号最近 50 笔 `{ orders }` |
+| `GET /recharges/<id>` | 读取本地 `{ order }` |
+| `POST /recharges/<id>/confirm` | 传 `{}` 触发微信查单并尝试入账，返回 `{ order }`。`needsWechatCode` 为 `true` 时，用新的 `wx.login` code 传 `{ code }` 重试 |
+
+1. 用户确认档位后生成 UUID 格式的 `requestId`，用该档位的 `cents` 填 `quotedCents`。下单请求遇到网络重试时复用 `requestId`，并重新获取 `code`。保存返回的订单 `id`，把非空的 `payData` 原样传给 `wx.requestVirtualPayment`。其中 `mode` 为 `short_series_coin`，`signData`、`paySig` 和 `signature` 均由服务端生成。
+2. 收银台结束后确认原单。超时后允许查询到账，回到页面时自动补查。微信明确取消且查单仍未付款时回到选档；付款结果未知时保留原单供用户查询。用户再次主动发起新充值时生成新 `requestId`。
+3. `order` 含 `id`、`credits`、`cents`、`platform`、`state`、`needsWechatCode`、`createdAt` 和 `updatedAt`。到账以 `credited` 为准，然后刷新 `/wallet`。`pending` 或 `paid` 显示「到账确认中」。`closed`、`refund_pending`、`refunded`、`review` 分别显示「订单已关闭」「退款处理中」「已退款」「待运营核对」。`409 recharge-quote` 表示需要刷新档位与报价。
+
 ### 道具直购对接
 
-`GET /api/tool-credits/capabilities` 返回 `purchase.directPurchase: true` 时，使用 `purchase.products` 渲染已配置道具。每项包含 `productId`、`tool`、`title`、`cents` 和 `ios`。`purchase.packages` 中的五档通用卷豆试价留待代币充值使用。调起前检查 `wx.requestVirtualPayment` 可用，并按微信指引校验 iOS 微信版本。 [微信个人主体前端接入](https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/virtual-payment/person)
+`GET /api/tool-credits/capabilities` 返回 `purchase.directPurchase: true` 时，使用 `purchase.products` 渲染已配置道具。每项包含 `productId`、`tool`、`title`、`cents` 和 `ios`。调起前检查 `wx.requestVirtualPayment` 可用，并按微信指引校验 iOS 微信版本。 [微信个人主体前端接入](https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/virtual-payment/person)
 
 所有购买请求附带卷豆 Bearer 凭证。
 
@@ -182,12 +206,14 @@ const settled = await billing.settle(key, deliveryRef);
 
 | 方法和路径 | 请求和返回 |
 | --- | --- |
-| `GET /admin/api/tool-credits` | 可传 `accountId` 筛选。返回 `{ rules, groupApproved, accounts, records }` |
+| `GET /admin/api/tool-credits` | 可传 `accountId` 筛选。返回 `{ rules, groupApproved, directPurchaseReady, tokenRechargeReady, accounts, records }` |
 | `POST /rules` | 传修改的分组字段，返回 `{ rules }`。分组为 `welcome`、`costs`、`invite`、`purchase`、`ads`。套餐数组按整组替换 |
 | `POST /adjust` | `{ accountId, amount, reason, requestId }`。正数补发，负数扣回。原因必填。返回 `{ accountId, balance, held }` |
 | `GET /purchases` | 可按账号编号或 UID 筛选最近 50 笔道具订单，附带钱包账号编号与微信单号 |
 | `POST /purchases/<订单号>/confirm` | 传 `{}`，手动触发查单 |
 | `POST /purchases/<订单号>/refund` | 传 `{ requestId, reason }`，指定微信退款原因代码 `"0"` 至 `"5"`，返回订单和退款单号 |
+| `GET /recharges` | 可按账号编号或 UID 筛选最近 50 笔充值单，附带钱包账号、微信单号、支付环境和核对原因 `issue` |
+| `POST /recharges/<订单号>/confirm` | 传 `{}`，手动触发充值或退款查单 |
 
 ```json
 {
@@ -199,10 +225,10 @@ const settled = await billing.settle(key, deliveryRef);
     "tokenRecharge": false,
     "packages": [
       { "credits": 1, "cents": 100 },
-      { "credits": 5, "cents": 400 },
-      { "credits": 10, "cents": 600 },
-      { "credits": 30, "cents": 1500 },
-      { "credits": 60, "cents": 2700 }
+      { "credits": 5, "cents": 500 },
+      { "credits": 10, "cents": 1000 },
+      { "credits": 30, "cents": 3000 },
+      { "credits": 60, "cents": 6000 }
     ]
   },
   "ads": { "enabled": false, "reward": 1, "dailyLimit": 2 }
@@ -213,7 +239,7 @@ const settled = await billing.settle(key, deliveryRef);
 
 一次人工调整生成一个 `requestId`，网络重试沿用相同 ID 和参数。每次调整最多 10000 颗，原因最多 200 字。已保存的请求重复提交只记一笔，复用请求 ID 改金额、账号或原因会返回 `409`。状态和流水以刷新后的服务端数据为准。
 
-读取规则时，`directPurchaseReady` 表示服务端已配置道具支付参数。核对 AppID 开通、道具发布、工具使用权接入和实际微信验收后，再通过 `purchase.directPurchase` 开放入口。 `tokenRecharge` 仍保持关闭。 [测试与部署](../deploy/README.md#微信道具直购)
+`tokenRechargeReady` 表示服务端具备当前环境的支付配置和卷豆数据库迁移。用 `purchase.tokenRecharge` 开关管理新充值，提交其他规则时只传改动字段。`directPurchaseReady` 和 `purchase.directPurchase` 用于道具直购。 [测试与部署](../deploy/README.md#微信代币充值)
 
 ### 错误与本机联调
 

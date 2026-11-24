@@ -13,9 +13,9 @@
     <view class="timer__grabber-zone" data-zone="handle" catchtouchstart="startGesture" catchtouchmove="moveGesture" catchtouchend="endGesture" catchtouchcancel="cancelGesture">
       <view class="timer__grabber"></view>
     </view>
-    <view class="timer__heading" data-zone="handle" catchtouchstart="startGesture" catchtouchmove="moveGesture" catchtouchend="endGesture" catchtouchcancel="cancelGesture">
+    <view class="timer__heading">
       <text>{{heading}}</text>
-      <button class="timer__close" aria-label="关闭面板" bindtap="dismiss"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button>
+      <button class="timer__close" data-sheet-no-drag="1" aria-label="关闭面板" catchtap="dismiss"><image data-sheet-no-drag="1" src="{{uiBase}}/close.svg" mode="aspectFit" /></button>
     </view>
 
     <view wx:if="{{loading}}" class="timer__notice" aria-role="status">正在读取套卷</view>

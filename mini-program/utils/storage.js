@@ -15,6 +15,7 @@ const KEYS = {
   creditToken: storageKey("rr:credit-token"),
   creditAccount: storageKey("rr:credit-account"),
   creditUid: storageKey("rr:credit-uid"),
+  creditRecharge: id => storageKey(`rr:credit-recharge:${id}`),
   inviteClaim: storageKey("rr:invite-claim"),
 };
 
@@ -246,6 +247,18 @@ function clearToolCreditSession() {
   wx.removeStorageSync(KEYS.creditUid);
 }
 
+function toolCreditRecharge(id) {
+  if (!id) return null;
+  const saved = wx.getStorageSync(KEYS.creditRecharge(id));
+  return saved?.requestId ? saved : null;
+}
+
+function setToolCreditRecharge(id, order) {
+  if (!id) return;
+  if (order) wx.setStorageSync(KEYS.creditRecharge(id), order);
+  else wx.removeStorageSync(KEYS.creditRecharge(id));
+}
+
 function inviteClaim() {
   const claim = wx.getStorageSync(KEYS.inviteClaim);
   return typeof claim === "string" && /^[a-f0-9]{48}$/i.test(claim) ? claim : "";
@@ -265,5 +278,6 @@ module.exports = {
   saveDraft, loadDraft, dropDraft, position, setPosition, pendingId, clearPendingId, KEYS,
   draftIndex, setDraftEntry, bestAttempt,
   toolCreditToken, setToolCreditToken, toolCreditAccountId, setToolCreditAccountId, toolCreditUid, setToolCreditUid, clearToolCreditSession,
+  toolCreditRecharge, setToolCreditRecharge,
   inviteClaim, setInviteClaim,
 };

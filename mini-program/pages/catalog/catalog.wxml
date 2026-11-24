@@ -5,9 +5,18 @@
   <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}" refresher-enabled="{{true}}" refresher-triggered="{{refreshing}}" refresher-background="#fcf8f1" bindrefresherrefresh="onRefresherRefresh">
   <view class="page-scroll__body">
   <view wx:if="{{loading}}" class="loading">正在读取套卷…</view>
-  <view wx:elif="{{error}}" class="empty">
-    <text>{{error}}</text>
-    <button class="chip" bindtap="retry">重新读取</button>
+  <view wx:elif="{{error}}" class="state-wrap">
+    <view class="state-card">
+      <view class="state-card__badge">
+        <image class="state-card__icon" src="/assets/ui/warn-ochre.svg" mode="aspectFit" />
+      </view>
+      <text class="state-card__title">暂时无法连接</text>
+      <text class="state-card__desc">{{error}}</text>
+      <button class="state-card__btn" bindtap="retry" hover-class="press">
+        <image class="state-card__btn-icon" src="/assets/ui/refresh-light.svg" mode="aspectFit" />
+        <text>重新读取</text>
+      </button>
+    </view>
   </view>
 
   <block wx:elif="{{projects.length}}">

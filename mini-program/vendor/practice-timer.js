@@ -67,7 +67,7 @@ var DEFAULT_TIMER_SECTIONS = Object.keys(TIMER_MODULE_WEIGHTS).map((name, index)
 function timerSectionsForQuestions(questions) {
   const sections = [];
   for (const question of questions) {
-    const name = subjectName(question.type), last = sections.at(-1);
+    const name = subjectName(question.type), last = sections[sections.length - 1];
     if (last?.name === name && last.end + 1 === question.number) last.end = question.number;
     else sections.push({ id: `section-${question.number}`, name, start: question.number, end: question.number });
   }
@@ -309,10 +309,25 @@ var publishers = [
 var publisherName = (institution) => publishers.find((item) => item.institution === institution)?.name ?? institution;
 
 // docs/ui-exploration/ios-v3/ui/timer-paper-model.ts
-var visible = (text, institution) => institution === "\u56DB\u6D77" ? text.replaceAll("\u56DB\u6D77", publisherName(institution)) : text;
-var compactVariant = (variant) => variant.replace(/地市级\s*\/\s*行政执法类/g, "\u5730\u5E02 / \u6267\u6CD5").replaceAll("\u526F\u7701\u7EA7", "\u526F\u7701");
+var visible = (text, institution) => institution === "\u56DB\u6D77" ? text.replace(/四海/g, publisherName(institution)) : text;
+var compactVariant = (variant) => variant.replace(/地市级\s*\/\s*行政执法类/g, "\u5730\u5E02 / \u6267\u6CD5").replace(/副省级/g, "\u526F\u7701");
 var collectionVariant = (variant) => /^\d+题版$/.test(variant.trim()) ? "" : variant;
-var natural = new Intl.Collator("zh-CN", { numeric: true, sensitivity: "base" });
+var naturalCollator = typeof Intl !== "undefined" && typeof Intl.Collator === "function" ? new Intl.Collator("zh-CN", { numeric: true, sensitivity: "base" }) : null;
+function compareNatural(a, b) {
+  if (naturalCollator) return naturalCollator.compare(a, b);
+  const left = a.toLowerCase().match(/\d+|\D+/g) || [];
+  const right = b.toLowerCase().match(/\d+|\D+/g) || [];
+  const limit = Math.min(left.length, right.length);
+  for (let i = 0; i < limit; i += 1) {
+    if (left[i] === right[i]) continue;
+    if (/^\d+$/.test(left[i]) && /^\d+$/.test(right[i])) {
+      const diff = Number(left[i]) - Number(right[i]);
+      if (diff !== 0) return diff;
+    }
+    return left[i] < right[i] ? -1 : 1;
+  }
+  return left.length - right.length;
+}
 var issueNumber = (label) => {
   const value = label.split(" \xB7 ")[0]?.replace(/\s+/g, "") ?? "";
   const digits = value.match(/^(?:第)?(\d+)期$/);
@@ -339,13 +354,14 @@ function timerCollections(papers) {
     if (!groups.has(id)) groups.set(id, { id, label, detail, institution: paper.institution, papers: [] });
     groups.get(id)?.papers.push(paper);
   }
-  return [...groups.values()].sort((a, b) => natural.compare(a.detail || "", b.detail || "") || issueNumber(a.label) - issueNumber(b.label) || natural.compare(a.label, b.label) || natural.compare(a.id, b.id));
+  return [...groups.values()].sort((a, b) => compareNatural(a.detail || "", b.detail || "") || issueNumber(a.label) - issueNumber(b.label) || compareNatural(a.label, b.label) || compareNatural(a.id, b.id));
 }
 function timerPaperTitle(paper, compact = false) {
   const title = visible(paper.title, paper.institution);
-  const tail = title.split(/\s*·\s*/).at(-1) ?? title;
+  const parts = title.split(/\s*·\s*/);
+  const tail = parts[parts.length - 1] ?? title;
   return compact && (/^第\s*\d+\s*套$/.test(tail) || /^(?:混合组卷\d+|\d{4}国考卷)$/.test(tail)) ? tail : title;
 }
 function timerPaperSearchText(paper) {
-  return [publisherName(paper.institution), timerPaperTitle(paper), paper.project, paper.period, paper.variant, paper.number].filter((value) => value !== void 0).join(" ").toLocaleLowerCase("zh-CN");
+  return [publisherName(paper.institution), timerPaperTitle(paper), paper.project, paper.period, paper.variant, paper.number].filter((value) => value !== void 0).join(" ").toLowerCase();
 }

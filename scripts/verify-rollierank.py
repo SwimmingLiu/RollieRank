@@ -25,7 +25,8 @@ SCENARIOS = {
     "miniprogram-ui": ("test/miniprogram-layout.test.js", "test/miniprogram-design-rationality.test.js", "test/miniprogram-web.test.js", "test/miniprogram-timer.test.js", "test/wechat-profile.test.js", "test/test-environment.test.js"),
     "visual-design-audit": ("test/miniprogram-design-rationality.test.js", "test/miniprogram-layout.test.js"),
     "core": ("test/feature-integration.test.js",),
-    "tool-credits": ("test/tool-credits.test.js", "test/wechat-tool-payment.test.js", "test/tool-credits-ui.test.js", "test/test-environment.test.js"),
+    "tool-credits": ("test/tool-credits.test.js", "test/wechat-tool-payment.test.js", "test/wechat-coin-recharge.test.js",
+                     "test/tool-credits-ui.test.js", "test/miniprogram-recharge.test.js", "test/test-environment.test.js"),
     "catalog-admin": ("test/imported-papers.test.js", "test/booklet-time-limits.test.js", "test/positions-import.test.js", "test/admin-console.test.js"),
     "practice-history": ("test/prototype-state.test.js", "test/model.test.js", "test/ios-entry.test.js", "test/ios-preview-cleanup.test.js", "test/preview-history-recovery.test.js"),
     "positions-rank": ("test/positions.test.js", "test/leaderboard.test.js", "test/positions-hierarchy.test.js", "test/ios-positions-browser.test.js", "test/positions-feature.test.js", "test/miniprogram-layout.test.js"),
@@ -35,7 +36,7 @@ SCENARIOS = {
     "sharing": ("test/ios-analytics-components.test.js", "test/ios-share-modes.test.js", "test/ios-sharing-browser.test.js"),
     "insights": ("test/positions-insights.test.js", "test/ios-insights-browser.test.js"),
     "timing-practice": ("test/practice-timer.test.js", "test/timer-paper-picker.test.js", "test/timer-configuration.test.js", "test/miniprogram-timer.test.js", "test/booklet-time-limits.test.js", "test/ios-timer-entry-feedback-browser.test.js", "test/ios-timer-latest-feedback-browser.test.js", "test/ios-practice-session-browser.test.js"),
-    "omr": ("test/omr.test.js",),
+    "omr": ("test/omr.test.js", "test/ios-omr-browser.test.js"),
 }
 
 
@@ -151,7 +152,9 @@ def source_lock() -> dict:
         *sorted((ROOT / "mini-program/components/rr-option-sheet").glob("rr-option-sheet.*")),
         ROOT / "docs/ui-exploration/ios-v3/wechat-webview.js",
         ROOT / "mini-program/app.js",
+        ROOT / "mini-program/app.json",
         ROOT / "mini-program/app.wxss",
+        *sorted((ROOT / "mini-program/custom-tab-bar").glob("index.*")),
         ROOT / "mini-program/tools/check.mjs",
         ROOT / "mini-program/utils/navigation.js",
         ROOT / "pyproject.toml",
@@ -161,6 +164,10 @@ def source_lock() -> dict:
         ROOT / "docs/ui-exploration/ios-v3/motion/interaction-current.gif",
         ROOT / "docs/ui-exploration/ios-v3/motion/interaction-current.json",
         ROOT / "src/subjects.js",
+        ROOT / "src/omr-draft.js",
+        ROOT / "mini-program/utils/omr.js",
+        ROOT / "docs/ui-exploration/ios-v3/ui/omr-scanner.tsx",
+        ROOT / "test/ios-omr-browser.test.js",
         ROOT / "src/analytics.js",
         ROOT / "src/practice-timer.js",
         ROOT / "src/data/papers.js",
@@ -523,6 +530,8 @@ def run_unit(scenario: str, output: Path) -> dict:
     web_host = ["--wechat-host"] if scenario == "miniprogram-ui" else []
     live = run_command([sys.executable, "scripts/verify-ios-features.py", *web_host, "--output", str(output / f"{scenario}-live")], output / f"{scenario}-live.log", f"{scenario}-live-user-journey", env)
     commands = [result, live]
+    if scenario in {"miniprogram-ui", "timing-practice", "visual-design-audit"}:
+        commands.append(run_command(["npm", "--prefix", "mini-program", "run", "check"], output / "miniprogram-check.log", "miniprogram-check", env))
     # Catalog administration and backup/claim flows exist on the foundation surface too.
     if scenario in {"core", "catalog-admin", "practice-history", "sharing"}:
         commands.append(run_command([sys.executable, "scripts/verify-prototype.py", "--output", str(output / f"{scenario}-foundation")], output / f"{scenario}-foundation.log", f"{scenario}-foundation-user-journey", env))

@@ -104,7 +104,7 @@ rr-nav { flex: none; }
 @media (max-width: 350px) { .footer-bar { padding-inline: 16px; } }
 
 /* 标签 */
-.chip { display: inline-flex; align-items: center; gap: 8rpx; height: 52rpx; padding: 0 22rpx; border-radius: 26rpx; background: var(--line-soft); color: var(--quiet); font-size: 24rpx; }
+.chip { display: inline-flex; align-items: center; justify-content: center; gap: 8rpx; width: auto !important; margin: 0 !important; height: 56rpx; padding: 0 24rpx; border-radius: 28rpx; background: var(--line-soft); color: var(--ink-soft); font-size: 24rpx; font-weight: 500; line-height: 1; }
 .chip--on { background: #2b2724; color: #fff8ee; }
 .chip--coral { background: var(--coral-soft); color: #c2565c; }
 
@@ -114,8 +114,64 @@ rr-nav { flex: none; }
 
 .section-title { font-size: 30rpx; font-weight: 600; margin: 36rpx 4rpx 20rpx; }
 
-.empty { padding: 80rpx 0; display: flex; flex-direction: column; align-items: center; gap: 18rpx; color: var(--quiet); }
+.empty { padding: 80rpx 36rpx; display: flex; flex-direction: column; align-items: center; gap: 18rpx; color: var(--quiet); text-align: center; }
 .empty__icon { width: 64rpx; height: 64rpx; opacity: 0.5; }
+
+/* 统一服务异常 / 暂不可用纸卡 */
+.state-wrap { box-sizing: border-box; padding: 52px 22px 32px; }
+.state-card {
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 36px 24px 30px;
+  border: 1px solid #e9dfce;
+  border-radius: 24px;
+  background: var(--card);
+  box-shadow: 0 3px 0 #eae1d0;
+  text-align: center;
+}
+.state-card--standalone { margin-top: 38px; }
+.state-card__badge {
+  width: 58px;
+  height: 58px;
+  margin-bottom: 4px;
+  border-radius: 19px;
+  background: #f7ecd6;
+  border: 1px solid #e8d8b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.state-card__icon { width: 28px; height: 28px; flex: none; }
+.state-card__title { font-size: 16px; font-weight: 700; line-height: 1.35; color: var(--ink); }
+.state-card__desc { max-width: 248px; font-size: 13px; line-height: 1.6; color: #7c6f5d; }
+.state-card__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: auto !important;
+  min-width: 148px;
+  height: 44px;
+  margin: 10px 0 0 !important;
+  padding: 0 24px;
+  border-radius: 22px;
+  background: #18181b !important;
+  color: #fffaf0 !important;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+.state-card__btn-icon { width: 15px; height: 15px; flex: none; }
+@media (max-width: 350px) {
+  .state-wrap { padding: 36px 16px 24px; }
+  .state-card { padding: 30px 18px 26px; }
+  .state-card--standalone { margin-top: 24px; }
+}
 
 .loading { padding: 120rpx 0; text-align: center; color: var(--quiet); font-size: 26rpx; }
 
@@ -135,7 +191,7 @@ rr-nav { flex: none; }
 .sheet-head { position: relative; display: flex; align-items: center; justify-content: space-between; min-height: 44px; font-size: 20px; font-weight: 700; }
 @media (max-width: 350px) { .sheet-panel { padding-inline: 16px; } .sheet-grabber-zone { margin-inline: -16px; } }
 .sheet-head:has(.sheet-close) { padding-right: 44px; }
-.sheet-close { position: absolute; top: 50%; right: 0; transform: translateY(-50%); display: grid; place-items: center; width: 44px !important; height: 44px; }
+.sheet-close { position: absolute; top: 50%; right: 0; z-index: 2; transform: translateY(-50%); display: grid; place-items: center; width: 44px !important; height: 44px; margin: 0 !important; }
 .sheet-close image { width: 16px; height: 16px; }
 .sheet-scroll { max-height: 62vh; }
 .sheet-actions { display: flex; gap: 12px; padding-top: 16px; }

@@ -50,8 +50,10 @@ export function createOmrService({ maxCache = 40 } = {}) {
     const planes = toPlanes(image);
     const sheet = detectSheet(planes);
     if (!sheet.found)
-      throw fault(422, "没有找到答题卡的选项框。请正对答题卡拍摄，四角完整入镜、光线均匀。");
+      throw fault(422, "没有找到答题卡的选项框。请正对整张答题卡拍摄，保证四角完整入镜、光线均匀。");
     const result = recognizeSheet(planes, sheet, { debug: options.debug === true });
+    if (result.sheetValid === false)
+      throw fault(422, result.rejectionReason || "没有找到答题卡的选项框。请正对整张答题卡拍摄，保证四角完整入镜、光线均匀。");
     result.imageDigest = digest;
     result.elapsedMs = Date.now() - started;
     result.cached = false;

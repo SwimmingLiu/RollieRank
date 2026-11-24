@@ -7,18 +7,26 @@ const reconcilableStates = new Set(["pending", "paid", "refunding"]);
 const rejectedRefundCodes = new Set([268490001, 268490002, 268490003, 268490013, 268490021]);
 const intervalMs = 60_000;
 
-function paymentPush(raw) {
+export function paymentPush(raw) {
   const source = raw.trim();
   if (source.startsWith("{")) {
     try { return JSON.parse(source); } catch { return null; }
   }
   if (!source.startsWith("<xml>")) return null;
   const fields = {};
-  for (const key of ["Event", "OpenId", "OutTradeNo", "MchOrderId"]) {
+  for (const key of ["Event", "OpenId", "OutTradeNo", "MchOrderId", "Env", "RetCode"]) {
     const value = new RegExp("<" + key + ">(?:<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>|([^<]*))</" + key + ">").exec(source);
     if (value) fields[key] = (value[1] ?? value[2]).trim();
   }
   return fields;
+}
+
+export function acknowledgePaymentPush(raw, response) {
+  const json = raw.trimStart().startsWith("{");
+  response.writeHead(200, {
+    "Content-Type": json ? "application/json; charset=utf-8" : "application/xml; charset=utf-8", "Cache-Control": "no-store",
+  });
+  response.end(json ? '{"ErrCode":0,"ErrMsg":"success"}' : "<xml><ErrCode>0</ErrCode><ErrMsg>success</ErrMsg></xml>");
 }
 
 export function createToolCreditsCommerce({ payment, store, requireAccount, getWechatSession, accountKey, background = true }) {
@@ -170,8 +178,7 @@ export function createToolCreditsCommerce({ payment, store, requireAccount, getW
     return true;
   }
 
-  async function handleWechatPush(raw, response) {
-    const message = paymentPush(raw);
+  async function handleWechatPush(message, raw, response) {
     const deliver = message?.Event === "xpay_goods_deliver_notify";
     const refund = message?.Event === "xpay_refund_notify";
     if (!deliver && !refund) return false;
@@ -185,11 +192,7 @@ export function createToolCreditsCommerce({ payment, store, requireAccount, getW
     // Plaintext message signatures authenticate the sender. All financial changes still use signed server queries.
     const confirmed = await refresh(order);
     if (deliver && confirmed.state === "pending") throw creditError(502, "微信尚未确认付款，请重试。");
-    const json = raw.trimStart().startsWith("{");
-    response.writeHead(200, {
-      "Content-Type": json ? "application/json; charset=utf-8" : "application/xml; charset=utf-8", "Cache-Control": "no-store",
-    });
-    response.end(json ? '{"ErrCode":0,"ErrMsg":"success"}' : "<xml><ErrCode>0</ErrCode><ErrMsg>success</ErrMsg></xml>");
+    acknowledgePaymentPush(raw, response);
     return true;
   }
 

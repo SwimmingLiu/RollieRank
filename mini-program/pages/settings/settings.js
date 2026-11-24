@@ -8,6 +8,13 @@ Page({
     this.setData({ name: storage.hasCustomName() ? storage.name() : "" });
   },
 
+  onUnload() {
+    if (this._backTimer) {
+      clearTimeout(this._backTimer);
+      this._backTimer = null;
+    }
+  },
+
   onName(event) {
     this.setData({ name: event.detail.value });
   },
@@ -23,11 +30,24 @@ Page({
     try {
       const saved = await profile.saveName(name);
       this.setData({ name: saved.name });
-      wx.showToast({ title: "昵称已保存", icon: "success" });
+      wx.showToast({ title: "昵称已保存", icon: "success", duration: 900 });
+      this._backTimer = setTimeout(() => {
+        this._backTimer = null;
+        if (getCurrentPages().length > 1) {
+          wx.navigateBack({
+            delta: 1,
+            fail: () => this.setData({ saving: false }),
+          });
+        } else {
+          wx.redirectTo({
+            url: "/pages/profile/profile",
+            fail: () => this.setData({ saving: false }),
+          });
+        }
+      }, 650);
     } catch (error) {
-      wx.showToast({ title: error.message || "昵称保存失败，请重试", icon: "none" });
-    } finally {
       this.setData({ saving: false });
+      wx.showToast({ title: error.message || "昵称保存失败，请重试", icon: "none" });
     }
   },
 });

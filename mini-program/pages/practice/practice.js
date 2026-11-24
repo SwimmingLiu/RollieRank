@@ -1,6 +1,7 @@
 const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
 const catalogUtil = require("../../utils/catalog.js");
+const omrUtil = require("../../utils/omr.js");
 const timing = require("../../utils/timing.js");
 const { createPageSheetDrag } = require("../../utils/sheet-gesture.js");
 const { resumeEntryTimer, pauseEntryTimer } = require("../../vendor/practice-timer.js");
@@ -57,6 +58,13 @@ Page({
     sheetDragging: false,
     sheetClosing: false,
     sheetShadeOpacity: 1,
+    scanPhase: "idle",
+    scanPreview: "",
+    scanError: "",
+    scanSummary: null,
+    scanLowConfidenceText: "",
+    scanMode: "fill-blank",
+    scanCanApply: false,
     uiBase: "/assets/ui",
     choices: CHOICES,
   },
@@ -334,6 +342,226 @@ Page({
     this.setData({ sheet: "sections" });
   },
 
+  openScan() {
+    this.scanSeq = (this.scanSeq || 0) + 1;
+    this.scanResult = null;
+    this.setData({
+      sheet: "scan",
+      sheetScrollTop: 0,
+      scanPhase: "idle",
+      scanPreview: "",
+      scanError: "",
+      scanSummary: null,
+      scanLowConfidenceText: "",
+      scanMode: this.data.answered > 0 ? "fill-blank" : "replace",
+      scanCanApply: false,
+    });
+  },
+
+  chooseScanImage() {
+    if (!this.version) return;
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ["image"],
+      sourceType: ["camera", "album"],
+      sizeType: ["original"],
+      success: (res) => {
+        const file = res && Array.isArray(res.tempFiles) ? res.tempFiles[0] : null;
+        if (!file || !file.tempFilePath) return;
+        this.runScan(file.tempFilePath, Number(file.size) || 0);
+      },
+      fail: (error) => {
+        const msg = String((error && error.errMsg) || "");
+        if (/cancel/i.test(msg)) return;
+        this.setData({
+          scanPhase: "error",
+          scanError: "无法打开相机或相册，请检查微信权限后重试。",
+        });
+      },
+    });
+  },
+
+  readFileBase64(filePath) {
+    return new Promise((resolve, reject) => {
+      wx.getFileSystemManager().readFile({
+        filePath,
+        encoding: "base64",
+        success: (res) => {
+          if (typeof res.data === "string" && res.data) resolve(res.data);
+          else reject(new Error("照片读取失败，请重新拍摄。"));
+        },
+        fail: () => reject(new Error("照片读取失败，请重新拍摄。")),
+      });
+    });
+  },
+
+  getImageInfo(src) {
+    return new Promise((resolve, reject) => {
+      wx.getImageInfo({
+        src,
+        success: resolve,
+        fail: () => reject(new Error("无法读取这张照片，请选择清晰的 JPG 图片重试。")),
+      });
+    });
+  },
+
+  convertToJpegViaCanvas(filePath, width, height) {
+    return new Promise((resolve, reject) => {
+      const longEdge = Math.max(width, height);
+      const scale = longEdge > omrUtil.OMR_TARGET_EDGE ? omrUtil.OMR_TARGET_EDGE / longEdge : 1;
+      const targetWidth = Math.max(1, Math.round(width * scale));
+      const targetHeight = Math.max(1, Math.round(height * scale));
+      this.createSelectorQuery()
+        .select("#omr-canvas")
+        .fields({ node: true })
+        .exec((results) => {
+          const canvas = results && results[0] && results[0].node;
+          if (!canvas) {
+            reject(new Error("当前环境无法转换照片格式，请直接拍摄 JPG 照片。"));
+            return;
+          }
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+          const ctx = canvas.getContext("2d");
+          const img = canvas.createImage();
+          img.onload = () => {
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, targetWidth, targetHeight);
+            ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+            wx.canvasToTempFilePath({
+              canvas,
+              fileType: "jpg",
+              quality: 0.92,
+              success: (out) => resolve(out.tempFilePath),
+              fail: () => reject(new Error("照片转码失败，请重新拍摄。")),
+            });
+          };
+          img.onerror = () => reject(new Error("照片解码失败，请重新选择。"));
+          img.src = filePath;
+        });
+    });
+  },
+
+  async prepareScanJpeg(filePath, fileSize) {
+    const info = await this.getImageInfo(filePath);
+    const width = Number(info.width) || 0;
+    const height = Number(info.height) || 0;
+    if (!width || !height) throw new Error("照片尺寸无效，请重新拍摄。");
+    const type = String(info.type || "").toLowerCase();
+    const isJpeg = type === "jpeg" || type === "jpg" || /\.jpe?g$/i.test(filePath);
+    const longEdge = Math.max(width, height);
+    if (isJpeg && longEdge <= omrUtil.OMR_DIRECT_MAX_EDGE && (!fileSize || fileSize <= omrUtil.OMR_DIRECT_MAX_BYTES)) {
+      return this.readFileBase64(filePath);
+    }
+    const convertedPath = await this.convertToJpegViaCanvas(filePath, width, height);
+    return this.readFileBase64(convertedPath);
+  },
+
+  canApplyScan(summary, mode) {
+    if (!summary || !summary.recognized) return false;
+    if (this.data.answered > 0 && mode === "fill-blank") return summary.fillBlankAdded > 0;
+    return true;
+  },
+
+  async runScan(filePath, fileSize) {
+    const seq = (this.scanSeq || 0) + 1;
+    this.scanSeq = seq;
+    this.scanResult = null;
+    this.setData({
+      scanPhase: "loading",
+      scanPreview: filePath,
+      scanError: "",
+      scanSummary: null,
+      scanLowConfidenceText: "",
+      scanCanApply: false,
+    });
+    try {
+      const base64 = await this.prepareScanJpeg(filePath, fileSize);
+      if (seq !== this.scanSeq) return;
+      const result = await api.recognizeAnswerSheet({
+        image: base64,
+        expectedQuestions: this.version.questionCount,
+      });
+      if (seq !== this.scanSeq) return;
+      const summary = omrUtil.summarizeOmrResult(result, {
+        questionCount: this.version.questionCount,
+        currentAnswers: this.data.answers,
+      });
+      if (summary.recognized === 0) {
+        this.setData({
+          scanPhase: "error",
+          scanError: summary.warnings[0] || "未识别到有效涂黑，请重拍",
+        });
+        return;
+      }
+      const mode = this.data.answered > 0 ? "fill-blank" : "replace";
+      const lowConfidenceText = summary.lowConfidenceCount > 0
+        ? `${summary.lowConfidence.slice(0, 6).join("、")}${summary.lowConfidenceCount > 6 ? ` 等 ${summary.lowConfidenceCount} 题` : " 题"}`
+        : "";
+      this.scanResult = result;
+      this.setData({
+        scanPhase: "ready",
+        scanSummary: summary,
+        scanLowConfidenceText: lowConfidenceText,
+        scanMode: mode,
+        scanCanApply: this.canApplyScan(summary, mode),
+      });
+    } catch (error) {
+      if (seq !== this.scanSeq) return;
+      this.setData({
+        scanPhase: "error",
+        scanError: (error && error.message) || "识别失败，请重拍或手动录入。",
+      });
+    }
+  },
+
+  setScanMode(event) {
+    const mode = event.currentTarget.dataset.mode === "replace" ? "replace" : "fill-blank";
+    this.setData({
+      scanMode: mode,
+      scanCanApply: this.canApplyScan(this.data.scanSummary, mode),
+    });
+  },
+
+  cancelScan() {
+    this.scanSeq = (this.scanSeq || 0) + 1;
+    this.setData({
+      scanPhase: this.scanResult ? "ready" : "idle",
+      scanError: "",
+    });
+  },
+
+  applyScanResult() {
+    if (!this.scanResult || !this.version || !this.data.scanCanApply) return;
+    const mode = this.data.answered > 0 ? this.data.scanMode : "replace";
+    const applied = omrUtil.applyOmrResult({
+      result: this.scanResult,
+      questionCount: this.version.questionCount,
+      currentAnswers: this.data.answers,
+      currentMarks: this.data.marks,
+      mode,
+    });
+    this.scanResult = null;
+    this.sheetDrag?.reset();
+    this._sheetScrollTop = 0;
+    this.setData({
+      answers: applied.answers,
+      marks: applied.marks,
+      markOnly: false,
+      sheet: "",
+    });
+    this.jump(applied.firstFocusQuestion);
+    wx.showToast({
+      title: omrUtil.formatOmrApplyToast({
+        appliedCount: applied.appliedCount,
+        lowConfidenceMarked: applied.lowConfidenceMarked,
+        mode,
+      }),
+      icon: "none",
+      duration: 2400,
+    });
+  },
+
   openSheet() {
     const sheetSections = this.data.sections.map(section => ({
       ...section,
@@ -355,6 +583,7 @@ Page({
   },
 
   closeSheet() {
+    if (this.data.sheet === "scan") this.scanSeq = (this.scanSeq || 0) + 1;
     this.sheetDrag?.reset();
     this._sheetScrollTop = 0;
     this.setData({ sheet: "" });
@@ -412,6 +641,7 @@ Page({
   },
 
   onUnload() {
+    this.scanSeq = (this.scanSeq || 0) + 1;
     this.sheetDrag?.reset();
     clearTimeout(this.singleAnimTimer);
     clearTimeout(this.swipeClickTimer);

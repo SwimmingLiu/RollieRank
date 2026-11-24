@@ -101,6 +101,16 @@ test("首发检查忽略运营配置并计数用户数据", () => {
   assert.equal(counts.comments, 1);
 });
 
+test("首发检查保留运营短链和匿名点击，要求核对带来源或截断的点击记录", () => {
+  const shortLink = { code: "sample2", page: "pages/home/home", clicks: 1, clickLog: [{ at: 100, ref: "" }] };
+  const catalog = { versions: [{ id: "paper:v1" }], receipts: {}, features: { shortLinks: [shortLink] } };
+  assert.ok(Object.values(firstReleaseCounts(catalog)).every(count => count === 0));
+  catalog.features.shortLinks = [{ ...shortLink, clicks: 2 }];
+  assert.throws(() => firstReleaseCounts(catalog), /尚未核对的访问记录/);
+  catalog.features.shortLinks = [{ ...shortLink, clickLog: [{ at: 100, ref: "unscreened-origin" }] }];
+  assert.throws(() => firstReleaseCounts(catalog), /尚未核对的访问记录/);
+});
+
 test("联调拒绝生产地址、未标记的本机接口以及跳转", async t => {
   await assert.rejects(requireTestApi(), /请指定测试接口/);
   await assert.rejects(requireTestApi("https://rollie-rank.swimmingliu.cn"), /请指定测试接口/);
@@ -146,7 +156,8 @@ test("卷豆部署检查区分网页口令、旧后端和正确的未登录响�
     if (mode === "old-backend") {
       response.writeHead(404).end(JSON.stringify({ error: "接口不存在。" }));
     } else if (request.url === "/api/tool-credits/capabilities") {
-      response.end(JSON.stringify({ login: true }));
+      response.end(JSON.stringify({ login: true, purchase: { tokenRecharge: true, tokenRechargeIos: false,
+        packages: [{ credits: 5, cents: 500 }] } }));
     } else if (request.url === "/api/tool-credits/quote?tool=answer-sheet") {
       response.end(JSON.stringify({ tool: "answer-sheet", cost: 1 }));
     } else {
@@ -157,7 +168,7 @@ test("卷豆部署检查区分网页口令、旧后端和正确的未登录响�
   await once(server, "listening");
   t.after(() => new Promise(resolve => server.close(resolve)));
   const verify = () => run(process.execPath, [
-    "scripts/verify-test-wallet.mjs", `http://127.0.0.1:${server.address().port}`, "--login-ready",
+    "scripts/verify-test-wallet.mjs", `http://127.0.0.1:${server.address().port}`, "--login-ready", "--recharge-ready",
   ], { cwd });
 
   await assert.rejects(verify(), /缺少测试环境标识/);
@@ -165,7 +176,7 @@ test("卷豆部署检查区分网页口令、旧后端和正确的未登录响�
   await assert.rejects(verify(), /HTTP 状态有误/);
   mode = "live";
   assert.deepEqual(JSON.parse((await verify()).stdout), {
-    environment: "test", login: true, walletAuth: true, webAuth: false, scanCost: 1,
+    environment: "test", login: true, recharge: true, walletAuth: true, webAuth: false, scanCost: 1,
   });
 });
 

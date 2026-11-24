@@ -2,6 +2,7 @@ import { createHash, randomBytes, randomUUID, scryptSync, timingSafeEqual } from
 import { CHOICES, gradeVersion, parseQuestionCsv, publicVersion, roundedScoreRatio, validateQuestions } from "../src/model.js";
 import { createWechatModeration, normalizeKeywords } from "./wechat-moderation.mjs";
 import { createFeedbackService } from "./feedback.mjs";
+import { createQiniuStorage, readQiniuConfig } from "./qiniu-oss.mjs";
 
 const SESSION_COOKIE = "rr_admin_session";
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
@@ -937,7 +938,10 @@ export function createAdminConsoleService({
         author: c.author,
         text: c.text ?? "",
         links: c.links ?? [],
-        images: c.images ?? [],
+        images: (c.images ?? []).map((img) => ({
+          ...img,
+          dataUri: img.url || img.dataUri || "",
+        })),
         audio: c.audio ?? null,
         likeCount: Array.isArray(c.likedBy) ? new Set(c.likedBy).size : 0,
         createdAt: c.createdAt,
@@ -986,6 +990,7 @@ export function createAdminConsoleService({
       const muteAuthor = Boolean(input.muteAuthor);
 
       const idSet = new Set(ids);
+      let keysToDelete = [];
       const outcome = await mutateCatalog((store) => {
         store.features ??= {};
         const section = (store.features.discussions ??= { comments: [] });
@@ -993,26 +998,46 @@ export function createAdminConsoleService({
         const targets = section.comments.filter((c) => idSet.has(c.id));
         if (!targets.length) fail(404, "找不到目标评论。");
         const now = Date.now();
-        if (action === "delete") {
+        if (action === "delete" || action === "reject") {
+          if (action === "reject" && muteAuthor) {
+            for (const comment of targets) {
+              if (!comment.guestId) continue;
+              store.features.users ??= {};
+              store.features.users[comment.guestId] = {
+                ...(store.features.users[comment.guestId] ?? {}),
+                muted: true,
+                muteReason: reason || "发布违规评论",
+                mutedAt: now,
+                updatedAt: now,
+              };
+            }
+          }
           const removedRoots = new Set(targets.filter((c) => !c.parentId).map((c) => c.id));
+          const removed = section.comments.filter((c) => idSet.has(c.id) || removedRoots.has(c.rootId ?? c.id));
+          keysToDelete = removed.flatMap((c) => (c.images ?? []).map((img) => img?.key).filter(Boolean));
           section.comments = section.comments.filter((c) => !idSet.has(c.id) && !removedRoots.has(c.rootId ?? c.id));
-          appendAudit(store, "删除评论", `${targets.length} 条评论${reason ? `（${reason}）` : ""}`, session.username);
+          appendAudit(
+            store,
+            action === "reject" ? "拒绝并清除评论" : "删除评论",
+            `${targets.length} 条${muteAuthor ? " · 已禁言作者" : ""}${reason ? `（${reason}）` : ""}`,
+            session.username,
+          );
           return { processed: targets.length };
         }
         for (const comment of targets) {
           const prev = comment.moderation ?? {};
           comment.moderation = {
             ...prev,
-            status: action === "approve" ? "approved" : "rejected",
+            status: "approved",
             source: "manual",
-            reason: reason || (action === "approve" ? "管理员审核通过" : "管理员屏蔽违规评论"),
+            reason: reason || "管理员审核通过",
             labels: Array.isArray(prev.labels) ? prev.labels : [],
             traces: Array.isArray(prev.traces) ? prev.traces : [],
             reviewedAt: now,
             requireManualApproval: false,
           };
-          if (action === "approve" && Array.isArray(comment.reports)) comment.reports = [];
-          if (action === "approve" && rewardPoints > 0 && comment.guestId) {
+          if (Array.isArray(comment.reports)) comment.reports = [];
+          if (rewardPoints > 0 && comment.guestId) {
             applyPointsDelta(store, {
               userId: comment.guestId,
               delta: rewardPoints,
@@ -1022,25 +1047,19 @@ export function createAdminConsoleService({
               nickname: comment.author?.name,
             });
           }
-          if (action === "reject" && muteAuthor && comment.guestId) {
-            store.features.users ??= {};
-            store.features.users[comment.guestId] = {
-              ...(store.features.users[comment.guestId] ?? {}),
-              muted: true,
-              muteReason: reason || "发布违规评论",
-              mutedAt: now,
-              updatedAt: now,
-            };
-          }
         }
         appendAudit(
           store,
-          action === "approve" ? "评论审核通过" : "屏蔽违规评论",
-          `${targets.length} 条${rewardPoints ? ` · 奖励 +${rewardPoints} 积分` : ""}${muteAuthor ? " · 已禁言作者" : ""}`,
+          "评论审核通过",
+          `${targets.length} 条${rewardPoints ? ` · 奖励 +${rewardPoints} 积分` : ""}`,
           session.username,
         );
         return { processed: targets.length };
       });
+      if (keysToDelete.length) {
+        const oss = createQiniuStorage({ config: readQiniuConfig(env) });
+        await Promise.allSettled(keysToDelete.map((key) => oss.deleteObject(key)));
+      }
       send(200, { ok: true, ...outcome });
       return true;
     }

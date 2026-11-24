@@ -50,7 +50,7 @@ jobs:
           bash -n deploy/install-test-api.sh
           node --check scripts/verify-test-wallet.mjs
           node --test test/test-environment.test.js
-      - name: Verify wallet PostgreSQL migrations, billing and WeChat purchase reconciliation
+      - name: Verify wallet PostgreSQL billing, WeChat reconciliation and mini program recharge
         run: >-
           uv run --frozen --group verify python scripts/verify-rollierank.py feature tool-credits
           --output test-results/verification-wallet
@@ -59,11 +59,20 @@ jobs:
         run: >-
           uv run --frozen --group verify python scripts/verify-rollierank.py all
           --output test-results/verification
-      # 答题卡识别是纯 Node 能力：真实起服务、真跑三张不同版式的照片，并记录耗时。
+      # 答题卡识别：真实起服务、真跑三张不同版式的照片，并记录耗时。
       - name: Verify answer-sheet recognition
         run: >-
-          node --test test/omr.test.js &&
+          node --test test/omr.test.js test/ios-omr-browser.test.js &&
           python3 scripts/verify-omr.py --repeat 3 --output test-results/omr
+      - name: Print failed journey logs
+        if: failure()
+        run: |
+          for file in test-results/verification/journeys/wechat.log test-results/verification/journeys/unit-and-service.log test-results/verification/journeys/mobile.log; do
+            if [ -f "$file" ]; then
+              echo "=== $file ==="
+              tail -n 100 "$file"
+            fi
+          done
       - name: Upload verification evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -73,5 +82,6 @@ jobs:
             test-results/verification
             test-results/verification-wallet
             test-results/omr
+            test-results/omr-ui
           if-no-files-found: warn
           retention-days: 14

@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ChangeEvent } from "react";
-import { AlertCircle, Camera, Check, LoaderCircle, RotateCcw } from "lucide-react";
+import { AlertCircle, Bookmark, Camera, Check, LoaderCircle, Maximize2, RotateCcw, Scan, Sun } from "lucide-react";
 import { Button } from "./components/motion/button/base";
 import { mountRoot, type Cleanup } from "./root-registry";
 import {
@@ -12,7 +12,7 @@ import {
 } from "../../../../src/omr-draft.js";
 
 export type OmrScannerProps = {
-  paperTitle: string;
+  paperTitle?: string;
   questionCount: number;
   currentAnswers: readonly string[];
   onRecognize: (imageBase64: string, expectedQuestions: number) => Promise<OmrRecognizeResponse>;
@@ -27,9 +27,9 @@ function readAsDataUrl(file: Blob): Promise<string> {
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") resolve(reader.result);
-      else reject(new Error("照片读取失败，请重新选择。"));
+      else reject(new Error("照片读取失败，请重选"));
     };
-    reader.onerror = () => reject(new Error("照片读取失败，请重新选择。"));
+    reader.onerror = () => reject(new Error("照片读取失败，请重选"));
     reader.readAsDataURL(file);
   });
 }
@@ -38,7 +38,7 @@ function loadImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("无法读取这张照片，请选择清晰的 JPG 图片重试。"));
+    img.onerror = () => reject(new Error("无法读取该图片，请选 JPG 重试"));
     img.src = url;
   });
 }
@@ -57,13 +57,12 @@ async function prepareOmrJpeg(file: File): Promise<{ dataUrl: string; previewUrl
   const height = image.naturalHeight || image.height;
   if (!width || !height) {
     URL.revokeObjectURL(previewUrl);
-    throw new Error("照片尺寸无效，请重新拍摄。");
+    throw new Error("照片尺寸无效，请重拍");
   }
 
   const isJpeg = file.type === "image/jpeg" || file.type === "image/jpg" || /\.jpe?g$/i.test(file.name || "");
   const longEdge = Math.max(width, height);
 
-  // 合规尺寸的 JPEG 直接传原字节，保留原始锐度；非 JPEG 或超大原图在端侧转码缩放。
   if (isJpeg && longEdge <= OMR_DIRECT_MAX_EDGE && file.size <= OMR_DIRECT_MAX_BYTES) {
     const dataUrl = await readAsDataUrl(file);
     return { dataUrl, previewUrl };
@@ -78,7 +77,7 @@ async function prepareOmrJpeg(file: File): Promise<{ dataUrl: string; previewUrl
   const ctx = canvas.getContext("2d");
   if (!ctx) {
     URL.revokeObjectURL(previewUrl);
-    throw new Error("当前浏览器无法处理照片，请直接选择 JPG 图片。");
+    throw new Error("请直接选择 JPG 图片");
   }
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, targetWidth, targetHeight);
@@ -90,7 +89,29 @@ async function prepareOmrJpeg(file: File): Promise<{ dataUrl: string; previewUrl
   return { dataUrl, previewUrl };
 }
 
-function OmrScanner({ paperTitle, questionCount, currentAnswers, onRecognize, onApply, onClose }: OmrScannerProps) {
+function OmrGuideIllustration() {
+  return (
+    <svg className="rr-omr-guide-art" viewBox="0 0 180 112" fill="none" aria-hidden="true">
+      <path d="M18 32V20a6 6 0 0 1 6-6h12M144 14h12a6 6 0 0 1 6 6v12M162 80v12a6 6 0 0 1-6 6h-12M36 98H24a6 6 0 0 1-6-6V80" stroke="#b98a3e" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="34" y="21" width="112" height="70" rx="8" fill="#fffdf8" stroke="#dfd0b8" strokeWidth="1.5" />
+      <rect x="44" y="30" width="40" height="4.5" rx="2.25" fill="#e6d7bd" />
+      <rect x="118" y="30" width="18" height="4.5" rx="2.25" fill="#efe4d0" />
+      <g fill="#e9decb">
+        <rect x="44" y="42" width="8" height="4" rx="2" /><rect x="54" y="42" width="8" height="4" rx="2" fill="#302d26" /><rect x="64" y="42" width="8" height="4" rx="2" /><rect x="74" y="42" width="8" height="4" rx="2" />
+        <rect x="44" y="52" width="8" height="4" rx="2" /><rect x="54" y="52" width="8" height="4" rx="2" /><rect x="64" y="52" width="8" height="4" rx="2" fill="#302d26" /><rect x="74" y="52" width="8" height="4" rx="2" />
+        <rect x="44" y="62" width="8" height="4" rx="2" fill="#302d26" /><rect x="54" y="62" width="8" height="4" rx="2" /><rect x="64" y="62" width="8" height="4" rx="2" /><rect x="74" y="62" width="8" height="4" rx="2" />
+        <rect x="44" y="72" width="8" height="4" rx="2" /><rect x="54" y="72" width="8" height="4" rx="2" /><rect x="64" y="72" width="8" height="4" rx="2" /><rect x="74" y="72" width="8" height="4" rx="2" fill="#302d26" />
+        <rect x="98" y="42" width="8" height="4" rx="2" fill="#302d26" /><rect x="108" y="42" width="8" height="4" rx="2" /><rect x="118" y="42" width="8" height="4" rx="2" /><rect x="128" y="42" width="8" height="4" rx="2" />
+        <rect x="98" y="52" width="8" height="4" rx="2" /><rect x="108" y="52" width="8" height="4" rx="2" /><rect x="118" y="52" width="8" height="4" rx="2" /><rect x="128" y="52" width="8" height="4" rx="2" fill="#302d26" />
+        <rect x="98" y="62" width="8" height="4" rx="2" /><rect x="108" y="62" width="8" height="4" rx="2" fill="#302d26" /><rect x="118" y="62" width="8" height="4" rx="2" /><rect x="128" y="62" width="8" height="4" rx="2" />
+        <rect x="98" y="72" width="8" height="4" rx="2" /><rect x="108" y="72" width="8" height="4" rx="2" /><rect x="118" y="72" width="8" height="4" rx="2" fill="#302d26" /><rect x="128" y="72" width="8" height="4" rx="2" />
+      </g>
+      <line x1="28" y1="56" x2="152" y2="56" stroke="#c5864b" strokeWidth="1.6" strokeDasharray="4 3" strokeLinecap="round" opacity=".72" />
+    </svg>
+  );
+}
+
+function OmrScanner({ questionCount, currentAnswers, onRecognize, onApply, onClose }: OmrScannerProps) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const seqRef = useRef(0);
@@ -141,12 +162,18 @@ function OmrScanner({ paperTitle, questionCount, currentAnswers, onRecognize, on
       replacePreview(prepared.previewUrl);
       const recognized = await onRecognize(prepared.dataUrl, questionCount);
       if (seq !== seqRef.current) return;
+      const nextSummary = summarizeOmrResult(recognized, { questionCount, currentAnswers });
+      if (nextSummary.recognized === 0) {
+        setError(nextSummary.warnings[0] || "未识别到有效涂黑，请重拍");
+        setPhase("error");
+        return;
+      }
       setResult(recognized);
       setMode(hasExisting ? "fill-blank" : "replace");
       setPhase("ready");
     } catch (caught) {
       if (seq !== seqRef.current) return;
-      const message = caught instanceof Error && caught.message ? caught.message : "识别失败，请重拍或手动录入。";
+      const message = caught instanceof Error && caught.message ? caught.message : "识别失败，请重拍";
       setError(message);
       setPhase("error");
     }
@@ -162,11 +189,6 @@ function OmrScanner({ paperTitle, questionCount, currentAnswers, onRecognize, on
 
   return (
     <div className="rr-omr-sheet" data-omr-phase={phase}>
-      <p className="rr-omr-context" title={paperTitle}>
-        <span>{paperTitle}</span>
-        <small>{questionCount} 题</small>
-      </p>
-
       <input
         ref={inputRef}
         id={inputId}
@@ -178,13 +200,14 @@ function OmrScanner({ paperTitle, questionCount, currentAnswers, onRecognize, on
       />
 
       {phase === "idle" ? (
-        <div className="rr-omr-empty">
-          <div className="rr-omr-empty-icon" aria-hidden="true">
-            <Camera size={24} />
+        <button type="button" className="rr-omr-guide" onClick={triggerPicker} aria-label="拍照或选图">
+          <OmrGuideIllustration />
+          <div className="rr-omr-cues" aria-hidden="true">
+            <span><Scan size={13} />四角入镜</span>
+            <span><Maximize2 size={13} />纸面平整</span>
+            <span><Sun size={13} />光线均匀</span>
           </div>
-          <p className="rr-omr-tip">正对答题卡拍摄，四角完整入镜、光线均匀</p>
-          <p className="rr-omr-subtip">识别后填入当前草稿，存疑题可核对后再交卷</p>
-        </div>
+        </button>
       ) : null}
 
       {previewUrl ? (
@@ -193,14 +216,14 @@ function OmrScanner({ paperTitle, questionCount, currentAnswers, onRecognize, on
           {phase === "loading" ? (
             <div className="rr-omr-loading-overlay" role="status" aria-live="polite">
               <LoaderCircle size={20} className="rr-omr-spin" />
-              <span>正在识别答题卡…</span>
+              <span>识别中…</span>
             </div>
           ) : null}
         </div>
       ) : phase === "loading" ? (
         <div className="rr-omr-loading-box" role="status" aria-live="polite">
           <LoaderCircle size={20} className="rr-omr-spin" />
-          <span>正在准备照片…</span>
+          <span>处理中…</span>
         </div>
       ) : null}
 
@@ -220,28 +243,24 @@ function OmrScanner({ paperTitle, questionCount, currentAnswers, onRecognize, on
             </div>
             <div className={`rr-omr-metric${summary.lowConfidenceCount ? " is-warn" : ""}`}>
               <strong>{summary.lowConfidenceCount}</strong>
-              <small>待核对</small>
+              <small>存疑</small>
             </div>
             <div className="rr-omr-metric">
               <strong>{summary.blank}</strong>
-              <small>未填涂</small>
+              <small>留空</small>
             </div>
           </div>
 
-          {summary.recognized === 0 ? (
-            <div className="rr-omr-alert is-error" role="alert">
-              <AlertCircle size={16} />
-              <span>未识别到有效涂黑，请重拍或继续手动录入。</span>
+          {summary.lowConfidenceCount > 0 ? (
+            <div className="rr-omr-suspect">
+              <Bookmark size={13} />
+              <span>{summary.lowConfidence.slice(0, 6).join("、")}{summary.lowConfidenceCount > 6 ? ` 等 ${summary.lowConfidenceCount} 题` : " 题"}</span>
             </div>
-          ) : summary.lowConfidenceCount > 0 ? (
-            <p className="rr-omr-note">
-              第 {summary.lowConfidence.slice(0, 6).join("、")}{summary.lowConfidenceCount > 6 ? ` 等 ${summary.lowConfidenceCount} 题` : " 题"}涂痕较浅，填入后将自动标为存疑。
-            </p>
           ) : null}
 
           {summary.warnings.length > 0 ? (
             <div className="rr-omr-alert" role="status">
-              <AlertCircle size={16} />
+              <AlertCircle size={15} />
               <span>{summary.warnings[0]}</span>
             </div>
           ) : null}
@@ -252,27 +271,20 @@ function OmrScanner({ paperTitle, questionCount, currentAnswers, onRecognize, on
                 type="button"
                 role="radio"
                 aria-checked={mode === "fill-blank"}
-                className={`rr-omr-merge-option${mode === "fill-blank" ? " is-selected" : ""}`}
+                className={`rr-omr-merge-pill${mode === "fill-blank" ? " is-selected" : ""}`}
                 onClick={() => setMode("fill-blank")}
               >
-                <span>
-                  <b>仅补空题</b>
-                  <small>保留已填 {summary.existingAnswered} 题，补录 {summary.fillBlankAdded} 题</small>
-                </span>
-                {mode === "fill-blank" ? <Check size={15} /> : null}
+                <span>仅补空题</span>
+                {summary.fillBlankAdded ? <small>+{summary.fillBlankAdded}</small> : null}
               </button>
               <button
                 type="button"
                 role="radio"
                 aria-checked={mode === "replace"}
-                className={`rr-omr-merge-option${mode === "replace" ? " is-selected" : ""}`}
+                className={`rr-omr-merge-pill${mode === "replace" ? " is-selected" : ""}`}
                 onClick={() => setMode("replace")}
               >
-                <span>
-                  <b>整份替换</b>
-                  <small>用本次识别覆盖当前草稿{summary.replaceConflicts ? `（改写 ${summary.replaceConflicts} 题）` : ""}</small>
-                </span>
-                {mode === "replace" ? <Check size={15} /> : null}
+                <span>整份替换</span>
               </button>
             </div>
           ) : null}
@@ -282,19 +294,19 @@ function OmrScanner({ paperTitle, questionCount, currentAnswers, onRecognize, on
       <div className="rr-omr-actions">
         {phase === "idle" ? (
           <Button type="button" className="rr-omr-primary" onClick={triggerPicker}>
-            <Camera size={16} />拍照或选图
+            <Camera size={16} />拍照 / 选图
           </Button>
         ) : phase === "loading" ? (
           <Button type="button" variant="secondary" onClick={handleCancel}>
-            取消识别
+            取消
           </Button>
         ) : phase === "error" ? (
           <>
             <Button type="button" variant="secondary" onClick={onClose}>
-              继续手录
+              手录
             </Button>
             <Button type="button" className="rr-omr-primary" onClick={triggerPicker}>
-              <RotateCcw size={15} />重新选图
+              <RotateCcw size={15} />重拍
             </Button>
           </>
         ) : (
@@ -308,7 +320,7 @@ function OmrScanner({ paperTitle, questionCount, currentAnswers, onRecognize, on
               disabled={applyDisabled}
               onClick={() => { if (result) onApply({ result, mode: hasExisting ? mode : "replace" }); }}
             >
-              <Check size={16} />填入答题卡
+              <Check size={16} />填入
             </Button>
           </>
         )}

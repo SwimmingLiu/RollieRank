@@ -43,7 +43,7 @@
 .timer__sheet--expanded { max-height: calc(94vh - var(--timer-keyboard)); }
 .timer__heading { position: relative; display: flex; flex: none; min-height: 47px; align-items: center; justify-content: space-between; margin-bottom: 9px; }
 .timer__heading > text { font-size: 20px; font-weight: 600; }
-.timer__close { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: grid; place-items: center; flex: none; margin: 0 !important; width: 44px !important; height: 44px; }
+.timer__close { position: absolute; right: 0; top: 50%; z-index: 2; transform: translateY(-50%); display: grid; place-items: center; flex: none; margin: 0 !important; width: 44px !important; height: 44px; }
 .timer__close image { width: 18px; height: 18px; opacity: .66; }
 .timer__switch { flex: none; display: flex; padding: 3px; border-radius: 12px; background: #eee6d8; margin-bottom: 12px; }
 .timer__switch-item { display: flex; align-items: center; justify-content: center; flex: 1; margin: 0 !important; width: 0 !important; height: 38px; border-radius: 9px; color: #78654c; font-size: 13px; }

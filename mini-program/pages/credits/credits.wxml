@@ -15,10 +15,16 @@
       <view class="credits">
         <view wx:if="{{loading}}" class="credits__loading">正在读取…</view>
 
-        <view wx:elif="{{error && !signedIn}}" class="credits__card credits__error-card">
-          <image class="credits__state-icon" src="{{uiBase}}/warn.svg" mode="aspectFit" />
-          <text class="credits__error-text">{{error}}</text>
-          <button class="credits__retry-btn" bindtap="reload">重新读取</button>
+        <view wx:elif="{{error && !signedIn}}" class="state-card state-card--standalone">
+          <view class="state-card__badge">
+            <image class="state-card__icon" src="/assets/ui/warn-ochre.svg" mode="aspectFit" />
+          </view>
+          <text class="state-card__title">暂时无法连接</text>
+          <text class="state-card__desc">{{error}}</text>
+          <button class="state-card__btn" bindtap="reload" hover-class="press">
+            <image class="state-card__btn-icon" src="/assets/ui/refresh-light.svg" mode="aspectFit" />
+            <text>重新读取</text>
+          </button>
         </view>
 
         <block wx:else>
@@ -77,46 +83,32 @@
             </button>
           </view>
 
-          <!-- 已登录态：余额画报卡 + 直接展开充值档位 + 明细入口 -->
           <block wx:else>
-            <view class="credits__hero">
-              <view class="credits__hero-main">
-                <view class="credits__hero-copy grow">
-                  <view class="credits__eyebrow">
-                    <image class="credits__eyebrow-icon" src="{{uiBase}}/bean-ochre.svg" mode="aspectFit" />
-                    <text>可用卷豆</text>
-                    <text wx:if="{{held > 0}}" class="credits__pill credits__pill--ochre">占用 {{held}}</text>
-                  </view>
-                  <view class="credits__balance-main">
-                    <text class="display-num credits__balance-num">{{balance}}</text>
-                    <text class="credits__balance-unit">颗</text>
-                  </view>
+            <view class="credits__hero credits__hero--balance">
+              <view class="credits__hero-head">
+                <view class="credits__eyebrow">
+                  <image class="credits__eyebrow-icon" src="{{uiBase}}/bean-ochre.svg" mode="aspectFit" />
+                  <text>可用卷豆</text>
+                  <text wx:if="{{held > 0}}" class="credits__pill credits__pill--ochre">占用 {{held}}</text>
                 </view>
-                <image class="credits__hero-art" src="/assets/credits-art.svg" mode="aspectFit" />
-              </view>
-
-              <view class="credits__hero-foot">
-                <button wx:if="{{uid}}" class="credits__uid-chip" bindtap="copyUid" aria-label="复制 UID {{uid}}">
-                  <text class="num">UID {{uid}}</text>
-                  <image class="credits__uid-copy" src="{{uiBase}}/copy.svg" mode="aspectFit" />
-                </button>
-                <text wx:else class="credits__sync-text">微信账号已同步</text>
-
                 <button class="credits__ledger-link" bindtap="openLedger">
-                  <text>卷豆明细</text>
+                  <text>到账明细</text>
                   <image class="credits__ledger-arrow" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
                 </button>
+              </view>
+              <view class="credits__hero-main">
+                <view class="credits__balance-main grow">
+                  <text class="display-num credits__balance-num">{{balance}}</text>
+                  <text class="credits__balance-unit">颗</text>
+                </view>
+                <image class="credits__hero-art" src="/assets/credits-art.svg" mode="aspectFit" />
               </view>
             </view>
 
             <text wx:if="{{error}}" class="credits__inline-error" aria-role="alert">{{error}}</text>
 
-            <!-- 直接在主页面展开的充值卷豆区块 -->
             <view class="credits__section">
-              <view class="credits__section-head">
-                <text class="credits__section-title">充值卷豆</text>
-                <text class="credits__section-sub">{{purchaseReady ? '即时到账' : '渠道即将开放'}}</text>
-              </view>
+              <text class="credits__section-title">充值卷豆</text>
 
               <view class="credits__pack-grid">
                 <button
@@ -125,31 +117,17 @@
                   class="credits__pack {{item.featured ? 'credits__pack--featured' : ''}} {{selectedPackIndex === index ? 'credits__pack--on' : ''}}"
                   data-index="{{index}}"
                   bindtap="selectPackage"
+                  aria-pressed="{{selectedPackIndex === index}}"
+                  disabled="{{rechargeAction || rechargeOrder}}"
                 >
-                  <block wx:if="{{item.featured}}">
-                    <view class="credits__pack-left">
-                      <view class="credits__pack-title-row">
-                        <text class="credits__pack-count num">{{item.credits}}<text class="credits__pack-unit"> 颗</text></text>
-                        <text wx:if="{{item.recommended}}" class="credits__pack-tag">常用</text>
-                      </view>
-                      <text class="credits__pack-unit-price num">约 {{item.unitText}}</text>
-                    </view>
-                    <text class="credits__pack-price credits__pack-price--lg num">{{item.yuanText}}</text>
-                  </block>
-                  <block wx:else>
-                    <view class="credits__pack-head">
-                      <text class="credits__pack-count num">{{item.credits}}<text class="credits__pack-unit"> 颗</text></text>
-                      <text wx:if="{{item.recommended}}" class="credits__pack-tag">常用</text>
-                    </view>
-                    <view class="credits__pack-foot">
-                      <text class="credits__pack-price num">{{item.yuanText}}</text>
-                      <text class="credits__pack-unit-price num">{{item.unitText}}</text>
-                    </view>
-                  </block>
+                  <text class="credits__pack-count num">{{item.credits}}<text class="credits__pack-unit"> 颗</text></text>
+                  <text class="credits__pack-price {{item.featured ? 'credits__pack-price--lg' : ''}} num">{{item.yuanText}}</text>
                 </button>
               </view>
 
-              <text class="credits__recharge-note">卷豆长期可用，充值与赠送共用余额，优先消耗赠送。</text>
+              <view wx:if="{{!rechargeOrder && rechargeDeviceMessage && !rechargeTestGuide}}" class="credits__payment-state">
+                <text class="credits__payment-text" aria-role="status">{{rechargeDeviceMessage}}</text>
+              </view>
             </view>
 
             <!-- 其他已开通的获取渠道（未开通自动隐藏） -->
@@ -173,15 +151,17 @@
 
   <!-- 底部固定充值栏（仅已登录态） -->
   <view wx:if="{{!loading && signedIn}}" class="credits__footer">
-    <view class="credits__footer-info">
-      <text class="credits__footer-label">已选 {{packages[selectedPackIndex].credits}} 颗</text>
-      <text class="display-num credits__footer-price">{{packages[selectedPackIndex].yuanText}}</text>
-    </view>
+    <text class="display-num credits__footer-price">{{rechargeOrder ? rechargeOrder.yuanText : packages[selectedPackIndex].yuanText}}</text>
     <button
-      class="credits__footer-btn {{purchaseReady ? '' : 'credits__footer-btn--soon'}}"
+      class="credits__footer-btn"
       bindtap="submitRecharge"
+      disabled="{{!!rechargeAction || (!rechargeOrder && (!purchaseReady || (!!rechargeDeviceMessage && !rechargeTestGuide)))}}"
     >
-      {{purchaseReady ? '立即充值' : '支付即将开放'}}
+      <block wx:if="{{rechargeAction}}">{{rechargeAction}}</block>
+      <block wx:elif="{{rechargeOrder}}">查询到账</block>
+      <block wx:elif="{{rechargeTestGuide === 'ios'}}">iPhone 充值说明</block>
+      <block wx:elif="{{rechargeTestGuide}}">真机测试</block>
+      <block wx:else>{{purchaseReady && !rechargeDeviceMessage ? '立即充值' : '充值暂未开放'}}</block>
     </button>
   </view>
 
@@ -200,7 +180,7 @@
       class="sheet-panel credits__sheet"
       style="{{sheetDragY ? 'transform: translateY(' + sheetDragY + 'px);' : ''}}"
       aria-role="dialog"
-      aria-label="{{sheet === 'ledger' ? '卷豆明细' : '邀请好友'}}"
+      aria-label="{{sheet === 'ledger' ? '到账明细' : '邀请好友'}}"
       bindtouchstart="startSheetDrag"
       bindtouchmove="moveSheetDrag"
       bindtouchend="endSheetDrag"
@@ -218,9 +198,9 @@
       </view>
 
       <view class="sheet-head">
-        <text>{{sheet === 'ledger' ? '卷豆明细' : '邀请好友'}}</text>
-        <button class="sheet-close" bindtap="closeSheet" aria-label="关闭">
-          <image src="{{uiBase}}/close.svg" mode="aspectFit" />
+        <text>{{sheet === 'ledger' ? '到账明细' : '邀请好友'}}</text>
+        <button class="sheet-close" data-sheet-no-drag="1" catchtap="closeSheet" aria-label="关闭">
+          <image data-sheet-no-drag="1" src="{{uiBase}}/close.svg" mode="aspectFit" />
         </button>
       </view>
 
@@ -281,6 +261,44 @@
           </button>
         </block>
         <view wx:else class="credits__empty">{{inviteLoading ? '正在生成邀请码…' : '暂无法获取邀请码'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 纸卡主题支付提示弹窗 -->
+  <view wx:if="{{rechargeDialog}}" class="credits__dialog-layer">
+    <view class="credits__dialog-shade" catchtap="closeRechargeDialog" catchtouchmove="noopDialog"></view>
+    <view
+      class="credits__dialog"
+      aria-role="dialog"
+      aria-modal="true"
+      aria-label="{{rechargeDialog.title}}"
+      catchtouchmove="noopDialog"
+    >
+      <view class="credits__dialog-badge credits__dialog-badge--{{rechargeDialog.kind}}">
+        <image
+          class="credits__dialog-icon"
+          src="{{rechargeDialog.kind === 'pending' ? uiBase + '/clock-ochre.svg' : rechargeDialog.kind === 'info' ? uiBase + '/bean-ochre.svg' : uiBase + '/warn-ochre.svg'}}"
+          mode="aspectFit"
+        />
+      </view>
+      <text class="credits__dialog-title">{{rechargeDialog.title}}</text>
+      <text class="credits__dialog-desc">{{rechargeDialog.message}}</text>
+      <view wx:if="{{rechargeDialog.detail}}" class="credits__dialog-detail">
+        <text class="credits__dialog-detail-text">{{rechargeDialog.detail}}</text>
+      </view>
+      <view class="credits__dialog-actions {{rechargeDialog.secondaryText ? 'credits__dialog-actions--dual' : ''}}">
+        <button
+          wx:if="{{rechargeDialog.secondaryText}}"
+          class="credits__dialog-btn credits__dialog-btn--soft"
+          bindtap="onRechargeDialogSecondary"
+          hover-class="press"
+        >{{rechargeDialog.secondaryText}}</button>
+        <button
+          class="credits__dialog-btn credits__dialog-btn--primary"
+          bindtap="onRechargeDialogPrimary"
+          hover-class="press"
+        >{{rechargeDialog.primaryText || '知道了'}}</button>
       </view>
     </view>
   </view>

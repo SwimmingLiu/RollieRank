@@ -276,9 +276,19 @@ export function createDiscussionRecorder({ onState, onAudio, onError }) {
 }
 
 function safeMedia(uri, kind) {
+  if (typeof uri !== "string" || !uri) return "";
+  if (kind === "image" && /^https?:\/\//i.test(uri)) {
+    try {
+      const parsed = new URL(uri);
+      if ((parsed.protocol === "https:" || parsed.protocol === "http:") && parsed.hostname && !parsed.username && !parsed.password) {
+        return parsed.href;
+      }
+    } catch { return ""; }
+    return "";
+  }
   const prefix = `data:${kind === "image" ? "image/png" : "audio/wav"};base64,`;
   const limit = kind === "image" ? DISCUSSION_LIMITS.imageBytes : DISCUSSION_LIMITS.audioBytes;
-  if (typeof uri !== "string" || !uri.startsWith(prefix) || uri.length > prefix.length + Math.ceil(limit / 3) * 4) return "";
+  if (!uri.startsWith(prefix) || uri.length > prefix.length + Math.ceil(limit / 3) * 4) return "";
   const payload = uri.slice(prefix.length);
   if (!payload || payload.length % 4 || !/^[A-Za-z0-9+/]*={0,2}$/.test(payload)) return "";
   try {

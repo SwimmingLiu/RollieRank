@@ -4,14 +4,26 @@
   <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}" refresher-enabled="{{true}}" refresher-triggered="{{refreshing}}" refresher-background="#fcf8f1" bindrefresherrefresh="onRefresherRefresh">
   <view class="page-scroll__body">
   <view class="records {{tabSwiping ? 'records--swiping' : ''}}" style="{{tabSwipeOffset ? 'transform: translateX(' + tabSwipeOffset + 'px);' : ''}}">
-    <button class="records__profile" bindtap="openProfile" aria-label="编辑个人资料">
+    <view class="records__profile" bindtap="openProfile" hover-class="press" aria-role="button" aria-label="编辑个人资料">
       <image class="records__avatar" src="{{avatar || asset.profile}}" mode="aspectFill" />
-      <view class="stack grow">
+      <view class="records__profile-main grow">
         <text class="records__name ellipsis">{{name}}</text>
-        <text wx:if="{{!hasWechatProfile}}" class="records__profile-hint">点击同步微信头像和昵称</text>
+        <view
+          wx:if="{{creditUid}}"
+          class="records__uid"
+          catchtap="copyUid"
+          hover-class="press"
+          hover-stop-propagation="{{true}}"
+          aria-role="button"
+          aria-label="复制 UID {{creditUid}}"
+        >
+          <text class="num">UID {{creditUid}}</text>
+          <image class="records__uid-copy" src="{{uiBase}}/copy.svg" mode="aspectFit" />
+        </view>
+        <text wx:elif="{{!hasWechatProfile}}" class="records__profile-hint">点击同步微信头像和昵称</text>
       </view>
       <image class="records__art" src="/assets/answer-paper.svg" mode="aspectFit" />
-    </button>
+    </view>
 
     <button class="records__credits" bindtap="openCredits" hover-class="press" aria-label="卷豆，{{creditSignedIn ? creditBalance + ' 颗' : '暂未获取'}}">
       <image class="records__credits-img" src="{{uiBase}}/bean-ochre.svg" mode="aspectFit" />

@@ -28,6 +28,10 @@
         "value": "/tools"
       },
       {
+        "type": "folder",
+        "value": "/test-results"
+      },
+      {
         "type": "file",
         "value": "/README.md"
       },

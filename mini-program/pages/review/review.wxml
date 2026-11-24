@@ -4,9 +4,18 @@
   <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}">
   <view class="page-scroll__body">
   <view wx:if="{{loading}}" class="loading">正在读取答卷…</view>
-  <view wx:elif="{{error}}" class="empty">
-    <text>{{error}}</text>
-    <button class="chip" bindtap="load">重新读取</button>
+  <view wx:elif="{{error}}" class="state-wrap">
+    <view class="state-card">
+      <view class="state-card__badge">
+        <image class="state-card__icon" src="/assets/ui/warn-ochre.svg" mode="aspectFit" />
+      </view>
+      <text class="state-card__title">暂时无法连接</text>
+      <text class="state-card__desc">{{error}}</text>
+      <button class="state-card__btn" bindtap="load" hover-class="press">
+        <image class="state-card__btn-icon" src="/assets/ui/refresh-light.svg" mode="aspectFit" />
+        <text>重新读取</text>
+      </button>
+    </view>
   </view>
 
   <view wx:else class="review">
@@ -75,7 +84,7 @@
       <view class="sheet-grabber-zone" data-sheet-zone="handle" catchtouchstart="startSheetDrag" catchtouchmove="moveSheetDrag" catchtouchend="endSheetDrag" catchtouchcancel="cancelSheetDrag">
         <view class="sheet-grabber"></view>
       </view>
-      <view class="sheet-head"><text>{{feedbackDetail ? '反馈处理详情' : '反馈记录'}}</text><button class="sheet-close" bindtap="closeFeedbackHistory" aria-label="关闭"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button></view>
+      <view class="sheet-head"><text>{{feedbackDetail ? '反馈处理详情' : '反馈记录'}}</text><button class="sheet-close" data-sheet-no-drag="1" catchtap="closeFeedbackHistory" aria-label="关闭"><image data-sheet-no-drag="1" src="{{uiBase}}/close.svg" mode="aspectFit" /></button></view>
       <scroll-view scroll-y enhanced show-scrollbar="{{false}}" class="review__feedback-scroll" bindscroll="onSheetScroll">
         <block wx:if="{{feedbackDetail}}">
           <view wx:for="{{feedbackDetail.items}}" wx:key="question" class="review__feedback-card">

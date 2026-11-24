@@ -2,7 +2,7 @@
 
 ## Sub-features
 
-微信换码、首次赠送、可核实的旧游客身份绑定、余额与流水、工具独立定价、并发占用、结算和释放、人工调整、渠道受控的邀请归因与奖励。
+微信换码、首次赠送、可核实的旧游客身份绑定、余额与流水、工具独立定价、并发占用、结算和释放、人工调整、渠道受控的邀请归因与奖励、微信道具直购和代币充值。
 
 ## How to get to it (user POV)
 
@@ -11,6 +11,8 @@
 运营后台通过侧边栏「卷豆」（`/admin/#credits`，实现位于 `admin/src/components/ToolCreditsView.tsx`）进入，使用 `/admin/api/tool-credits` 下的查询、规则和调整接口以及现有管理员会话。参数和状态写在[产品与前端对接方案](../../../../docs/solution-tool-credits.md#前端对接)。
 
 付费工具从服务端取得 `billing` 并调用占用、结算与释放方法。普通交卷沿用原入口，受邀账号可附带登录 token 记录首次有效提交。
+
+在原生「个人中心 → 卷豆」选择套餐并点「立即充值」。小程序通过 `/api/tool-credits/recharges` 下单，使用微信收银台付款，再查询服务器订单。余额卡的「到账明细」展示入账和使用流水。后台用卷豆规则开启充值，可查订单和触发复查。
 
 ## Driving it with verification CLI
 
@@ -22,13 +24,15 @@
 - 用管理员会话改规则、补发和扣回。对照用户余额、后台原因和操作人，确认运营积分独立。
 - 用已校验群凭证模拟多次邀请、首次正式交卷、已结算工具的有效使用和月上限。核对伪造场景、过期重放及跨账号复用无法领奖。
 - 模拟微信虚拟支付的签名响应，验证道具价格、账号绑定、无凭证推送拒绝、确认后仅产生一次可用权益。核对失败释放、已用订单退款拒绝、原路退款受理冻结、成功撤回及失败解冻。
+- 通过 HTTP 下单并验签，核对卷豆 1 元 1 颗及沙箱、现网密钥分离。让确认请求与微信推送并发到达，核对重复交易、错误价格、账号和跨环境通知均无法多入账。模拟代币扣减回包丢失和会话过期，换码复查后在 `/wallet` 读取唯一的 `purchase` 流水。确认充值卷豆可参与原有工具占用、结算和退款对账。
+- 驱动原生 `submitRecharge`，使用模拟 `wx.requestVirtualPayment` 和隔离 HTTP、PostgreSQL。核对双点、取消轻提示、下单回包丢失、安卓 `onShow` 提前触发时仍保留真实错误码并弹出纸卡错误弹窗且自动解锁、返回页面后的原订单恢复、无回调待确认单弹窗支持「查询到账 / 重新选择」、过期会话换码和测试包拒绝现网支付参数。确认到账后通过现有明细入口读取新增流水。
 - 通过真实 Playwright 驱动 `/admin/#credits` 校验账号列表、流水明细、规则与可扫张数实时试算预览、人工补发/扣回与账号筛选，并保留 `test-results/verification/visual/tool-credits/` 原始分辨率截图。
-- 驱动小程序 `services/tool-credits.js` 与 `services/api.js` 对接真实钱包服务，并检验 `pages/credits/credits` 与 `pages/records/records` 卷豆入口在 320/390/430 宽度的视觉布局与无溢出。
+- 驱动小程序 `services/tool-credits.js` 与 `services/api.js` 对接真实钱包服务，并检验 `pages/credits/credits`（含纸卡主题支付弹窗：确认到账中、代币暂未发布错误弹窗）与 `pages/records/records` 卷豆入口在 320/390/430 宽度的视觉布局与无溢出。
 
 输出包含 `tool-credits.log`、`results.json` 和 `source-lock.json`。CI 保留专项和全量结果。
 
-共享测试站部署后运行 `node scripts/verify-test-wallet.mjs https://rollie-rank-test.swimmingliu.cn --login-ready`。它只读核对公网能力、测试 PG 中的报价、未登录钱包的业务响应和网页口令。
+共享测试站部署后运行 `node scripts/verify-test-wallet.mjs https://rollie-rank-test.swimmingliu.cn --login-ready --recharge-ready`。它只读核对沙箱开关、固定兑换比例、充值和钱包入口的鉴权、测试 PG 中的用量及网页口令。
 
 ## Gotchas
 
-真实微信登录需要对应环境的 AppID 和服务端密钥。群活动审批及群入口校验器、支付和激励视频属于外部联调。答题卡定位由识别专项验证。前端接入发布后，从实际页面补做微信开发者工具和真机验收。
+真实微信登录需要对应环境的 AppID 和服务端密钥。开发者工具中确认「到账明细」可开关，模拟 iPhone 时点击「iPhone 充值说明」查看 Apple IAP 条件。布局代理在 320、390、430 检查套餐、状态和底栏。微信支付沙箱使用支持该模式的微信真机。iPhone 支付和到账在开通 Apple IAP 的现网正式版验证。群活动审批、群入口校验器和激励视频需对应平台能力。答题卡定位由识别专项验证。

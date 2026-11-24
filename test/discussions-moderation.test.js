@@ -94,9 +94,10 @@ test("WeChat msgSecCheck and mediaCheckAsync enforce text/image OCR moderation a
   });
 
   const calls = [];
+  let nextImgSecResponse = { errcode: 0, errmsg: "ok" };
   const mockFetch = async (url, init = {}) => {
     const href = String(url);
-    const body = init.body ? JSON.parse(init.body) : null;
+    const body = typeof init.body === "string" ? JSON.parse(init.body) : null;
     calls.push({ href, body });
     if (href.includes("/cgi-bin/stable_token")) {
       return new Response(JSON.stringify({ access_token: "mock-access-token", expires_in: 7200 }), { status: 200 });
@@ -112,6 +113,11 @@ test("WeChat msgSecCheck and mediaCheckAsync enforce text/image OCR moderation a
         return new Response(JSON.stringify({ errcode: 0, trace_id: "txt-review", result: { suggest: "review", label: 10001 } }), { status: 200 });
       }
       return new Response(JSON.stringify({ errcode: 0, trace_id: "txt-pass", result: { suggest: "pass", label: 100 } }), { status: 200 });
+    }
+    if (href.includes("/wxa/img_sec_check")) {
+      const reply = nextImgSecResponse;
+      nextImgSecResponse = { errcode: 0, errmsg: "ok" };
+      return new Response(JSON.stringify(reply), { status: 200 });
     }
     if (href.includes("/wxa/media_check_async")) {
       return new Response(JSON.stringify({ errcode: 0, trace_id: `media-trace-${calls.length}` }), { status: 200 });
@@ -137,12 +143,24 @@ test("WeChat msgSecCheck and mediaCheckAsync enforce text/image OCR moderation a
   const { version } = await server.submitAttempt(guestA, attemptA);
   await server.submitAttempt(guestB, attemptB);
 
-  // 1. Risky text is blocked immediately and logged in blockedLog.
+  // 1. Risky text is blocked immediately and leaves zero text/log records in DB.
   const risky = await server.json("/api/discussions", {
     paperId: version.paperId, attemptId: attemptA, guestId: guestA,
     clientId: "client-risky-001", nickname: "考生甲", text: "卖课加微 12345", wxCode: "wx-code-1",
   });
   assert.equal(risky.status, 422);
+
+  // 1b. Risky image is blocked synchronously by img_sec_check before saving to DB.
+  nextImgSecResponse = { errcode: 87014, errmsg: "risky content" };
+  const riskyImg = await server.json("/api/discussions", {
+    paperId: version.paperId, attemptId: attemptA, guestId: guestA,
+    clientId: "client-risky-img-001", nickname: "考生甲", text: "正常文字",
+    images: [{ dataUri: pngUri(), alt: "违规图" }], wxCode: "wx-code-1",
+  });
+  assert.equal(riskyImg.status, 422);
+  const adminAfterSyncBlock = await server.json("/api/discussions/admin/list", { reviewToken: "mod-secret-token", status: "all" });
+  assert.equal(adminAfterSyncBlock.body.comments.length, 0);
+  assert.equal(adminAfterSyncBlock.body.blockedLog.length, 0);
 
   // 2. Review-suggested text is stored as flagged (visible to author only, hidden from others).
   const flagged = await server.json("/api/discussions", {
@@ -203,7 +221,7 @@ test("WeChat msgSecCheck and mediaCheckAsync enforce text/image OCR moderation a
   assert.equal(readerList2.body.comments[0].id, withImage.body.comment.id);
   assert.equal("moderationStatus" in readerList2.body.comments[0], false);
 
-  // 6. Another image comment flagged as risky via JSON callback (e.g. OCR ad text in image) is auto-rejected.
+  // 6. Another image comment flagged as risky via JSON callback (e.g. OCR ad text in image) is deleted completely from DB.
   const badImage = await server.json("/api/discussions", {
     paperId: version.paperId, attemptId: attemptA, guestId: guestA,
     clientId: "client-image-004", nickname: "考生甲", text: "看图",
@@ -217,10 +235,9 @@ test("WeChat msgSecCheck and mediaCheckAsync enforce text/image OCR moderation a
     body: JSON.stringify({ Event: "wxa_media_check", trace_id: badTrace, result: { suggest: "risky", label: 10001 } }),
   });
   assert.equal(jsonCb.status, 200);
-  const adminAfterReject = await server.json("/api/discussions/admin/list", { reviewToken: "mod-secret-token", status: "rejected" });
-  assert.equal(adminAfterReject.body.comments.length, 1);
-  assert.match(adminAfterReject.body.comments[0].moderation.reason, /广告/);
-  assert.equal(adminAfterReject.body.blockedLog.length, 1);
+  const adminAfterReject = await server.json("/api/discussions/admin/list", { reviewToken: "mod-secret-token", status: "all" });
+  assert.equal(adminAfterReject.body.comments.some((c) => c.id === badImage.body.comment.id), false, "rejected image comment must be purged from DB");
+  assert.equal(adminAfterReject.body.blockedLog.length, 0, "rejected text/images must not be retained in blockedLog");
 
   // 7. Profile nickname check rejects risky names via WeChat msgSecCheck.
   const session = await server.json("/api/miniprogram-profile/session", {});
@@ -314,17 +331,13 @@ test("Admin comment moderation supports settings, keywords, review actions, repo
   assert.equal(reported.status, 200);
   assert.equal(reported.body.reportCount, 1);
 
-  // Refresh in UI and reject, then delete from rejected tab.
+  // Refresh in UI and reject -> comment is purged immediately with zero retention.
   await page.click('[data-feature="discussions-admin"] [data-disc-admin-action="refresh"]');
   await page.waitForSelector('.disc-admin-item');
   await page.click('[data-disc-admin-action="reject"]');
   await page.waitForFunction(() => document.querySelector('[data-feature="discussions-admin"]')?.textContent?.includes("当前没有待复核评论"));
 
-  await page.click('[data-disc-admin-action="filter"][data-filter="rejected"]');
-  await page.waitForSelector('.disc-admin-item');
-  await page.click('[data-disc-admin-action="delete"]');
-  await page.waitForSelector('[data-disc-admin-action="confirm-delete"]');
-  await page.click('[data-disc-admin-action="confirm-delete"]');
+  await page.click('[data-disc-admin-action="filter"][data-filter="all"]');
   await page.waitForFunction(() => document.querySelector('[data-feature="discussions-admin"]')?.textContent?.includes("没有匹配的评论"));
 
   // Audit log records admin actions.

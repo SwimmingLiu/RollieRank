@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 import navigation from "../mini-program/utils/navigation.js";
 import catalog from "../mini-program/utils/catalog.js";
@@ -371,5 +371,40 @@ test("all sheets share a unified paper theme and iPhone-style 1:1 drag gestures"
     const content = markup(file);
     assert.match(content, grabberRe, `${file} missing grabber`);
     assert.match(content, moveRe, `${file} missing drag move handler`);
+  }
+
+  // 所有底部抽屉的关闭按钮不得被父级 catchtouchstart 拦截，并显式标记 data-sheet-no-drag="1" 与 catchtap。
+  const timerSheet = markup("components/rr-timer-sheet/rr-timer-sheet.wxml");
+  assert.doesNotMatch(timerSheet, /timer__heading[^>]*catchtouchstart/, "timer__heading must not intercept close button taps");
+  assert.match(timerSheet, /class="timer__close"[^>]*data-sheet-no-drag="1"[^>]*catchtap="dismiss"/);
+  for (const file of [
+    "pages/practice/practice.wxml",
+    "pages/report/report.wxml",
+    "pages/review/review.wxml",
+    "pages/analytics/analytics.wxml",
+    "pages/admin/admin.wxml",
+    "pages/credits/credits.wxml",
+  ]) {
+    const content = markup(file);
+    const closeButtons = content.match(/<button[^>]*class="sheet-close"[^>]*>/g) || [];
+    assert.ok(closeButtons.length > 0, `${file} should have at least one sheet-close button`);
+    for (const tag of closeButtons) {
+      assert.match(tag, /data-sheet-no-drag="1"/, `${file} sheet-close missing data-sheet-no-drag="1"`);
+      assert.match(tag, /catchtap="/, `${file} sheet-close should use catchtap`);
+    }
+  }
+});
+
+test("custom tabBar configuration includes a valid custom-tab-bar component", () => {
+  const appConfig = JSON.parse(markup("app.json"));
+  if (appConfig.tabBar?.custom) {
+    for (const ext of ["js", "json", "wxml", "wxss"]) {
+      assert.ok(
+        existsSync(new URL(`../mini-program/custom-tab-bar/index.${ext}`, import.meta.url)),
+        `missing mini-program/custom-tab-bar/index.${ext}`,
+      );
+    }
+    const tabBarMeta = JSON.parse(markup("custom-tab-bar/index.json"));
+    assert.equal(tabBarMeta.component, true);
   }
 });

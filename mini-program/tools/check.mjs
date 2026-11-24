@@ -5,6 +5,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
+import vm from "node:vm";
 
 const root = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const repo = path.resolve(root, "..");
@@ -29,12 +30,23 @@ function checkMarkup(file, markup) {
 }
 
 for (const name of readdirSync(root, { recursive: true })) {
-  if (!/^(?:app\.js|config\.js|(?:components|pages|services|utils)\/.*\.js)$/.test(name)) continue;
+  if (!/^(?:app\.js|config\.js|(?:components|custom-tab-bar|pages|services|utils)\/.*\.js)$/.test(name)) continue;
   const result = spawnSync(process.execPath, ["--check", path.join(root, name)], { encoding: "utf8" });
   if (result.status !== 0) problem(result.stderr.trim() || name);
 }
 
 const app = JSON.parse(readFileSync(path.join(root, "app.json"), "utf8"));
+if (app.tabBar?.custom) {
+  for (const ext of ["js", "json", "wxml", "wxss"]) {
+    const file = path.join(root, `custom-tab-bar/index.${ext}`);
+    if (!existsSync(file)) problem(`tabBar.custom 为 true 时缺少 custom-tab-bar/index.${ext}`);
+  }
+  const customTabBarJsonPath = path.join(root, "custom-tab-bar/index.json");
+  if (existsSync(customTabBarJsonPath)) {
+    const customTabBarJson = JSON.parse(readFileSync(customTabBarJsonPath, "utf8"));
+    if (!customTabBarJson.component) problem("custom-tab-bar/index.json 必须声明 component: true");
+  }
+}
 const pages = readdirSync(path.join(root, "pages"), { withFileTypes: true })
   .filter(entry => entry.isDirectory())
   .map(entry => `pages/${entry.name}/${entry.name}`);
@@ -93,5 +105,68 @@ if (format.percent(0.2595) !== "26%") problem(`百分比格式化不正确：${f
 const groups = catalog.groupByInstitution(IMPORTED_PAPERS.map(item => ({ ...item, id: `${item.id}:v1`, status: "published", questionCount: item.answerKey.length })));
 if (!groups.length) problem("机构分组为空");
 for (const group of groups) if (!group.projects.length) problem(`${group.name} 没有期数分组`);
+
+// 模拟安卓微信精简 V8（无 Intl、无 ES2021+ 原型方法），确保所有入口模块加载期不报错并完成注册。
+function verifyAndroidRuntimeBoot() {
+  const store = new Map();
+  const wxMock = {
+    getStorageSync: key => store.get(key),
+    setStorageSync: (key, value) => store.set(key, value),
+    removeStorageSync: key => store.delete(key),
+    getAccountInfoSync: () => ({ miniProgram: { envVersion: "release" } }),
+    getWindowInfo: () => ({ statusBarHeight: 24, windowWidth: 360, screenTop: 0 }),
+    getMenuButtonBoundingClientRect: () => ({ top: 30, height: 32, left: 260 }),
+    loadFontFace: () => {},
+    request: () => {},
+  };
+  const runEntry = (relPath, expectedGlobal) => {
+    let registered = 0;
+    const context = vm.createContext({
+      console, setTimeout, clearTimeout, setInterval, clearInterval,
+      wx: wxMock,
+      App: () => { if (expectedGlobal === "App") registered += 1; },
+      Page: () => { if (expectedGlobal === "Page") registered += 1; },
+      Component: () => { if (expectedGlobal === "Component") registered += 1; },
+      getApp: () => ({ globalData: { versions: [] } }),
+    });
+    vm.runInContext(
+      "Object.defineProperty(globalThis, 'Intl', { value: undefined, configurable: true, writable: true }); delete Array.prototype.at; delete String.prototype.replaceAll;",
+      context,
+    );
+    const cache = new Map();
+    const loadModule = targetPath => {
+      const abs = path.resolve(targetPath);
+      if (cache.has(abs)) return cache.get(abs).exports;
+      const mod = { exports: {} };
+      cache.set(abs, mod);
+      const source = readFileSync(abs, "utf8");
+      const wrapper = vm.runInContext(
+        `(function(exports, require, module, __filename, __dirname){\n${source}\n})`,
+        context,
+        { filename: abs },
+      );
+      wrapper(mod.exports, request => loadModule(path.resolve(path.dirname(abs), request)), mod, abs, path.dirname(abs));
+      return mod.exports;
+    };
+    try {
+      loadModule(path.join(root, relPath));
+      if (registered !== 1) problem(`安卓无 Intl 沙箱加载 ${relPath} 未完成 ${expectedGlobal} 注册`);
+    } catch (error) {
+      problem(`安卓无 Intl 沙箱加载 ${relPath} 失败：${error.message}`);
+    }
+  };
+
+  runEntry("app.js", "App");
+  for (const page of app.pages) runEntry(`${page}.js`, "Page");
+  for (const entry of readdirSync(path.join(root, "components"), { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    runEntry(`components/${entry.name}/${entry.name}.js`, "Component");
+  }
+  if (app.tabBar?.custom && existsSync(path.join(root, "custom-tab-bar/index.js"))) {
+    runEntry("custom-tab-bar/index.js", "Component");
+  }
+}
+
+verifyAndroidRuntimeBoot();
 
 console.log(process.exitCode ? "检查未通过" : `检查通过：${pages.length} 个页面，${groups.length} 个机构`);

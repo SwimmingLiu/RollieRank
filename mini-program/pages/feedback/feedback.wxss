@@ -187,19 +187,6 @@
 }
 .fb__empty-btn--primary { background: #18181b !important; color: #fffaf0 !important; }
 
-.fb__foot-links { display: flex; justify-content: center; padding-top: 18px; }
-.fb__admin-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  width: auto !important;
-  margin: 0 !important;
-  padding: 8px 14px;
-  font-size: 12px;
-  color: #a3947e;
-}
-.fb__admin-link image { width: 13px; height: 13px; opacity: .62; }
-
 @media (max-width: 350px) {
   .fb { padding-inline: 16px; }
   .fb__cats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
