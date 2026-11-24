@@ -311,7 +311,6 @@ export function BottomSheet({
               >
                 {/* Option lists keep a full-width gesture area without painting a drag marker. */}
                 <div
-                  onPointerDown={(event) => dragControls.start(event)}
                   // A slow pull must not hand the gesture to iOS's callout,
                   // which would leave the sheet frozen mid-drag.
                   className={cn(

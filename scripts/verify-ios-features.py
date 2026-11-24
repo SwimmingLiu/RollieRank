@@ -103,8 +103,35 @@ def check_choice_sheet(frame, title):
     return panel, body
 
 
+def wait_sheet_settled(panel):
+    # Motion's dragSnapToOrigin animates transform via rAF rather than CSS animations; wait until ty returns to 0 and rect stabilizes.
+    panel.evaluate("""node => new Promise((resolve, reject) => {
+      const deadline = Date.now() + 5000;
+      let stable = 0;
+      let prevTop = null;
+      const check = () => {
+        const rect = node.getBoundingClientRect();
+        const transform = getComputedStyle(node).transform;
+        const ty = transform && transform !== "none" ? new DOMMatrix(transform).m42 : 0;
+        if (Math.abs(ty) < 1 && prevTop !== null && Math.abs(rect.top - prevTop) < 0.5) {
+          stable += 1;
+          if (stable >= 2) { resolve(); return; }
+        } else {
+          stable = 0;
+        }
+        prevTop = rect.top;
+        if (Date.now() >= deadline) {
+          reject(new Error(`Sheet did not settle (ty=${ty.toFixed(1)}, top=${rect.top.toFixed(1)}, bottom=${rect.bottom.toFixed(1)})`));
+          return;
+        }
+        requestAnimationFrame(check);
+      };
+      check();
+    })""")
+
+
 def drag_sheet(page, panel, distance, steps=16):
-    panel.evaluate("node => Promise.all(node.getAnimations().map(anim => anim.finished.catch(() => {})))")
+    wait_sheet_settled(panel)
     box = panel.locator(".rr-options-drag-target").bounding_box()
     assert box is not None
     x, y = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
@@ -148,6 +175,7 @@ def exercise_review_picker(page, frame, output):
     assert list_body.evaluate("node => node.scrollHeight > node.clientHeight")
     drag_sheet(page, panel, -120)
     expect(panel).to_have_attribute("data-expanded", "true")
+    wait_sheet_settled(panel)
     page.locator("#phone").screenshot(path=str(output / "review-picker-expanded-320.png"))
     drag_sheet(page, panel, 125, steps=18)
     expect(panel).to_have_attribute("data-expanded", "false")
