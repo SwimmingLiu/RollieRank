@@ -156,17 +156,19 @@ async function fixture(t) {
     forgetOrder: () => storage.setToolCreditRecharge(storage.toolCreditAccountId(), null) };
 }
 
-test("iPhone 和 iPhone 模拟器显示 Apple IAP 说明，通用模拟器可查看预览步骤", async t => {
-  const { scenario, page, requests, checkouts, modals } = await fixture(t);
+test("iPhone 和 iPhone 模拟器显示 Apple IAP 纸卡弹窗说明，通用模拟器可查看预览步骤", async t => {
+  const { scenario, page, requests, checkouts } = await fixture(t);
   for (const [device, model, guide] of [["devtools", "", "preview"], ["devtools", "iPhone 17", "ios"], ["ios", "iPhone 17", "ios"]]) {
     Object.assign(scenario, { device, model });
     await page.onShow();
     assert.equal(page.data.rechargeTestGuide, guide);
     await page.submitRecharge();
-    assert.match(modals.at(-1).content, guide === "ios" ? /Apple IAP.*现网/ : /「预览」.*扫码/);
-    assert.doesNotMatch(modals.at(-1).content, /安卓/);
+    assert.equal(page.data.rechargeDialog?.kind, "info");
+    assert.match(page.data.rechargeDialog.message, guide === "ios" ? /Apple IAP.*现网/ : /「预览」.*扫码/);
+    assert.doesNotMatch(page.data.rechargeDialog.message, /安卓/);
+    page.closeRechargeDialog();
+    assert.equal(page.data.rechargeDialog, null);
   }
-  assert.equal(modals.length, 3);
   assert.deepEqual(requests, []);
   assert.deepEqual(checkouts, []);
 });
@@ -211,12 +213,13 @@ test("下单期间退出再进入，只有仍在当前页面的请求能打开�
   assert.equal(reopened.data.balance, 4);
 });
 
-test("下单回包丢失复用请求编号，微信取消后可重新选择", async t => {
-  const { scenario, page, requests, checkouts } = await fixture(t);
+test("下单回包丢失复用请求编号，微信取消后轻提示且可重新选择", async t => {
+  const { scenario, page, requests, checkouts, toasts } = await fixture(t);
   scenario.loseCreate = true;
   scenario.cashier = "cancelled";
   await page.submitRecharge();
-  assert.match(page.data.rechargeMessage, /超时/);
+  assert.equal(page.data.rechargeDialog?.kind, "error");
+  assert.match(page.data.rechargeDialog.message, /超时/);
   assert.equal(checkouts.length, 0);
   await page.submitRecharge();
   const creations = requests.filter(item => item.pathname === root);
@@ -225,7 +228,8 @@ test("下单回包丢失复用请求编号，微信取消后可重新选择", as
   assert.notEqual(creations[0].data.code, creations[1].data.code);
   assert.equal(checkouts.length, 1);
   assert.equal(page.data.rechargeOrder, null);
-  assert.equal(page.data.rechargeMessage, "支付已取消。");
+  assert.equal(page.data.rechargeDialog, null);
+  assert.equal(toasts.at(-1), "已取消支付");
   assert.equal(page.data.balance, 3);
 });
 
@@ -236,30 +240,34 @@ test("收银台后断网，回到原生页会按原订单恢复到账并更新�
   await page.submitRecharge();
   assert.equal(page.data.balance, 3);
   const orderId = page.data.rechargeOrder.orderId;
-  assert.match(page.data.rechargeMessage, /查询到账/);
+  assert.equal(page.data.rechargeDialog?.kind, "pending");
+  assert.match(page.data.rechargeDialog.message, /查询到账/);
   const reopened = openPage();
   await reopened.onShow();
   assert.equal(reopened.data.balance, 4);
   assert.equal(reopened.data.rechargeOrder, null);
+  assert.equal(reopened.data.rechargeDialog, null);
   assert.equal(checkouts.length, 1);
   assert.equal(requests.filter(item => item.pathname === root).length, 1);
   const checks = requests.filter(item => item.pathname === `${root}/${orderId}/confirm`);
   assert.ok(checks.some(item => typeof item.data.code === "string"));
 });
 
-test("微信没有回调时返回页面查原单，到账前的重试不会发起第二笔付款", { timeout: 8000 }, async t => {
+test("微信没有回调时返回页面弹窗查原单，到账前的重试不会发起第二笔付款", { timeout: 8000 }, async t => {
   const { scenario, page, cashierReached, finishCashier, requests, checkouts } = await fixture(t);
   scenario.holdCashier = true;
   const payment = page.submitRecharge();
   await cashierReached;
   await page.onShow();
   await payment;
-  await page.submitRecharge();
-  assert.match(page.data.rechargeMessage, /正在确认/);
+  await page.onRechargeDialogPrimary();
+  assert.equal(page.data.rechargeDialog?.kind, "pending");
+  assert.equal(page.data.rechargeDialog?.title, "确认到账中");
   assert.equal(page.data.balance, 3);
   finishCashier(false);
-  await page.submitRecharge();
+  await page.onRechargeDialogPrimary();
   assert.equal(page.data.balance, 4);
+  assert.equal(page.data.rechargeDialog, null);
   assert.equal(checkouts.length, 1);
   assert.equal(requests.filter(item => item.pathname === root).length, 1);
 });
@@ -284,14 +292,15 @@ test("测试包拒绝传入现网收银台参数", async t => {
   scenario.wrongEnv = true;
   await page.submitRecharge();
   assert.equal(checkouts.length, 0);
-  assert.match(page.data.rechargeMessage, /校验失败/);
+  assert.equal(page.data.rechargeDialog?.kind, "error");
+  assert.match(page.data.rechargeDialog.message, /校验失败/);
   assert.equal(page.data.balance, 3);
 });
 
-test("安卓拉起支付失败即使 onShow 先触发也透出错误码并自动解锁档位", { timeout: 8000 }, async t => {
+test("安卓拉起支付失败即使 onShow 先触发也弹出纸卡错误弹窗并自动解锁档位", { timeout: 8000 }, async t => {
   const { scenario, page, cashierReached, finishCashier, checkouts } = await fixture(t);
   scenario.holdCashier = true;
-  scenario.cashier = { errCode: -15006, errMsg: "requestVirtualPayment:fail paySig invalid" };
+  scenario.cashier = { errCode: -15009, errMsg: "requestVirtualPayment:fail COIN_NOT_PUBLISH" };
   const payment = page.submitRecharge();
   await cashierReached;
   // 模拟安卓切换回页面时 onShow 比 fail 回调更早触发。
@@ -300,14 +309,18 @@ test("安卓拉起支付失败即使 onShow 先触发也透出错误码并自动
   await payment;
   assert.equal(checkouts.length, 1);
   assert.equal(page.data.rechargeOrder, null);
-  assert.match(page.data.rechargeMessage, /签名校验失败/);
-  assert.match(page.data.rechargeMessage, /errCode=-15006/);
+  assert.equal(page.data.rechargeDialog?.kind, "error");
+  assert.equal(page.data.rechargeDialog?.title, "代币暂未发布");
+  assert.match(page.data.rechargeDialog.message, /尚未发布/);
+  assert.match(page.data.rechargeDialog.detail, /errCode=-15009/);
+  page.onRechargeDialogPrimary();
+  assert.equal(page.data.rechargeDialog, null);
   // 失败自动解锁后可正常切换档位并重新发起支付。
   page.selectPackage({ currentTarget: { dataset: { index: 0 } } });
   assert.equal(page.data.selectedPackIndex, 0);
 });
 
-test("无回调待确认单允许用户主动放弃并重新选择档位", { timeout: 8000 }, async t => {
+test("无回调待确认单弹窗支持主动放弃并重新选择档位", { timeout: 8000 }, async t => {
   const { scenario, page, cashierReached } = await fixture(t);
   scenario.holdCashier = true;
   const payment = page.submitRecharge();
@@ -315,10 +328,12 @@ test("无回调待确认单允许用户主动放弃并重新选择档位", { tim
   page.onShow();
   await payment;
   assert.ok(page.data.rechargeOrder);
-  assert.match(page.data.rechargeMessage, /重新选择/);
-  page.cancelPendingRecharge();
+  assert.equal(page.data.rechargeDialog?.kind, "pending");
+  assert.equal(page.data.rechargeDialog?.secondaryText, "重新选择");
+  assert.match(page.data.rechargeDialog.message, /重新选择/);
+  page.onRechargeDialogSecondary();
   assert.equal(page.data.rechargeOrder, null);
-  assert.equal(page.data.rechargeMessage, "");
+  assert.equal(page.data.rechargeDialog, null);
 });
 
 test("正式版 iPhone 使用已开放的 Apple 支付渠道和现网签名", async t => {

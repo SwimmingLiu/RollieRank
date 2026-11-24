@@ -201,20 +201,41 @@ async function confirmRecharge(id) {
   return (await authedRequest(path, { code: await wxLoginCode() }, 30_000, true, token)).order;
 }
 
-function formatRechargeFailure(errCode, errMsg) {
+function describeRechargeFailure(errCode, errMsg) {
   const code = Number(errCode);
-  let base = "未能调起微信支付，请稍后重试。";
-  if (code === -2) return "支付已取消。";
-  if (code === -4) base = "当前支付被微信风控拦截，请稍后再试。";
-  else if (code === 1001 || code === -15001) base = "微信支付参数有误，请稍后重试。";
-  else if (code === -15002) base = "这笔订单号已失效，请重新点击充值。";
-  else if (code === -15006 || code === -15011) base = "微信支付签名校验失败，请检查后台配置。";
-  if (!IS_TEST_ENVIRONMENT) return base;
-  const detail = [
-    Number.isFinite(code) ? `errCode=${code}` : "",
-    typeof errMsg === "string" && errMsg.trim() ? errMsg.trim() : "",
-  ].filter(Boolean).join(" ");
-  return detail ? `${base}（${detail}）` : base;
+  if (code === -2) return { title: "已取消支付", message: "支付已取消。", detail: "" };
+  let title = "未能调起支付";
+  let message = "未能调起微信支付，请稍后重试。";
+  if (code === -4) {
+    title = "支付暂受限制";
+    message = "当前支付被微信风控拦截，请稍后再试。";
+  } else if (code === 1001 || code === -15001) {
+    title = "支付参数异常";
+    message = "微信支付参数有误，请稍后重试。";
+  } else if (code === -15002) {
+    title = "订单已失效";
+    message = "这笔订单号已失效，请重新点击充值。";
+  } else if (code === -15006 || code === -15011) {
+    title = "签名校验失败";
+    message = "微信支付签名校验失败，请检查后台配置。";
+  } else if (code === -15009) {
+    title = "代币暂未发布";
+    message = IS_TEST_ENVIRONMENT
+      ? "当前测试环境的卷豆代币尚未发布，请核对微信虚拟支付后台配置。"
+      : "当前充值服务暂未就绪，请稍后再试。";
+  }
+  const detail = IS_TEST_ENVIRONMENT
+    ? [
+        Number.isFinite(code) ? `errCode=${code}` : "",
+        typeof errMsg === "string" && errMsg.trim() ? errMsg.trim() : "",
+      ].filter(Boolean).join(" ")
+    : "";
+  return { title, message, detail };
+}
+
+function formatRechargeFailure(errCode, errMsg) {
+  const { message, detail } = describeRechargeFailure(errCode, errMsg);
+  return detail ? `${message}（${detail}）` : message;
 }
 
 function payRecharge(payData, order) {
@@ -343,6 +364,7 @@ module.exports = {
   paidRecharge,
   confirmRecharge,
   payRecharge,
+  describeRechargeFailure,
   formatRechargeFailure,
   hasSession,
   accountId,

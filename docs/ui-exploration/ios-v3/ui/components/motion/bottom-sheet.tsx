@@ -73,6 +73,7 @@ export function BottomSheet({
   const bodyRef = useRef<HTMLDivElement>(null);
   const listTouch = useRef<{ x: number; y: number; atTop: boolean } | null>(null);
   const bodyPull = useRef<{ pointerId: number; x: number; y: number; atTop: boolean } | null>(null);
+  const headerDrag = useRef<{ pointerId: number; x: number; y: number; handled: boolean } | null>(null);
   const reduce = useReducedMotion();
   const uid = useId();
   const titleId = `${uid}-title`;
@@ -132,6 +133,7 @@ export function BottomSheet({
   };
 
   const onDragEnd = (_: unknown, info: PanInfo) => {
+    if (headerDrag.current) headerDrag.current.handled = true;
     const velocity = info.velocity.y;
     const offset = info.offset.y;
     const sheetHeight = sheetRef.current?.clientHeight || 360;
@@ -149,7 +151,10 @@ export function BottomSheet({
     // Distance OR velocity dismisses; fast flicks feel immediate like iOS sheets.
     if ((velocity > 500 && offset > 28) || offset > effectiveDismiss) {
       const smaller = snapPoints.map((_, i) => i).filter((i) => i < snap);
-      if (smaller.length && velocity < 850 && offset < effectiveDismiss * 1.65) {
+      const stepDown = smaller.length > 0
+        && offset < effectiveDismiss * 1.65
+        && (optionList || velocity < 850);
+      if (stepDown) {
         setSnap(smaller[smaller.length - 1]);
         restoreScrim();
       } else {
@@ -177,6 +182,37 @@ export function BottomSheet({
   function startHeaderDrag(event: ReactPointerEvent<HTMLDivElement>) {
     if (event.target instanceof Element && event.target.closest('button, input, textarea, select, a, [data-vaul-no-drag]')) return;
     listTouch.current = null;
+    if (optionList && event.isPrimary) {
+      const start = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, handled: false };
+      headerDrag.current = start;
+      const onUp = (upEvent: PointerEvent) => {
+        if (upEvent.pointerId !== start.pointerId) return;
+        window.removeEventListener("pointerup", onUp, true);
+        window.removeEventListener("pointercancel", onCancel, true);
+        // Wait for motion's postRender onDragEnd before applying the fallback snap transition.
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          if (headerDrag.current !== start || start.handled) return;
+          headerDrag.current = null;
+          const dx = upEvent.clientX - start.x;
+          const dy = upEvent.clientY - start.y;
+          if (Math.abs(dy) < 72 || Math.abs(dy) < Math.abs(dx) * 1.2) return;
+          if (dy < 0 && snap < snapPoints.length - 1 && listOverflows()) {
+            setSnap((current) => Math.min(snapPoints.length - 1, current + 1));
+          } else if (dy > 0) {
+            if (snap > 0) setSnap((current) => Math.max(0, current - 1));
+            else onOpenChange(false);
+          }
+        }));
+      };
+      const onCancel = (cancelEvent: PointerEvent) => {
+        if (cancelEvent.pointerId !== start.pointerId) return;
+        window.removeEventListener("pointerup", onUp, true);
+        window.removeEventListener("pointercancel", onCancel, true);
+        if (headerDrag.current === start) headerDrag.current = null;
+      };
+      window.addEventListener("pointerup", onUp, true);
+      window.addEventListener("pointercancel", onCancel, true);
+    }
     dragControls.start(event);
   }
 

@@ -181,7 +181,20 @@ def exercise_review_picker(page, frame, output):
     wait_sheet_settled(panel)
     page.locator("#phone").screenshot(path=str(output / "review-picker-expanded-320.png"))
     drag_sheet(page, panel, 125, steps=18)
-    expect(panel).to_have_attribute("data-expanded", "false")
+    try:
+        expect(panel).to_have_attribute("data-expanded", "false")
+    except AssertionError:
+        diag = frame.locator("body").evaluate("""() => {
+          const dlg = document.querySelector('[role="dialog"]');
+          return dlg ? {
+            expanded: dlg.getAttribute('data-expanded'),
+            rect: dlg.getBoundingClientRect().toJSON(),
+            transform: getComputedStyle(dlg).transform,
+            opacity: getComputedStyle(dlg).opacity,
+          } : { missing: true };
+        }""")
+        print(f"exercise_review_picker collapse failed diag={diag}", file=sys.stderr, flush=True)
+        raise
     list_body.hover()
     page.mouse.wheel(0, 350)
     expect(list_body).not_to_have_js_property("scrollTop", 0)

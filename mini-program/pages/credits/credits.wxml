@@ -125,13 +125,8 @@
                 </button>
               </view>
 
-              <view wx:if="{{rechargeMessage || (!rechargeOrder && rechargeDeviceMessage && !rechargeTestGuide)}}" class="credits__payment-state">
-                <text class="credits__payment-text" aria-role="status">{{rechargeMessage || rechargeDeviceMessage}}</text>
-                <button
-                  wx:if="{{rechargeOrder && !rechargeAction}}"
-                  class="credits__payment-reset"
-                  bindtap="cancelPendingRecharge"
-                >重新选择</button>
+              <view wx:if="{{!rechargeOrder && rechargeDeviceMessage && !rechargeTestGuide}}" class="credits__payment-state">
+                <text class="credits__payment-text" aria-role="status">{{rechargeDeviceMessage}}</text>
               </view>
             </view>
 
@@ -266,6 +261,44 @@
           </button>
         </block>
         <view wx:else class="credits__empty">{{inviteLoading ? '正在生成邀请码…' : '暂无法获取邀请码'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 纸卡主题支付提示弹窗 -->
+  <view wx:if="{{rechargeDialog}}" class="credits__dialog-layer">
+    <view class="credits__dialog-shade" catchtap="closeRechargeDialog" catchtouchmove="noopDialog"></view>
+    <view
+      class="credits__dialog"
+      aria-role="dialog"
+      aria-modal="true"
+      aria-label="{{rechargeDialog.title}}"
+      catchtouchmove="noopDialog"
+    >
+      <view class="credits__dialog-badge credits__dialog-badge--{{rechargeDialog.kind}}">
+        <image
+          class="credits__dialog-icon"
+          src="{{rechargeDialog.kind === 'pending' ? uiBase + '/clock-ochre.svg' : rechargeDialog.kind === 'info' ? uiBase + '/bean-ochre.svg' : uiBase + '/warn-ochre.svg'}}"
+          mode="aspectFit"
+        />
+      </view>
+      <text class="credits__dialog-title">{{rechargeDialog.title}}</text>
+      <text class="credits__dialog-desc">{{rechargeDialog.message}}</text>
+      <view wx:if="{{rechargeDialog.detail}}" class="credits__dialog-detail">
+        <text class="credits__dialog-detail-text">{{rechargeDialog.detail}}</text>
+      </view>
+      <view class="credits__dialog-actions {{rechargeDialog.secondaryText ? 'credits__dialog-actions--dual' : ''}}">
+        <button
+          wx:if="{{rechargeDialog.secondaryText}}"
+          class="credits__dialog-btn credits__dialog-btn--soft"
+          bindtap="onRechargeDialogSecondary"
+          hover-class="press"
+        >{{rechargeDialog.secondaryText}}</button>
+        <button
+          class="credits__dialog-btn credits__dialog-btn--primary"
+          bindtap="onRechargeDialogPrimary"
+          hover-class="press"
+        >{{rechargeDialog.primaryText || '知道了'}}</button>
       </view>
     </view>
   </view>

@@ -332,6 +332,7 @@ test("miniprogram credits and records entry pass visual layout checks at 320, 39
   assert.doesNotMatch(creditsWxml, /微信账号已同步|即时到账|unitText|卷豆长期可用|已选|常用/);
   assert.match(creditsWxml, /rechargeTestGuide === 'ios'[^>]*>iPhone 充值说明/);
   assert.match(creditsWxml, /catchtap="closeSheet"/, "抽屉遮罩点击空白应关闭");
+  assert.match(creditsWxml, /class="credits__dialog-layer"[\s\S]*class="credits__dialog"/, "支付状态反馈应使用纸卡主题弹窗");
   assert.match(creditsJs, /closeSheet\(\)\s*\{\s*this\.sheetDrag\?\.reset\(\)/, "closeSheet 应使用标准 sheetDrag.reset() 关闭抽屉");
 
   const appWxss = (await readFile(path.join(ROOT, "mini-program/app.wxss"), "utf8"))
@@ -362,6 +363,7 @@ test("miniprogram credits and records entry pass visual layout checks at 320, 39
     checkLight: await iconUri("check-light.svg"),
     back: await iconUri("back.svg"),
     warnOchre: await iconUri("warn-ochre.svg"),
+    clockOchre: await iconUri("clock-ochre.svg"),
     refreshLight: await iconUri("refresh-light.svg"),
     avatar: `data:image/svg+xml;utf8,${encodeURIComponent(avatarSvg)}`,
     paperArt: `data:image/svg+xml;utf8,${encodeURIComponent(paperSvg)}`,
@@ -556,12 +558,46 @@ img { display: block; }
     </div>
   </div>`;
 
+  const dialogMarkup = ({ kind, title, message, detail = "", primaryText = "知道了", secondaryText = "" }) => {
+    const icon = kind === "pending" ? icons.clockOchre : kind === "info" ? icons.bean : icons.warnOchre;
+    return `
+    ${signedInMarkup("", kind === "pending")}
+    <div class="credits__dialog-layer">
+      <div class="credits__dialog-shade"></div>
+      <div class="credits__dialog" role="dialog" aria-modal="true" aria-label="${title}">
+        <div class="credits__dialog-badge credits__dialog-badge--${kind}">
+          <img class="credits__dialog-icon" src="${icon}" alt="" />
+        </div>
+        <span class="credits__dialog-title">${title}</span>
+        <span class="credits__dialog-desc">${message}</span>
+        ${detail ? `<div class="credits__dialog-detail"><span class="credits__dialog-detail-text">${detail}</span></div>` : ""}
+        <div class="credits__dialog-actions ${secondaryText ? "credits__dialog-actions--dual" : ""}">
+          ${secondaryText ? `<button class="credits__dialog-btn credits__dialog-btn--soft" type="button">${secondaryText}</button>` : ""}
+          <button class="credits__dialog-btn credits__dialog-btn--primary" type="button">${primaryText}</button>
+        </div>
+      </div>
+    </div>`;
+  };
+
   const cases = [
     ["mp-credits-error", "卷豆", errorMarkup, [320, 390, 430], true],
     ["mp-credits-guest", "卷豆", guestMarkup, [320, 390], true],
     ["mp-credits-signedin", "卷豆", signedInMarkup(), [320, 390, 430], true],
-    ["mp-credits-device", "卷豆", signedInMarkup("", false, true), [320, 390], true],
-    ["mp-credits-pending", "卷豆", signedInMarkup("这笔充值正在确认，请稍后查询。", true), [320, 390], true],
+    ["mp-credits-device", "卷豆", signedInMarkup("iOS 暂未开放卷豆充值。", false, false), [320, 390], true],
+    ["mp-credits-pending", "卷豆", dialogMarkup({
+      kind: "pending",
+      title: "确认到账中",
+      message: "暂未收到微信付款结果。如已付款请点查询到账，未付款可重新选择。",
+      primaryText: "查询到账",
+      secondaryText: "重新选择",
+    }), [320, 390], true],
+    ["mp-credits-pay-error", "卷豆", dialogMarkup({
+      kind: "error",
+      title: "代币暂未发布",
+      message: "当前测试环境的卷豆代币尚未发布，请核对微信虚拟支付后台配置。",
+      detail: "errCode=-15009 requestVirtualPayment:fail COIN_NOT_PUBLISH",
+      primaryText: "知道了",
+    }), [320, 390], true],
     ["mp-credits-ledger-sheet", "卷豆", ledgerSheetMarkup, [320, 390], true],
     ["mp-records-credits-guest", "个人中心", recordsMarkup(false), [320, 390], false],
     ["mp-records-credits-signedin", "个人中心", recordsMarkup(true), [320, 390, 430], false],
@@ -578,6 +614,7 @@ img { display: block; }
         const footer = document.querySelector(".credits__footer")?.getBoundingClientRect();
         const packs = document.querySelector(".credits__pack-grid")?.getBoundingClientRect();
         const paymentState = document.querySelector(".credits__payment-state")?.getBoundingClientRect();
+        const dialog = document.querySelector(".credits__dialog")?.getBoundingClientRect();
         let retryVerticalOffset = 0;
         if (retryBtn && retryText) {
           const br = retryBtn.getBoundingClientRect();
@@ -590,6 +627,7 @@ img { display: block; }
           retryVerticalOffset,
           packsClearFooter: !packs || !footer || packs.bottom <= footer.top,
           paymentStateClearFooter: !paymentState || !footer || paymentState.bottom <= footer.top,
+          dialogFitsViewport: !dialog || (dialog.left >= 12 && dialog.right <= window.innerWidth - 12 && dialog.top >= 12 && dialog.bottom <= window.innerHeight - 12),
           tinyButtons: [...document.querySelectorAll("button")].filter((el) => {
             const r = el.getBoundingClientRect();
             return r.width < 32 || r.height < 32;
@@ -601,7 +639,8 @@ img { display: block; }
       assert.ok(metrics.retryVerticalOffset <= 2, `${name}@${width} retry button text is not vertically centered (offset=${metrics.retryVerticalOffset})`);
       assert.ok(metrics.packsClearFooter, `${name}@${width} 固定操作栏遮住了充值档位`);
       assert.ok(metrics.paymentStateClearFooter, `${name}@${width} 固定操作栏遮住了到账状态`);
-      await page.screenshot({ path: path.join(VISUAL_DIR, `${name}-${width}.png`), fullPage: true });
+      assert.ok(metrics.dialogFitsViewport, `${name}@${width} 纸卡提示弹窗超出视口范围`);
+      await page.screenshot({ path: path.join(VISUAL_DIR, `${name}-${width}.png`), fullPage: true, animations: "disabled" });
     }
   }
 });

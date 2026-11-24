@@ -3,10 +3,10 @@ const storage = require("../../utils/storage.js");
 const { createPageSheetDrag } = require("../../utils/sheet-gesture.js");
 
 const rechargeStatus = {
-  closed: "这笔订单已关闭，可重新充值。",
-  refund_pending: "这笔订单正在退款。",
-  refunded: "这笔订单已退款。",
-  review: "这笔充值待运营核对。",
+  closed: { kind: "info", title: "订单已关闭", message: "这笔订单已关闭，可重新选择档位充值。" },
+  refund_pending: { kind: "pending", title: "订单退款中", message: "这笔充值正在退款，请留意微信到账通知。" },
+  refunded: { kind: "info", title: "订单已退款", message: "这笔充值已原路退款。" },
+  review: { kind: "pending", title: "充值待核对", message: "这笔充值正在核对中，请稍后查看到账明细。" },
 };
 const activeRecharges = new Set();
 const CASHIER_RESUME_GRACE_MS = 500;
@@ -28,7 +28,7 @@ Page({
     rechargeDeviceMessage: "",
     rechargeTestGuide: "",
     rechargeAction: "",
-    rechargeMessage: "",
+    rechargeDialog: null,
     rechargeOrder: null,
     packages: credits.formatPackages(),
     selectedPackIndex: 0,
@@ -116,6 +116,7 @@ Page({
           purchaseReady,
           rechargeDeviceMessage,
           rechargeTestGuide,
+          rechargeDialog: null,
           rechargeOrder: null,
           packages,
           selectedPackIndex,
@@ -163,6 +164,7 @@ Page({
           signedIn: false,
           balance: 0,
           held: 0,
+          rechargeDialog: null,
           rechargeOrder: null,
           records: [],
           nextBefore: null,
@@ -219,15 +221,61 @@ Page({
     if (this.data.rechargeAction || this.data.rechargeOrder) return;
     const index = Number(event.currentTarget.dataset.index);
     if (Number.isInteger(index) && index >= 0 && index < this.data.packages.length) {
-      this.setData({ selectedPackIndex: index, rechargeMessage: "" });
+      this.setData({ selectedPackIndex: index });
     }
+  },
+
+  showRechargeDialog({
+    kind = "error",
+    title = "充值提示",
+    message = "",
+    detail = "",
+    primaryText = "知道了",
+    primaryAction = "close",
+    secondaryText = "",
+    secondaryAction = "",
+  }) {
+    this.setData({
+      rechargeDialog: {
+        kind,
+        title,
+        message,
+        detail,
+        primaryText,
+        primaryAction,
+        secondaryText,
+        secondaryAction,
+      },
+    });
+  },
+
+  closeRechargeDialog() {
+    if (!this.data.rechargeDialog) return;
+    this.setData({ rechargeDialog: null });
+  },
+
+  noopDialog() {},
+
+  onRechargeDialogPrimary() {
+    const action = this.data.rechargeDialog?.primaryAction;
+    this.setData({ rechargeDialog: null });
+    if (action === "query") return this.submitRecharge();
+  },
+
+  onRechargeDialogSecondary() {
+    const action = this.data.rechargeDialog?.secondaryAction;
+    if (action === "cancel") {
+      this.cancelPendingRecharge();
+      return;
+    }
+    this.setData({ rechargeDialog: null });
   },
 
   cancelPendingRecharge() {
     if (this.data.rechargeAction || !this.data.rechargeOrder) return;
     const owner = credits.accountId();
     if (owner) storage.setToolCreditRecharge(owner, null);
-    this.setData({ rechargeOrder: null, rechargeMessage: "" });
+    this.setData({ rechargeOrder: null, rechargeDialog: null });
   },
 
   async submitRecharge() {
@@ -235,7 +283,11 @@ Page({
     const owner = credits.accountId();
     if (!owner) return;
     if (activeRecharges.has(owner)) {
-      this.setData({ rechargeMessage: "这笔充值正在处理，请稍后查询。" });
+      this.showRechargeDialog({
+        kind: "pending",
+        title: "充值处理中",
+        message: "这笔充值正在处理，请稍后查询到账。",
+      });
       return;
     }
     let pending = storage.toolCreditRecharge(owner);
@@ -243,20 +295,19 @@ Page({
     const device = pending?.cashierStarted ? null : credits.rechargeDevice(this.data.capabilities.purchase);
     if (this.data.purchaseReady && device?.testGuide) {
       const ios = device.testGuide === "ios";
-      wx.showModal({
-        title: ios ? "iPhone 充值说明" : "真机测试",
-        content: ios
+      this.showRechargeDialog({
+        kind: "info",
+        title: ios ? "iPhone 充值说明" : "真机测试说明",
+        message: ios
           ? "微信在 iPhone 上通过 Apple IAP 收款，只支持现网。小程序开通 Apple IAP 并发布后，可在 iPhone 上充值。"
           : "点击开发者工具顶部的「预览」，用手机微信扫码。iPhone 的充值需要在现网通过 Apple IAP 验证。",
-        showCancel: false,
-        confirmText: "知道了",
       });
       return;
     }
     if (device && (!this.data.purchaseReady || device.message || !pack)) return;
 
     activeRecharges.add(owner);
-    this.setData({ rechargeAction: pending?.cashierStarted ? "确认到账…" : "正在下单…", rechargeMessage: "" });
+    this.setData({ rechargeAction: pending?.cashierStarted ? "确认到账…" : "正在下单…", rechargeDialog: null });
     try {
       if (!pending?.cashierStarted) {
         // Persist the request and order before opening the cashier so a retry cannot charge twice.
@@ -306,14 +357,39 @@ Page({
       if (error?.errorId === "recharge-quote") {
         storage.setToolCreditRecharge(owner, null);
         await this.reload();
-        this.setData({ rechargeMessage: "充值档位已更新，请重新选择。" });
+        this.showRechargeDialog({
+          kind: "info",
+          title: "档位已更新",
+          message: "充值档位已更新，请重新选择后发起充值。",
+        });
       } else if (error?.errorId === "recharge-signature") {
         storage.setToolCreditRecharge(owner, null);
-        this.setData({ rechargeOrder: null, rechargeMessage: error.message });
+        this.setData({ rechargeOrder: null });
+        this.showRechargeDialog({
+          kind: "error",
+          title: "订单校验失败",
+          message: error.message || "充值订单校验失败，请重试。",
+        });
       } else if (!credits.hasSession()) {
         await this.reload();
       } else if (credits.accountId() === owner) {
-        this.setData({ rechargeMessage: pending?.orderId ? "暂未查到结果，可稍后查询到账。" : error?.message || "暂时无法下单，请重试。" });
+        if (pending?.orderId && pending?.cashierStarted) {
+          this.showRechargeDialog({
+            kind: "pending",
+            title: "暂未查到结果",
+            message: "网络波动导致暂未获取到账结果，请稍后点击查询到账。",
+            primaryText: "查询到账",
+            primaryAction: "query",
+            secondaryText: "稍后再看",
+            secondaryAction: "close",
+          });
+        } else {
+          this.showRechargeDialog({
+            kind: "error",
+            title: "暂时无法下单",
+            message: error?.message || "暂时无法发起充值，请稍后重试。",
+          });
+        }
       }
     } finally {
       clearTimeout(this.cashierResumeTimer);
@@ -336,26 +412,48 @@ Page({
     if (order?.id !== pending.orderId) throw new Error("暂未查到这笔充值。");
     if (order.state === "credited") {
       storage.setToolCreditRecharge(owner, null);
-      this.setData({ rechargeOrder: null });
+      this.setData({ rechargeOrder: null, rechargeDialog: null });
       await this.reload();
       wx.showToast({ title: `已到账 ${order.credits} 颗`, icon: "success" });
     } else if (rechargeStatus[order.state]) {
       storage.setToolCreditRecharge(owner, null);
-      this.setData({ rechargeOrder: null, rechargeMessage: rechargeStatus[order.state] });
+      this.setData({ rechargeOrder: null });
+      this.showRechargeDialog(rechargeStatus[order.state]);
     } else if (order.state === "pending" && pending.paymentResult === "cancelled") {
       storage.setToolCreditRecharge(owner, null);
-      this.setData({ rechargeOrder: null, rechargeMessage: "支付已取消。" });
+      this.setData({ rechargeOrder: null, rechargeDialog: null });
+      wx.showToast({ title: "已取消支付", icon: "none" });
     } else if (order.state === "pending" && pending.paymentResult === "failed") {
       storage.setToolCreditRecharge(owner, null);
-      this.setData({
-        rechargeOrder: null,
-        rechargeMessage: credits.formatRechargeFailure(pending.paymentErrCode, pending.paymentErrMsg),
+      this.setData({ rechargeOrder: null });
+      const info = credits.describeRechargeFailure(pending.paymentErrCode, pending.paymentErrMsg);
+      this.showRechargeDialog({
+        kind: "error",
+        title: info.title,
+        message: info.message,
+        detail: info.detail,
+      });
+    } else if (order.state === "pending") {
+      this.showRechargeDialog({
+        kind: "pending",
+        title: "确认到账中",
+        message: order.wechatOrderMissing
+          ? "暂未收到微信付款结果。如已付款请点查询到账，未付款可重新选择。"
+          : "这笔充值正在核对到账状态，请稍后查询。",
+        primaryText: "查询到账",
+        primaryAction: "query",
+        secondaryText: "重新选择",
+        secondaryAction: "cancel",
       });
     } else {
-      this.setData({
-        rechargeMessage: order.state === "pending" && order.wechatOrderMissing
-          ? "这笔充值正在确认，如未付款可点击重新选择。"
-          : "这笔充值正在确认，请稍后查询。",
+      this.showRechargeDialog({
+        kind: "pending",
+        title: "确认到账中",
+        message: "已收到付款通知，卷豆正在入账中，请稍后查询。",
+        primaryText: "查询到账",
+        primaryAction: "query",
+        secondaryText: "稍后再看",
+        secondaryAction: "close",
       });
     }
   },
