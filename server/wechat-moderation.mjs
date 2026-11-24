@@ -264,6 +264,46 @@ export function createWechatModeration({
     }
   }
 
+  async function checkImageSync({ bytes, mime = "image/png" }) {
+    if (!config.enabled) return { skipped: true, suggest: "pass", label: "" };
+    if (!Buffer.isBuffer(bytes) || !bytes.length) return { suggest: "review", label: "图片内容无效", degraded: true };
+    // 微信同步 img_sec_check 上限为 1 MB，超出时交由异步检测或人工复核。
+    if (bytes.length > 1024 * 1024) {
+      return { suggest: "review", label: "图片超过同步检测大小限制", degraded: true };
+    }
+    try {
+      const token = await getAccessToken();
+      const ext = mime === "image/jpeg" ? "jpg" : "png";
+      const form = new FormData();
+      form.append("media", new Blob([bytes], { type: mime }), `check.${ext}`);
+      const url = new URL("/wxa/img_sec_check", WECHAT_API);
+      url.search = new URLSearchParams({ access_token: token });
+      const response = await fetchImpl(url, {
+        method: "POST",
+        body: form,
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!response.ok) {
+        return { suggest: "review", label: "微信图片检测异常", degraded: true };
+      }
+      const result = await response.json().catch(() => null);
+      if (result?.errcode === 0) {
+        return { suggest: "pass", label: "" };
+      }
+      if (result?.errcode === 87014) {
+        return { suggest: "risky", label: "违规图片", errcode: 87014 };
+      }
+      return {
+        suggest: "review",
+        label: "微信图片检测异常",
+        degraded: true,
+        errcode: result?.errcode,
+      };
+    } catch {
+      return { suggest: "review", label: "微信图片检测超时", degraded: true };
+    }
+  }
+
   async function checkMediaAsync({ mediaUrl, mediaType = 2, openid, scene = 2 }) {
     if (!config.enabled || !openid || !mediaUrl) return { skipped: true };
     try {
@@ -334,6 +374,7 @@ export function createWechatModeration({
     isCallbackTokenConfigured: () => Boolean(config.msgToken),
     resolveOpenId,
     checkText,
+    checkImageSync,
     checkMediaAsync,
     buildMediaUrl,
     verifyMediaUrl,

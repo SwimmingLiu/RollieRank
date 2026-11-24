@@ -18,7 +18,7 @@
    - `ROLLIERANK_WECHAT_MSG_TOKEN`：微信公众平台「开发管理 → 开发设置 → 消息推送」里设置的 Token
    - 消息推送 URL 填 `https://<你的API域名>/api/wechat/sec-callback`，消息格式选 JSON 或 XML 均可（明文模式）。
    - 如需临时关闭微信自动审核，可设 `ROLLIERANK_WECHAT_SEC_CHECK=0`。
-4. **微信头像七牛 OSS 存储（推荐）。** 在 `/etc/rollierank.env` 中配置以下环境变量后，用户通过小程序选择的微信头像会自动上传至七牛 OSS，数据库中仅存 OSS 地址、不再落盘 base64：
+4. **全站图片七牛 OSS 存储（推荐）。** 在 `/etc/rollierank.env` 中配置以下环境变量后，微信头像（`avatars/`）、评论区配图（`discussions/`）与意见反馈截图（`feedback/`）都会自动上传至七牛 OSS，数据库中仅存 OSS 地址、不再落盘 base64：
    - `ROLLIERANK_QINIU_AK` / `ROLLIERANK_QINIU_SK`：七牛 AccessKey / SecretKey（兼容 `QINIU_AK` / `QINIU_SK`）
    - `ROLLIERANK_QINIU_BUCKET`：存储空间名（默认 `rollie-rank`）
    - `ROLLIERANK_QINIU_DOMAIN`：加速域名（默认 `https://rollie-rank-oss.swimmingliu.cn`）
@@ -99,6 +99,28 @@ sudo node --env-file=/etc/rollierank-test.env scripts/migrate-tool-credits.mjs -
 
 本机用 `npm run verify -- feature tool-credits` 验证签名、下单、幂等发货、退款和权益冻结。验证使用模拟微信接口和真实临时 PostgreSQL。微信支付的真实授权和商品适用范围在实际 AppID 后台核对。
 
+## 微信代币充值
+
+卷豆的微信代币按 1 元 1 颗发布。按[卷豆数据库](#卷豆数据库)先应用钱包迁移至 `wallet/005_wechat_coin_refund_polling.sql`。迁移保留已有档位颗数，并把人民币分值改为颗数乘 100。应用角色需能读写充值订单和卷豆批次。
+
+| 服务端配置 | 开发版、预览和体验版 | 正式版 |
+| --- | --- | --- |
+| 环境文件 | `/etc/rollierank-test.env` | `/etc/rollierank.env` |
+| `ROLLIERANK_WXPAY_COIN_ENV` | `1` | `0` |
+| `ROLLIERANK_WXPAY_OFFER_ID` | 当前 AppID 的 OfferID | 当前 AppID 的 OfferID |
+| 支付密钥 | `ROLLIERANK_WXPAY_SANDBOX_APP_KEY` | `ROLLIERANK_WXPAY_APP_KEY` |
+| 卷豆库 | `TEST_DATABASE_URL` 和 `TEST_DATABASE_SCHEMA` | `DATABASE_URL` 和 `DATABASE_SCHEMA` |
+
+沿用当前 AppID 的服务端微信登录配置和 `ROLLIERANK_WECHAT_MSG_TOKEN`。密钥写入上述服务端文件，权限为 `0600`。微信发货推送使用 `/api/wechat/sec-callback`，确认收到消息后以签名查单核对。台前小程序按构建环境选择 API。测试域名的 Nginx 配置须允许卷豆充值 API 直接访问，并将钱包 Bearer 凭证传给应用。
+
+应用读到正确环境的密钥和数据库迁移后，运营后台的 `GET /admin/api/tool-credits` 返回 `tokenRechargeReady: true`。通过管理员接口 `POST /admin/api/tool-credits/rules` 传 `{ "purchase": { "tokenRecharge": true } }` 开放该环境的新充值。启用 `ROLLIERANK_WXPAY_COIN_IOS=1` 还需在微信后台开通 Apple IAP 并核对实际档位。微信沙箱仅用微信支付渠道联调。
+
+```sh
+node scripts/verify-test-wallet.mjs https://rollie-rank-test.swimmingliu.cn --login-ready --recharge-ready
+```
+
+该命令只读核对测试环境、充值入口、固定兑换比例和鉴权。真机联调从 1 颗档位开始，检查支付结果、到账明细和微信账单。小程序接口见[卷豆产品与对接方案](../docs/solution-tool-credits.md#卷豆充值对接)。
+
 ## 测试后端
 
 测试实例使用同一台服务器上的独立进程。systemd 把专用回环端口交给测试进程。初次启动从内置试卷和岗位目录初始化。答卷、评论、后台记录与上传数据都写到测试目录。
@@ -150,4 +172,4 @@ node scripts/verify-test-wallet.mjs https://rollie-rank-test.swimmingliu.cn --lo
 ssh swimmingliu.cn 'cd /opt/rollierank && sudo node --env-file=/etc/rollierank.env deploy/check-first-release.mjs'
 ```
 
-检查读取生产的 `catalog.json` 和 PostgreSQL 卷豆表。结果需为 `ready: true`，用户记录计数全部为零。题库、岗位目录、后台账号和配置保留。发现已有记录时先核对来源并保留可恢复的备份。
+检查读取生产的 `catalog.json` 和 PostgreSQL 卷豆表。结果需为 `ready: true`，用户记录计数全部为零。检查运营短链的页面路径和匿名点击结构。访问含来源、扩展字段或已截断时，核对来源并保留可恢复备份。

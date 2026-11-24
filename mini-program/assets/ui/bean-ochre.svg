@@ -1,10 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <g transform="rotate(-14 32 34)">
-    <path d="M33 10C46 10 53 20 52 34c-1 13-10 22-21 22-11 0-19-8-18-20 1-13 9-26 20-26Z" fill="#F6C973" stroke="#3C3025" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M47 22c3 5 4 12 2 19-2 8-8 14-17 14-4 0-8-1-11-3 3 3 7 4 11 4 11 0 19-9 20-22 1-5-1-9-5-12Z" fill="#E6A64B" opacity="0.55"/>
-    <path d="M34 19c-4 3-6 9-5 15 1 6 5 10 9 11" stroke="#3C3025" stroke-width="2.8" stroke-linecap="round"/>
-    <path d="M23 23c2-4 5-7 9-8" stroke="#FFF9E8" stroke-width="3.2" stroke-linecap="round"/>
-    <circle cx="21" cy="31" r="1.8" fill="#FFF9E8"/>
+  <!-- 后方柔珊瑚小卷豆 -->
+  <g transform="rotate(-28 22 38)">
+    <path d="M22 21c7 0 11.5 6 11 13.5-.5 8-5.5 13-12 13s-11-4.8-10.5-12C11 28 15.5 21 22 21Z" fill="#F3A493" stroke="#302F28" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M22 27c-2.2 1.8-3.4 5.2-2.8 8.8.6 3 2.4 5.2 4.6 5.8" stroke="#302F28" stroke-width="2.4" stroke-linecap="round"/>
   </g>
-  <path d="M51 9v7M47.5 12.5h7" stroke="#EF7D82" stroke-width="2.8" stroke-linecap="round"/>
+  <!-- 前景暖金主卷豆 -->
+  <g transform="rotate(-14 39 34)">
+    <path d="M39 14c10.5 0 16.5 8.5 16 19.5-.6 10.8-8 18.5-17 18.5-9.2 0-15.6-6.6-15-16.5.7-10.5 7-21.5 16-21.5Z" fill="#F6C973" stroke="#302F28" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M51 24.5c2.2 4 2.8 9.2 1.5 15-1.6 6.4-6.4 11-13.5 11-3.2 0-6.2-.8-8.8-2.4 2.5 2.4 5.8 3.6 9.2 3.6 9 0 15.6-7.2 16.2-18 .6-4-1-7-4.6-9.2Z" fill="#E39E3E" opacity="0.45"/>
+    <path d="M39.5 21.5c-3.2 2.5-4.8 7.4-4.2 12.2.7 4.8 3.8 8 7.4 9" stroke="#302F28" stroke-width="2.8" stroke-linecap="round"/>
+    <path d="M31.2 24.8c1.6-3.2 4.2-5.8 7.5-6.8" stroke="#FFFBF0" stroke-width="3.2" stroke-linecap="round"/>
+    <circle cx="29.5" cy="31.8" r="1.8" fill="#FFFBF0"/>
+  </g>
+  <!-- 珊瑚星芒 -->
+  <path d="M54 9v7M50.5 12.5h7" stroke="#EF7D82" stroke-width="3" stroke-linecap="round"/>
 </svg>

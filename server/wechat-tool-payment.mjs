@@ -6,35 +6,13 @@ const CHECKOUT_MODE = "short_series_goods";
 const PAYMENT_ENV = 0;
 const PRODUCT_ID = /^[a-zA-Z0-9_-]{1,80}$/;
 const staleTokenCodes = new Set([40001, 40014, 42001]);
+const duplicateDebit = 268490004;
 
 function sign(key, value) {
   return createHmac("sha256", key).update(value).digest("hex");
 }
 
-export function createWechatToolPayment({ env, appId, secret, fetchImpl = globalThis.fetch, clock = Date.now }) {
-  const offerId = env.ROLLIERANK_WXPAY_OFFER_ID?.trim();
-  const appKey = env.ROLLIERANK_WXPAY_APP_KEY?.trim();
-  const rawGoods = env.ROLLIERANK_WXPAY_GOODS?.trim();
-  if (!appId || !secret || !offerId || !appKey || !rawGoods) return null;
-
-  let goods;
-  try {
-    goods = JSON.parse(rawGoods);
-  } catch {
-    throw new Error("微信道具配置 ROLLIERANK_WXPAY_GOODS 不是有效的 JSON。");
-  }
-  if (!Array.isArray(goods) || !goods.length || goods.length > 50 ||
-      new Set(goods.map(item => item?.productId)).size !== goods.length || goods.some(item =>
-        typeof item?.productId !== "string" || !PRODUCT_ID.test(item.productId) ||
-        typeof item.tool !== "string" || !TOOL_ID.test(item.tool) ||
-        typeof item.title !== "string" || !item.title.trim() || item.title.length > 60 ||
-        !Number.isInteger(item.cents) || item.cents < 1 || item.cents > 10_000_000)) {
-    throw new Error("微信道具配置须包含有效且唯一的 productId、工具、名称和分值价格。");
-  }
-  const products = goods.map(({ productId, tool, title, cents, ios = false }) => ({
-    productId, tool, title: title.trim(), cents, ios: ios === true && cents >= 100,
-  }));
-
+function createWechatPaymentApi({ appId, secret, offerId, appKey, paymentEnv, fetchImpl = globalThis.fetch, clock = Date.now }) {
   let token;
   let tokenExpires = 0;
   let pendingToken;
@@ -71,10 +49,11 @@ export function createWechatToolPayment({ env, appId, secret, fetchImpl = global
     return pendingToken;
   }
 
-  async function invoke(path, payload, { unsigned = false } = {}) {
+  async function invoke(path, payload, { unsigned = false, signature, acceptDuplicate = false } = {}) {
     const body = JSON.stringify(payload);
     const url = new URL(path, WECHAT_API);
     if (!unsigned) url.searchParams.set("pay_sig", sign(appKey, path + "&" + body));
+    if (signature) url.searchParams.set("signature", signature);
     async function send(access) {
       url.searchParams.set("access_token", access);
       return post(url, body, { allowEmpty: unsigned });
@@ -85,7 +64,7 @@ export function createWechatToolPayment({ env, appId, secret, fetchImpl = global
       if (token === usedToken) tokenExpires = 0;
       result = await send(await accessToken());
     }
-    if (result?.errcode !== 0) {
+    if (result?.errcode !== 0 && !(acceptDuplicate && result?.errcode === duplicateDebit)) {
       throw Object.assign(creditError(502, "微信尚未确认这笔交易，请稍后重试。", "wechat-payment"), {
         wechatCode: result?.errcode,
       });
@@ -93,38 +72,110 @@ export function createWechatToolPayment({ env, appId, secret, fetchImpl = global
     return result;
   }
 
-  function checkout(order, sessionKey) {
+  function checkout(mode, order, item, sessionKey) {
     const signData = JSON.stringify({
-      offerId, buyQuantity: 1, env: PAYMENT_ENV, currencyType: "CNY",
-      productId: order.productId, goodsPrice: order.cents, outTradeNo: order.id, attach: order.id,
+      offerId, buyQuantity: item.buyQuantity, env: paymentEnv, currencyType: "CNY",
+      ...item.goods, outTradeNo: order.id, attach: order.id,
     });
     return {
-      mode: CHECKOUT_MODE, signData,
+      mode, signData,
       paySig: sign(appKey, "requestVirtualPayment&" + signData),
       signature: sign(sessionKey, signData),
     };
   }
 
   return {
-    offerId, products, checkout,
+    checkout, invoke,
     async query(order, id = order.id) {
-      const result = await invoke("/xpay/query_order", { openid: order.openid, env: PAYMENT_ENV, order_id: id });
+      const result = await invoke("/xpay/query_order", { openid: order.openid, env: paymentEnv, order_id: id });
       if (!result.order || result.order.order_id !== id || !Number.isInteger(result.order.status)) {
         throw creditError(502, "微信返回的订单信息与本地订单不一致。", "wechat-order-mismatch");
       }
       return result.order;
     },
+  };
+}
+
+export function createWechatToolPayment({ env, appId, secret, fetchImpl, clock }) {
+  const offerId = env.ROLLIERANK_WXPAY_OFFER_ID?.trim();
+  const appKey = env.ROLLIERANK_WXPAY_APP_KEY?.trim();
+  const rawGoods = env.ROLLIERANK_WXPAY_GOODS?.trim();
+  if (!appId || !secret || !offerId || !appKey || !rawGoods) return null;
+
+  let goods;
+  try {
+    goods = JSON.parse(rawGoods);
+  } catch {
+    throw new Error("微信道具配置 ROLLIERANK_WXPAY_GOODS 不是有效的 JSON。");
+  }
+  if (!Array.isArray(goods) || !goods.length || goods.length > 50 ||
+      new Set(goods.map(item => item?.productId)).size !== goods.length || goods.some(item =>
+        typeof item?.productId !== "string" || !PRODUCT_ID.test(item.productId) ||
+        typeof item.tool !== "string" || !TOOL_ID.test(item.tool) ||
+        typeof item.title !== "string" || !item.title.trim() || item.title.length > 60 ||
+        !Number.isInteger(item.cents) || item.cents < 1 || item.cents > 10_000_000)) {
+    throw new Error("微信道具配置须包含有效且唯一的 productId、工具、名称和分值价格。");
+  }
+  const products = goods.map(({ productId, tool, title, cents, ios = false }) => ({
+    productId, tool, title: title.trim(), cents, ios: ios === true && cents >= 100,
+  }));
+  const api = createWechatPaymentApi({ appId, secret, offerId, appKey, paymentEnv: PAYMENT_ENV, fetchImpl, clock });
+  return {
+    offerId, products, query: api.query,
+    checkout(order, sessionKey) {
+      return api.checkout(CHECKOUT_MODE, order, {
+        buyQuantity: 1, goods: { productId: order.productId, goodsPrice: order.cents },
+      }, sessionKey);
+    },
     acknowledge(order) {
-      return invoke("/xpay/notify_provide_goods", { order_id: order.id, env: PAYMENT_ENV }, { unsigned: true });
+      return api.invoke("/xpay/notify_provide_goods", { order_id: order.id, env: PAYMENT_ENV }, { unsigned: true });
     },
     async refund(order, refund) {
-      const result = await invoke("/xpay/refund_order", {
+      const result = await api.invoke("/xpay/refund_order", {
         openid: order.openid, order_id: order.id, refund_order_id: refund.id,
         left_fee: order.cents, refund_fee: order.cents, biz_meta: order.id,
         refund_reason: refund.reason, req_from: "1", env: PAYMENT_ENV,
       });
       if (result.refund_order_id !== refund.id || result.pay_order_id !== order.id) {
         throw creditError(502, "微信返回的退款单与本地订单不一致。", "wechat-order-mismatch");
+      }
+    },
+  };
+}
+
+export function createWechatCoinPayment({ env, appId, secret, fetchImpl, clock, testEnvironment }) {
+  const paymentEnv = testEnvironment ? 1 : 0;
+  const offerId = env.ROLLIERANK_WXPAY_OFFER_ID?.trim();
+  const keyName = paymentEnv ? "ROLLIERANK_WXPAY_SANDBOX_APP_KEY" : "ROLLIERANK_WXPAY_APP_KEY";
+  const appKey = env[keyName]?.trim();
+  // Test services can only sign sandbox recharges, even if a production key is present.
+  if (env.ROLLIERANK_WXPAY_COIN_ENV !== String(paymentEnv) || !appId || !secret || !offerId || !appKey) return null;
+  const ios = paymentEnv === 0 && env.ROLLIERANK_WXPAY_COIN_IOS === "1";
+  const api = createWechatPaymentApi({ appId, secret, offerId, appKey, paymentEnv, fetchImpl, clock });
+
+  function debitPayload(order) {
+    return {
+      openid: order.openid, env: paymentEnv, amount: order.credits,
+      order_id: "RD" + order.id.slice(2), remark: "RollieRank wallet " + order.id,
+    };
+  }
+
+  return {
+    appId, offerId, env: paymentEnv, ios, query: api.query,
+    checkout(order, sessionKey) {
+      return api.checkout("short_series_coin", order, { buyQuantity: order.credits }, sessionKey);
+    },
+    signDebit(order, sessionKey) {
+      // Only the signature for this immutable debit is persisted. The WeChat session key stays in memory.
+      return sign(sessionKey, JSON.stringify(debitPayload(order)));
+    },
+    async debit(order) {
+      const payload = debitPayload(order);
+      const result = await api.invoke("/xpay/currency_pay", payload, {
+        signature: order.debitSignature, acceptDuplicate: true,
+      });
+      if ((result.errcode === 0 || result.order_id) && result.order_id !== payload.order_id) {
+        throw creditError(502, "微信代币扣减单号与本地订单不一致。", "wechat-order-mismatch");
       }
     },
   };

@@ -84,14 +84,7 @@ function validatePng(uri) {
     fail("图片无法解码，请重新选择文件。");
   }
   const normalized = Buffer.concat(kept);
-  return {
-    dataUri: `data:image/png;base64,${normalized.toString("base64")}`,
-    buffer: normalized,
-    mime: "image/png",
-    width,
-    height,
-    bytes: normalized.length,
-  };
+  return { dataUri: `data:image/png;base64,${normalized.toString("base64")}`, width, height, bytes: normalized.length };
 }
 
 function validateWav(uri) {
@@ -279,7 +272,7 @@ function adminCommentView(comment, titles, profilesByGuest) {
     author: resolveAuthor(comment, profilesByGuest),
     text: comment.text ?? "",
     links: comment.links ?? [],
-    images: comment.images ?? [],
+    images: projectDiscussionImages(comment.images),
     audio: comment.audio ?? null,
     likeCount: Array.isArray(comment.likedBy) ? new Set(comment.likedBy).size : 0,
     createdAt: comment.createdAt,
@@ -356,13 +349,14 @@ function appendAudit(store, action, target) {
   store.audit.unshift({ id: randomUUID(), action, target, createdAt: Date.now() });
 }
 
-function recordBlockedAttempt(store, entry) {
-  const section = writableDiscussions(store);
-  section.blockedLog ??= [];
-  section.blockedLog.unshift({ id: randomUUID(), ...entry, createdAt: Date.now() });
-  if (section.blockedLog.length > MAX_BLOCKED_LOG) {
-    section.blockedLog.length = MAX_BLOCKED_LOG;
+function collectOssKeys(comments) {
+  const keys = [];
+  for (const comment of comments) {
+    for (const img of comment?.images ?? []) {
+      if (typeof img?.key === "string" && img.key.trim()) keys.push(img.key.trim());
+    }
   }
+  return keys;
 }
 
 export function createDiscussionsService(
@@ -370,13 +364,20 @@ export function createDiscussionsService(
   { oss } = {},
 ) {
   const imageStorage = oss ?? createQiniuStorage();
+  async function purgeOssKeys(keys) {
+    if (!keys.length || typeof imageStorage.deleteObject !== "function") return;
+    await Promise.allSettled(keys.map((key) => imageStorage.deleteObject(key)));
+  }
+
   async function applyMediaCheckResult(payload) {
     if (!payload?.traceId) return false;
     const suggest = ["pass", "review", "risky"].includes(payload.suggest) ? payload.suggest : "review";
     const label = payload.label && payload.label !== 100 ? labelName(payload.label) : "";
     let matched = false;
+    let keysToDelete = [];
     await mutateCatalog((store) => {
-      const comments = store.features?.discussions?.comments ?? [];
+      const section = store.features?.discussions;
+      const comments = section?.comments ?? [];
       for (const comment of comments) {
         const traces = comment.moderation?.traces;
         if (!Array.isArray(traces)) continue;
@@ -398,11 +399,13 @@ export function createDiscussionsService(
         ])];
         comment.moderation.labels = labels;
         if (risky) {
-          comment.moderation.status = "rejected";
-          comment.moderation.source = "wechat";
-          comment.moderation.label = risky.label || "违规媒体";
-          comment.moderation.reason = `微信媒体检测（含图片文字）拦截：${risky.label || "疑似违规"}`;
-          comment.moderation.reviewedAt = Date.now();
+          // 审核不通过不得发布，也不在数据库留存违规图片与文字记录。
+          const removedId = comment.id;
+          const isRoot = !parentOf(comment);
+          const removed = comments.filter((item) => item.id === removedId || (isRoot && rootOf(item) === removedId));
+          keysToDelete = collectOssKeys(removed);
+          section.comments = comments.filter((item) => item.id !== removedId && (!isRoot || rootOf(item) !== removedId));
+          appendAudit(store, "拦截并清除违规评论", `微信媒体检测未通过（${risky.label || "违规内容"}）`);
         } else if (review) {
           comment.moderation.status = "flagged";
           comment.moderation.source = "wechat";
@@ -422,6 +425,7 @@ export function createDiscussionsService(
         break;
       }
     });
+    if (keysToDelete.length) await purgeOssKeys(keysToDelete);
     return matched;
   }
 
@@ -554,45 +558,56 @@ export function createDiscussionsService(
       if (!rawIds.length || rawIds.length > 100 || !rawIds.every(token)) fail("请选择有效的评论。");
       const reason = cleanText(input.reason, "审核理由", 500, false);
       const idSet = new Set(rawIds);
+      let keysToDelete = [];
       const result = await mutateCatalog((store) => {
         const section = writableDiscussions(store);
         const titles = paperTitleMap(store);
         const targets = section.comments.filter((item) => idSet.has(item.id));
         if (!targets.length) fail("找不到要操作的评论。", 404);
         const now = Date.now();
-        if (action === "delete") {
+        if (action === "delete" || action === "reject") {
           const removedRoots = new Set(targets.filter((item) => !parentOf(item)).map((item) => item.id));
+          const removed = section.comments.filter((item) => idSet.has(item.id) || removedRoots.has(rootOf(item)));
+          keysToDelete = collectOssKeys(removed);
           section.comments = section.comments.filter((item) => !idSet.has(item.id) && !removedRoots.has(rootOf(item)));
-          appendAudit(store, "删除评论", `${targets.length} 条评论${reason ? `（${reason}）` : ""}`);
-          return { deleted: targets.length, summary: moderationSummary(store, moderation) };
+          appendAudit(
+            store,
+            action === "reject" ? "拒绝并清除评论" : "删除评论",
+            `${targets.length} 条评论${reason ? `（${reason}）` : ""}`,
+          );
+          return {
+            deleted: targets.length,
+            ...(action === "reject" ? { rejected: targets.length } : {}),
+            summary: moderationSummary(store, moderation),
+          };
         }
         const profilesByGuest = wechatProfilesByGuest(store);
         const updated = [];
         for (const comment of targets) {
           const prev = comment.moderation ?? {};
-          const nextStatus = action === "approve" ? "approved" : "rejected";
           comment.moderation = {
             ...prev,
-            status: nextStatus,
+            status: "approved",
             source: "manual",
-            reason: reason || (action === "approve" ? "管理员人工审核通过" : "管理员屏蔽违规评论"),
+            reason: reason || "管理员人工审核通过",
             labels: Array.isArray(prev.labels) ? prev.labels : [],
             traces: Array.isArray(prev.traces) ? prev.traces : [],
             reviewedAt: now,
             requireManualApproval: false,
           };
-          if (action === "approve" && Array.isArray(comment.reports)) {
+          if (Array.isArray(comment.reports)) {
             comment.reports = [];
           }
           updated.push(adminCommentView(comment, titles, profilesByGuest));
         }
         appendAudit(
           store,
-          action === "approve" ? "审核通过评论" : "屏蔽评论",
+          "审核通过评论",
           `${targets.length} 条评论${reason ? `（${reason}）` : ""}`,
         );
         return { updated, summary: moderationSummary(store, moderation) };
       });
+      if (keysToDelete.length) await purgeOssKeys(keysToDelete);
       send(200, result);
       return true;
     }
@@ -710,7 +725,7 @@ export function createDiscussionsService(
       return true;
     }
 
-    // 第 1 层：自定义敏感词预检（本地零成本）。
+    // 第 1 层：自定义敏感词预检（不通过直接拦截，不在数据库留存违规文字/图片）。
     const settings = readSettings(initial);
     const combinedText = [
       body.nickname,
@@ -721,19 +736,10 @@ export function createDiscussionsService(
     ].filter(Boolean).join("\n");
     const matchedKeywords = matchKeywords(combinedText, settings.blockedKeywords);
     if (matchedKeywords.length) {
-      await mutateCatalog((store) => {
-        recordBlockedAttempt(store, {
-          paperId: input.paperId,
-          nickname: body.nickname,
-          text: body.text.slice(0, 200),
-          source: "keyword",
-          reason: `命中敏感词：${matchedKeywords.join("、")}`,
-        });
-      });
       fail("评论包含不允许发布的内容，请修改后重试。", 422);
     }
 
-    // 第 2 层：微信小程序文本安全检测（msgSecCheck，免费）。
+    // 第 2 层：微信小程序文本 + 图片同步安全检测（不通过直接拦截，不落盘、不上传 OSS）。
     let openid = "";
     let moderationRecord = null;
     if (moderation.isEnabled()) {
@@ -742,51 +748,90 @@ export function createDiscussionsService(
         wxCode: input.wxCode,
         guestId: input.guestId,
       });
-      if (openid && combinedText.trim()) {
-        const textCheck = await moderation.checkText({
-          content: combinedText,
-          openid,
-          scene: 2,
-          nickname: body.nickname,
-        });
-        if (textCheck.suggest === "risky") {
-          const reason = `微信文本检测拦截：${textCheck.label || "违规内容"}`;
-          await mutateCatalog((store) => {
-            recordBlockedAttempt(store, {
-              paperId: input.paperId,
-              nickname: body.nickname,
-              text: body.text.slice(0, 200),
-              source: "wechat",
-              label: textCheck.label || "",
-              reason,
-            });
+      if (combinedText.trim()) {
+        if (openid) {
+          const textCheck = await moderation.checkText({
+            content: combinedText,
+            openid,
+            scene: 2,
+            nickname: body.nickname,
           });
-          fail("评论内容未通过安全检测，请修改后重试。", 422);
-        }
-        if (textCheck.suggest === "review") {
-          moderationRecord = {
-            status: "flagged",
-            source: "wechat",
-            label: textCheck.label || "待复核",
-            labels: textCheck.labels ?? [],
-            reason: textCheck.degraded
-              ? `微信文本检测暂不可用，转人工复核（${textCheck.label || "超时"}）`
-              : `微信文本检测建议复核：${textCheck.label || "疑似风险"}`,
-            traces: [],
-            reviewedAt: null,
-            requireManualApproval: settings.mode === "manual",
-          };
+          if (textCheck.suggest === "risky") {
+            fail("评论内容未通过安全检测，请修改后重试。", 422);
+          }
+          if (textCheck.suggest === "review") {
+            moderationRecord = {
+              status: "flagged",
+              source: "wechat",
+              label: textCheck.label || "待复核",
+              labels: textCheck.labels ?? [],
+              reason: textCheck.degraded
+                ? `微信文本检测暂不可用，转人工复核（${textCheck.label || "超时"}）`
+                : `微信文本检测建议复核：${textCheck.label || "疑似风险"}`,
+              traces: [],
+              reviewedAt: null,
+              requireManualApproval: settings.mode === "manual",
+            };
+          } else {
+            moderationRecord = {
+              status: settings.mode === "manual" ? "pending" : "approved",
+              source: "wechat",
+              label: "",
+              labels: [],
+              reason: settings.mode === "manual" ? "已通过微信文本检测，等待管理员审核公开" : "微信文本检测通过",
+              traces: [],
+              reviewedAt: settings.mode === "manual" ? null : Date.now(),
+              requireManualApproval: settings.mode === "manual",
+            };
+          }
         } else {
+          // 缺少微信 openid 无法完成文本机审时，不直接公开，转人工审核。
           moderationRecord = {
-            status: settings.mode === "manual" ? "pending" : "approved",
-            source: "wechat",
+            status: "pending",
+            source: "auto",
             label: "",
             labels: [],
-            reason: settings.mode === "manual" ? "已通过微信文本检测，等待管理员审核公开" : "微信文本检测通过",
+            reason: "未获取微信身份凭证，等待管理员审核公开",
             traces: [],
-            reviewedAt: settings.mode === "manual" ? null : Date.now(),
-            requireManualApproval: settings.mode === "manual",
+            reviewedAt: null,
+            requireManualApproval: true,
           };
+        }
+      }
+
+      // 对所有图片执行同步安全检测（落盘与上传 OSS 之前先拦截违规图片）。
+      if (body.images.length > 0 && typeof moderation.checkImageSync === "function") {
+        for (const img of body.images) {
+          const bytes = Buffer.from(img.dataUri.slice(img.dataUri.indexOf(",") + 1), "base64");
+          const imgCheck = await moderation.checkImageSync({ bytes, mime: "image/png" });
+          if (imgCheck.suggest === "risky") {
+            fail("图片内容未通过安全检测，请更换后重试。", 422);
+          }
+          if (imgCheck.suggest === "review") {
+            moderationRecord = {
+              status: "flagged",
+              source: "wechat",
+              label: imgCheck.label || "图片待复核",
+              labels: [...new Set([...(moderationRecord?.labels ?? []), imgCheck.label].filter(Boolean))],
+              reason: imgCheck.degraded
+                ? `微信图片检测暂不可用，转人工复核（${imgCheck.label || "异常"}）`
+                : `微信图片检测建议复核：${imgCheck.label || "疑似风险"}`,
+              traces: [],
+              reviewedAt: null,
+              requireManualApproval: settings.mode === "manual",
+            };
+          } else if (!moderationRecord) {
+            moderationRecord = {
+              status: settings.mode === "manual" ? "pending" : "approved",
+              source: "wechat",
+              label: "",
+              labels: [],
+              reason: settings.mode === "manual" ? "已通过微信图片检测，等待管理员审核公开" : "微信图片检测通过",
+              traces: [],
+              reviewedAt: settings.mode === "manual" ? null : Date.now(),
+              requireManualApproval: settings.mode === "manual",
+            };
+          }
         }
       }
     }
@@ -805,7 +850,11 @@ export function createDiscussionsService(
     }
 
     const hasMedia = body.images.length > 0 || Boolean(body.audio);
-    const shouldCheckMedia = Boolean(hasMedia && moderation.isMediaCallbackReady() && openid);
+    const callbackReady = Boolean(
+      moderation.isMediaCallbackReady() &&
+      (typeof moderation.isCallbackTokenConfigured !== "function" || moderation.isCallbackTokenConfigured()),
+    );
+    const shouldCheckMedia = Boolean(hasMedia && callbackReady && openid);
     if (shouldCheckMedia) {
       moderationRecord ??= {
         status: "pending",
@@ -822,15 +871,28 @@ export function createDiscussionsService(
         moderationRecord.reason = "媒体内容（含图片文字）正在安全检测中";
         moderationRecord.reviewedAt = null;
       }
+    } else if (body.audio && moderation.isEnabled() && (!moderationRecord || moderationRecord.status === "approved")) {
+      // 语音无法走同步图片检测，未配置异步回调时转人工审核。
+      moderationRecord = {
+        status: "pending",
+        source: "auto",
+        label: "",
+        labels: [],
+        reason: "语音内容等待管理员审核公开",
+        traces: [],
+        reviewedAt: null,
+        requireManualApproval: true,
+      };
     }
 
     const storedImages = await Promise.all(body.images.map(async (img) => {
-      const { buffer, mime, dataUri, ...meta } = img;
+      const { dataUri, ...meta } = img;
       if (imageStorage.isEnabled()) {
+        const bytes = Buffer.from(dataUri.slice(dataUri.indexOf(",") + 1), "base64");
         const uploaded = await imageStorage.uploadDiscussionImage({
           id: randomBytes(16).toString("hex"),
-          bytes: buffer,
-          mime: mime || "image/png",
+          bytes,
+          mime: "image/png",
         });
         return { ...meta, url: uploaded.url, key: uploaded.key };
       }

@@ -325,9 +325,12 @@ test("miniprogram credits and records entry pass visual layout checks at 320, 39
   assert.match(recordsWxml, /class="records__credits"[^>]*bindtap="openCredits"/, "个人中心页应直接展示卷豆入口");
   assert.doesNotMatch(profileWxml, /openCredits/, "头像点进去的个人资料二级页不应包含卷豆入口");
   assert.doesNotMatch(creditsWxml, /答题卡扫描|还可扫描/, "卷豆页不应与扫描功能强绑定");
-  assert.doesNotMatch(creditsWxml, /账号编号|退出登录/, "卷豆页不应展示长账号编号与退出登录");
-  assert.match(creditsWxml, /UID \{\{uid\}\}/, "卷豆页应展示 5 位 UID");
+  assert.doesNotMatch(creditsWxml, /账号编号|退出登录|UID/, "卷豆页不应展示账号编号、UID 与退出登录");
+  assert.match(recordsWxml, /UID \{\{creditUid\}\}/, "个人中心页应展示 5 位 UID");
   assert.match(creditsWxml, /bindtap="openLedger"[\s\S]*bindtap="selectPackage"[\s\S]*bindtap="submitRecharge"/, "卷豆页应直接展示充值档位并收口明细抽屉");
+  assert.match(creditsWxml, /class="credits__ledger-link" bindtap="openLedger">\s*<text>到账明细<\/text>/);
+  assert.doesNotMatch(creditsWxml, /微信账号已同步|即时到账|unitText|卷豆长期可用|已选|常用/);
+  assert.match(creditsWxml, /rechargeTestGuide === 'ios'[^>]*>iPhone 充值说明/);
   assert.match(creditsWxml, /catchtap="closeSheet"/, "抽屉遮罩点击空白应关闭");
   assert.match(creditsJs, /closeSheet\(\)\s*\{\s*this\.sheetDrag\?\.reset\(\)/, "closeSheet 应使用标准 sheetDrag.reset() 关闭抽屉");
 
@@ -358,6 +361,8 @@ test("miniprogram credits and records entry pass visual layout checks at 320, 39
     search: await iconUri("search.svg"),
     checkLight: await iconUri("check-light.svg"),
     back: await iconUri("back.svg"),
+    warnOchre: await iconUri("warn-ochre.svg"),
+    refreshLight: await iconUri("refresh-light.svg"),
     avatar: `data:image/svg+xml;utf8,${encodeURIComponent(avatarSvg)}`,
     paperArt: `data:image/svg+xml;utf8,${encodeURIComponent(paperSvg)}`,
     creditsArt: `data:image/svg+xml;utf8,${encodeURIComponent(creditsArtSvg)}`,
@@ -369,6 +374,7 @@ test("miniprogram credits and records entry pass visual layout checks at 320, 39
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
+*, *::before, *::after { box-sizing: border-box; }
 ${appWxss}
 button { border: none; font-family: inherit; cursor: pointer; }
 ${creditsWxss}
@@ -408,62 +414,47 @@ img { display: block; }
     </div>
   </div>`;
 
-  const signedInMarkup = `
+  const signedInMarkup = (message = "", pending = false, testGuide = false) => `
   <div class="credits__scroll-body">
   <div class="credits">
-    <div class="credits__hero">
+    <div class="credits__hero credits__hero--balance">
+      <div class="credits__hero-head">
+        <div class="credits__eyebrow"><img class="credits__eyebrow-icon" src="${icons.bean}" alt="" /><span>可用卷豆</span></div>
+        <button class="credits__ledger-link" type="button"><span>到账明细</span><img class="credits__ledger-arrow" src="${icons.chevron}" alt="" /></button>
+      </div>
       <div class="credits__hero-main">
-        <div class="credits__hero-copy grow">
-          <div class="credits__eyebrow"><img class="credits__eyebrow-icon" src="${icons.bean}" alt="" /><span>可用卷豆</span></div>
-          <div class="credits__balance-main">
-            <span class="display-num credits__balance-num">3</span>
-            <span class="credits__balance-unit">颗</span>
-          </div>
+        <div class="credits__balance-main grow">
+          <span class="display-num credits__balance-num">3</span>
+          <span class="credits__balance-unit">颗</span>
         </div>
         <img class="credits__hero-art" src="${icons.creditsArt}" alt="" />
       </div>
-      <div class="credits__hero-foot">
-        <button class="credits__uid-chip" type="button"><span class="num">UID 10001</span><img class="credits__uid-copy" src="${icons.copy}" alt="" /></button>
-        <button class="credits__ledger-link" type="button"><span>卷豆明细</span><img class="credits__ledger-arrow" src="${icons.chevron}" alt="" /></button>
-      </div>
     </div>
     <div class="credits__section">
-      <div class="credits__section-head">
-        <span class="credits__section-title">充值卷豆</span>
-        <span class="credits__section-sub">渠道即将开放</span>
-      </div>
+      <span class="credits__section-title">充值卷豆</span>
       <div class="credits__pack-grid">
-        <button class="credits__pack credits__pack--featured credits__pack--on" type="button">
-          <div class="credits__pack-left">
-            <div class="credits__pack-title-row"><span class="credits__pack-count num">10<span class="credits__pack-unit"> 颗</span></span><span class="credits__pack-tag">常用</span></div>
-            <span class="credits__pack-unit-price num">约 ¥0.60/颗</span>
-          </div>
-          <span class="credits__pack-price credits__pack-price--lg num">¥6</span>
-        </button>
-        <button class="credits__pack" type="button"><div class="credits__pack-head"><span class="credits__pack-count num">1<span class="credits__pack-unit"> 颗</span></span></div><div class="credits__pack-foot"><span class="credits__pack-price num">¥1</span><span class="credits__pack-unit-price num">¥1.00/颗</span></div></button>
-        <button class="credits__pack" type="button"><div class="credits__pack-head"><span class="credits__pack-count num">5<span class="credits__pack-unit"> 颗</span></span></div><div class="credits__pack-foot"><span class="credits__pack-price num">¥4</span><span class="credits__pack-unit-price num">¥0.80/颗</span></div></button>
-        <button class="credits__pack" type="button"><div class="credits__pack-head"><span class="credits__pack-count num">30<span class="credits__pack-unit"> 颗</span></span></div><div class="credits__pack-foot"><span class="credits__pack-price num">¥15</span><span class="credits__pack-unit-price num">¥0.50/颗</span></div></button>
-        <button class="credits__pack" type="button"><div class="credits__pack-head"><span class="credits__pack-count num">60<span class="credits__pack-unit"> 颗</span></span></div><div class="credits__pack-foot"><span class="credits__pack-price num">¥27</span><span class="credits__pack-unit-price num">¥0.45/颗</span></div></button>
+        ${[10, 1, 5, 30, 60].map(credits => `
+          <button class="credits__pack ${credits === 10 ? "credits__pack--featured" : ""} ${credits === 1 ? "credits__pack--on" : ""}" type="button">
+            <span class="credits__pack-count num">${credits}<span class="credits__pack-unit"> 颗</span></span>
+            <span class="credits__pack-price ${credits === 10 ? "credits__pack-price--lg" : ""} num">¥${credits}</span>
+          </button>`).join("")}
       </div>
-      <div class="credits__recharge-note">卷豆长期可用，充值与赠送共用余额，优先消耗赠送。</div>
+      ${message ? `<div class="credits__payment-state"><span role="status">${message}</span></div>` : ""}
     </div>
   </div>
   </div>
   <div class="credits__footer">
-    <div class="credits__footer-info">
-      <span class="credits__footer-label">已选 10 颗</span>
-      <span class="display-num credits__footer-price">¥6</span>
-    </div>
-    <button class="credits__footer-btn credits__footer-btn--soon" type="button">支付即将开放</button>
+    <span class="display-num credits__footer-price">¥1</span>
+    <button class="credits__footer-btn" type="button">${pending ? "查询到账" : testGuide ? "iPhone 充值说明" : "立即充值"}</button>
   </div>`;
 
   const ledgerSheetMarkup = `
-  ${signedInMarkup}
+  ${signedInMarkup()}
   <div class="sheet-layer">
     <div class="sheet-shade"></div>
     <div class="sheet-panel credits__sheet">
       <div class="sheet-grabber-zone"><div class="sheet-grabber"></div></div>
-      <div class="sheet-head"><span>卷豆明细</span><button class="sheet-close" type="button" aria-label="关闭"><img src="${icons.close}" style="width:16px;height:16px;" alt="" /></button></div>
+      <div class="sheet-head"><span>到账明细</span><button class="sheet-close" type="button" aria-label="关闭"><img src="${icons.close}" style="width:16px;height:16px;" alt="" /></button></div>
       <div class="sheet-scroll">
         <div class="credits__list">
           <div class="credits__item">
@@ -504,14 +495,16 @@ img { display: block; }
 
   const recordsMarkup = (signedIn) => `
   <div class="records">
-    <button class="records__profile" type="button">
+    <div class="records__profile">
       <img class="records__avatar" src="${icons.avatar}" alt="" />
-      <div class="stack grow">
+      <div class="records__profile-main grow">
         <span class="records__name ellipsis">卷友3918</span>
-        ${signedIn ? "" : `<span class="records__profile-hint">点击同步微信头像和昵称</span>`}
+        ${signedIn
+          ? `<div class="records__uid"><span class="num">UID 10001</span><img class="records__uid-copy" src="${icons.copy}" alt="" /></div>`
+          : `<span class="records__profile-hint">点击同步微信头像和昵称</span>`}
       </div>
       <img class="records__art" src="${icons.paperArt}" alt="" />
-    </button>
+    </div>
     <button class="records__credits" type="button">
       <img class="records__credits-img" src="${icons.bean}" alt="" />
       <span class="records__credits-title">卷豆</span>
@@ -548,12 +541,30 @@ img { display: block; }
   t.after(() => browser.close());
   const page = await browser.newPage();
 
+  const errorMarkup = `
+  <div class="credits">
+    <div class="state-card state-card--standalone">
+      <div class="state-card__badge">
+        <img class="state-card__icon" src="${icons.warnOchre}" alt="" />
+      </div>
+      <div class="state-card__title">暂时无法连接</div>
+      <div class="state-card__desc">卷豆服务暂不可用，请稍后重试。</div>
+      <button class="state-card__btn" type="button">
+        <img class="state-card__btn-icon" src="${icons.refreshLight}" alt="" />
+        <span>重新读取</span>
+      </button>
+    </div>
+  </div>`;
+
   const cases = [
+    ["mp-credits-error", "卷豆", errorMarkup, [320, 390, 430], true],
     ["mp-credits-guest", "卷豆", guestMarkup, [320, 390], true],
-    ["mp-credits-signedin", "卷豆", signedInMarkup, [320, 390, 430], true],
+    ["mp-credits-signedin", "卷豆", signedInMarkup(), [320, 390, 430], true],
+    ["mp-credits-device", "卷豆", signedInMarkup("", false, true), [320, 390], true],
+    ["mp-credits-pending", "卷豆", signedInMarkup("这笔充值正在确认，请稍后查询。", true), [320, 390], true],
     ["mp-credits-ledger-sheet", "卷豆", ledgerSheetMarkup, [320, 390], true],
-    ["mp-records-credits-guest", "练习记录", recordsMarkup(false), [320, 390], false],
-    ["mp-records-credits-signedin", "练习记录", recordsMarkup(true), [320, 390, 430], false],
+    ["mp-records-credits-guest", "个人中心", recordsMarkup(false), [320, 390], false],
+    ["mp-records-credits-signedin", "个人中心", recordsMarkup(true), [320, 390, 430], false],
   ];
 
   for (const [name, title, markup, widths, showBack] of cases) {
@@ -561,16 +572,35 @@ img { display: block; }
       const height = width === 320 ? 568 : width === 390 ? 844 : 932;
       await page.setViewportSize({ width, height });
       await page.setContent(shellHtml(title, markup, { showBack }), { waitUntil: "load" });
-      const metrics = await page.evaluate(() => ({
-        scrollWidth: document.documentElement.scrollWidth,
-        innerWidth: window.innerWidth,
-        tinyButtons: [...document.querySelectorAll("button")].filter((el) => {
-          const r = el.getBoundingClientRect();
-          return r.width < 32 || r.height < 32;
-        }).map((el) => ({ text: el.textContent.trim(), w: el.getBoundingClientRect().width, h: el.getBoundingClientRect().height })),
-      }));
+      const metrics = await page.evaluate(() => {
+        const retryBtn = document.querySelector(".state-card__btn");
+        const retryText = retryBtn?.querySelector("span");
+        const footer = document.querySelector(".credits__footer")?.getBoundingClientRect();
+        const packs = document.querySelector(".credits__pack-grid")?.getBoundingClientRect();
+        const paymentState = document.querySelector(".credits__payment-state")?.getBoundingClientRect();
+        let retryVerticalOffset = 0;
+        if (retryBtn && retryText) {
+          const br = retryBtn.getBoundingClientRect();
+          const tr = retryText.getBoundingClientRect();
+          retryVerticalOffset = Math.abs((tr.top + tr.bottom) / 2 - (br.top + br.bottom) / 2);
+        }
+        return {
+          scrollWidth: document.documentElement.scrollWidth,
+          innerWidth: window.innerWidth,
+          retryVerticalOffset,
+          packsClearFooter: !packs || !footer || packs.bottom <= footer.top,
+          paymentStateClearFooter: !paymentState || !footer || paymentState.bottom <= footer.top,
+          tinyButtons: [...document.querySelectorAll("button")].filter((el) => {
+            const r = el.getBoundingClientRect();
+            return r.width < 32 || r.height < 32;
+          }).map((el) => ({ text: el.textContent.trim(), w: el.getBoundingClientRect().width, h: el.getBoundingClientRect().height })),
+        };
+      });
       assert.ok(metrics.scrollWidth <= metrics.innerWidth + 1, `${name}@${width} overflows horizontally (${metrics.scrollWidth} > ${metrics.innerWidth})`);
       assert.deepEqual(metrics.tinyButtons, [], `${name}@${width} has undersized buttons`);
+      assert.ok(metrics.retryVerticalOffset <= 2, `${name}@${width} retry button text is not vertically centered (offset=${metrics.retryVerticalOffset})`);
+      assert.ok(metrics.packsClearFooter, `${name}@${width} 固定操作栏遮住了充值档位`);
+      assert.ok(metrics.paymentStateClearFooter, `${name}@${width} 固定操作栏遮住了到账状态`);
       await page.screenshot({ path: path.join(VISUAL_DIR, `${name}-${width}.png`), fullPage: true });
     }
   }

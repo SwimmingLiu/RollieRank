@@ -251,8 +251,4 @@ Page({
       this.setData({ loadingMine: false, mineError: error.message || "反馈记录读取失败" });
     }
   },
-
-  openAdmin() {
-    wx.navigateTo({ url: "/pages/admin/admin?tab=feedback" });
-  },
 });

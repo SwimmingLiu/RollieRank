@@ -69,7 +69,7 @@ export function FeedbackView({
   const [notifyEnabled, setNotifyEnabled] = useState(true);
   const [templateId, setTemplateId] = useState("");
   const [mpState, setMpState] = useState<"formal" | "trial" | "developer">("formal");
-  const [jumpPage, setJumpPage] = useState("pages/admin/admin?tab=feedback");
+  const [jumpPage, setJumpPage] = useState("pages/admin/admin");
   const [categoryKey, setCategoryKey] = useState("thing1");
   const [contentKey, setContentKey] = useState("thing2");
   const [timeKey, setTimeKey] = useState("time3");
@@ -91,7 +91,7 @@ export function FeedbackView({
       setNotifyEnabled(notify.enabled);
       setTemplateId(notify.templateId || "");
       setMpState(notify.miniprogramState || "formal");
-      setJumpPage(notify.page || "pages/admin/admin?tab=feedback");
+      setJumpPage(notify.page || "pages/admin/admin");
       setCategoryKey(notify.fieldMap?.categoryKey ?? "thing1");
       setContentKey(notify.fieldMap?.contentKey ?? "thing2");
       setTimeKey(notify.fieldMap?.timeKey ?? "time3");
@@ -142,7 +142,7 @@ export function FeedbackView({
         enabled: notifyEnabled,
         templateId: templateId.trim(),
         miniprogramState: mpState,
-        page: jumpPage.trim() || "pages/admin/admin?tab=feedback",
+        page: jumpPage.trim() || "pages/admin/admin",
         fieldMap: {
           categoryKey: categoryKey.trim(),
           contentKey: contentKey.trim(),
@@ -311,7 +311,10 @@ export function FeedbackView({
                       <td className="px-4 py-3.5 whitespace-nowrap">
                         <Badge tone={statusMeta.tone}>{statusMeta.label}</Badge>
                         {item.notifySummary ? (
-                          <div className="mt-1 text-[12px] text-[#7a7268]">
+                          <div
+                            className="mt-1 text-[12px] text-[#7a7268]"
+                            title={item.notifySummary.lastError || item.notifySummary.skippedReason || ""}
+                          >
                             {item.notifySummary.sent > 0
                               ? `已推送 ${item.notifySummary.sent} 人`
                               : item.notifySummary.attempted > 0
@@ -529,7 +532,7 @@ export function FeedbackView({
                   id="notify-jump-page"
                   value={jumpPage}
                   onChange={(e) => setJumpPage(e.target.value)}
-                  placeholder="pages/admin/admin?tab=feedback"
+                  placeholder="pages/admin/admin"
                   className={INPUT_CLASS}
                 />
               </div>
@@ -608,7 +611,7 @@ export function FeedbackView({
               </div>
             ) : (
               <p className="rounded-xl border border-dashed border-[#dfd8cc] px-3.5 py-3.5 text-center text-[13px] text-[#7a7268]">
-                暂未绑定 · 在小程序维护者页点「订阅 +1」即可绑定
+                暂未绑定 · 在小程序维护者页解锁后点「订阅 +1」
               </p>
             )}
           </div>

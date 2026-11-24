@@ -110,6 +110,56 @@ def recognize(base, path, expected=QUESTION_COUNT):
     return status, body, elapsed
 
 
+def make_negative_jpegs(directory):
+    """用项目自带的 jpeg-js 生成典型非答题卡图片，验证服务端必须 422 拒绝、不能硬凑答案。"""
+    script = """
+    const fs = require("node:fs");
+    const path = require("node:path");
+    const jpeg = require("jpeg-js");
+    const dir = process.argv[1];
+    function write(name, w, h, fn) {
+      const data = Buffer.alloc(w * h * 4);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const [r, g, b] = fn(x, y);
+          const p = (y * w + x) * 4;
+          data[p] = r; data[p + 1] = g; data[p + 2] = b; data[p + 3] = 255;
+        }
+      }
+      fs.writeFileSync(path.join(dir, name), jpeg.encode({ width: w, height: h, data }, 85).data);
+    }
+    let seed = 42;
+    const rand = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+    const book = [];
+    for (let row = 0; row < 45; row++) {
+      const y = 120 + row * 34;
+      let x = 100;
+      while (x < 1150) {
+        const w = 15 + Math.floor(rand() * 35), h = 10 + Math.floor(rand() * 8);
+        if (rand() < 0.7) book.push([x, y, x + w, y + h]);
+        x += w + 8 + Math.floor(rand() * 20);
+      }
+    }
+    write("neg-book-text.jpg", 1280, 1710, (x, y) => {
+      for (const b of book) if (x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3]) return [45, 45, 45];
+      return [232, 232, 228];
+    });
+    write("neg-grid.jpg", 1280, 1710, (x, y) => {
+      const gx = x % 48, gy = y % 36;
+      return gx >= 10 && gx <= 36 && gy >= 8 && gy <= 24 ? [40, 42, 45] : [210, 212, 215];
+    });
+    """
+    subprocess.run(["node", "-e", script, str(directory)], cwd=ROOT, check=True)
+    cases = [
+        ("neg-book-text.jpg", directory / "neg-book-text.jpg"),
+        ("neg-grid.jpg", directory / "neg-grid.jpg"),
+    ]
+    qrcode = ROOT / "assets/miniprogram-qrcode.jpg"
+    if qrcode.exists():
+        cases.append(("miniprogram-qrcode.jpg", qrcode))
+    return cases
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--repeat", type=int, default=3, help="每张图重复识别的次数")
@@ -126,7 +176,7 @@ def main():
     assert not missing, f"缺少测试图片: {missing}"
 
     data_dir = Path(tempfile.mkdtemp(prefix="rollierank-omr-"))
-    results = {"generatedAt": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "sheets": [], "failures": []}
+    results = {"generatedAt": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "sheets": [], "negatives": [], "failures": []}
     process = None
     try:
         base, process = start_server(data_dir)
@@ -183,11 +233,29 @@ def main():
         if len(signatures) > 1 and len(unique) == 1:
             results["failures"].append({"error": "三张答题卡识别出完全相同的答案，疑似没有真正判读涂黑。"})
 
+        # 非答题卡图片必须被 422 拒收，绝不能返回 200 或硬凑假答案。
+        for neg_name, neg_path in make_negative_jpegs(data_dir):
+            neg_status, neg_body, neg_ms = recognize(base, neg_path)
+            results["negatives"].append({
+                "name": neg_name,
+                "status": neg_status,
+                "elapsedMs": round(neg_ms, 1),
+                "error": neg_body.get("error") if isinstance(neg_body, dict) else None,
+                "recognized": neg_body.get("recognized", 0) if isinstance(neg_body, dict) else 0,
+            })
+            if neg_status != 422:
+                results["failures"].append({
+                    "sheet": neg_name,
+                    "error": f"非答题卡图片应返回 422 拒收，实际返回 HTTP {neg_status}（识别 {neg_body.get('recognized', 0)} 题）。",
+                })
+
         results["summary"] = {
             "sheets": len(results["sheets"]),
             "recognized": [entry["recognized"] for entry in results["sheets"]],
             "correct": [entry["accuracy"]["correct"] for entry in results["sheets"]],
             "wrong": [entry["accuracy"]["wrong"] for entry in results["sheets"]],
+            "negativesRejected": sum(1 for item in results["negatives"] if item["status"] == 422),
+            "negativesTotal": len(results["negatives"]),
             "averageRequestMs": round(
                 sum(entry["averageRequestMs"] for entry in results["sheets"]) / len(results["sheets"]), 1)
             if results["sheets"] else None,

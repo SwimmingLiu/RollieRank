@@ -6,6 +6,7 @@ import { prunePreviewHistory, recoverPreviewHistory } from "./preview-history.js
 import { defaultNickname, isDefaultNickname } from "./service-client.js";
 import { selectPreviousAttempt } from "../../../src/analytics.js";
 import { createPracticeTimer, createCustomPracticeTimer, bindPracticeTimer, setTimerMode, reorderTimerModules, balanceTimerModules, resolveTimerLimit, restorePracticeTimer, timerSectionsForQuestions, timerView, changeTimerPlan, startPracticeTimer, pausePracticeTimer, switchTimerModule, finishPracticeTimer, resumeEntryTimer, pauseEntryTimer, timingSummary, validateTimingSummary } from "../../../src/practice-timer.js";
+import { applyOmrResult, formatOmrApplyToast } from "../../../src/omr-draft.js";
 // 页面与资源预览共享同一图标定义，避免重复维护造成线宽或造型漂移。
 // The iframe may keep an older icon module cached across design revisions.
 const {icons}=await import("./icon-data.js?v="+encodeURIComponent(new URLSearchParams(location.search).get("design")||"easy-lang-1114-v4"));
@@ -292,7 +293,40 @@ function timerSections(){const version=serviceClient?.currentVersion();return ve
 function pauseCurrentEntry(){const timer=currentTimer();if(timer){state.practiceTimers[state.activeAttemptId]=pauseEntryTimer(timer);writeStore()}}
 function resumeCurrentEntry(){const timer=currentTimer();if(timer&&!serviceClient?.currentAttempt()){state.practiceTimers[state.activeAttemptId]=resumeEntryTimer(timer);writeStore()}}
 function freezeCurrentTiming(){const id=state.activeAttemptId;if(state.submittedTiming[id])return;pauseCurrentEntry();const timing=timingSummary(currentTimer());if(timing){state.submittedTiming[id]=timing;writeStore()}}
-function mountEntryTools(){const host=$('#entry-tools-ui'),ui=window.RollieUI;if(!host||!ui?.mountEntryTools)return;ui.mountEntryTools(host,{mode:state.entryMode,sections:viewTypes().map(([name,start,end])=>({name,start,end})),answers:state.answers,current:state.current,marks:currentMarks(),onMode:mode=>{state.entryMode=mode;writeStore();mountEntryTools();updateEntryVisibility();scrollToQuestion(state.current,true)},onJump:jumpToAnswer})}
+function openOmrScanner(){
+ if(['running','paused'].includes(currentTimer()?.status)){showPracticeTimer();return;}
+ openSheet('扫描答题卡','<div id="omr-scanner-ui" class="rr-session-sheet"></div>',content=>{
+  const host=content.querySelector('#omr-scanner-ui'),ui=window.RollieUI;
+  if(!host||!ui?.mountOmrScanner)return;
+  ui.mountOmrScanner(host,{
+   paperTitle:paperLabel(),
+   questionCount:questionCount(),
+   currentAnswers:[...state.answers],
+   onRecognize:async(image,expectedQuestions)=>{
+    if(serviceClient?.recognizeAnswerSheet)return serviceClient.recognizeAnswerSheet({image,expectedQuestions});
+    const response=await fetch('/api/omr/recognize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image,expectedQuestions}),signal:AbortSignal.timeout(45000)});
+    const data=await response.json().catch(()=>null);
+    if(!response.ok||!data)throw new Error(data?.error||'识别服务暂时不可用，请稍后重试。');
+    return data;
+   },
+   onApply:({result,mode})=>{
+    if(!/^[\w-]{10,80}$/.test(state.activeAttemptId||''))state.activeAttemptId=crypto.randomUUID();
+    const applied=applyOmrResult({result,questionCount:questionCount(),currentAnswers:state.answers,currentMarks:currentMarks(),mode});
+    state.answers=applied.answers;
+    state.reviewMarks[state.activeAttemptId]=applied.marks;
+    state.current=applied.firstFocusQuestion;
+    state.blankConsent=null;
+    persist();
+    closeSheet('complete');
+    render();
+    requestAnimationFrame(()=>scrollToQuestion(state.current,true));
+    toast(formatOmrApplyToast({appliedCount:applied.appliedCount,lowConfidenceMarked:applied.lowConfidenceMarked,mode}));
+   },
+   onClose:()=>closeSheet('dismiss'),
+  });
+ });
+}
+function mountEntryTools(){const host=$('#entry-tools-ui'),ui=window.RollieUI;if(!host||!ui?.mountEntryTools)return;ui.mountEntryTools(host,{mode:state.entryMode,sections:viewTypes().map(([name,start,end])=>({name,start,end})),answers:state.answers,current:state.current,marks:currentMarks(),onScan:openOmrScanner,onMode:mode=>{state.entryMode=mode;writeStore();mountEntryTools();updateEntryVisibility();scrollToQuestion(state.current,true)},onJump:jumpToAnswer})}
 function updateEntryVisibility(){
  const single=state.entryMode==='single',locked=['running','paused'].includes(currentTimer()?.status),content=$('.answer-content'),host=$('#single-answer-ui');if(content)content.hidden=single;if(host){host.hidden=!single;if(single)window.RollieUI.mountSingleAnswer(host,{question:state.current,total:questionCount(),section:viewTypes().find(t=>state.current>=t[1]&&state.current<=t[2])?.[0]||'',answer:state.answers[state.current-1]||'',marked:currentMarks().includes(state.current),onAnswer:option=>recordAnswer(state.current,option),onJump:jumpToAnswer,onMark:()=>toggleReviewMark(state.current)})}
  for(const section of document.querySelectorAll('.answer-section'))section.hidden=single&&!(state.current>=Number(section.dataset.start)&&state.current<=Number(section.dataset.end));

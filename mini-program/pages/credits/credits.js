@@ -1,5 +1,14 @@
 const credits = require("../../services/tool-credits.js");
+const storage = require("../../utils/storage.js");
 const { createPageSheetDrag } = require("../../utils/sheet-gesture.js");
+
+const rechargeStatus = {
+  closed: "这笔订单已关闭，可重新充值。",
+  refund_pending: "这笔订单正在退款。",
+  refunded: "这笔订单已退款。",
+  review: "这笔充值待运营核对。",
+};
+const activeRecharges = new Set();
 
 Page({
   data: {
@@ -15,10 +24,14 @@ Page({
       ads: false,
     },
     purchaseReady: false,
+    rechargeDeviceMessage: "",
+    rechargeTestGuide: "",
+    rechargeAction: "",
+    rechargeMessage: "",
+    rechargeOrder: null,
     packages: credits.formatPackages(),
     selectedPackIndex: 0,
     signedIn: false,
-    uid: 0,
     balance: 0,
     held: 0,
     records: [],
@@ -45,12 +58,27 @@ Page({
 
   onShow() {
     this.syncLegacyCandidate();
-    this.reload();
+    if (this.resumeCashier) {
+      this.resumeCashier();
+      return;
+    }
+    if (!this.data.rechargeAction) return this.reloadAndResumeRecharge();
+  },
+
+  onUnload() {
+    this.unloaded = true;
+    this.resumeCashier?.();
   },
 
   onRefresherRefresh() {
+    if (this.data.rechargeAction) return;
     this.setData({ refreshing: true });
-    this.reload().finally(() => this.setData({ refreshing: false }));
+    return this.reloadAndResumeRecharge().finally(() => this.setData({ refreshing: false }));
+  },
+
+  async reloadAndResumeRecharge() {
+    await this.reload();
+    if (this.data.rechargeOrder) await this.submitRecharge();
   },
 
   syncLegacyCandidate() {
@@ -68,20 +96,27 @@ Page({
     this.setData({ error: "", loginError: "" });
     try {
       const cap = await credits.capabilities();
-      const packages = cap.purchase?.packages?.length ? cap.purchase.packages : credits.formatPackages();
-      const recommendedIdx = packages.findIndex((item) => item.recommended);
-      const selectedPackIndex = recommendedIdx >= 0 ? recommendedIdx : 0;
-      const purchaseReady = Boolean(cap.purchase?.directPurchase || cap.purchase?.tokenRecharge);
+      const packages = cap.purchase.packages;
+      const previousPack = this.data.signedIn ? this.data.packages[this.data.selectedPackIndex] : null;
+      const previousIndex = packages.findIndex(item => item.credits === previousPack?.credits && item.cents === previousPack?.cents);
+      const smallest = Math.min(...packages.map(item => item.credits));
+      const selectedPackIndex = previousIndex >= 0 ? previousIndex : packages.findIndex(item => item.credits === smallest);
+      const purchaseReady = cap.purchase.tokenRecharge;
+      const device = purchaseReady ? credits.rechargeDevice(cap.purchase) : {};
+      const rechargeDeviceMessage = device.message || "";
+      const rechargeTestGuide = device.testGuide || "";
 
       if (!credits.hasSession()) {
         this.setData({
           loading: false,
           capabilities: cap,
           purchaseReady,
+          rechargeDeviceMessage,
+          rechargeTestGuide,
+          rechargeOrder: null,
           packages,
           selectedPackIndex,
           signedIn: false,
-          uid: 0,
           records: [],
           nextBefore: null,
           invite: null,
@@ -91,14 +126,28 @@ Page({
       }
 
       const wallet = await credits.wallet(0);
+      let pending = storage.toolCreditRecharge(wallet.accountId);
+      if (!pending?.cashierStarted && !activeRecharges.has(wallet.accountId)) {
+        const paid = await credits.paidRecharge().catch(() => null);
+        if (this.unloaded || credits.accountId() !== wallet.accountId) return;
+        pending = storage.toolCreditRecharge(wallet.accountId);
+        if (paid && !pending?.cashierStarted && !activeRecharges.has(wallet.accountId)) {
+          pending = { credits: paid.credits, cents: paid.cents, yuanText: `¥${paid.credits}`, orderId: paid.id,
+            requestId: storage.uuid(), cashierStarted: true, paymentResult: "paid" };
+          storage.setToolCreditRecharge(wallet.accountId, pending);
+        }
+      }
+      const orderPackIndex = pending?.cashierStarted ? packages.findIndex(item => item.credits === pending.credits) : -1;
       this.setData({
         loading: false,
         capabilities: cap,
         purchaseReady,
+        rechargeDeviceMessage,
+        rechargeTestGuide,
+        rechargeOrder: pending?.cashierStarted ? pending : null,
         packages,
-        selectedPackIndex,
+        selectedPackIndex: orderPackIndex >= 0 ? orderPackIndex : selectedPackIndex,
         signedIn: true,
-        uid: wallet.uid || 0,
         balance: wallet.balance,
         held: wallet.held,
         records: wallet.records,
@@ -109,9 +158,9 @@ Page({
         this.setData({
           loading: false,
           signedIn: false,
-          uid: 0,
           balance: 0,
           held: 0,
+          rechargeOrder: null,
           records: [],
           nextBefore: null,
           invite: null,
@@ -153,7 +202,7 @@ Page({
         title: result.created && result.balance > 0 ? `已领 ${result.balance} 颗卷豆` : "登录成功",
         icon: "success",
       });
-      await this.reload();
+      await this.reloadAndResumeRecharge();
     } catch (error) {
       const message = error?.message || "微信登录失败，请稍后重试。";
       const canSkipBind = bindLegacy && (error?.statusCode === 400 || error?.statusCode === 409);
@@ -164,18 +213,108 @@ Page({
   },
 
   selectPackage(event) {
+    if (this.data.rechargeAction || this.data.rechargeOrder) return;
     const index = Number(event.currentTarget.dataset.index);
     if (Number.isInteger(index) && index >= 0 && index < this.data.packages.length) {
-      this.setData({ selectedPackIndex: index });
+      this.setData({ selectedPackIndex: index, rechargeMessage: "" });
     }
   },
 
-  submitRecharge() {
-    if (!this.data.purchaseReady) {
-      wx.showToast({ title: "微信支付开通中，暂可先使用赠送卷豆", icon: "none" });
+  async submitRecharge() {
+    if (this.data.rechargeAction || !credits.hasSession()) return;
+    const owner = credits.accountId();
+    if (!owner) return;
+    if (activeRecharges.has(owner)) {
+      this.setData({ rechargeMessage: "这笔充值正在处理，请稍后查询。" });
       return;
     }
-    wx.showToast({ title: "请稍候，正在发起支付", icon: "none" });
+    let pending = storage.toolCreditRecharge(owner);
+    const pack = this.data.packages[this.data.selectedPackIndex];
+    const device = pending?.cashierStarted ? null : credits.rechargeDevice(this.data.capabilities.purchase);
+    if (this.data.purchaseReady && device?.testGuide) {
+      const ios = device.testGuide === "ios";
+      wx.showModal({
+        title: ios ? "iPhone 充值说明" : "真机测试",
+        content: ios
+          ? "微信在 iPhone 上通过 Apple IAP 收款，只支持现网。小程序开通 Apple IAP 并发布后，可在 iPhone 上充值。"
+          : "点击开发者工具顶部的「预览」，用手机微信扫码。iPhone 的充值需要在现网通过 Apple IAP 验证。",
+        showCancel: false,
+        confirmText: "知道了",
+      });
+      return;
+    }
+    if (device && (!this.data.purchaseReady || device.message || !pack)) return;
+
+    activeRecharges.add(owner);
+    this.setData({ rechargeAction: pending?.cashierStarted ? "确认到账…" : "正在下单…", rechargeMessage: "" });
+    try {
+      if (!pending?.cashierStarted) {
+        // Persist the request and order before opening the cashier so a retry cannot charge twice.
+        if (pending?.credits !== pack.credits || pending?.cents !== pack.cents) {
+          pending = { credits: pack.credits, cents: pack.cents, yuanText: pack.yuanText, requestId: storage.uuid() };
+          storage.setToolCreditRecharge(owner, pending);
+        }
+        const { order, payData } = await credits.createRecharge(pending, device.platform);
+        if (!/^RC[a-f0-9]{30}$/.test(order?.id) || order.credits !== pack.credits || order.cents !== pack.cents) {
+          throw new Error("充值订单校验失败，请重试。");
+        }
+        pending = { ...pending, orderId: order.id };
+        storage.setToolCreditRecharge(owner, pending);
+        if (this.unloaded || credits.accountId() !== owner) return;
+        pending = { ...pending, cashierStarted: true };
+        storage.setToolCreditRecharge(owner, pending);
+        this.setData({ rechargeOrder: pending, rechargeAction: payData ? "等待微信支付…" : "确认到账…" });
+        if (payData) {
+          const returned = new Promise(resolve => { this.resumeCashier = () => resolve("unknown"); });
+          const paymentResult = await Promise.race([credits.payRecharge(payData, order), returned]);
+          this.resumeCashier = null;
+          pending = { ...pending, paymentResult };
+          storage.setToolCreditRecharge(owner, pending);
+        }
+      }
+      if (!this.unloaded && credits.accountId() === owner) await this.checkRecharge(owner, pending);
+    } catch (error) {
+      if (this.unloaded) return;
+      if (error?.errorId === "recharge-quote") {
+        storage.setToolCreditRecharge(owner, null);
+        await this.reload();
+        this.setData({ rechargeMessage: "充值档位已更新，请重新选择。" });
+      } else if (error?.errorId === "recharge-signature") {
+        storage.setToolCreditRecharge(owner, null);
+        this.setData({ rechargeOrder: null, rechargeMessage: error.message });
+      } else if (!credits.hasSession()) {
+        await this.reload();
+      } else if (credits.accountId() === owner) {
+        this.setData({ rechargeMessage: pending?.orderId ? "暂未查到结果，可稍后查询到账。" : error?.message || "暂时无法下单，请重试。" });
+      }
+    } finally {
+      this.resumeCashier = null;
+      activeRecharges.delete(owner);
+      if (!this.unloaded) this.setData({ rechargeAction: "" });
+    }
+  },
+
+  async checkRecharge(owner, pending) {
+    this.setData({ rechargeAction: "确认到账…" });
+    let order = await credits.confirmRecharge(pending.orderId);
+    if (pending.paymentResult === "paid" && ["pending", "paid"].includes(order?.state)) {
+      await new Promise(resolve => setTimeout(resolve, 900));
+      if (this.unloaded || credits.accountId() !== owner) return;
+      order = await credits.confirmRecharge(pending.orderId);
+    }
+    if (this.unloaded || credits.accountId() !== owner) return;
+    if (order?.id !== pending.orderId) throw new Error("暂未查到这笔充值。");
+    if (order.state === "credited") {
+      storage.setToolCreditRecharge(owner, null);
+      this.setData({ rechargeOrder: null });
+      await this.reload();
+      wx.showToast({ title: `已到账 ${order.credits} 颗`, icon: "success" });
+    } else if (rechargeStatus[order.state] || (order.state === "pending" && pending.paymentResult === "cancelled")) {
+      storage.setToolCreditRecharge(owner, null);
+      this.setData({ rechargeOrder: null, rechargeMessage: rechargeStatus[order.state] || "支付已取消。" });
+    } else {
+      this.setData({ rechargeMessage: "这笔充值正在确认，请稍后查询。" });
+    }
   },
 
   openLedger() {
@@ -247,17 +386,6 @@ Page({
     } finally {
       this.setData({ loadingMore: false });
     }
-  },
-
-  copyUid() {
-    if (!this.data.uid) return;
-    const text = String(this.data.uid);
-    wx.setClipboardData({
-      data: text,
-      success() {
-        wx.showToast({ title: `已复制 UID ${text}`, icon: "success" });
-      },
-    });
   },
 
   async loadInviteCode() {

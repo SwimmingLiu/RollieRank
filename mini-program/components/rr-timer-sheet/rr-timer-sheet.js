@@ -404,6 +404,10 @@ Component({
     startGesture(event) {
       clearTimeout(this.closeTimer);
       if (this.data.closing) this.setData({ closing: false, dragging: true });
+      if (event?.target?.dataset?.sheetNoDrag || event?.currentTarget?.dataset?.sheetNoDrag) {
+        this.gesture = null;
+        return;
+      }
       const point = event.touches.length === 1 && event.touches[0];
       const zone = event.currentTarget?.dataset?.zone || "";
       if (!point) {

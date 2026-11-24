@@ -210,7 +210,7 @@ function createPageSheetDrag(page, { onDismiss }) {
       if (page.data.sheetClosing) {
         page.setData({ sheetClosing: false, sheetDragging: true });
       }
-      if (event?.target?.dataset?.sheetNoDrag) {
+      if (event?.target?.dataset?.sheetNoDrag || event?.currentTarget?.dataset?.sheetNoDrag) {
         session = null;
         return;
       }

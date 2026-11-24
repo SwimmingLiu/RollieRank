@@ -5,9 +5,18 @@
   <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}" refresher-enabled="{{true}}" refresher-triggered="{{refreshing}}" refresher-background="#fcf8f1" bindrefresherrefresh="onRefresherRefresh">
   <view class="page-scroll__body {{publicView ? 'page-scroll__body--plain' : ''}}">
   <view wx:if="{{loading}}" class="loading">正在核分…</view>
-  <view wx:elif="{{error}}" class="empty">
-    <text>{{error}}</text>
-    <button class="chip" bindtap="retry">重新读取</button>
+  <view wx:elif="{{error}}" class="state-wrap">
+    <view class="state-card">
+      <view class="state-card__badge">
+        <image class="state-card__icon" src="/assets/ui/warn-ochre.svg" mode="aspectFit" />
+      </view>
+      <text class="state-card__title">暂时无法连接</text>
+      <text class="state-card__desc">{{error}}</text>
+      <button class="state-card__btn" bindtap="retry" hover-class="press">
+        <image class="state-card__btn-icon" src="/assets/ui/refresh-light.svg" mode="aspectFit" />
+        <text>重新读取</text>
+      </button>
+    </view>
   </view>
 
   <view wx:elif="{{summary}}" class="report__body">
@@ -124,7 +133,7 @@
       </view>
       <view class="sheet-head">
         <text>对比详情</text>
-        <button class="sheet-close" bindtap="closeVsDetail" aria-label="关闭"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button>
+        <button class="sheet-close" data-sheet-no-drag="1" catchtap="closeVsDetail" aria-label="关闭"><image data-sheet-no-drag="1" src="{{uiBase}}/close.svg" mode="aspectFit" /></button>
       </view>
       <scroll-view scroll-y class="sheet-scroll" enhanced show-scrollbar="{{false}}" bindscroll="onSheetScroll">
         <view class="report__vs-detail">

@@ -240,7 +240,7 @@ export interface AdminUserFeedback {
   statusLabel: string;
   reply: { text: string; operator: string; repliedAt: number } | null;
   clientMeta?: { platform?: string; envVersion?: string; appVersion?: string; page?: string };
-  notifySummary?: { attempted: number; sent: number; failed: number; lastError?: string; at: number } | null;
+  notifySummary?: { attempted: number; sent: number; failed: number; skippedReason?: string; lastError?: string; at: number } | null;
   createdAt: number;
   updatedAt: number;
 }

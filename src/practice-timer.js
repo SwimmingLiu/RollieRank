@@ -18,7 +18,7 @@ export const DEFAULT_TIMER_SECTIONS = Object.keys(TIMER_MODULE_WEIGHTS).map((nam
 export function timerSectionsForQuestions(questions) {
   const sections = [];
   for (const question of questions) {
-    const name = subjectName(question.type), last = sections.at(-1);
+    const name = subjectName(question.type), last = sections[sections.length - 1];
     if (last?.name === name && last.end + 1 === question.number) last.end = question.number;
     else sections.push({ id: `section-${question.number}`, name, start: question.number, end: question.number });
   }

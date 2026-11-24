@@ -26,8 +26,9 @@ Never point these at the shared 4781 preview: they mutate nothing, but a shared 
 - Each sheet resolves at least its measured baseline (sheet-a 99, sheet-b 123, sheet-c 101); the remainder may be genuinely blank or too faint.
 - Each sheet's answers match the hand-transcribed key in `test/fixtures/omr/sheet-*.answers.json`: at least 118 / 132 / 110 correct, and at most 6 / 2 / 6 wrong. A mark invented where the key says blank counts as wrong.
 - The three sheets — same layout, different pencil marks — must not produce an identical answer string.
+- Non-answer-sheet negative images (printed text page, regular grid, QR code) must be rejected with HTTP 422 and never return 200 with fabricated answers.
 - Average request latency stays under `--max-average-ms` (default 8000).
-- `test/omr.test.js` passes in full.
+- `test/omr.test.js` passes in full (including EXIF orientation, full-frame/shadow robustness, and non-sheet rejection).
 
 ## Evidence
 

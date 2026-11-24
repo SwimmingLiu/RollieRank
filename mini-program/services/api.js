@@ -100,4 +100,11 @@ async function remove(attemptIds) {
   return request("attempts/delete", { guestId: storage.guestId(), attemptIds });
 }
 
-module.exports = { request, catalog, versionForScope, submit, sync, remove, resetCatalogCache() { catalogCache.versions = null; } };
+async function recognizeAnswerSheet({ image, expectedQuestions }) {
+  return request("omr/recognize", {
+    image,
+    ...(Number.isInteger(expectedQuestions) ? { expectedQuestions } : {}),
+  }, 45000);
+}
+
+module.exports = { request, catalog, versionForScope, submit, sync, remove, recognizeAnswerSheet, resetCatalogCache() { catalogCache.versions = null; } };

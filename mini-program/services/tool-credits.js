@@ -3,14 +3,9 @@ const { request } = require("./api.js");
 const profile = require("./profile.js");
 const storage = require("../utils/storage.js");
 const format = require("../utils/format.js");
+const { IS_TEST_ENVIRONMENT } = require("../config.js");
 
-const DEFAULT_PACKAGES = [
-  { credits: 1, cents: 100 },
-  { credits: 5, cents: 400 },
-  { credits: 10, cents: 600 },
-  { credits: 30, cents: 1500 },
-  { credits: 60, cents: 2700 },
-];
+const DEFAULT_PACKAGES = [1, 5, 10, 30, 60].map(credits => ({ credits, cents: credits * 100 }));
 
 const TOOL_LABEL = {
   "answer-sheet": "答题卡扫描",
@@ -22,6 +17,8 @@ const SOURCE_LABEL = {
   manual: "人工调整",
   tool: "工具使用",
   invite: "邀请奖励",
+  purchase: "微信充值",
+  refund: "微信充值退款",
 };
 
 function wxLoginCode() {
@@ -50,12 +47,16 @@ function authHeader(required = true) {
   return { Authorization: `Bearer ${token}` };
 }
 
-async function authedRequest(path, payload, timeout = 15000, required = true) {
+async function authedRequest(path, payload, timeout = 15000, required = true, expectedToken) {
   const headers = authHeader(required);
+  if (expectedToken !== undefined && headers.Authorization !== `Bearer ${expectedToken}`) {
+    throw new Error("卷豆账号已切换，请重新操作。");
+  }
   try {
     return await request(path, payload, timeout, headers);
   } catch (error) {
-    if (error && error.statusCode === 401) {
+    // A failed wx.login exchange for payment does not expire the wallet's Bearer session.
+    if (error?.statusCode === 401 && error.errorId === "login" && headers.Authorization === `Bearer ${storage.toolCreditToken()}`) {
       storage.clearToolCreditSession();
     }
     throw error;
@@ -80,19 +81,16 @@ function formatPackages(list) {
     const creditsCount = Number(item?.credits) || 0;
     const cents = Number(item?.cents) || 0;
     const yuan = (cents / 100).toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
-    const unit = creditsCount > 0 ? (cents / 100 / creditsCount).toFixed(2) : "0.00";
     return {
       credits: creditsCount,
       cents,
       yuanText: `¥${yuan}`,
-      unitText: `¥${unit}/颗`,
-      recommended: creditsCount === 10,
       featured: false,
     };
   });
-  // 奇数档位时把主推档置顶跨两列，保证下方 2×N 网格完全对称无残缺空洞。
+  // Keep the full-width card and complete two-column rows when there is an odd number of packages.
   if (formatted.length % 2 === 1 && formatted.length >= 3) {
-    const idx = formatted.findIndex((item) => item.recommended);
+    const idx = formatted.findIndex(item => item.credits === 10);
     const featuredIdx = idx >= 0 ? idx : 0;
     const [featured] = formatted.splice(featuredIdx, 1);
     featured.featured = true;
@@ -153,16 +151,74 @@ function formatRecord(entry) {
 
 async function capabilities() {
   const data = await request("tool-credits/capabilities");
+  const packages = Array.isArray(data?.purchase?.packages) ? data.purchase.packages.filter(item =>
+    Number.isInteger(item?.credits) && item.credits > 0 && item.cents === item.credits * 100) : [];
   return {
     login: Boolean(data?.login),
     invite: Boolean(data?.invite),
     purchase: {
       directPurchase: Boolean(data?.purchase?.directPurchase),
-      tokenRecharge: Boolean(data?.purchase?.tokenRecharge),
-      packages: formatPackages(data?.purchase?.packages),
+      tokenRecharge: Boolean(data?.purchase?.tokenRecharge && packages.length),
+      tokenRechargeIos: Boolean(data?.purchase?.tokenRechargeIos),
+      packages: formatPackages(packages),
     },
     ads: Boolean(data?.ads),
   };
+}
+
+function rechargeDevice(purchase) {
+  const device = wx.getDeviceInfo?.() || wx.getSystemInfoSync?.() || {};
+  const platform = String(device.platform || "").toLowerCase();
+  const simulatesApple = platform === "devtools" && /iphone|ipad|\bios\b/i.test(`${device.model} ${device.system}`);
+  if (IS_TEST_ENVIRONMENT && (platform === "ios" || simulatesApple)) return { testGuide: "ios" };
+  if (platform === "devtools") return { testGuide: "preview" };
+  if (platform === "ios" && !purchase.tokenRechargeIos) {
+    return { message: "iOS 暂未开放卷豆充值。" };
+  }
+  if (typeof wx.requestVirtualPayment !== "function") return { message: "当前微信版本无法充值，请更新后重试。" };
+  if (platform === "ios") return { platform: "ios" };
+  if (["android", "ohos", "harmonyos", "windows"].includes(platform)) return { platform: "android" };
+  return { message: "当前设备暂时无法充值。" };
+}
+
+async function createRecharge({ credits, cents, requestId }, platform) {
+  const token = storage.toolCreditToken();
+  const code = await wxLoginCode();
+  return authedRequest("tool-credits/recharges", { credits, quotedCents: cents, requestId, platform, code }, 15_000, true, token);
+}
+
+async function paidRecharge() {
+  const data = await authedRequest("tool-credits/recharges");
+  return Array.isArray(data.orders) ? data.orders.find(order => order.state === "paid" && /^RC[a-f0-9]{30}$/.test(order.id)) : null;
+}
+
+async function confirmRecharge(id) {
+  const token = storage.toolCreditToken();
+  const path = `tool-credits/recharges/${encodeURIComponent(id)}/confirm`;
+  const result = await authedRequest(path, {}, 30_000);
+  if (!result.order?.needsWechatCode) return result.order;
+  if (token !== storage.toolCreditToken()) throw new Error("卷豆账号已切换，请重新操作。");
+  return (await authedRequest(path, { code: await wxLoginCode() }, 30_000, true, token)).order;
+}
+
+function payRecharge(payData, order) {
+  const { mode, signData, paySig, signature } = payData;
+  let sign;
+  try { sign = JSON.parse(signData); } catch { /* Rejected by the checkout validation below. */ }
+  // Confirm the checkout targets this order and environment before handing off to the native cashier.
+  if (mode !== "short_series_coin" || sign?.env !== (IS_TEST_ENVIRONMENT ? 1 : 0) ||
+      sign.outTradeNo !== order.id || sign.buyQuantity !== order.credits || sign.currencyType !== "CNY" ||
+      typeof paySig !== "string" || !paySig || typeof signature !== "string" || !signature) {
+    throw Object.assign(new Error("充值订单校验失败，请重试。"), { errorId: "recharge-signature" });
+  }
+  return new Promise(resolve => {
+    wx.requestVirtualPayment({
+      mode, signData, paySig, signature,
+      success: () => resolve("paid"),
+      fail: ({ errCode } = {}) => resolve(Number(errCode) === -2 ? "cancelled" : "unknown"),
+      complete: () => resolve("unknown"),
+    });
+  });
 }
 
 async function login({ bindLegacy = false, profileToken, attemptId, inviteClaim } = {}) {
@@ -192,7 +248,9 @@ async function login({ bindLegacy = false, profileToken, attemptId, inviteClaim 
 
 async function wallet(before = 0) {
   const query = Number.isSafeInteger(before) && before > 0 ? `?before=${before}` : "";
+  const token = storage.toolCreditToken();
   const data = await authedRequest(`tool-credits/wallet${query}`, undefined, 15000, true);
+  if (token !== storage.toolCreditToken()) throw new Error("卷豆账号已切换，请重新读取。");
   if (data?.accountId) storage.setToolCreditAccountId(data.accountId);
   if (data?.uid) storage.setToolCreditUid(data.uid);
   return {
@@ -252,6 +310,11 @@ module.exports = {
   logout,
   makeInvite,
   visitInvite,
+  rechargeDevice,
+  createRecharge,
+  paidRecharge,
+  confirmRecharge,
+  payRecharge,
   hasSession,
   accountId,
   uid,

@@ -3,7 +3,8 @@ import { pathToFileURL } from "node:url";
 import { createWalletDatabase } from "../server/tool-credits-postgres.mjs";
 
 const PRODUCTION_CATALOG = "/var/lib/rollierank/catalog.json";
-const KNOWN_FEATURES = new Set(["positions", "discussions", "wechatProfiles", "corrections", "feedback", "users", "points", "adminAuth", "toolCreditInviteSubmissions"]);
+const KNOWN_FEATURES = new Set(["positions", "discussions", "wechatProfiles", "corrections", "feedback", "users", "points", "adminAuth", "toolCreditInviteSubmissions", "shortLinks"]);
+const SHORT_LINK_FIELDS = new Set(["code", "page", "title", "channel", "createdAt", "expiresAt", "clicks", "lastClickAt", "clickLog"]);
 
 export function firstReleaseWalletCounts(database) {
   return database.transaction(async (client) => {
@@ -13,6 +14,7 @@ export function firstReleaseWalletCounts(database) {
       (SELECT COUNT(*) FROM wallet_tool_operations) AS "walletOperations",
       (SELECT COUNT(*) FROM wallet_wechat_orders) AS "walletPaymentOrders",
       (SELECT COUNT(*) FROM wallet_wechat_refunds) AS "walletPaymentRefunds",
+      (SELECT COUNT(*) FROM wallet_coin_recharges) AS "walletCoinRecharges",
       (SELECT COUNT(*) FROM wallet_invite_visits) AS "walletInvites"`);
     return counts;
   }, { readOnly: true });
@@ -30,6 +32,23 @@ function countList(value, label) {
   return value.length;
 }
 
+function verifyShortLinkMetadata(links = []) {
+  countList(links, "shortLinks");
+  // The launch gate can keep operator-created routes and visits with only a timestamp.
+  for (const link of links) {
+    if (!link || typeof link !== "object" || Array.isArray(link) || Object.keys(link).some(key => !SHORT_LINK_FIELDS.has(key)) ||
+        typeof link.code !== "string" || !/^[a-z0-9]{7}$/.test(link.code) ||
+        typeof link.page !== "string" || !/^pages(?:\/[\w-]+)+$/.test(link.page)) {
+      throw new Error("生产短链接含有尚未核对的数据结构。");
+    }
+    const visits = link.clickLog ?? [];
+    if (countList(visits, "shortLinks.clickLog") !== link.clicks || visits.some(visit =>
+      !visit || typeof visit !== "object" || Object.keys(visit).length !== 2 || !Number.isFinite(visit.at) || visit.ref !== "")) {
+      throw new Error("生产短链接含有尚未核对的访问记录。");
+    }
+  }
+}
+
 export function firstReleaseCounts(catalog) {
   if (!Array.isArray(catalog?.versions) || !catalog.versions.length || !catalog.receipts || !catalog.features) {
     throw new Error("找不到完整的生产套卷与存储结构。");
@@ -38,6 +57,7 @@ export function firstReleaseCounts(catalog) {
   countMap(features, "features");
   const unknown = Object.keys(features).filter(key => !KNOWN_FEATURES.has(key));
   if (unknown.length) throw new Error(`生产库包含尚未核对的功能数据：${unknown.join("、")}。`);
+  verifyShortLinkMetadata(features.shortLinks);
   return {
     attempts: countMap(catalog.receipts, "receipts"),
     positionMembers: countMap(features.positions?.members, "positions.members"),

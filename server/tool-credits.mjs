@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
 import { createToolCreditStore } from "./tool-credits-store.mjs";
 import { createWalletDatabase } from "./tool-credits-postgres.mjs";
-import { createToolCreditsCommerce } from "./tool-credits-commerce.mjs";
-import { createWechatToolPayment } from "./wechat-tool-payment.mjs";
+import { createToolCreditsCommerce, paymentPush } from "./tool-credits-commerce.mjs";
+import { createToolCreditsRecharge } from "./tool-credits-recharge.mjs";
+import { createWechatCoinPayment, createWechatToolPayment } from "./wechat-tool-payment.mjs";
 import { creditError, validAccountRef, validId } from "./tool-credits-rules.mjs";
 import { wechatProfilesByGuest } from "./wechat-profile.mjs";
 
@@ -47,7 +48,10 @@ export function createToolCredits({ readCatalog, mutateCatalog }, {
   } catch (error) {
     console.warn(error.message);
   }
-  const store = createToolCreditStore({ database, groupApproved, directPurchaseReady: Boolean(payment), clock });
+  // Recharge has its own environment and never depends on a published direct-purchase product.
+  const coinPayment = database ? createWechatCoinPayment({ env, appId, secret, fetchImpl, clock, testEnvironment }) : null;
+  const store = createToolCreditStore({ database, groupApproved, directPurchaseReady: Boolean(payment),
+    tokenRechargeReady: Boolean(coinPayment), clock });
   const bearer = (request) => /^Bearer ([a-f0-9]{64})$/i.exec(request.headers.authorization ?? "")?.[1];
   const accountKey = (openid) => sha256((appId || "local-test") + ":" + openid);
 
@@ -67,6 +71,7 @@ export function createToolCredits({ readCatalog, mutateCatalog }, {
   }
 
   const commerce = createToolCreditsCommerce({ payment, store, requireAccount, getWechatSession, accountKey });
+  const recharge = createToolCreditsRecharge({ payment: coinPayment, orders: store.recharges, requireAccount, getWechatSession, accountKey });
 
   async function handle({ pathname, method, input, query, send, request }) {
     if (!pathname.startsWith(ROOT + "/")) return false;
@@ -74,10 +79,12 @@ export function createToolCredits({ readCatalog, mutateCatalog }, {
     if (method === "GET" && route === "/capabilities") {
       const purchase = await store.purchaseSettings();
       const directPurchase = Boolean(payment && purchase.directPurchase);
+      const tokenRecharge = Boolean(coinPayment && purchase.tokenRecharge);
       send(200, {
         login: Boolean(database && (exchange || (appId && secret))), invite: await store.inviteEnabled(),
         purchase: {
-          directPurchase, tokenRecharge: false, packages: purchase.packages,
+          directPurchase, tokenRecharge, packages: purchase.packages,
+          ...(tokenRecharge ? { tokenRechargeIos: coinPayment.ios } : {}),
           ...(directPurchase ? { products: payment.products } : {}),
         },
         ads: false,
@@ -148,7 +155,8 @@ export function createToolCredits({ readCatalog, mutateCatalog }, {
       const { id } = await requireAccount(request);
       send(200, await store.makeInvite(id));
     } else {
-      return commerce.handle({ route, method, input, request, send });
+      const context = { route, method, input, request, send };
+      return await recharge.handle(context) || commerce.handle(context);
     }
     return true;
   }
@@ -167,7 +175,8 @@ export function createToolCredits({ readCatalog, mutateCatalog }, {
           Math.abs(amount) > 10000 || !reason || reason.length > 200) throw creditError(400, "请填写账号、调整颗数和原因。");
       send(200, await store.adjust({ accountId, amount, reason, requestId, actor: session.username }));
     } else {
-      return commerce.handleAdmin({ sub, method, input, query, send, session });
+      const context = { sub, method, input, query, send, session };
+      return await recharge.handleAdmin(context) || commerce.handleAdmin(context);
     }
     return true;
   }
@@ -206,7 +215,10 @@ export function createToolCredits({ readCatalog, mutateCatalog }, {
   const { quote, operation, reserve, settle, release, recordToolUse } = store;
   return {
     handle, handleAdmin, invitedAccount, stageInviteUse, flushInviteUses,
-    handleWechatPaymentPush: commerce.handleWechatPush,
+    async handleWechatPaymentPush(raw, response) {
+      const message = paymentPush(raw);
+      return await recharge.handleWechatPush(message, raw, response) || commerce.handleWechatPush(message, raw, response);
+    },
     billing: Object.freeze({ requireAccount, quote, operation, reserve, settle, release, recordToolUse }),
   };
 }

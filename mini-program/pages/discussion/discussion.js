@@ -1,7 +1,7 @@
 const api = require("../../services/api.js");
 const profile = require("../../services/profile.js");
 const storage = require("../../utils/storage.js");
-const { IS_TEST_ENVIRONMENT, storageKey } = require("../../config.js");
+const { storageKey } = require("../../config.js");
 
 function avatarFor(seed) {
   const value = String(seed || "卷友");
@@ -27,8 +27,6 @@ function relativeTime(timestamp) {
 }
 
 async function quietWxCode() {
-  // 验收包的评论直接交给隔离后端。
-  if (IS_TEST_ENVIRONMENT) return "";
   try {
     const res = await new Promise((resolve, reject) => wx.login({ success: resolve, fail: reject }));
     return typeof res?.code === "string" ? res.code : "";
@@ -55,6 +53,7 @@ async function photoAsPng(tempFilePath) {
 Page({
   data: {
     loading: true,
+    refreshing: false,
     error: "",
     comments: [],
     nextCursor: "",
@@ -104,6 +103,44 @@ Page({
       this.profileSignature = nextSignature;
       this.refreshAfterProfileChange();
     }
+  },
+
+  onHide() {
+    this.stopPendingPoll();
+  },
+
+  onUnload() {
+    this.stopPendingPoll();
+  },
+
+  onRefresherRefresh() {
+    this.setData({ refreshing: true });
+    this.refreshAll().finally(() => this.setData({ refreshing: false }));
+  },
+
+  stopPendingPoll() {
+    if (this._pendingPollTimer) {
+      clearTimeout(this._pendingPollTimer);
+      this._pendingPollTimer = null;
+    }
+  },
+
+  schedulePendingPoll(attempt = 0) {
+    this.stopPendingPoll();
+    const hasPending = this.data.comments.some((c) => c.moderationStatus === "pending")
+      || Object.values(this.data.replyByRoot).some((list) => (list || []).some((r) => r.moderationStatus === "pending"));
+    if (!hasPending || attempt >= 5) return;
+    this._pendingPollTimer = setTimeout(async () => {
+      this._pendingPollTimer = null;
+      await this.refreshAll();
+      this.schedulePendingPoll(attempt + 1);
+    }, 3000);
+  },
+
+  async refreshAll() {
+    await this.load();
+    const expandedIds = Object.keys(this.data.expandedReplies).filter((id) => this.data.expandedReplies[id]);
+    await Promise.all(expandedIds.map((id) => this.loadReplies(id)));
   },
 
   currentProfileSignature() {
@@ -250,6 +287,7 @@ Page({
       } else {
         await this.load();
       }
+      this.schedulePendingPoll(0);
     } catch (error) {
       wx.showToast({ title: error.message, icon: "none" });
     } finally {

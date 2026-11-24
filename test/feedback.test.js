@@ -190,7 +190,7 @@ test("User feedback submission, isolation, admin WeChat subscribe reminder, quot
     assert.equal(sendCall.body.touser, "openid-admin-code-1");
     assert.equal(sendCall.body.template_id, "tmpl_feedback_123456");
     assert.equal(sendCall.body.miniprogram_state, "trial");
-    assert.match(sendCall.body.page, /pages\/admin\/admin\?tab=feedback&id=fb-idempotent-001/);
+    assert.equal(sendCall.body.page, "pages/admin/admin");
     assert.equal(sendCall.body.data.thing1.value, "功能建议");
     assert.ok(sendCall.body.data.thing2.value.length <= 20);
 
@@ -249,19 +249,45 @@ test("User feedback submission, isolation, admin WeChat subscribe reminder, quot
     assert.equal(submit3.data.notified.attempted, 1);
     assert.equal(submit3.data.notified.sent, 0);
 
-    // 7. Mini-program admin lists feedbacks & replies
-    const adminList = await srv.request("/api/feedback/admin/list", { reviewToken, status: "pending" });
-    assert.equal(adminList.status, 200);
-    assert.equal(adminList.data.summary.pending, 3);
-    assert.equal(adminList.data.notify.totalQuota, 0);
-    assert.match(adminList.data.notify.subscribers[0].lastError, /订阅次数已用完/);
+    // 7. Mini-program admin only checks push status (no feedback list/reply endpoints in mini-program)
+    const notifyStatus = await srv.request("/api/feedback/admin/notify-status", { reviewToken });
+    assert.equal(notifyStatus.status, 200);
+    assert.equal(notifyStatus.data.items, undefined);
+    assert.equal(notifyStatus.data.notify.totalQuota, 0);
+    assert.match(notifyStatus.data.notify.subscribers[0].lastError, /订阅次数已用完/);
 
-    const replyRes = await srv.request("/api/feedback/admin/reply", {
+    const blockedMpList = await srv.request("/api/feedback/admin/list", { reviewToken, status: "pending" });
+    assert.equal(blockedMpList.status, 404);
+    const blockedMpReply = await srv.request("/api/feedback/admin/reply", {
       reviewToken,
       feedbackId: "fb-idempotent-001",
       status: "replied",
-      replyText: "收到！深色模式已排入下一版计划。",
+      replyText: "should not work",
     });
+    assert.equal(blockedMpReply.status, 404);
+
+    // 8. Web Admin Console records every feedback & handles replies
+    const setupRes = await srv.request("/admin/api/setup", {
+      username: "admin",
+      password: "StrongPassword123",
+      confirmPassword: "StrongPassword123",
+    });
+    assert.equal(setupRes.status, 200);
+    const cookie = setupRes.headers.get("set-cookie").split(";")[0];
+
+    const consoleList = await srv.request("/admin/api/feedback?status=pending", undefined, { Cookie: cookie });
+    assert.equal(consoleList.status, 200);
+    assert.equal(consoleList.data.summary.pending, 3);
+
+    const replyRes = await srv.request(
+      "/admin/api/feedback/update",
+      {
+        feedbackId: "fb-idempotent-001",
+        status: "replied",
+        replyText: "收到！深色模式已排入下一版计划。",
+      },
+      { Cookie: cookie },
+    );
     assert.equal(replyRes.status, 200);
     assert.equal(replyRes.data.feedback.status, "replied");
 
@@ -299,11 +325,16 @@ test("Web Admin Console feedback management, notification settings, CLI and Play
     assert.equal(setupRes.status, 200);
     const cookie = setupRes.headers.get("set-cookie").split(";")[0];
 
-    // Overview metrics reflect pending user feedback
+    // Overview metrics reflect pending user feedback & skipped push summary is recorded
     const ov = await srv.request("/admin/api/overview", undefined, { Cookie: cookie });
     assert.equal(ov.status, 200);
     assert.equal(ov.data.metrics.pendingFeedbacks, 1);
     assert.equal(ov.data.metrics.totalFeedbacks, 1);
+
+    const listWithSkip = await srv.request("/admin/api/feedback?status=pending", undefined, { Cookie: cookie });
+    assert.equal(listWithSkip.status, 200);
+    assert.equal(listWithSkip.data.items[0].notifySummary.attempted, 0);
+    assert.ok(listWithSkip.data.items[0].notifySummary.skippedReason);
 
     // Update notify settings via admin console
     const notifyUpd = await srv.request(
@@ -312,7 +343,7 @@ test("Web Admin Console feedback management, notification settings, CLI and Play
         enabled: true,
         templateId: "tmpl_console_999999",
         miniprogramState: "formal",
-        page: "pages/admin/admin?tab=feedback",
+        page: "pages/admin/admin",
         fieldMap: { categoryKey: "thing1", contentKey: "thing2", timeKey: "time3", userKey: "thing4" },
       },
       { Cookie: cookie },
@@ -388,8 +419,14 @@ test("Mini-program feedback entries and synchronous subscribe message invocation
 
   const recordsWxml = readFileSync(path.join(ROOT, "mini-program/pages/records/records.wxml"), "utf8");
   const profileWxml = readFileSync(path.join(ROOT, "mini-program/pages/profile/profile.wxml"), "utf8");
+  const feedbackWxml = readFileSync(path.join(ROOT, "mini-program/pages/feedback/feedback.wxml"), "utf8");
+  const adminWxml = readFileSync(path.join(ROOT, "mini-program/pages/admin/admin.wxml"), "utf8");
+  const settingsJs = readFileSync(path.join(ROOT, "mini-program/pages/settings/settings.js"), "utf8");
   assert.match(recordsWxml, /<rr-nav[^>]*title="个人中心"[^>]*action-icon="comment"[^>]*bind:action="openFeedback"/);
   assert.match(profileWxml, /bindtap="openFeedback"/);
+  assert.doesNotMatch(feedbackWxml, /openAdmin|维护者/, "feedback page should not expose admin entry in mini-program");
+  assert.doesNotMatch(adminWxml, /userFeedbacks|openUserFeedback/, "mini-program admin page should not list user feedback records");
+  assert.match(settingsJs, /wx\.navigateBack/, "saving nickname should navigate back to profile page");
 
   const adminJs = readFileSync(path.join(ROOT, "mini-program/pages/admin/admin.js"), "utf8");
   const match = adminJs.match(/subscribeFeedbackNotify\s*\(\)\s*\{([\s\S]*?)wx\.requestSubscribeMessage/);

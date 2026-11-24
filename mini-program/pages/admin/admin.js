@@ -19,13 +19,6 @@ function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
-const USER_FEEDBACK_STATUS_OPTIONS = [
-  { key: "pending", label: "待处理" },
-  { key: "processing", label: "处理中" },
-  { key: "replied", label: "已回复" },
-  { key: "closed", label: "已关闭" },
-];
-
 Page({
   data: {
     loading: true,
@@ -33,19 +26,9 @@ Page({
     error: "",
     reviewEnabled: false,
     pendingCount: 0,
-    userFeedbackPendingCount: 0,
-    userFeedbacks: [],
-    userFeedbackFilter: "pending",
-    userFeedbackSummary: { total: 0, pending: 0, processing: 0, replied: 0, closed: 0 },
     feedbackNotify: { enabled: true, wechatReady: false, templateConfigured: false, templateId: "", subscriberCount: 0, totalQuota: 0 },
     subscribingNotify: false,
     testingNotify: false,
-    activeUserFeedback: null,
-    userFeedbackReplyText: "",
-    userFeedbackReplyStatus: "replied",
-    userFeedbackStatusOptions: USER_FEEDBACK_STATUS_OPTIONS,
-    userFeedbackError: "",
-    savingUserFeedback: false,
     credentialOpen: false,
     hasCredential: false,
     authorized: false,
@@ -70,12 +53,10 @@ Page({
     uiBase: "/assets/ui",
   },
 
-  onLoad(query) {
-    this.targetFeedbackId = typeof query?.id === "string" ? query.id : "";
+  onLoad() {
     this.sheetDrag = createPageSheetDrag(this, {
       onDismiss: () => {
-        if (this.data.activeUserFeedback) this.closeUserFeedback();
-        else if (this.data.review) this.closeReview();
+        if (this.data.review) this.closeReview();
         else if (this.data.detail) this.closeDetail();
         else if (this.data.credentialOpen) this.closeCredential();
       },
@@ -98,26 +79,15 @@ Page({
   async loadSummary() {
     this.setData({ loading: true, error: "" });
     try {
-      const [summary, fbSummary] = await Promise.all([
-        api.request("corrections/summary"),
-        api.request("feedback/summary").catch(() => ({ pendingCount: 0, reviewEnabled: false })),
-      ]);
+      const summary = await api.request("corrections/summary");
       this.setData({
         loading: false,
-        reviewEnabled: Boolean(summary.reviewEnabled || fbSummary.reviewEnabled),
+        reviewEnabled: Boolean(summary.reviewEnabled),
         pendingCount: summary.pendingCount || 0,
-        userFeedbackPendingCount: fbSummary.pendingCount || 0,
       });
     } catch (error) {
       this.setData({ loading: false, error: error.message });
     }
-  },
-
-  decorateUserFeedback(item) {
-    return {
-      ...item,
-      createdAtText: dateText(item.createdAt),
-    };
   },
 
   decorateFeedback(feedback) {
@@ -137,13 +107,12 @@ Page({
     if (!token || this.data.adminLoading) return;
     this.setData({ adminLoading: true, error: "" });
     try {
-      const [admin, fbRes] = await Promise.all([
+      const [admin, notifyRes] = await Promise.all([
         api.request("corrections/admin", { reviewToken: token }),
-        api.request("feedback/admin/list", { reviewToken: token, status: this.data.userFeedbackFilter }).catch(() => null),
+        api.request("feedback/admin/notify-status", { reviewToken: token }).catch(() => null),
       ]);
       this.reviewToken = token;
       this.credential = "";
-      const userFeedbacks = (fbRes?.items || []).map(item => this.decorateUserFeedback(item));
       this.setData({
         adminLoading: false,
         credentialOpen: false,
@@ -153,16 +122,8 @@ Page({
         pendingCount: admin.pendingCount || 0,
         feedbacks: (admin.feedbacks || []).map(feedback => this.decorateFeedback(feedback)),
         versions: admin.versions || [],
-        userFeedbacks,
-        userFeedbackSummary: fbRes?.summary || this.data.userFeedbackSummary,
-        userFeedbackPendingCount: fbRes?.summary?.pending ?? this.data.userFeedbackPendingCount,
-        feedbackNotify: fbRes?.notify || this.data.feedbackNotify,
+        feedbackNotify: notifyRes?.notify || this.data.feedbackNotify,
       });
-      if (this.targetFeedbackId) {
-        const target = userFeedbacks.find(item => item.id === this.targetFeedbackId);
-        this.targetFeedbackId = "";
-        if (target) this.openUserFeedbackItem(target);
-      }
     } catch (error) {
       this.setData({ adminLoading: false, error: error.message, authorized: false });
     }
@@ -192,21 +153,16 @@ Page({
     }
     this.setData({ adminLoading: true, error: "" });
     try {
-      const [admin, fbRes] = await Promise.all([
+      const [admin, notifyRes] = await Promise.all([
         api.request("corrections/admin", { reviewToken: this.reviewToken }),
-        api.request("feedback/admin/list", { reviewToken: this.reviewToken, status: this.data.userFeedbackFilter }).catch(() => null),
+        api.request("feedback/admin/notify-status", { reviewToken: this.reviewToken }).catch(() => null),
       ]);
       this.setData({
         adminLoading: false,
         pendingCount: admin.pendingCount || 0,
         feedbacks: (admin.feedbacks || []).map(feedback => this.decorateFeedback(feedback)),
         versions: admin.versions || [],
-        ...(fbRes ? {
-          userFeedbacks: (fbRes.items || []).map(item => this.decorateUserFeedback(item)),
-          userFeedbackSummary: fbRes.summary || this.data.userFeedbackSummary,
-          userFeedbackPendingCount: fbRes.summary?.pending ?? this.data.userFeedbackPendingCount,
-          feedbackNotify: fbRes.notify || this.data.feedbackNotify,
-        } : {}),
+        ...(notifyRes?.notify ? { feedbackNotify: notifyRes.notify } : {}),
       });
     } catch (error) {
       this.setData({ adminLoading: false, error: error.message });
@@ -220,89 +176,10 @@ Page({
       authorized: false,
       feedbacks: [],
       versions: [],
-      userFeedbacks: [],
       detail: null,
       review: null,
-      activeUserFeedback: null,
     });
     this.loadSummary();
-  },
-
-  async setUserFeedbackFilter(event) {
-    const status = event.currentTarget.dataset.status;
-    if (!status || status === this.data.userFeedbackFilter || !this.reviewToken) return;
-    this.setData({ userFeedbackFilter: status });
-    try {
-      const fbRes = await api.request("feedback/admin/list", { reviewToken: this.reviewToken, status });
-      this.setData({
-        userFeedbacks: (fbRes.items || []).map(item => this.decorateUserFeedback(item)),
-        userFeedbackSummary: fbRes.summary || this.data.userFeedbackSummary,
-        userFeedbackPendingCount: fbRes.summary?.pending ?? this.data.userFeedbackPendingCount,
-        feedbackNotify: fbRes.notify || this.data.feedbackNotify,
-      });
-    } catch (error) {
-      wx.showToast({ title: error.message || "读取失败", icon: "none" });
-    }
-  },
-
-  openUserFeedback(event) {
-    const item = this.data.userFeedbacks.find(entry => entry.id === event.currentTarget.dataset.id);
-    if (item) this.openUserFeedbackItem(item);
-  },
-
-  openUserFeedbackItem(item) {
-    this.setData({
-      activeUserFeedback: item,
-      userFeedbackReplyText: item.reply?.text || "",
-      userFeedbackReplyStatus: item.status === "pending" ? "replied" : item.status,
-      userFeedbackError: "",
-    });
-  },
-
-  closeUserFeedback() {
-    if (this.data.savingUserFeedback) return;
-    this.sheetDrag?.reset();
-    this._sheetScrollTop = 0;
-    this.setData({ activeUserFeedback: null, userFeedbackError: "" });
-  },
-
-  setUserFeedbackReplyStatus(event) {
-    const status = event.currentTarget.dataset.status;
-    if (status) this.setData({ userFeedbackReplyStatus: status, userFeedbackError: "" });
-  },
-
-  onUserFeedbackReplyInput(event) {
-    this.setData({ userFeedbackReplyText: event.detail.value || "", userFeedbackError: "" });
-  },
-
-  copyFeedbackContact() {
-    const contact = this.data.activeUserFeedback?.contact;
-    if (contact) wx.setClipboardData({ data: contact });
-  },
-
-  previewUserFeedbackImage(event) {
-    const index = Number(event.currentTarget.dataset.index) || 0;
-    const urls = (this.data.activeUserFeedback?.images || []).map(img => img.dataUri);
-    if (urls[index]) wx.previewImage({ current: urls[index], urls });
-  },
-
-  async submitUserFeedbackReply() {
-    const target = this.data.activeUserFeedback;
-    if (!target || !this.reviewToken || this.data.savingUserFeedback) return;
-    this.setData({ savingUserFeedback: true, userFeedbackError: "" });
-    try {
-      await api.request("feedback/admin/reply", {
-        reviewToken: this.reviewToken,
-        feedbackId: target.id,
-        status: this.data.userFeedbackReplyStatus,
-        replyText: String(this.data.userFeedbackReplyText || "").trim(),
-      });
-      this.setData({ savingUserFeedback: false, activeUserFeedback: null });
-      wx.showToast({ title: "已保存回复", icon: "success" });
-      await this.refreshAdmin();
-    } catch (error) {
-      this.setData({ savingUserFeedback: false, userFeedbackError: error.message || "保存失败" });
-    }
   },
 
   subscribeFeedbackNotify() {

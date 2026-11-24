@@ -2,9 +2,18 @@
   <rr-nav title="录答案" />
 
   <view wx:if="{{loading}}" class="loading">正在打开答题卡…</view>
-  <view wx:elif="{{error}}" class="empty">
-    <text>{{error}}</text>
-    <button class="chip" bindtap="retry">重新读取</button>
+  <view wx:elif="{{error}}" class="state-wrap">
+    <view class="state-card">
+      <view class="state-card__badge">
+        <image class="state-card__icon" src="/assets/ui/warn-ochre.svg" mode="aspectFit" />
+      </view>
+      <text class="state-card__title">暂时无法连接</text>
+      <text class="state-card__desc">{{error}}</text>
+      <button class="state-card__btn" bindtap="retry" hover-class="press">
+        <image class="state-card__btn-icon" src="/assets/ui/refresh-light.svg" mode="aspectFit" />
+        <text>重新读取</text>
+      </button>
+    </view>
   </view>
 
   <block wx:else>
@@ -16,8 +25,11 @@
       </view>
       <view class="practice__filters">
         <button class="practice__filter grow" bindtap="openSections">
-          <text>{{sections[activeSection].type}}</text>
+          <text class="ellipsis">{{sections[activeSection].type}}</text>
           <image src="{{uiBase}}/chevron-down.svg" mode="aspectFit" />
+        </button>
+        <button class="practice__filter practice__filter--scan" bindtap="openScan" aria-label="扫描答题卡">
+          <image src="{{uiBase}}/camera.svg" mode="aspectFit" /><text>扫卡</text>
         </button>
         <button class="practice__filter practice__filter--icon {{markOnly ? 'practice__filter--on' : ''}}" bindtap="toggleMarkFilter" aria-label="待检查 {{uncertain}} 题" aria-pressed="{{markOnly}}">
           <image src="{{uiBase}}/mark.svg" mode="aspectFit" /><text wx:if="{{uncertain}}">{{uncertain}}</text>
@@ -98,7 +110,7 @@
         </view>
         <view class="sheet-head">
           <text>选岗查看同岗排名</text>
-          <button class="sheet-close" bindtap="closeSheet" aria-label="关闭"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button>
+          <button class="sheet-close" data-sheet-no-drag="1" catchtap="closeSheet" aria-label="关闭"><image data-sheet-no-drag="1" src="{{uiBase}}/close.svg" mode="aspectFit" /></button>
         </view>
         <view class="sheet-actions">
           <button class="btn btn--soft practice__skip" bindtap="doSubmit">先提交</button>
@@ -114,8 +126,8 @@
           <view class="sheet-grabber"></view>
         </view>
         <view class="sheet-head">
-          <text>{{sheet === 'submit' ? (answered < version.questionCount ? '还有 ' + (version.questionCount - answered) + ' 题未答' : '确认交卷') : sheet === 'sections' ? '选择板块' : '答题卡'}}</text>
-          <button class="sheet-close" bindtap="closeSheet" aria-label="关闭"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button>
+          <text>{{sheet === 'submit' ? (answered < version.questionCount ? '还有 ' + (version.questionCount - answered) + ' 题未答' : '确认交卷') : sheet === 'sections' ? '选择板块' : sheet === 'scan' ? '扫描答题卡' : '答题卡'}}</text>
+          <button class="sheet-close" data-sheet-no-drag="1" catchtap="closeSheet" aria-label="关闭"><image data-sheet-no-drag="1" src="{{uiBase}}/close.svg" mode="aspectFit" /></button>
         </view>
         <scroll-view wx:if="{{sheet !== 'submit'}}" scroll-y class="sheet-scroll" scroll-top="{{sheetScrollTop}}" enhanced show-scrollbar="{{false}}" bindscroll="onSheetScroll">
           <view wx:if="{{sheet === 'sections'}}" class="practice__section-list">
@@ -124,6 +136,64 @@
               <text class="practice__section-range">{{item.start}}–{{item.end}}</text>
               <image src="{{uiBase}}/{{index === activeSection ? 'check' : 'chevron'}}.svg" mode="aspectFit" />
             </button>
+          </view>
+          <view wx:elif="{{sheet === 'scan'}}" class="practice__omr">
+            <view wx:if="{{scanPhase === 'idle'}}" class="practice__omr-guide" bindtap="chooseScanImage">
+              <image class="practice__omr-art" src="{{uiBase}}/omr-guide.svg" mode="aspectFit" />
+              <view class="practice__omr-cues">
+                <view class="practice__omr-cue"><image src="{{uiBase}}/omr-frame.svg" mode="aspectFit" /><text>四角入镜</text></view>
+                <view class="practice__omr-cue"><image src="{{uiBase}}/omr-flat.svg" mode="aspectFit" /><text>纸面平整</text></view>
+                <view class="practice__omr-cue"><image src="{{uiBase}}/omr-sun.svg" mode="aspectFit" /><text>光线均匀</text></view>
+              </view>
+            </view>
+
+            <view wx:if="{{scanPreview}}" class="practice__omr-preview {{scanPhase === 'loading' ? 'practice__omr-preview--loading' : ''}}">
+              <image src="{{scanPreview}}" mode="aspectFit" />
+              <view wx:if="{{scanPhase === 'loading'}}" class="practice__omr-loading">识别中…</view>
+            </view>
+            <view wx:elif="{{scanPhase === 'loading'}}" class="practice__omr-loading-box">处理中…</view>
+
+            <view wx:if="{{scanPhase === 'error'}}" class="practice__omr-alert practice__omr-alert--error">
+              <image src="{{uiBase}}/warn.svg" mode="aspectFit" />
+              <text>{{scanError}}</text>
+            </view>
+
+            <block wx:if="{{scanPhase === 'ready' && scanSummary}}">
+              <view class="practice__omr-metrics">
+                <view class="practice__omr-metric">
+                  <text class="display-num practice__omr-metric-num">{{scanSummary.recognized}}</text>
+                  <text class="practice__omr-metric-label">已识别</text>
+                </view>
+                <view class="practice__omr-metric {{scanSummary.lowConfidenceCount ? 'practice__omr-metric--warn' : ''}}">
+                  <text class="display-num practice__omr-metric-num">{{scanSummary.lowConfidenceCount}}</text>
+                  <text class="practice__omr-metric-label">存疑</text>
+                </view>
+                <view class="practice__omr-metric">
+                  <text class="display-num practice__omr-metric-num">{{scanSummary.blank}}</text>
+                  <text class="practice__omr-metric-label">留空</text>
+                </view>
+              </view>
+
+              <view wx:if="{{scanLowConfidenceText}}" class="practice__omr-suspect">
+                <image src="{{uiBase}}/mark.svg" mode="aspectFit" />
+                <text>{{scanLowConfidenceText}}</text>
+              </view>
+
+              <view wx:if="{{scanSummary.warnings.length}}" class="practice__omr-alert">
+                <image src="{{uiBase}}/warn.svg" mode="aspectFit" />
+                <text>{{scanSummary.warnings[0]}}</text>
+              </view>
+
+              <view wx:if="{{answered > 0 && scanSummary.recognized > 0}}" class="practice__omr-merge">
+                <button class="practice__omr-merge-pill {{scanMode === 'fill-blank' ? 'practice__omr-merge-pill--on' : ''}}" data-mode="fill-blank" bindtap="setScanMode">
+                  <text>仅补空题</text>
+                  <text wx:if="{{scanSummary.fillBlankAdded}}" class="practice__omr-merge-badge">+{{scanSummary.fillBlankAdded}}</text>
+                </button>
+                <button class="practice__omr-merge-pill {{scanMode === 'replace' ? 'practice__omr-merge-pill--on' : ''}}" data-mode="replace" bindtap="setScanMode">
+                  <text>整份替换</text>
+                </button>
+              </view>
+            </block>
           </view>
           <view wx:else class="practice__answer-sheet" aria-label="按题型选择题号">
             <view class="practice__sheet-summary">已答 <text class="practice__sheet-answered">{{answered}}</text><text> / {{version.questionCount}}</text></view>
@@ -141,7 +211,23 @@
             </view>
           </view>
         </scroll-view>
-        <block wx:else>
+        <block wx:if="{{sheet === 'scan'}}">
+          <view wx:if="{{scanPhase === 'idle'}}" class="sheet-actions practice__omr-actions">
+            <button class="btn btn--primary" bindtap="chooseScanImage">拍照 / 选图</button>
+          </view>
+          <view wx:elif="{{scanPhase === 'loading'}}" class="sheet-actions practice__omr-actions">
+            <button class="btn btn--soft" bindtap="cancelScan">取消</button>
+          </view>
+          <view wx:elif="{{scanPhase === 'error'}}" class="sheet-actions practice__omr-actions">
+            <button class="btn btn--soft" bindtap="closeSheet">手录</button>
+            <button class="btn btn--primary" bindtap="chooseScanImage">重拍</button>
+          </view>
+          <view wx:else class="sheet-actions practice__omr-actions">
+            <button class="btn btn--soft" bindtap="chooseScanImage">重拍</button>
+            <button class="btn btn--primary" disabled="{{!scanCanApply}}" bindtap="applyScanResult">填入</button>
+          </view>
+        </block>
+        <block wx:elif="{{sheet === 'submit'}}">
           <view class="sheet-actions">
             <button class="btn btn--soft" bindtap="closeSheet">继续录入</button>
             <button class="btn btn--primary practice__confirm" bindtap="confirmSubmission" disabled="{{submitting}}">{{answered < version.questionCount ? '留空交卷' : '交卷'}}</button>
@@ -149,5 +235,6 @@
         </block>
       </view>
     </view>
+    <canvas type="2d" id="omr-canvas" class="practice__omr-canvas"></canvas>
   </block>
 </view>

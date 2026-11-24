@@ -50,8 +50,8 @@ Run `.agents/skills/verify-rollierank/scripts/verify.sh <scenario>` or `npm run 
 | `visual` | Real `/ios-v3/` pages at desktop, 430, 390 and 320 widths; screenshots, runtime errors, overflow, target sizes, theme font and hidden scrollbars. |
 | `journeys` | Base app, connected features, iOS user flows and the complete Node test suite. |
 | `feature <id>` | The matching feature id from the map. |
-| `core`, `catalog-admin`, `practice-history`, `positions-rank`, `discussion`, `analytics`, `corrections`, `sharing`, `insights`, `timing-practice`, `miniprogram-ui`, `visual-design-audit` | Focused service, component, browser and visual/UI-design rationality regressions. |
-| `tool-credits` | Wallet HTTP, PostgreSQL migrations and transactions across processes, administrator sessions and invite rules. |
+| `core`, `catalog-admin`, `practice-history`, `positions-rank`, `discussion`, `analytics`, `corrections`, `sharing`, `insights`, `timing-practice`, `omr`, `miniprogram-ui`, `visual-design-audit` | Focused service, component, browser, OMR and visual/UI-design rationality regressions (`miniprogram-ui`, `timing-practice`, `visual-design-audit` and `all` also run `npm --prefix mini-program run check`, including Android no-`Intl`/ES2020 sandbox boot and `custom-tab-bar` validation). |
+| `tool-credits` | Wallet HTTP, PostgreSQL transactions, administrator sessions, invite rules, WeChat reconciliation and the mini program recharge flow. |
 
 Stable handles are the gallery `.page-picker [data-page]`, the mobile iframe `.view[data-page]`, feature buttons' accessible names and the application routes. Feature files define exact preconditions and side effects. Do not replace a missing real entry with an internal setter, a temporary fixture page, or a direct local-storage write.
 

@@ -8,7 +8,7 @@
 
 ## How to get to it (user POV)
 
-手机首页进入机构与套卷列表；基础入口侧栏的套卷管理进入导入、版本和审计。
+手机首页进入机构与套卷列表；基础入口侧栏的「运营后台」（`#/admin`）进入套卷与版本导入、发布和审计。
 
 ## Driving it with verification CLI
 
@@ -20,4 +20,4 @@ Preconditions: 已按主Skill安装依赖；CLI启动隔离服务并通过doctor
 
 ## Gotchas
 
-公开目录不包含参考答案。手机审核页负责岗位导入，`/#/admin` 的套卷管理负责套卷 CSV。独立运营后台 `/admin/` 提供管理员登录、运营总览、评论审查、用户、积分、答案纠错和操作日志。套卷维护 API 仍供维护者调用。运行 `node --test test/admin-console.test.js` 检查独立后台。
+公开目录不包含参考答案。手机审核页负责岗位导入，`/#/admin` 的套卷与版本页签负责套卷 CSV。独立运营后台 `/admin/`（或环境变量 `ROLLIERANK_ADMIN_PATH` 对应路径）提供管理员登录、运营总览、评论审查、用户、积分、卷豆、答案纠错、用户反馈和操作日志。套卷维护 API 仍供维护者调用。运行 `node --test test/admin-console.test.js` 检查独立后台。

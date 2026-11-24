@@ -14,6 +14,7 @@
 - [成绩分享与导出](sharing.md)
 
 - [群体分析与公开成绩](insights.md)
+- [自有短链与小程序码入口](shortlink.md)
 - [做题计时与完整录答](timing-practice.md)
 - [答题卡识别（OMR）](omr.md)
 - [微信小程序原稿版](miniprogram-ui.md)

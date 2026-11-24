@@ -203,10 +203,10 @@ test("React/BaseUI/beUI /admin/ console supports setup, password change, moderat
   // CLI local direct mode verification (--data-dir) without needing password.
   const localComments = await runCli(["comments", "list", "--data-dir", dir, "--status", "all", "--json"]);
   assert.equal(localComments.total, 1);
-  await runCli(["comments", "reject", posted.body.comment.id, "--data-dir", dir, "--reason", "CLI 本地屏蔽", "--json"]);
-  const afterReject = await runCli(["comments", "list", "--data-dir", dir, "--status", "rejected", "--json"]);
-  assert.equal(afterReject.total, 1);
   await runCli(["comments", "approve", posted.body.comment.id, "--data-dir", dir, "--reward", "10", "--json"]);
+  await runCli(["comments", "reject", posted.body.comment.id, "--data-dir", dir, "--reason", "CLI 本地拒绝清除", "--json"]);
+  const afterReject = await runCli(["comments", "list", "--data-dir", dir, "--status", "all", "--json"]);
+  assert.equal(afterReject.total, 0);
 
   const localAudit = await runCli(["audit", "list", "--data-dir", dir, "--json"]);
   assert.ok(localAudit.total >= 4);

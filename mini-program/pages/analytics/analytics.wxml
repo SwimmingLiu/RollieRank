@@ -61,7 +61,7 @@
       <view class="sheet-grabber-zone" data-sheet-zone="handle" catchtouchstart="startSheetDrag" catchtouchmove="moveSheetDrag" catchtouchend="endSheetDrag" catchtouchcancel="cancelSheetDrag">
         <view class="sheet-grabber"></view>
       </view>
-      <view class="sheet-head"><text>筛选</text><button class="sheet-close" bindtap="closeFilters" aria-label="关闭"><image src="{{uiBase}}/close.svg" mode="aspectFit" /></button></view>
+      <view class="sheet-head"><text>筛选</text><button class="sheet-close" data-sheet-no-drag="1" catchtap="closeFilters" aria-label="关闭"><image data-sheet-no-drag="1" src="{{uiBase}}/close.svg" mode="aspectFit" /></button></view>
       <view class="analytics__filter-section">
         <text class="analytics__filter-label">来源</text>
         <view class="analytics__source-list">
