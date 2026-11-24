@@ -132,10 +132,26 @@ export function BottomSheet({
     dragOffset.set(Math.max(0, info.offset.y));
   };
 
-  const onDragEnd = (_: unknown, info: PanInfo) => {
-    if (headerDrag.current) headerDrag.current.handled = true;
+  const onDragEnd = (event: MouseEvent | globalThis.TouchEvent | PointerEvent, info: PanInfo) => {
+    const start = headerDrag.current;
+    if (start) start.handled = true;
     const velocity = info.velocity.y;
-    const offset = info.offset.y;
+    let offset = info.offset.y;
+    if (optionList && start && event) {
+      const point = "changedTouches" in event && event.changedTouches[0]
+        ? event.changedTouches[0]
+        : "clientY" in event
+          ? event
+          : null;
+      if (point) {
+        const dx = point.clientX - start.x;
+        const dy = point.clientY - start.y;
+        if (Math.abs(dy) >= Math.abs(dx) * 1.2 && Math.abs(dy) > Math.abs(offset)) {
+          offset = dy;
+        }
+      }
+    }
+    headerDrag.current = null;
     const sheetHeight = sheetRef.current?.clientHeight || 360;
     const effectiveDismiss = Math.min(dismissThreshold, Math.max(84, sheetHeight * 0.34));
     const restoreScrim = () => {

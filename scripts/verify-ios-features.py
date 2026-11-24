@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import socket
 import subprocess
+import sys
 import tempfile
 import time
 from urllib.parse import urlencode
@@ -135,13 +136,17 @@ def drag_sheet(page, panel, distance, steps=16):
     box = panel.locator(".rr-options-drag-target").bounding_box()
     assert box is not None
     x, y = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+    step1 = 10 if distance > 0 else -10
     page.mouse.move(x, y)
     page.mouse.down()
     panel.evaluate("() => new Promise(resolve => requestAnimationFrame(() => resolve()))")
+    # Cross Motion's 3px pan threshold and yield a frame so PanSession enters dragging before the main travel.
+    page.mouse.move(x, y + step1, steps=2)
+    panel.evaluate("() => new Promise(resolve => requestAnimationFrame(() => resolve()))")
     page.mouse.move(x, y + distance, steps=steps)
-    # Motion's PanSession only transitions into dragging inside rAF (frame.update); wait for frames before pointerup so slow software CI never cancels the pan early.
     panel.evaluate("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))")
     page.mouse.up()
+    return {"box": box, "start": [x, y], "end": [x, y + distance]}
 
 
 def exercise_collection_picker(page, frame, output):
@@ -180,20 +185,22 @@ def exercise_review_picker(page, frame, output):
     expect(panel).to_have_attribute("data-expanded", "true")
     wait_sheet_settled(panel)
     page.locator("#phone").screenshot(path=str(output / "review-picker-expanded-320.png"))
-    drag_sheet(page, panel, 125, steps=18)
+    drag_meta = drag_sheet(page, panel, 125, steps=18)
     try:
         expect(panel).to_have_attribute("data-expanded", "false")
     except AssertionError:
         diag = frame.locator("body").evaluate("""() => {
           const dlg = document.querySelector('[role="dialog"]');
+          const zone = dlg?.querySelector('.rr-options-drag-target');
           return dlg ? {
             expanded: dlg.getAttribute('data-expanded'),
             rect: dlg.getBoundingClientRect().toJSON(),
+            zone: zone?.getBoundingClientRect().toJSON() || null,
             transform: getComputedStyle(dlg).transform,
             opacity: getComputedStyle(dlg).opacity,
           } : { missing: true };
         }""")
-        print(f"exercise_review_picker collapse failed diag={diag}", file=sys.stderr, flush=True)
+        print(f"exercise_review_picker collapse failed drag={drag_meta} diag={diag}", file=sys.stderr, flush=True)
         raise
     list_body.hover()
     page.mouse.wheel(0, 350)
