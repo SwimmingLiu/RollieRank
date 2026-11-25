@@ -10,6 +10,7 @@ const {
   getStyle,
   splitScoreParts,
   enrichBands,
+  bandCountUnit,
   outcomeMetrics,
   rulerTicks,
   drawDonut,
@@ -109,9 +110,10 @@ Page({
     previewTop: 0,
     summary: null,
     outcomes: null,
-    rulerTicks: ["0", "25", "50", "75", "100"],
+    rulerTicks: ["0", "50", "100"],
     rulerSubMarks: [10, 20, 30, 40, 60, 70, 80, 90],
     bestBand: null,
+    bandUnitLabel: "对题 / 总题",
     comparison: null,
     sections: [],
     timing: null,
@@ -219,6 +221,7 @@ Page({
       outcomes: outcomeMetrics(this.summary),
       rulerTicks: rulerTicks(maxText),
       bestBand,
+      bandUnitLabel: bandCountUnit(this.bands),
       comparison,
       sections: this.bands,
       publisherLogo: this.publisher,
@@ -313,8 +316,8 @@ Page({
     try {
       const canvas = await this.getCanvas("#radarCanvas");
       if (!canvas) return;
-      const width = 398;
-      const height = 246;
+      const width = 406;
+      const height = 306;
       const dpr = wx.getWindowInfo?.().pixelRatio || 2;
       canvas.width = width * dpr;
       canvas.height = height * dpr;
@@ -343,7 +346,7 @@ Page({
     try {
       const canvas = await this.getCanvas("#donutCanvas");
       if (!canvas) return;
-      const size = 104;
+      const size = 124;
       const dpr = wx.getWindowInfo?.().pixelRatio || 2;
       canvas.width = size * dpr;
       canvas.height = size * dpr;
@@ -375,7 +378,7 @@ Page({
     try {
       const canvas = await this.getCanvas("#ringCanvas");
       if (!canvas) return;
-      const size = 64;
+      const size = 82;
       const dpr = wx.getWindowInfo?.().pixelRatio || 2;
       canvas.width = size * dpr;
       canvas.height = size * dpr;

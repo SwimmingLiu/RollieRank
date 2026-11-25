@@ -5,12 +5,19 @@ function reportBands(parts) {
   const groups = new Map();
   for (const part of parts || []) {
     const name = subjectName(part.name);
-    const total = groups.get(name) || { name, cents: 0, max: 0 };
+    const existing = groups.get(name);
+    const total = existing || { name, cents: 0, max: 0, correct: 0, count: 0, hasCounts: true };
     total.cents += part.centsEarned || 0;
     total.max += part.maxCents || 0;
+    if (Number.isFinite(part.count) && Number.isFinite(part.correct)) {
+      total.correct += part.correct;
+      total.count += part.count;
+    } else {
+      total.hasCounts = false;
+    }
     groups.set(name, total);
   }
-  return [...groups.values()].map(({ name, cents, max }) => {
+  return [...groups.values()].map(({ name, cents, max, correct, count, hasCounts }) => {
     const rate = max > 0 ? Math.max(0, Math.min(1, cents / max)) : 0;
     return {
       name,
@@ -22,6 +29,9 @@ function reportBands(parts) {
       maxCents: max,
       earned: score(cents),
       max: score(max),
+      correct,
+      count,
+      hasCounts: hasCounts && count > 0,
     };
   });
 }

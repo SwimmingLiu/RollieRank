@@ -1,7 +1,18 @@
 const WIDTH = 450;
-const PAD = 26;
+const PAD = 22;
 const INNER = WIDTH - PAD * 2;
 const DEFAULT_STYLE = "ticket";
+
+// 微信小游戏/小程序 Canvas 2D 在 iOS/WebKit 下仅接受标准 100 倍数字重（100–900）与整数像素字号，
+// 非法字重（如 650/750/450）会被静默忽略并回退到默认 10px sans-serif。
+function canvasFont(weight, size, family) {
+  const numeric = Number(weight);
+  const clamped = Number.isFinite(numeric)
+    ? Math.max(100, Math.min(900, Math.round(numeric / 100) * 100))
+    : 400;
+  const px = Math.max(1, Math.round(Number(size) || 12));
+  return `${clamped} ${px}px ${family}`;
+}
 
 const SHORT_NAMES = {
   政治理论: "政治",
@@ -332,14 +343,31 @@ function enrichBands(bands) {
   return list.map((band, idx) => {
     const rate = Math.max(0, Math.min(1, Number(band.rate) || 0));
     const pctInt = Math.round(rate * 100);
+    const hasCounts = band.hasCounts !== undefined
+      ? Boolean(band.hasCounts)
+      : Number.isFinite(band.count) && Number.isFinite(band.correct) && band.count > 0;
+    const countLabel = hasCounts
+      ? `${band.correct} / ${band.count}`
+      : `${band.earned} / ${band.max}`;
+    const countShort = hasCounts
+      ? `${band.correct}/${band.count}`
+      : `${band.earned}/${band.max}`;
     return {
       ...band,
       short: shortSubject(band.name),
       pctInt,
+      hasCounts,
+      countLabel,
+      countShort,
       isBest: maxRate > 0 && idx === bestIndex,
       isLow: pctInt < 65,
     };
   });
+}
+
+function bandCountUnit(bands) {
+  const list = enrichBands(bands);
+  return list.length && list.every(item => item.hasCounts) ? "对题 / 总题" : "得分 / 满分";
 }
 
 function outcomeMetrics(summary) {
@@ -357,7 +385,7 @@ function outcomeMetrics(summary) {
 function rulerTicks(maxLabel) {
   const maxNum = Number(maxLabel) || 100;
   const fmt = v => (Number.isInteger(v) ? String(v) : String(Math.round(v * 10) / 10));
-  return ["0", fmt(maxNum * 0.25), fmt(maxNum * 0.5), fmt(maxNum * 0.75), fmt(maxNum)];
+  return ["0", fmt(maxNum * 0.5), fmt(maxNum)];
 }
 
 // ============ CRISP CANVAS VECTOR ICON HELPERS ============
@@ -379,13 +407,13 @@ function drawSparkleIcon(ctx, cx, cy, r, color) {
 function drawCheckIcon(ctx, cx, cy, color) {
   ctx.save();
   ctx.strokeStyle = color;
-  ctx.lineWidth = 1.9;
+  ctx.lineWidth = 2.1;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.beginPath();
-  ctx.moveTo(cx - 4.3, cy + 0.3);
-  ctx.lineTo(cx - 1.3, cy + 3.3);
-  ctx.lineTo(cx + 4.5, cy - 3.1);
+  ctx.moveTo(cx - 4.8, cy + 0.3);
+  ctx.lineTo(cx - 1.5, cy + 3.7);
+  ctx.lineTo(cx + 5.1, cy - 3.5);
   ctx.stroke();
   ctx.restore();
 }
@@ -393,13 +421,13 @@ function drawCheckIcon(ctx, cx, cy, color) {
 function drawCrossIcon(ctx, cx, cy, color) {
   ctx.save();
   ctx.strokeStyle = color;
-  ctx.lineWidth = 1.9;
+  ctx.lineWidth = 2.1;
   ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.moveTo(cx - 3.3, cy - 3.3);
-  ctx.lineTo(cx + 3.3, cy + 3.3);
-  ctx.moveTo(cx + 3.3, cy - 3.3);
-  ctx.lineTo(cx - 3.3, cy + 3.3);
+  ctx.moveTo(cx - 3.8, cy - 3.8);
+  ctx.lineTo(cx + 3.8, cy + 3.8);
+  ctx.moveTo(cx + 3.8, cy - 3.8);
+  ctx.lineTo(cx - 3.8, cy + 3.8);
   ctx.stroke();
   ctx.restore();
 }
@@ -407,11 +435,11 @@ function drawCrossIcon(ctx, cx, cy, color) {
 function drawBlankIcon(ctx, cx, cy, color) {
   ctx.save();
   ctx.strokeStyle = color;
-  ctx.lineWidth = 1.55;
+  ctx.lineWidth = 1.7;
   ctx.lineCap = "round";
-  if (ctx.setLineDash) ctx.setLineDash([2.4, 2.2]);
+  if (ctx.setLineDash) ctx.setLineDash([2.6, 2.4]);
   ctx.beginPath();
-  ctx.arc(cx, cy, 4.4, 0, Math.PI * 2);
+  ctx.arc(cx, cy, 5, 0, Math.PI * 2);
   ctx.stroke();
   ctx.restore();
 }
@@ -419,22 +447,22 @@ function drawBlankIcon(ctx, cx, cy, color) {
 function drawTrendArrow(ctx, cx, cy, up, color) {
   ctx.save();
   ctx.strokeStyle = color;
-  ctx.lineWidth = 1.6;
+  ctx.lineWidth = 1.8;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.beginPath();
   if (up) {
-    ctx.moveTo(cx - 3.2, cy + 3.2);
-    ctx.lineTo(cx + 3.2, cy - 3.2);
-    ctx.moveTo(cx - 0.8, cy - 3.2);
-    ctx.lineTo(cx + 3.2, cy - 3.2);
-    ctx.lineTo(cx + 3.2, cy + 0.8);
+    ctx.moveTo(cx - 3.6, cy + 3.6);
+    ctx.lineTo(cx + 3.6, cy - 3.6);
+    ctx.moveTo(cx - 0.8, cy - 3.6);
+    ctx.lineTo(cx + 3.6, cy - 3.6);
+    ctx.lineTo(cx + 3.6, cy + 0.8);
   } else {
-    ctx.moveTo(cx - 3.2, cy - 3.2);
-    ctx.lineTo(cx + 3.2, cy + 3.2);
-    ctx.moveTo(cx - 0.8, cy + 3.2);
-    ctx.lineTo(cx + 3.2, cy + 3.2);
-    ctx.lineTo(cx + 3.2, cy - 0.8);
+    ctx.moveTo(cx - 3.6, cy - 3.6);
+    ctx.lineTo(cx + 3.6, cy + 3.6);
+    ctx.moveTo(cx - 0.8, cy + 3.6);
+    ctx.lineTo(cx + 3.6, cy + 3.6);
+    ctx.lineTo(cx + 3.6, cy - 0.8);
   }
   ctx.stroke();
   ctx.restore();
@@ -443,6 +471,7 @@ function drawTrendArrow(ctx, cx, cy, up, color) {
 function drawSectionIcon(ctx, kind, x, y, theme) {
   ctx.save();
   ctx.translate(x, y);
+  ctx.scale(18 / 14, 18 / 14);
   if (kind === "radar") {
     ctx.beginPath();
     ctx.moveTo(7, 1.5);
@@ -521,7 +550,7 @@ function drawDonut(ctx, size, summary, styleOrKey) {
   const { correct, wrong, blank, total, accuracy } = outcomeMetrics(summary);
   const cx = size / 2;
   const cy = size / 2;
-  const stroke = Math.max(8, Math.round(size * 0.094));
+  const stroke = Math.max(9, Math.round(size * 0.088));
   const r = (size - stroke) / 2 - 1.5;
 
   ctx.save();
@@ -533,15 +562,6 @@ function drawDonut(ctx, size, summary, styleOrKey) {
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.strokeStyle = theme.barTrack;
   ctx.stroke();
-
-  // Inner watch-dial hairline
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, r - stroke / 2 - 4.5, 0, Math.PI * 2);
-  ctx.strokeStyle = theme.donutInner;
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  ctx.restore();
 
   if (total > 0) {
     const segs = [
@@ -556,9 +576,8 @@ function drawDonut(ctx, size, summary, styleOrKey) {
       ctx.stroke();
     } else {
       const capRad = stroke / (2 * r);
-      const minGap = capRad * 1.35;
+      const minGap = capRad * 1.5;
       let start = -Math.PI / 2;
-      // Draw largest arc first so tiny accent arcs sit crisply on top without ugly overlap
       const spans = segs.map(s => {
         const span = (s.count / total) * Math.PI * 2;
         const item = { ...s, start, span };
@@ -578,30 +597,30 @@ function drawDonut(ctx, size, summary, styleOrKey) {
     }
   }
 
-  // Editorial Fraunces integer + compact % sign
+  // Clean open center with editorial Fraunces accuracy + quiet label
   ctx.textBaseline = "middle";
   const numStr = String(accuracy);
-  const numSize = Math.round(size * 0.235);
-  const signSize = Math.round(size * 0.125);
-  ctx.font = `750 ${numSize}px Fraunces, Georgia, serif`;
+  const numSize = Math.round(size * 0.29);
+  const signSize = Math.round(size * 0.145);
+  ctx.font = canvasFont(700, numSize, "Fraunces, Georgia, serif");
   const numW = ctx.measureText(numStr).width;
-  ctx.font = `600 ${signSize}px Nunito, sans-serif`;
+  ctx.font = canvasFont(600, signSize, "Nunito, sans-serif");
   const signW = ctx.measureText("%").width;
   const totalW = numW + signW + 1;
   const baseX = cx - totalW / 2;
 
   ctx.textAlign = "left";
   ctx.fillStyle = theme.ink;
-  ctx.font = `750 ${numSize}px Fraunces, Georgia, serif`;
-  ctx.fillText(numStr, baseX, cy - size * 0.055);
+  ctx.font = canvasFont(700, numSize, "Fraunces, Georgia, serif");
+  ctx.fillText(numStr, baseX, cy - size * 0.08);
   ctx.fillStyle = theme.muted;
-  ctx.font = `600 ${signSize}px Nunito, sans-serif`;
-  ctx.fillText("%", baseX + numW + 1, cy - size * 0.025);
+  ctx.font = canvasFont(600, signSize, "Nunito, sans-serif");
+  ctx.fillText("%", baseX + numW + 1, cy - size * 0.035);
 
   ctx.textAlign = "center";
   ctx.fillStyle = theme.subtle;
-  ctx.font = `500 ${Math.round(size * 0.10)}px Nunito, FangYuan, sans-serif`;
-  ctx.fillText("正确率", cx, cy + size * 0.16);
+  ctx.font = canvasFont(500, Math.round(size * 0.12), "Nunito, FangYuan, sans-serif");
+  ctx.fillText("正确率", cx, cy + size * 0.185);
   ctx.restore();
 }
 
@@ -609,10 +628,11 @@ function drawMiniRing(ctx, size, pctInt, isBest, isLow, styleOrKey) {
   const theme = typeof styleOrKey === "string" ? getStyle(styleOrKey) : (styleOrKey || STYLES[0]);
   const cx = size / 2;
   const cy = size / 2;
-  const stroke = Math.max(5, size * 0.092);
-  const r = (size - stroke) / 2 - 1;
+  const stroke = Math.max(6, Math.round(size * 0.084));
+  const r = (size - stroke) / 2 - 1.5;
   const pct = Math.max(0, Math.min(100, Number(pctInt) || 0));
-  const color = isBest ? theme.barBest : isLow ? theme.barLow : theme.barFill;
+  const color0 = isBest ? theme.barBest0 : isLow ? theme.barLow0 : theme.barFill0;
+  const color1 = isBest ? theme.barBest1 : isLow ? theme.barLow1 : theme.barFill1;
 
   ctx.save();
   ctx.lineWidth = stroke;
@@ -624,28 +644,31 @@ function drawMiniRing(ctx, size, pctInt, isBest, isLow, styleOrKey) {
   ctx.stroke();
 
   if (pct > 0) {
+    const grad = ctx.createLinearGradient(cx, cy - r, cx, cy + r);
+    grad.addColorStop(0, color0);
+    grad.addColorStop(1, color1);
     ctx.beginPath();
     ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + (pct / 100) * Math.PI * 2);
-    ctx.strokeStyle = color;
+    ctx.strokeStyle = grad;
     ctx.stroke();
   }
 
   ctx.textBaseline = "middle";
   const numStr = String(pct);
-  const numSize = Math.round(size * 0.255);
-  const signSize = Math.round(size * 0.145);
-  ctx.font = `750 ${numSize}px Fraunces, Georgia, serif`;
+  const numSize = Math.round(size * 0.295);
+  const signSize = Math.round(size * 0.16);
+  ctx.font = canvasFont(700, numSize, "Fraunces, Georgia, serif");
   const numW = ctx.measureText(numStr).width;
-  ctx.font = `600 ${signSize}px Nunito, sans-serif`;
+  ctx.font = canvasFont(600, signSize, "Nunito, sans-serif");
   const signW = ctx.measureText("%").width;
   const startX = cx - (numW + signW + 0.5) / 2;
 
   ctx.textAlign = "left";
   ctx.fillStyle = isBest ? theme.barBest : theme.ink;
-  ctx.font = `750 ${numSize}px Fraunces, Georgia, serif`;
+  ctx.font = canvasFont(700, numSize, "Fraunces, Georgia, serif");
   ctx.fillText(numStr, startX, cy + 0.5);
   ctx.fillStyle = isBest ? theme.barBest : theme.subtle;
-  ctx.font = `600 ${signSize}px Nunito, sans-serif`;
+  ctx.font = canvasFont(600, signSize, "Nunito, sans-serif");
   ctx.fillText("%", startX + numW + 0.5, cy + 2);
   ctx.restore();
 }
@@ -657,7 +680,7 @@ function drawRichRadar(ctx, bands, x, y, width, height, styleOrKey) {
 
   const centerX = x + width / 2;
   const centerY = y + height / 2 + 2;
-  const radius = Math.min(width / 2 - 86, height / 2 - 44);
+  const radius = Math.min(width / 2 - 116, height / 2 - 64);
   if (radius <= 12) return;
 
   const axes = enriched.map((_, index) => {
@@ -686,20 +709,20 @@ function drawRichRadar(ctx, bands, x, y, width, height, styleOrKey) {
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // Concentric polygons (outer solid, 75% dashed, 50% solid, 25% subtle)
-  [1, 0.75, 0.5, 0.25].forEach(tick => {
+  // Concentric polygons (100% solid, 75% dashed, 50% solid — cleaner open center)
+  [1, 0.75, 0.5].forEach(tick => {
     ctx.save();
     if (tick === 0.75 && ctx.setLineDash) ctx.setLineDash([3, 3]);
     plot(enriched.map(() => tick));
     ctx.strokeStyle = tick === 1 ? theme.radarGrid : theme.radarMid;
-    ctx.lineWidth = tick === 0.25 ? 0.8 : 1;
+    ctx.lineWidth = tick === 1 ? 1 : 0.85;
     ctx.stroke();
     ctx.restore();
   });
 
   // Spokes
   ctx.strokeStyle = theme.radarMid;
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 0.85;
   for (const [dx, dy] of axes) {
     ctx.beginPath();
     ctx.moveTo(centerX, centerY);
@@ -715,7 +738,7 @@ function drawRichRadar(ctx, bands, x, y, width, height, styleOrKey) {
   ctx.fillStyle = grad;
   ctx.fill();
   ctx.strokeStyle = theme.radarStroke;
-  ctx.lineWidth = 2.2;
+  ctx.lineWidth = 2.3;
   ctx.lineJoin = "round";
   ctx.stroke();
 
@@ -726,12 +749,12 @@ function drawRichRadar(ctx, bands, x, y, width, height, styleOrKey) {
     const py = centerY + dy * radius * band.rate;
     if (band.isBest) {
       ctx.beginPath();
-      ctx.arc(px, py, 8.5, 0, Math.PI * 2);
+      ctx.arc(px, py, 9, 0, Math.PI * 2);
       ctx.fillStyle = theme.pinHalo;
       ctx.fill();
     }
     ctx.beginPath();
-    ctx.arc(px, py, band.isBest ? 4.8 : 3.6, 0, Math.PI * 2);
+    ctx.arc(px, py, band.isBest ? 5 : 3.8, 0, Math.PI * 2);
     ctx.fillStyle = band.isBest ? theme.radarDotBest : band.isLow ? theme.barLow : theme.radarDot;
     ctx.fill();
     ctx.strokeStyle = theme.radarDotStroke;
@@ -739,31 +762,31 @@ function drawRichRadar(ctx, bands, x, y, width, height, styleOrKey) {
     ctx.stroke();
   });
 
-  // Two-line vertex labels (Name + Fraunces %) with bespoke 4-point sparkle on strongest
+  // Two-line vertex labels (Name + calmer Fraunces %) with subtle sparkle on strongest
   ctx.textBaseline = "middle";
   axes.forEach(([dx, dy], index) => {
     const band = enriched[index];
     const isTopBot = Math.abs(dx) < 0.15;
     ctx.textAlign = isTopBot ? "center" : dx > 0 ? "left" : "right";
-    const labelX = centerX + dx * (radius + (isTopBot ? 0 : 18));
-    const baseY = centerY + dy * (radius + (isTopBot ? (dy < 0 ? 28 : 22) : 14));
-    const maxW = isTopBot ? 110 : Math.max(66, width / 2 - radius - 18);
+    const labelX = centerX + dx * (radius + (isTopBot ? 0 : 16));
+    const baseY = centerY + dy * (radius + (isTopBot ? (dy < 0 ? 37 : 34) : 14));
+    const maxW = isTopBot ? 154 : Math.max(92, width / 2 - Math.abs(dx) * (radius + 16) - 4);
 
     ctx.fillStyle = band.isBest ? theme.barBest : band.isLow ? theme.radarLabelLow : theme.radarLabel;
-    ctx.font = `${band.isBest ? 700 : 600} 11.5px Nunito, FangYuan, sans-serif`;
+    ctx.font = canvasFont(band.isBest ? 700 : 600, 16, "Nunito, FangYuan, sans-serif");
     if (band.isBest) {
       const tw = ctx.measureText(band.name).width;
-      const sx = isTopBot ? labelX - tw / 2 - 7 : dx > 0 ? labelX + 4 : labelX - tw - 8;
-      const tx = isTopBot ? labelX + 5 : dx > 0 ? labelX + 12 : labelX;
-      drawSparkleIcon(ctx, sx, baseY - 7, 4.6, theme.barBest);
-      ctx.fillText(band.name, tx, baseY - 7, maxW);
+      const sx = isTopBot ? labelX - tw / 2 - 9 : dx > 0 ? labelX + 5 : labelX - tw - 10;
+      const tx = isTopBot ? labelX + 7 : dx > 0 ? labelX + 15 : labelX;
+      drawSparkleIcon(ctx, sx, baseY - 10, 5.4, theme.barBest);
+      ctx.fillText(band.name, tx, baseY - 10, maxW);
     } else {
-      ctx.fillText(band.name, labelX, baseY - 7, maxW);
+      ctx.fillText(band.name, labelX, baseY - 10, maxW);
     }
 
-    ctx.fillStyle = band.isBest ? theme.barBest : band.isLow ? theme.subtle : theme.barFill;
-    ctx.font = "750 11px Fraunces, Georgia, serif";
-    ctx.fillText(`${band.pctInt}%`, labelX, baseY + 7.5, maxW);
+    ctx.fillStyle = band.isBest ? theme.barBest : band.isLow ? theme.subtle : theme.muted;
+    ctx.font = canvasFont(band.isBest ? 700 : 600, 14, "Fraunces, Georgia, serif");
+    ctx.fillText(`${band.pctInt}%`, labelX, baseY + 10, maxW);
   });
 
   ctx.restore();
@@ -771,37 +794,37 @@ function drawRichRadar(ctx, bands, x, y, width, height, styleOrKey) {
 
 function timingHeight(timing) {
   if (!timing) return 0;
-  return 56 + (timing.modules?.length || 0) * 30;
+  return 68 + (timing.modules?.length || 0) * 38;
 }
 
 function ringsBlockHeight(bands) {
   const rows = Math.max(1, Math.ceil((bands?.length || 0) / 3));
-  return rows * 134 - 10;
+  return rows * 174 - 12;
 }
 
 function posterHeight(mode, bands, timing, comparison, styleKey = DEFAULT_STYLE) {
   const theme = getStyle(styleKey);
   const isRings = theme.layout === "rings";
-  const footerH = 98;
+  const footerSlot = 132;
 
   if (mode === "score") {
-    const outcomeH = isRings ? 58 : 124;
-    const visualH = isRings ? ringsBlockHeight(bands) + 16 : 144;
-    return 286 + outcomeH + visualH + footerH;
+    const outcomeH = isRings ? 72 : 146;
+    const visualH = isRings ? ringsBlockHeight(bands) + 14 : 186;
+    return 317 + outcomeH + visualH + 130;
   }
   if (mode === "radar") {
-    return 118 + 278 + footerH;
+    return 131 + 342 + 130;
   }
   if (mode === "types") {
-    const typesH = isRings ? 34 + ringsBlockHeight(bands) : 238;
-    return 118 + typesH + footerH;
+    const typesH = isRings ? 40 + ringsBlockHeight(bands) : 286;
+    return 131 + typesH + footerSlot;
   }
-  const outcomeH = isRings ? 58 : 124;
-  const vsH = comparison ? 44 : 0;
-  const radarH = 278;
-  const typesH = isRings ? 34 + ringsBlockHeight(bands) : 238;
+  const outcomeH = isRings ? 72 : 146;
+  const vsH = comparison ? 54 : 0;
+  const radarH = 342;
+  const typesH = isRings ? 40 + ringsBlockHeight(bands) : 286;
   const timeH = timing ? timingHeight(timing) + 18 : 0;
-  return 286 + outcomeH + vsH + 14 + radarH + 14 + typesH + timeH + footerH;
+  return 317 + outcomeH + vsH + 14 + radarH + 18 + typesH + timeH + footerSlot;
 }
 
 function drawPoster(ctx, { mode, style = DEFAULT_STYLE, summary, bands, timing, comparison, images = {} }) {
@@ -811,15 +834,17 @@ function drawPoster(ctx, { mode, style = DEFAULT_STYLE, summary, bands, timing, 
   const bestBand = enriched.find(b => b.isBest) || null;
   const height = posterHeight(mode, enriched, timing, comparison, theme.key);
   const hasHero = mode === "full" || mode === "score";
-  const topH = hasHero ? 254 : 84;
+  const topH = hasHero ? 282 : 96;
   const perfY = topH + 11;
 
-  const text = (value, x, y, size, color = theme.ink, weight = 450, family = "Nunito, FangYuan, sans-serif", limit = WIDTH - x - PAD, align = "left") => {
+  const text = (value, x, y, size, color = theme.ink, weight = 500, family = "Nunito, FangYuan, sans-serif", limit, align = "left") => {
+    const fallbackLimit = align === "right" ? x - PAD : align === "center" ? INNER : WIDTH - x - PAD;
+    const maxW = limit !== undefined ? limit : fallbackLimit;
     ctx.save();
     ctx.fillStyle = color;
-    ctx.font = `${weight} ${size}px ${family}`;
+    ctx.font = canvasFont(weight, size, family);
     ctx.textAlign = align;
-    ctx.fillText(String(value), x, y, Math.max(20, limit));
+    ctx.fillText(String(value), x, y, Math.max(20, maxW));
     ctx.restore();
   };
 
@@ -867,54 +892,43 @@ function drawPoster(ctx, { mode, style = DEFAULT_STYLE, summary, bands, timing, 
   ctx.lineTo(WIDTH - 22, 1.5);
   ctx.stroke();
 
-  // Masthead
-  if (images.publisher) {
-    ctx.save();
-    roundPath(PAD, 22, 32, 32, 8);
-    ctx.clip();
-    ctx.drawImage(images.publisher, PAD, 22, 32, 32);
-    ctx.restore();
-  }
-  const titleX = images.publisher ? PAD + 42 : PAD;
-  const subParts = [summary.seriesName, summary.dateStamp].filter(Boolean).join(" · ");
-  text(summary.paperName || summary.identity, titleX, 36, 15.5, theme.topInk, 650, "FangYuan, Nunito, sans-serif", 224);
-  if (subParts) text(subParts, titleX, 53, 11, theme.topMuted, 500, "Nunito, FangYuan, sans-serif", 224);
-
-  // Auto-sized rank trophy chip
+  // Auto-sized rank trophy chip (measured first so masthead title never overlaps)
   const trophyImg = theme.dark ? (images.trophyGold || images.trophy) : images.trophy;
+  let chipLeft = WIDTH - PAD;
   const drawChip = (labelText, strongText, showTrophy) => {
-    const chipH = 28;
+    const chipH = 36;
     const cy = 24;
-    let chipW = 86;
+    let chipW = 104;
     let strongW = 0;
     let labelW = 0;
     ctx.save();
     if (showTrophy) {
-      ctx.font = "750 13.5px Fraunces, Georgia, serif";
+      ctx.font = canvasFont(700, 18, "Fraunces, Georgia, serif");
       strongW = ctx.measureText(strongText).width;
-      ctx.font = "600 11px Nunito, sans-serif";
+      ctx.font = canvasFont(600, 14, "Nunito, sans-serif");
       labelW = ctx.measureText(labelText).width;
-      chipW = Math.max(70, Math.ceil(10 + 14 + 5 + strongW + 4 + labelW + 10));
+      chipW = Math.max(86, Math.ceil(12 + 18 + 6 + strongW + 4 + labelW + 12));
     } else {
-      ctx.font = "750 12.5px Fraunces, Georgia, serif";
+      ctx.font = canvasFont(700, 17, "Fraunces, Georgia, serif");
       strongW = ctx.measureText(strongText).width;
-      chipW = Math.max(72, Math.ceil(strongW + 22));
+      chipW = Math.max(92, Math.ceil(strongW + 26));
     }
     ctx.restore();
     const cx = WIDTH - PAD - chipW;
-    roundPath(cx, cy, chipW, chipH, 14);
+    chipLeft = cx;
+    roundPath(cx, cy, chipW, chipH, 18);
     ctx.fillStyle = theme.chipBg;
     ctx.fill();
     ctx.strokeStyle = theme.chipBorder;
     ctx.lineWidth = 1;
     ctx.stroke();
     if (showTrophy) {
-      if (trophyImg) ctx.drawImage(trophyImg, cx + 10, cy + 7, 14, 14);
-      const sx = cx + 29;
-      text(strongText, sx, cy + 19, 13.5, theme.topInk, 750, "Fraunces, Georgia, serif", strongW + 8);
-      text(labelText, sx + strongW + 4, cy + 18.5, 11, theme.topMuted, 600, "Nunito, sans-serif", labelW + 8);
+      if (trophyImg) ctx.drawImage(trophyImg, cx + 12, cy + 9, 18, 18);
+      const sx = cx + 36;
+      text(strongText, sx, cy + 24, 18, theme.topInk, 700, "Fraunces, Georgia, serif", strongW + 8);
+      text(labelText, sx + strongW + 4, cy + 23.5, 14, theme.topMuted, 600, "Nunito, sans-serif", labelW + 8);
     } else {
-      text(strongText, cx + chipW / 2, cy + 19, 12.5, theme.topInk, 750, "Fraunces, Georgia, serif", chipW - 12, "center");
+      text(strongText, cx + chipW / 2, cy + 24, 17, theme.topInk, 700, "Fraunces, Georgia, serif", chipW - 12, "center");
     }
   };
   if (summary.rank) {
@@ -923,49 +937,66 @@ function drawPoster(ctx, { mode, style = DEFAULT_STYLE, summary, bands, timing, 
     drawChip("", `${summary.score} 分`, false);
   }
 
+  // Masthead
+  if (images.publisher) {
+    ctx.save();
+    roundPath(PAD, 22, 40, 40, 10);
+    ctx.clip();
+    ctx.drawImage(images.publisher, PAD, 22, 40, 40);
+    ctx.restore();
+  }
+  const titleX = images.publisher ? PAD + 50 : PAD;
+  const titleLimit = Math.max(120, chipLeft - titleX - 10);
+  const subParts = [summary.seriesName, summary.dateStamp].filter(Boolean).join(" · ");
+  text(summary.paperName || summary.identity, titleX, 41, 22, theme.topInk, 700, "FangYuan, Nunito, sans-serif", titleLimit);
+  if (subParts) text(subParts, titleX, 64, 15, theme.topMuted, 500, "Nunito, FangYuan, sans-serif", titleLimit);
+
   // Hero Score (Editorial Split Integer + Decimal Fraunces) + Trophy + Precision Score Ruler
   if (hasHero) {
     const { scoreInt, scoreDec } = splitScoreParts(summary.score);
     const isThreeDigit = scoreInt.length >= 3;
-    const intSize = isThreeDigit ? 70 : 84;
-    const decSize = isThreeDigit ? 38 : 44;
+    const intSize = isThreeDigit ? 76 : 92;
+    const decSize = isThreeDigit ? 40 : 50;
     ctx.save();
-    ctx.font = `750 ${intSize}px Fraunces, Georgia, serif`;
+    ctx.font = canvasFont(700, intSize, "Fraunces, Georgia, serif");
     const intW = ctx.measureText(scoreInt).width;
     ctx.restore();
 
-    text(scoreInt, PAD, 155, intSize, theme.topInk, 750, "Fraunces, Georgia, serif", 190);
+    text(scoreInt, PAD, 168, intSize, theme.topInk, 700, "Fraunces, Georgia, serif", 200);
     if (scoreDec) {
       ctx.save();
       ctx.globalAlpha = 0.78;
-      text(scoreDec, PAD + intW + 2, 154, decSize, theme.topInk, 600, "Fraunces, Georgia, serif", 96);
+      text(scoreDec, PAD + intW + 2, 168, decSize, theme.topInk, 600, "Fraunces, Georgia, serif", 116);
       ctx.restore();
     }
 
-    text(`/ ${summary.max} 分`, PAD, 182, 12.5, theme.topMuted, 500);
+    const maxLabel = `/ ${summary.max} 分`;
+    text(maxLabel, PAD, 200, 17, theme.topMuted, 600);
 
-    // Optional delta pill with bespoke vector trend arrow
-    if (comparison && comparison.deltaCents !== 0) {
+    // Optional delta pill only in compact score mode (full mode already carries a dedicated VS row)
+    if (mode === "score" && comparison && comparison.deltaCents !== 0) {
       const isUp = comparison.deltaTone === "up";
-      const pillX = PAD + 66;
-      const pillY = 167;
       ctx.save();
-      ctx.font = "700 11px Nunito, sans-serif";
+      ctx.font = canvasFont(600, 17, "Nunito, FangYuan, sans-serif");
+      const maxW = ctx.measureText(maxLabel).width;
+      ctx.font = canvasFont(700, 15, "Nunito, sans-serif");
       const dw = ctx.measureText(comparison.deltaText).width;
       ctx.restore();
-      const pillW = Math.ceil(22 + dw + 10);
-      roundPath(pillX, pillY, pillW, 21, 10.5);
+      const pillX = PAD + Math.ceil(maxW) + 10;
+      const pillY = 180;
+      const pillW = Math.ceil(26 + dw + 12);
+      roundPath(pillX, pillY, pillW, 27, 13.5);
       ctx.fillStyle = isUp ? theme.okBg : theme.noBg;
       ctx.fill();
       const fg = isUp ? theme.okInk : theme.noInk;
-      drawTrendArrow(ctx, pillX + 12, pillY + 10.5, isUp, fg);
-      text(comparison.deltaText, pillX + 20, pillY + 14.5, 11, fg, 700, "Nunito, sans-serif", dw + 6);
+      drawTrendArrow(ctx, pillX + 14, pillY + 13.5, isUp, fg);
+      text(comparison.deltaText, pillX + 24, pillY + 18.5, 15, fg, 700, "Nunito, sans-serif", dw + 6);
     }
 
     // Trophy keepsake illustration (with refined double-ring warm medallion on dark ink)
     if (theme.dark) {
       const mx = WIDTH - PAD - 72;
-      const my = 130;
+      const my = 140;
       ctx.save();
       ctx.beginPath();
       ctx.arc(mx, my, 61, 0, Math.PI * 2);
@@ -979,15 +1010,15 @@ function drawPoster(ctx, { mode, style = DEFAULT_STYLE, summary, bands, timing, 
       ctx.restore();
     }
     if (images.keepsake) {
-      ctx.drawImage(images.keepsake, WIDTH - PAD - 160, 74, 174, 116);
+      ctx.drawImage(images.keepsake, WIDTH - PAD - 160, 84, 174, 116);
     }
 
     // Precision Score Ruler Gauge
-    const rulerY = 212;
-    const rulerH = 8;
+    const rulerY = 232;
+    const rulerH = 9;
     const rawPct = Math.max(0, Math.min(100, Number(summary.scorePct) || 0));
     const pinPct = Math.max(2, Math.min(98, rawPct));
-    roundPath(PAD, rulerY, INNER, rulerH, 4);
+    roundPath(PAD, rulerY, INNER, rulerH, 4.5);
     ctx.fillStyle = theme.rulerTrack;
     ctx.fill();
 
@@ -998,12 +1029,12 @@ function drawPoster(ctx, { mode, style = DEFAULT_STYLE, summary, bands, timing, 
       ctx.fillRect(PAD + (INNER * t) / 10 - 0.5, rulerY + 1.5, 1, rulerH - 3);
     }
 
-    const fillW = Math.max(8, (INNER * rawPct) / 100);
+    const fillW = Math.max(9, (INNER * rawPct) / 100);
     if (rawPct > 0) {
       const grad = ctx.createLinearGradient(PAD, rulerY, PAD + INNER, rulerY);
       grad.addColorStop(0, theme.rulerStart);
       grad.addColorStop(1, theme.rulerEnd);
-      roundPath(PAD, rulerY, fillW, rulerH, 4);
+      roundPath(PAD, rulerY, fillW, rulerH, 4.5);
       ctx.fillStyle = grad;
       ctx.fill();
     }
@@ -1019,11 +1050,11 @@ function drawPoster(ctx, { mode, style = DEFAULT_STYLE, summary, bands, timing, 
     const pinY = rulerY + rulerH / 2;
     ctx.save();
     ctx.beginPath();
-    ctx.arc(pinX, pinY, 11.5, 0, Math.PI * 2);
+    ctx.arc(pinX, pinY, 12, 0, Math.PI * 2);
     ctx.fillStyle = theme.pinHalo;
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(pinX, pinY, 7.2, 0, Math.PI * 2);
+    ctx.arc(pinX, pinY, 7.6, 0, Math.PI * 2);
     ctx.fillStyle = theme.rulerEnd;
     ctx.fill();
     ctx.lineWidth = 2.4;
@@ -1031,12 +1062,12 @@ function drawPoster(ctx, { mode, style = DEFAULT_STYLE, summary, bands, timing, 
     ctx.stroke();
     ctx.restore();
 
-    // Tick numbers
+    // Tick numbers (3 clean landmarks: 0 / mid / max)
     const ticks = rulerTicks(summary.max);
     ticks.forEach((label, idx) => {
-      const frac = idx / 4;
-      const align = idx === 0 ? "left" : idx === 4 ? "right" : "center";
-      text(label, PAD + INNER * frac, rulerY + 25.5, 10, theme.topMuted, 600, "Nunito, sans-serif", 50, align);
+      const frac = ticks.length > 1 ? idx / (ticks.length - 1) : 0;
+      const align = idx === 0 ? "left" : idx === ticks.length - 1 ? "right" : "center";
+      text(label, PAD + INNER * frac, rulerY + 31, 14, theme.topMuted, 600, "Nunito, sans-serif", 56, align);
     });
   }
 
@@ -1061,11 +1092,12 @@ function drawPoster(ctx, { mode, style = DEFAULT_STYLE, summary, bands, timing, 
     ctx.stroke();
   }
 
-  let cursor = perfY + 21;
+  let cursor = perfY + 24;
 
-  // Outcome block (Donut + 3 Bespoke Vector Icon Tiles for A1; Segmented Bar for A2)
+  // Outcome block (hide blank item when blank === 0 to reduce visual clutter)
   if (hasHero) {
     const metrics = outcomeMetrics(summary);
+    const hasBlank = metrics.blank > 0;
     if (isRings) {
       const barY = cursor + 2;
       const barH = 10;
@@ -1090,48 +1122,59 @@ function drawPoster(ctx, { mode, style = DEFAULT_STYLE, summary, bands, timing, 
           sx += sw + gap;
         });
       }
-      const items = [
-        { label: "正确", value: String(metrics.correct), color: theme.ok, align: "left", x: PAD },
-        { label: "错误", value: String(metrics.wrong), color: theme.no, align: "center", x: WIDTH / 2 },
-        { label: "未答", value: String(metrics.blank), color: theme.bl, align: "right", x: WIDTH - PAD },
-      ];
+      const items = hasBlank
+        ? [
+            { label: "正确", value: String(metrics.correct), color: theme.ok, align: "left", x: PAD },
+            { label: "错误", value: String(metrics.wrong), color: theme.no, align: "center", x: WIDTH / 2 },
+            { label: "未答", value: String(metrics.blank), color: theme.bl, align: "right", x: WIDTH - PAD },
+          ]
+        : [
+            { label: "正确", value: String(metrics.correct), color: theme.ok, align: "left", x: PAD },
+            { label: "错误", value: String(metrics.wrong), color: theme.no, align: "right", x: WIDTH - PAD },
+          ];
       items.forEach(item => {
         ctx.save();
-        ctx.font = "500 12px Nunito, FangYuan, sans-serif";
+        ctx.font = canvasFont(500, 16, "Nunito, FangYuan, sans-serif");
         const lblW = ctx.measureText(item.label).width;
-        ctx.font = "750 15px Fraunces, Georgia, serif";
+        ctx.font = canvasFont(700, 22, "Fraunces, Georgia, serif");
         const valW = ctx.measureText(item.value).width;
         ctx.restore();
-        const totalW = 8 + 6 + lblW + 5 + valW;
+        const totalW = 10 + 7 + lblW + 6 + valW;
         const startX = item.align === "left" ? item.x : item.align === "center" ? item.x - totalW / 2 : item.x - totalW;
         ctx.beginPath();
-        ctx.arc(startX + 4, barY + 28, 4, 0, Math.PI * 2);
+        ctx.arc(startX + 5, barY + 34, 5, 0, Math.PI * 2);
         ctx.fillStyle = item.color;
         ctx.fill();
-        text(item.label, startX + 14, barY + 32, 12, theme.muted, 500, "Nunito, FangYuan, sans-serif", lblW + 6);
-        text(item.value, startX + 14 + lblW + 5, barY + 32, 15, theme.ink, 750, "Fraunces, Georgia, serif", valW + 6);
+        text(item.label, startX + 17, barY + 40, 16, theme.muted, 500, "Nunito, FangYuan, sans-serif", lblW + 8);
+        text(item.value, startX + 17 + lblW + 6, barY + 40, 22, theme.ink, 700, "Fraunces, Georgia, serif", valW + 8);
       });
-      hline(cursor + 52);
-      cursor += 58;
+      hline(cursor + 62);
+      cursor += 72;
     } else {
       ctx.save();
       ctx.translate(PAD, cursor);
-      drawDonut(ctx, 104, summary, theme);
+      drawDonut(ctx, 124, summary, theme);
       ctx.restore();
 
-      const chipsX = PAD + 120;
-      const chipGap = 8;
-      const chipW = (WIDTH - PAD - chipsX - chipGap * 2) / 3;
-      const chipH = 94;
-      const chipY = cursor + 5;
-      const tiles = [
-        { kind: "ok", value: metrics.correct, label: "正确", bg: theme.okBg, fg: theme.okInk },
-        { kind: "no", value: metrics.wrong, label: "错误", bg: theme.noBg, fg: theme.noInk },
-        { kind: "bl", value: metrics.blank, label: "未答", bg: theme.blBg, fg: theme.blInk },
-      ];
+      const chipsX = PAD + 138;
+      const chipGap = hasBlank ? 8 : 10;
+      const tiles = hasBlank
+        ? [
+            { kind: "ok", value: metrics.correct, label: "正确", bg: theme.okBg, fg: theme.okInk },
+            { kind: "no", value: metrics.wrong, label: "错误", bg: theme.noBg, fg: theme.noInk },
+            { kind: "bl", value: metrics.blank, label: "未答", bg: theme.blBg, fg: theme.blInk },
+          ]
+        : [
+            { kind: "ok", value: metrics.correct, label: "正确", bg: theme.okBg, fg: theme.okInk },
+            { kind: "no", value: metrics.wrong, label: "错误", bg: theme.noBg, fg: theme.noInk },
+          ];
+      const chipW = (WIDTH - PAD - chipsX - chipGap * (tiles.length - 1)) / tiles.length;
+      const chipH = 112;
+      const chipY = cursor + 6;
+      const valSize = hasBlank ? 28 : 32;
       tiles.forEach((tile, idx) => {
         const tx = chipsX + idx * (chipW + chipGap);
-        roundPath(tx, chipY, chipW, chipH, 15);
+        roundPath(tx, chipY, chipW, chipH, 16);
         ctx.fillStyle = theme.surfaceBg;
         ctx.fill();
         ctx.strokeStyle = theme.surfaceBorder;
@@ -1139,42 +1182,33 @@ function drawPoster(ctx, { mode, style = DEFAULT_STYLE, summary, bands, timing, 
         ctx.stroke();
 
         const icx = tx + chipW / 2;
-        const icy = chipY + 23;
+        const icy = chipY + 26;
         ctx.beginPath();
-        ctx.arc(icx, icy, 12, 0, Math.PI * 2);
+        ctx.arc(icx, icy, 15, 0, Math.PI * 2);
         ctx.fillStyle = tile.bg;
         ctx.fill();
         if (tile.kind === "ok") drawCheckIcon(ctx, icx, icy, tile.fg);
         else if (tile.kind === "no") drawCrossIcon(ctx, icx, icy, tile.fg);
         else drawBlankIcon(ctx, icx, icy, tile.fg);
 
-        text(tile.value, icx, chipY + 60, 21, theme.ink, 750, "Fraunces, Georgia, serif", chipW - 8, "center");
-        text(tile.label, icx, chipY + 78, 10.5, theme.muted, 500, "Nunito, FangYuan, sans-serif", chipW - 8, "center");
+        text(tile.value, icx, chipY + 72, valSize, theme.ink, 700, "Fraunces, Georgia, serif", chipW - 10, "center");
+        text(tile.label, icx, chipY + 96, 15, theme.muted, 500, "Nunito, FangYuan, sans-serif", chipW - 10, "center");
       });
-      hline(cursor + 118);
-      cursor += 124;
+      hline(cursor + 138);
+      cursor += 146;
     }
   }
 
   // Optional VS comparison row in full mode
   if (mode === "full" && comparison) {
-    text("较上次", PAD, cursor + 26, 12.5, theme.muted, 500);
-    text(`${comparison.previousScore} → ${comparison.currentScore}`, PAD + 52, cursor + 26, 13.5, theme.ink, 700, "Fraunces, Georgia, serif", 180);
+    text("较上次", PAD, cursor + 33, 16, theme.muted, 500);
+    text(`${comparison.previousScore} → ${comparison.currentScore}`, PAD + 66, cursor + 33, 18, theme.ink, 700, "Fraunces, Georgia, serif", 200);
     const toneColor = comparison.deltaTone === "up" ? theme.okInk : comparison.deltaTone === "down" ? theme.noInk : theme.muted;
     const deltaLabel = comparison.deltaText + (comparison.deltaCents !== 0 ? " 分" : "");
-    text(deltaLabel, WIDTH - PAD, cursor + 26, 13, toneColor, 700, "Nunito, FangYuan, sans-serif", 110, "right");
-    hline(cursor + 42);
-    cursor += 44;
+    text(deltaLabel, WIDTH - PAD, cursor + 33, 17, toneColor, 700, "Nunito, FangYuan, sans-serif", 130, "right");
+    hline(cursor + 52);
+    cursor += 54;
   }
-
-  const drawBestBadgeRight = (y, label) => {
-    ctx.save();
-    ctx.font = "650 11.5px Nunito, FangYuan, sans-serif";
-    const tw = ctx.measureText(label).width;
-    ctx.restore();
-    drawSparkleIcon(ctx, WIDTH - PAD - tw - 9, y - 4, 4.6, theme.barBest);
-    text(label, WIDTH - PAD, y, 11.5, theme.barBest, 650, "Nunito, FangYuan, sans-serif", 160, "right");
-  };
 
   const drawBarGradient = (x, y, w, h, isBest, isLow) => {
     const grad = ctx.createLinearGradient(x, y, x, y + h);
@@ -1183,8 +1217,10 @@ function drawPoster(ctx, { mode, style = DEFAULT_STYLE, summary, bands, timing, 
     return grad;
   };
 
+  const unitLegend = bandCountUnit(enriched);
+
   const drawMiniEqualizer = y => {
-    const boxH = 130;
+    const boxH = 172;
     roundPath(PAD, y, INNER, boxH, 16);
     ctx.fillStyle = theme.surfaceBg;
     ctx.fill();
@@ -1193,46 +1229,37 @@ function drawPoster(ctx, { mode, style = DEFAULT_STYLE, summary, bands, timing, 
     ctx.stroke();
 
     drawSectionIcon(ctx, "bars", PAD + 14, y + 12, theme);
-    text("六科表现", PAD + 33, y + 23.5, 12.5, theme.ink, 650, "FangYuan, Nunito, sans-serif", 120);
-    if (bestBand) {
-      const bestLabel = `${bestBand.short} ${bestBand.pctInt}%`;
-      ctx.save();
-      ctx.font = "700 11.5px Nunito, FangYuan, sans-serif";
-      const tw = ctx.measureText(bestLabel).width;
-      ctx.restore();
-      drawSparkleIcon(ctx, WIDTH - PAD - 16 - tw - 9, y + 19.5, 4.4, theme.barBest);
-      text(bestLabel, WIDTH - PAD - 16, y + 23.5, 11.5, theme.barBest, 700, "Nunito, FangYuan, sans-serif", 120, "right");
-    }
+    text("各科表现", PAD + 39, y + 28, 18, theme.ink, 700, "FangYuan, Nunito, sans-serif", 140);
 
-    const colW = (INNER - 24) / Math.max(1, enriched.length);
+    const colW = (INNER - 20) / Math.max(1, enriched.length);
     enriched.forEach((band, idx) => {
-      const cx = PAD + 12 + colW * idx + colW / 2;
+      const cx = PAD + 10 + colW * idx + colW / 2;
       const pctColor = band.isBest ? theme.barBest : band.isLow ? theme.subtle : theme.muted;
-      text(`${band.pctInt}%`, cx, y + 47, 10.5, pctColor, 750, "Fraunces, Georgia, serif", colW - 4, "center");
-      const trackW = 16;
-      const trackH = 50;
+      text(`${band.pctInt}%`, cx, y + 60, 15, pctColor, 700, "Fraunces, Georgia, serif", colW - 2, "center");
+      const trackW = 20;
+      const trackH = 58;
       const trackX = cx - trackW / 2;
-      const trackY = y + 54;
-      roundPath(trackX, trackY, trackW, trackH, 8);
+      const trackY = y + 70;
+      roundPath(trackX, trackY, trackW, trackH, 10);
       ctx.fillStyle = theme.barTrack;
       ctx.fill();
-      const fillH = Math.max(band.pctInt > 0 ? 7 : 0, (trackH * band.pctInt) / 100);
+      const fillH = Math.max(band.pctInt > 0 ? 9 : 0, (trackH * band.pctInt) / 100);
       if (fillH > 0) {
-        roundPath(trackX, trackY + trackH - fillH, trackW, fillH, 8);
+        roundPath(trackX, trackY + trackH - fillH, trackW, fillH, 10);
         ctx.fillStyle = drawBarGradient(trackX, trackY + trackH - fillH, trackW, fillH, band.isBest, band.isLow);
         ctx.fill();
       }
-      text(band.short, cx, y + 118, 10.5, band.isBest ? theme.barBest : theme.muted, band.isBest ? 700 : 500, "Nunito, FangYuan, sans-serif", colW - 2, "center");
+      text(band.short, cx, y + 152, 15, band.isBest ? theme.barBest : theme.muted, band.isBest ? 700 : 600, "Nunito, FangYuan, sans-serif", colW - 2, "center");
     });
   };
 
   const drawVerticalBars = y => {
     drawSectionIcon(ctx, "bars", PAD, y + 6, theme);
-    text("板块分布", PAD + 19, y + 17.5, 13.5, theme.ink, 650, "FangYuan, Nunito, sans-serif", 140);
-    if (bestBand) drawBestBadgeRight(y + 17.5, `${bestBand.name} ${bestBand.pctInt}%`);
+    text("各科表现", PAD + 25, y + 22, 20, theme.ink, 700, "FangYuan, Nunito, sans-serif", 160);
+    text(unitLegend, WIDTH - PAD, y + 22, 13, theme.subtle, 500, "Nunito, FangYuan, sans-serif", 120, "right");
 
-    const cardY = y + 30;
-    const cardH = 202;
+    const cardY = y + 38;
+    const cardH = 248;
     roundPath(PAD, cardY, INNER, cardH, 18);
     ctx.fillStyle = theme.surfaceBg;
     ctx.fill();
@@ -1240,37 +1267,37 @@ function drawPoster(ctx, { mode, style = DEFAULT_STYLE, summary, bands, timing, 
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    const trackTop = cardY + 36;
-    const trackH = 104;
+    const trackTop = cardY + 48;
+    const trackH = 116;
     const refY = trackTop + trackH * 0.2;
     ctx.save();
     if (ctx.setLineDash) ctx.setLineDash([4, 4]);
     ctx.strokeStyle = theme.refLine;
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(PAD + 10, refY);
-    ctx.lineTo(WIDTH - PAD - 36, refY);
+    ctx.moveTo(PAD + 8, refY);
+    ctx.lineTo(WIDTH - PAD - 42, refY);
     ctx.stroke();
     ctx.restore();
-    text("80%", WIDTH - PAD - 10, refY + 3.5, 9, theme.subtle, 600, "Nunito, sans-serif", 26, "right");
+    text("80%", WIDTH - PAD - 8, refY + 4, 12, theme.subtle, 600, "Nunito, sans-serif", 32, "right");
 
-    const colW = (INNER - 40) / Math.max(1, enriched.length);
+    const colW = (INNER - 46) / Math.max(1, enriched.length);
     enriched.forEach((band, idx) => {
-      const cx = PAD + 10 + colW * idx + colW / 2;
-      text(`${band.pctInt}%`, cx, cardY + 26, 13.5, band.isBest ? theme.barBest : theme.ink, 750, "Fraunces, Georgia, serif", colW - 4, "center");
-      const trackW = Math.min(24, colW - 18);
+      const cx = PAD + 8 + colW * idx + colW / 2;
+      text(`${band.pctInt}%`, cx, cardY + 33, 18, band.isBest ? theme.barBest : theme.ink, 700, "Fraunces, Georgia, serif", colW - 2, "center");
+      const trackW = Math.min(28, colW - 18);
       const tx = cx - trackW / 2;
-      roundPath(tx, trackTop, trackW, trackH, 8);
+      roundPath(tx, trackTop, trackW, trackH, 9);
       ctx.fillStyle = theme.barTrack;
       ctx.fill();
-      const fillH = Math.max(band.pctInt > 0 ? 8 : 0, (trackH * band.pctInt) / 100);
+      const fillH = Math.max(band.pctInt > 0 ? 10 : 0, (trackH * band.pctInt) / 100);
       if (fillH > 0) {
-        roundPath(tx, trackTop + trackH - fillH, trackW, fillH, 8);
+        roundPath(tx, trackTop + trackH - fillH, trackW, fillH, 9);
         ctx.fillStyle = drawBarGradient(tx, trackTop + trackH - fillH, trackW, fillH, band.isBest, band.isLow);
         ctx.fill();
       }
-      text(band.short, cx, trackTop + trackH + 22, 11.5, band.isBest ? theme.barBest : theme.ink, band.isBest ? 700 : 600, "Nunito, FangYuan, sans-serif", colW - 2, "center");
-      text(`${band.earned}/${band.max}`, cx, trackTop + trackH + 38, 9.5, theme.subtle, 500, "Nunito, sans-serif", colW - 2, "center");
+      text(band.short, cx, trackTop + trackH + 30, 16, band.isBest ? theme.barBest : theme.ink, band.isBest ? 700 : 600, "Nunito, FangYuan, sans-serif", colW - 2, "center");
+      text(band.countShort, cx, trackTop + trackH + 53, 14, theme.subtle, 500, "Nunito, sans-serif", colW - 2, "center");
     });
   };
 
@@ -1278,13 +1305,13 @@ function drawPoster(ctx, { mode, style = DEFAULT_STYLE, summary, bands, timing, 
     let top = y;
     if (showHeading) {
       drawSectionIcon(ctx, "rings", PAD, y + 6, theme);
-      text("六科微表盘", PAD + 19, y + 17.5, 13.5, theme.ink, 650, "FangYuan, Nunito, sans-serif", 150);
-      if (bestBand) drawBestBadgeRight(y + 17.5, `${bestBand.name} ${bestBand.pctInt}%`);
-      top = y + 32;
+      text("各科表现", PAD + 25, y + 22, 20, theme.ink, 700, "FangYuan, Nunito, sans-serif", 170);
+      text(unitLegend, WIDTH - PAD, y + 22, 13, theme.subtle, 500, "Nunito, FangYuan, sans-serif", 120, "right");
+      top = y + 40;
     }
-    const gap = 10;
+    const gap = 12;
     const tileW = (INNER - gap * 2) / 3;
-    const tileH = 124;
+    const tileH = 162;
     enriched.forEach((band, idx) => {
       const col = idx % 3;
       const row = Math.floor(idx / 3);
@@ -1297,35 +1324,34 @@ function drawPoster(ctx, { mode, style = DEFAULT_STYLE, summary, bands, timing, 
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      const ringSize = 62;
+      const ringSize = 82;
       ctx.save();
-      ctx.translate(tx + (tileW - ringSize) / 2, ty + 11);
+      ctx.translate(tx + (tileW - ringSize) / 2, ty + 12);
       drawMiniRing(ctx, ringSize, band.pctInt, band.isBest, band.isLow, theme);
       ctx.restore();
 
-      text(band.name, tx + tileW / 2, ty + 92, 11.5, band.isBest ? theme.barBest : theme.ink, 650, "Nunito, FangYuan, sans-serif", tileW - 10, "center");
-      text(`${band.earned} / ${band.max} 分`, tx + tileW / 2, ty + 110, 10, theme.subtle, 500, "Nunito, sans-serif", tileW - 10, "center");
+      text(band.name, tx + tileW / 2, ty + 119, 16, band.isBest ? theme.barBest : theme.ink, 700, "Nunito, FangYuan, sans-serif", tileW - 10, "center");
+      text(band.countLabel, tx + tileW / 2, ty + 143, 15, theme.subtle, 500, "Nunito, sans-serif", tileW - 10, "center");
     });
   };
 
   const drawRadarSection = y => {
     drawSectionIcon(ctx, "radar", PAD, y + 6, theme);
-    text("能力轮廓", PAD + 19, y + 17.5, 13.5, theme.ink, 650, "FangYuan, Nunito, sans-serif", 140);
-    if (bestBand) drawBestBadgeRight(y + 17.5, `${bestBand.name} ${bestBand.pctInt}%`);
-    drawRichRadar(ctx, enriched, PAD, y + 26, INNER, 246, theme);
+    text("能力轮廓", PAD + 25, y + 22, 20, theme.ink, 700, "FangYuan, Nunito, sans-serif", 160);
+    drawRichRadar(ctx, enriched, PAD, y + 36, INNER, 306, theme);
   };
 
   const drawTiming = y => {
     hline(y);
     drawSectionIcon(ctx, "clock", PAD, y + 14, theme);
-    text("做题用时", PAD + 19, y + 25.5, 13.5, theme.ink, 650, "FangYuan, Nunito, sans-serif", 120);
-    text(`${timing.actual} · 计划 ${timing.planned} 分（${timing.difference}）`, WIDTH - PAD, y + 25.5, 11, theme.muted, 450, "Nunito, FangYuan, sans-serif", 240, "right");
+    text("做题用时", PAD + 25, y + 30, 20, theme.ink, 700, "FangYuan, Nunito, sans-serif", 140);
+    text(`${timing.actual} / 计划 ${timing.planned} 分`, WIDTH - PAD, y + 30, 15, theme.muted, 500, "Nunito, FangYuan, sans-serif", 240, "right");
     (timing.modules || []).forEach((item, index) => {
-      const rowY = y + 50 + index * 30;
-      hline(rowY - 12);
-      text(item.name, PAD, rowY + 6, 12, theme.muted);
-      text(item.planned + " 分", WIDTH / 2, rowY + 6, 12, theme.subtle, 450, "Nunito, FangYuan, sans-serif", 100, "center");
-      text(item.actual, WIDTH - PAD, rowY + 6, 12, theme.ink, 650, "Fraunces, Georgia, serif", 100, "right");
+      const rowY = y + 58 + index * 38;
+      hline(rowY - 13);
+      text(item.name, PAD, rowY + 11, 16, theme.muted, 500);
+      text(item.planned + " 分", WIDTH / 2, rowY + 11, 16, theme.subtle, 500, "Nunito, FangYuan, sans-serif", 110, "center");
+      text(item.actual, WIDTH - PAD, rowY + 11, 16, theme.ink, 700, "Fraunces, Georgia, serif", 110, "right");
     });
   };
 
@@ -1341,37 +1367,37 @@ function drawPoster(ctx, { mode, style = DEFAULT_STYLE, summary, bands, timing, 
   } else if (mode === "full") {
     cursor += 14;
     drawRadarSection(cursor);
-    cursor += 278 + 14;
+    cursor += 342 + 18;
     if (isRings) {
       drawRingsGrid(cursor, true);
-      cursor += 34 + ringsBlockHeight(enriched);
+      cursor += 40 + ringsBlockHeight(enriched);
     } else {
       drawVerticalBars(cursor);
-      cursor += 238;
+      cursor += 286;
     }
     if (timing) {
-      drawTiming(cursor + 14);
+      drawTiming(cursor + 18);
     }
   }
 
-  // Clean QR Footer with subtle double-ring halo
-  const footerTop = height - 92;
+  // Clean QR Footer with vertically centered logo & QR code
+  const footerTop = height - 114;
   hline(footerTop);
-  const brandY = footerTop + 26;
+  const brandY = footerTop + 34;
   if (images.brand) {
     ctx.save();
-    roundPath(PAD, brandY, 34, 34, 9);
+    roundPath(PAD, brandY, 44, 44, 11);
     ctx.clip();
-    ctx.drawImage(images.brand, PAD, brandY, 34, 34);
+    ctx.drawImage(images.brand, PAD, brandY, 44, 44);
     ctx.restore();
   }
-  text("卷卷小榜", PAD + 44, brandY + 14, 14.5, theme.ink, 650, "FangYuan, Nunito, sans-serif", 180);
-  text("扫码同卷估分看排名", PAD + 44, brandY + 31, 11, theme.subtle, 500, "Nunito, FangYuan, sans-serif", 190);
+  text("卷卷小榜", PAD + 56, brandY + 19, 21, theme.ink, 700, "FangYuan, Nunito, sans-serif", 210);
+  text("扫码同卷估分看排名", PAD + 56, brandY + 42, 15, theme.subtle, 500, "Nunito, FangYuan, sans-serif", 220);
 
   if (images.qrcode) {
-    const qrSize = 64;
+    const qrSize = 76;
     const qrX = WIDTH - PAD - qrSize;
-    const qrY = footerTop + 13;
+    const qrY = footerTop + 18;
     const qcx = qrX + qrSize / 2;
     const qcy = qrY + qrSize / 2;
     ctx.save();
@@ -1406,9 +1432,11 @@ module.exports = {
   WIDTH,
   STYLES,
   DEFAULT_STYLE,
+  canvasFont,
   getStyle,
   splitScoreParts,
   enrichBands,
+  bandCountUnit,
   outcomeMetrics,
   rulerTicks,
   drawDonut,

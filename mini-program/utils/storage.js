@@ -122,9 +122,13 @@ function recordOf(attempt) {
     rate: attempt.report.rate,
     createdAt: attempt.createdAt,
     timing: attempt.timing || null,
-    // 题型得分率随快照保存，成长分析不需要再次联网。
+    // 题型得分率与题数随快照保存，成长分析与离线报告不需要再次联网。
     subjects: (attempt.report.breakdown || []).map(type => ({
-      name: type.name, centsEarned: type.centsEarned, maxCents: type.maxCents,
+      name: type.name,
+      centsEarned: type.centsEarned,
+      maxCents: type.maxCents,
+      count: type.count,
+      correct: type.correct,
     })),
   };
 }
