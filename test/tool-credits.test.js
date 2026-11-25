@@ -505,3 +505,75 @@ test("006 迁移无损缩放历史整数余额与占用，并将默认扫描用�
   assert.equal(finalWallet.balance, 1.9);
   assert.deepEqual(finalWallet.records.map(row => [row.amount, row.balanceAfter]), [[-0.1, 1.9], [-1, 2], [3, 3]]);
 });
+
+test("答题卡识别接入卷豆扣费：成功扣 0.1 颗、失败释放占用、余额不足返回 402", async (t) => {
+  const { readFile } = await import("node:fs/promises");
+  const server = await serverFor(t);
+  const admin = await adminSession(server);
+  const sheetBytes = await readFile(new URL("./fixtures/omr/sheet-c.jpg", import.meta.url));
+  const sheetBase64 = sheetBytes.toString("base64");
+
+  // 未登录调用返回 401 login。
+  const unauthed = await server.json("/api/omr/recognize", { image: sheetBase64, expectedQuestions: 140 });
+  assert.equal(unauthed.status, 401);
+  assert.equal(unauthed.data.errorId, "login");
+
+  // 登录后正常识别成功扣减 0.1 颗卷豆，余额从 3 变为 2.9。
+  const session = await login(server, "omr-billed-user");
+  const ok = await server.json("/api/omr/recognize", {
+    image: sheetBase64,
+    expectedQuestions: 140,
+    quotedCost: 0.1,
+    operationId: randomUUID(),
+  }, auth(session));
+  assert.equal(ok.status, 200, JSON.stringify(ok.data));
+  assert.ok(ok.data.recognized > 0);
+  assert.equal(ok.data.billing.charged, 0.1);
+  assert.equal(ok.data.billing.state, "settled");
+  const afterOk = (await server.json(walletRoutes + "wallet", undefined, auth(session))).data;
+  assert.equal(afterOk.balance, 2.9);
+  assert.equal(afterOk.held, 0);
+  assert.equal(afterOk.records[0].amount, -0.1);
+  assert.equal(afterOk.records[0].tool, "answer-sheet");
+
+  // 过期报价返回 409 quote，不扣卷豆。
+  const stale = await server.json("/api/omr/recognize", {
+    image: sheetBase64,
+    expectedQuestions: 140,
+    quotedCost: 1,
+    operationId: randomUUID(),
+  }, auth(session));
+  assert.equal(stale.status, 409);
+  assert.equal(stale.data.errorId, "quote");
+
+  // 非答题卡图片识别失败（422）自动释放占用，余额保持 2.9。
+  const nonSheet = await readFile(new URL("../assets/miniprogram-qrcode.jpg", import.meta.url));
+  const failed = await server.json("/api/omr/recognize", {
+    image: nonSheet.toString("base64"),
+    expectedQuestions: 140,
+    quotedCost: 0.1,
+    operationId: randomUUID(),
+  }, auth(session));
+  assert.equal(failed.status, 422);
+  const afterFail = (await server.json(walletRoutes + "wallet", undefined, auth(session))).data;
+  assert.equal(afterFail.balance, 2.9);
+  assert.equal(afterFail.held, 0);
+
+  // 将余额扣回至 0 后再次识图，返回 402 balance。
+  const drain = await server.json(adminRoutes + "tool-credits/adjust", {
+    accountId: session.accountId,
+    amount: -2.9,
+    reason: "测试余额不足拦截",
+    requestId: randomUUID(),
+  }, admin);
+  assert.equal(drain.status, 200);
+  assert.equal(drain.data.balance, 0);
+  const insufficient = await server.json("/api/omr/recognize", {
+    image: sheetBase64,
+    expectedQuestions: 140,
+    quotedCost: 0.1,
+    operationId: randomUUID(),
+  }, auth(session));
+  assert.equal(insufficient.status, 402);
+  assert.equal(insufficient.data.errorId, "balance");
+});

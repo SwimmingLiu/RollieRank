@@ -220,6 +220,6 @@ export function createToolCredits({ readCatalog, mutateCatalog }, {
       const message = paymentPush(raw);
       return await recharge.handleWechatPush(message, raw, response) || commerce.handleWechatPush(message, raw, response);
     },
-    billing: Object.freeze({ requireAccount, quote, operation, reserve, settle, release, recordToolUse }),
+    billing: Object.freeze({ enabled: Boolean(database), requireAccount, quote, operation, reserve, settle, release, recordToolUse }),
   };
 }

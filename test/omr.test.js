@@ -260,16 +260,25 @@ test("Web 与小程序答题卡草稿合并口径一致（补空题、整份替�
   assert.equal(mpOmr.formatOmrApplyToast({ appliedCount: 4, lowConfidenceMarked: [], mode: "replace" }), "已填入 4 题");
 });
 
-test("小程序录答案页正确接线答题卡识别入口与离屏画布", async () => {
+test("小程序录答案页正确接线答题卡识别入口、0.1 卷豆确认与余额不足弹窗", async () => {
   const wxml = await readFile(path.join(ROOT, "mini-program/pages/practice/practice.wxml"), "utf8");
   const wxss = await readFile(path.join(ROOT, "mini-program/pages/practice/practice.wxss"), "utf8");
   const js = await readFile(path.join(ROOT, "mini-program/pages/practice/practice.js"), "utf8");
+  const apiJs = await readFile(path.join(ROOT, "mini-program/services/api.js"), "utf8");
   assert.match(wxml, /bindtap="openScan"/);
   assert.match(wxml, /bindtap="chooseScanImage"/);
   assert.match(wxml, /bindtap="applyScanResult"/);
   assert.match(wxml, /id="omr-canvas"/);
+  assert.match(wxml, /每次识图消耗 \{\{scanCostText\}\} 卷豆/);
+  assert.match(wxml, /scanChargedText/);
   assert.match(wxss, /\.practice__omr-canvas\s*\{[^}]*left:\s*-9999px/);
   assert.match(js, /recognizeAnswerSheet/);
+  assert.match(js, /DEFAULT_SCAN_COST\s*=\s*0\.1/);
+  assert.match(js, /confirmAndRunScan\(/);
+  assert.match(js, /showInsufficientCreditsModal\(/);
+  assert.match(js, /\/pages\/credits\/credits/);
+  assert.match(js, /quotedCost/);
+  assert.match(apiJs, /recognizeAnswerSheet[\s\S]*Authorization/);
 });
 
 test("非答题卡图片（纯白、书页文字、随机杂斑、键盘网格、蓝底条纹、二维码）全部返回 422 拒绝而非硬凑答案", async () => {
