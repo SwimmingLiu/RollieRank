@@ -61,7 +61,7 @@ export function publicLeaderboardRow(person, viewerId) {
 }
 
 function publicSubjects(report) {
-  return report.breakdown.map((part) => ({ id: part.id, name: part.name, count: part.count, centsEarned: part.centsEarned,
+  return report.breakdown.map((part) => ({ id: part.id, name: part.name, count: part.count, correct: part.correct, centsEarned: part.centsEarned,
     maxCents: part.maxCents, rate: part.maxCents > 0 ? part.centsEarned / part.maxCents : 0 }));
 }
 

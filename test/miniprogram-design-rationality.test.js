@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import catalog from "../mini-program/utils/catalog.js";
+import posterUtil from "../mini-program/utils/poster.js";
 import reportUtil from "../mini-program/utils/report.js";
 import { IMPORTED_PAPERS } from "../src/data/imported-papers.js";
 import { PAPERS } from "../src/data/papers.js";
@@ -184,4 +185,82 @@ test("scoring precision and repeat-attempt VS comparison: no long float decimals
   assert.match(practiceWxml, /class="practice__single-badge/);
   assert.match(practiceWxml, /上一题/);
   assert.match(practiceWxml, /下一题/);
+});
+
+test("report bands aggregate question counts and poster Canvas 2D fonts use strict CSS Level 3 weights", () => {
+  const counted = reportUtil.reportBands([
+    { name: "政治理论", centsEarned: 750, maxCents: 1000, correct: 15, count: 20 },
+    { name: "图形推理", centsEarned: 400, maxCents: 800, correct: 5, count: 10 },
+    { name: "逻辑判断", centsEarned: 560, maxCents: 800, correct: 7, count: 10 },
+  ]);
+  assert.equal(counted[0].hasCounts, true);
+  assert.equal(counted[0].correct, 15);
+  assert.equal(counted[0].count, 20);
+  assert.equal(counted[1].name, "判断推理");
+  assert.equal(counted[1].hasCounts, true);
+  assert.equal(counted[1].correct, 12);
+  assert.equal(counted[1].count, 20);
+
+  const legacy = reportUtil.reportBands([
+    { name: "政治理论", centsEarned: 750, maxCents: 1000 },
+  ]);
+  assert.equal(legacy[0].hasCounts, false);
+
+  const reportWxml = readMp("pages/report/report.wxml");
+  assert.match(reportWxml, /item\.hasCounts[\s\S]*item\.correct[\s\S]*item\.count/);
+  const shareWxml = readMp("pages/share/share.wxml");
+  assert.match(shareWxml, /item\.countLabel/);
+  assert.match(shareWxml, /item\.countShort/);
+  const enriched = posterUtil.enrichBands(counted);
+  assert.equal(enriched[0].countLabel, "15 / 20");
+  assert.equal(enriched[0].countShort, "15/20");
+  assert.equal(posterUtil.bandCountUnit(counted), "对题 / 总题");
+  assert.equal(posterUtil.enrichBands(legacy)[0].countLabel, "7.5 / 10");
+  assert.equal(posterUtil.bandCountUnit(legacy), "得分 / 满分");
+  assert.deepEqual(posterUtil.rulerTicks("100"), ["0", "50", "100"]);
+  const storageJs = readMp("utils/storage.js");
+  assert.match(storageJs, /count:\s*type\.count/);
+  assert.match(storageJs, /correct:\s*type\.correct/);
+
+  // 微信 Canvas 2D 会静默拒绝 650/750/450 等非 100 倍数字重，导致分数或标题回退为 10px sans-serif。
+  const assignedFonts = [];
+  const noop = () => {};
+  const makeCtx = () => {
+    let font = "10px sans-serif";
+    return {
+      get font() { return font; },
+      set font(value) { assignedFonts.push(value); font = value; },
+      save: noop, restore: noop, translate: noop, scale: noop, beginPath: noop, closePath: noop,
+      moveTo: noop, lineTo: noop, arc: noop, arcTo: noop, quadraticCurveTo: noop,
+      fill: noop, stroke: noop, clip: noop, fillRect: noop, drawImage: noop, setLineDash: noop,
+      roundRect: noop, fillText: noop,
+      measureText: text => ({ width: String(text).length * 8 }),
+      createLinearGradient: () => ({ addColorStop: noop }),
+      createRadialGradient: () => ({ addColorStop: noop }),
+    };
+  };
+  const bands = [
+    { name: "政治理论", rate: 0.75, earned: "7.5", max: "10", correct: 15, count: 20 },
+    { name: "常识判断", rate: 0.2, earned: "1.5", max: "7.5", correct: 3, count: 15 },
+    { name: "言语理解", rate: 0.567, earned: "13.6", max: "24", correct: 17, count: 30 },
+    { name: "数量关系", rate: 0.6, earned: "6", max: "10", correct: 6, count: 10 },
+    { name: "判断推理", rate: 0.512, earned: "14.6", max: "28.5", correct: 18, count: 35 },
+    { name: "资料分析", rate: 0.8, earned: "16", max: "20", correct: 16, count: 20 },
+  ];
+  const summary = {
+    paperName: "行测07套", seriesName: "花生 · 2026 下半年 · 第1期", dateStamp: "11.25",
+    score: "59.20", max: "100", scorePct: 59.2, correct: 75, wrong: 55, blank: 0, rank: 1, count: 2,
+  };
+  const comparison = { previousScore: "56.60", currentScore: "59.20", deltaCents: 260, deltaText: "+2.60", deltaTone: "up" };
+  const timing = { planned: 120, actual: "115 分", difference: "−5 分", modules: [{ name: "政治理论", planned: 15, actual: "14 分" }] };
+
+  for (const style of posterUtil.STYLES) {
+    for (const mode of ["full", "score", "types", "radar"]) {
+      posterUtil.drawPoster(makeCtx(), { mode, style: style.key, summary, bands, comparison, timing });
+    }
+  }
+  assert.ok(assignedFonts.length > 100);
+  for (const font of assignedFonts) {
+    assert.match(font, /^[1-9]00\s+\d+px\s+/, `非法 Canvas 2D 字体声明（会被微信 iOS 回退为 10px）: ${font}`);
+  }
 });

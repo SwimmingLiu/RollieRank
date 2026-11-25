@@ -115,7 +115,7 @@
         <button wx:for="{{shownBands}}" wx:key="name" class="report__band" data-type="{{item.name}}" bindtap="reviewBand" disabled="{{publicView}}">
           <view class="row row--between"><text>{{item.name}}</text><image wx:if="{{!publicView}}" src="{{uiBase}}/chevron.svg" mode="aspectFit" /></view>
           <text class="display-num report__band-value">{{item.percent}}</text>
-          <text class="report__caption">{{item.earned}} / {{item.max}} 分</text>
+          <text class="num report__caption">{{item.hasCounts ? ('对 ' + item.correct + ' / ' + item.count + ' 题') : (item.earned + ' / ' + item.max + ' 分')}}</text>
           <view class="report__band-progress"><view style="width: {{item.pct}}%;"></view></view>
         </button>
       </view>
