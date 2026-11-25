@@ -100,11 +100,15 @@ async function remove(attemptIds) {
   return request("attempts/delete", { guestId: storage.guestId(), attemptIds });
 }
 
-async function recognizeAnswerSheet({ image, expectedQuestions }) {
+async function recognizeAnswerSheet({ image, expectedQuestions, quotedCost, operationId }) {
+  const token = storage.toolCreditToken();
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
   return request("omr/recognize", {
     image,
     ...(Number.isInteger(expectedQuestions) ? { expectedQuestions } : {}),
-  }, 45000);
+    ...(quotedCost !== undefined && quotedCost !== null ? { quotedCost } : {}),
+    ...(operationId ? { operationId } : {}),
+  }, 45000, headers);
 }
 
 module.exports = { request, catalog, versionForScope, submit, sync, remove, recognizeAnswerSheet, resetCatalogCache() { catalogCache.versions = null; } };

@@ -207,10 +207,16 @@ test("root tabs swipe cleanly between home and records without hijacking vertica
 
 test("single-question mode animates horizontal swipes and all pages hide scrollbars", () => {
   const practiceWxml = markup("pages/practice/practice.wxml");
+  const practiceJs = markup("pages/practice/practice.js");
   const practiceWxss = markup("pages/practice/practice.wxss");
+  assert.match(practiceWxml, /scroll-with-animation="\{\{scrollAnimated\}\}"/);
+  assert.match(practiceJs, /scrollListToRow\(/);
+  assert.match(practiceJs, /scrollerNode\.scrollTo\(/);
+  assert.match(practiceJs, /transitionSingleTo\(/);
   assert.match(practiceWxml, /bindtouchmove="moveSwipe"[\s\S]*bindtouchcancel="cancelSwipe"/);
   assert.match(practiceWxml, /practice__single-card--dragging/);
   assert.match(practiceWxss, /\.practice__single-card\s*\{[^}]*transition:\s*transform/);
+  assert.match(practiceWxss, /\.practice__row\s*\{[^}]*transition:\s*background-color/);
 
   const appWxss = markup("app.wxss");
   assert.match(appWxss, /(?:^|\n)::-webkit-scrollbar/);

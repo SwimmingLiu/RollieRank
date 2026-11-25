@@ -195,11 +195,11 @@ export async function createApi({
   const services = [];
   // 小程序链接缓存独立于业务数据：Redis 不可用时自动降级为进程内缓存。
   const linkCache = await createRedisCache();
-  // 答题卡识别是纯计算：不进落盘事务，识别结果按图片摘要缓存，重复请求不重复计算。
-  const omrService = createOmrService();
+  const toolCredits = createToolCredits({ readCatalog, mutateCatalog }, toolCreditOptions);
+  // 答题卡识别是纯计算：不进落盘事务，识别结果按图片摘要缓存；启用卷豆库时按单次识别扣减卷豆。
+  const omrService = createOmrService({ billing: toolCredits.billing });
   services.push(await omrService);
   services.push(await createOmrGradeService({ readCatalog }));
-  const toolCredits = createToolCredits({ readCatalog, mutateCatalog }, toolCreditOptions);
   services.push(toolCredits.handle);
   const flushInviteUses = () => toolCredits.flushInviteUses().catch(() => {
     // 正式答卷已持久化，奖励事件在服务重启或下次提交时继续处理。
