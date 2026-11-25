@@ -223,19 +223,29 @@ export function printMask(planes) {
   return mask;
 }
 
-// 蓝色答题区色带（尺度自适应：答题卡在画面中占 30%–100% 宽度都可检出）。
+// 蓝色答题区色带（尺度与白平衡自适应：通过纵向局部 R−B 对比分离蓝/白交替块，
+// 避免冷色 LED 下全页偏蓝导致 4 条蓝带粘连，也不受左右暖色桌面边缘影响）。
 export function blueBands(planes) {
   const { width: W, height: H, data } = planes;
-  const diff = new Int16Array(W * H);
+  const diff = new Float32Array(W * H);
   if (data && data.length === W * H * 4) {
     for (let i = 0, p = 0; i < W * H; i++, p += 4) diff[i] = data[p] - data[p + 2];
   } else {
     const { sat } = planes;
     for (let i = 0; i < W * H; i++) diff[i] = sat[i] > 26 ? -20 : 0;
   }
-  const blur = boxFilter({ data: Float32Array.from(diff, (v) => v), W, H }, Math.max(4, Math.round(Math.min(W, H) / 110)));
+  const blur = boxFilter({ data: diff, W, H }, Math.max(4, Math.round(Math.min(W, H) / 110)));
+  const sums = integral(blur);
+  const vertR = Math.max(28, Math.round(H * 0.085));
   const mask = new Uint8Array(W * H);
-  for (let i = 0; i < mask.length; i++) mask[i] = blur.data[i] < -8 ? 1 : 0;
+  for (let y = 0; y < H; y++) {
+    const row = y * W;
+    for (let x = 0; x < W; x++) {
+      const val = blur.data[row + x];
+      const vMean = sums(x, y - vertR, x + 1, y + vertR + 1);
+      mask[row + x] = val - vMean < -5.5 && val < 8 ? 1 : 0;
+    }
+  }
   const minArea = Math.max(800, Math.round(W * H * 0.0012));
   const raw = labelComponents(mask, { width: W, height: H }, minArea)
     .filter((c) => c.w > W * 0.28 && c.h > H * 0.025 && c.h < H * 0.30)

@@ -323,15 +323,40 @@ export function recognizeRowV3(planes, features, timingTrack, options = {}) {
   const pickWindow = (rows) => {
     const info = rows.map((row) => ({ y: mean(row.map((m) => m.y)), items: row }));
     if (info.length <= ROW_COUNT_NEEDED) return info;
+    const maxExpected = timingTrack ? 4 : 5;
     let best = { start: 0, score: -Infinity };
     for (let i = 0; i + ROW_COUNT_NEEDED <= info.length; i++) {
       const slice = info.slice(i, i + ROW_COUNT_NEEDED);
       const gaps = [];
-      for (let j = 1; j < slice.length; j++) gaps.push(slice[j].y - slice[j - 1].y);
-      const pitch = median(gaps);
+      const intraGaps = [];
+      const interGaps = [];
+      for (let j = 1; j < slice.length; j++) {
+        const g = slice[j].y - slice[j - 1].y;
+        gaps.push(g);
+        if (j % ROW_GROUP_ROWS === 0) interGaps.push(g);
+        else intraGaps.push(g);
+      }
+      const pitch = median(intraGaps);
       let score = 0;
-      for (let j = 0; j < slice.length; j++) score += Math.min(5, slice[j].items.length);
+      for (let j = 0; j < slice.length; j++) {
+        const n = slice[j].items.length;
+        score += Math.min(maxExpected, n);
+        // 单行最多 4 道题（无同步轨时至多多 1 个右侧条码块），明显偏多通常是底栏/表头粗黑印刷字。
+        if (n > maxExpected + 1) score -= (n - maxExpected - 1) * 1.5;
+      }
       for (const gap of gaps) score -= Math.max(0, gap - pitch * 2.2) * 0.6;
+      // 7 块 × 5 行结构：块间缝（第 5/10/.../30 行后）宽于块内行距，错位会把块间缝挤进块内。
+      if (pitch > 1 && interGaps.length) {
+        const medInter = median(interGaps);
+        if (medInter > pitch * 1.08) {
+          for (const g of interGaps) {
+            if (g > pitch * 1.08 && g < pitch * 2.3) score += Math.min(4, (g / pitch - 1) * 8);
+          }
+          for (const g of intraGaps) {
+            if (g > pitch * 1.25) score -= (g / pitch - 1.25) * 10;
+          }
+        }
+      }
       if (score > best.score) best = { start: i, score };
     }
     return info.slice(best.start, best.start + ROW_COUNT_NEEDED);
@@ -609,19 +634,24 @@ export function recognizeRowV3(planes, features, timingTrack, options = {}) {
         }
         let top = 0;
         for (let q = 1; q < OPTION_ROWS; q++) if (values[q] > values[top]) top = q;
-        let second = -1;
-        for (let q = 0; q < OPTION_ROWS; q++) if (q !== top && values[q] > second) second = values[q];
-        const dTop = values[top];
+        const sortedVals = [values[0], values[1], values[2], values[3]].sort((a, b) => b - a);
+        const dTop = sortedVals[0];
+        const second = sortedVals[1];
+        // 最浅两格均值代表本行未涂印刷选项的底噪（红/蓝印约 0.05，黑字印刷如四海公考约 0.20）；
+        // 上限 0.28 防止深色杂斑/二维码借高底噪伪造高对比度。
+        const printBase = Math.min(0.28, (sortedVals[2] + sortedVals[3]) * 0.5);
+        const excessTop = Math.max(0, dTop - printBase);
+        const excessSecond = Math.max(0, second - printBase);
         const margin = dTop - second;
-        const ratio = dTop / (second + 0.03);
-        if (dTop >= 0.16) {
+        const ratio = excessTop / (excessSecond + 0.045);
+        if (dTop >= 0.16 && excessTop >= 0.11) {
           activeCount++;
-          if (second >= 0.16 && second >= dTop * 0.55) multiDarkCount++;
+          if (excessSecond >= 0.10 && excessSecond >= excessTop * 0.52) multiDarkCount++;
         }
         const index = b * COLUMNS_PER_BLOCK + g * ROW_GROUP_ROWS + r;
         if (index >= QUESTION_COUNT) continue;
-        if (dTop >= 0.19 && margin >= 0.105 && ratio >= 1.75) {
-          const confidence = clamp01(margin / 0.50);
+        if (dTop >= 0.19 && excessTop >= 0.145 && margin >= 0.105 && ratio >= 1.95) {
+          const confidence = clamp01(margin / 0.45);
           questions[index] = { number: index + 1, answer: OPTIONS[top], confidence: Number(confidence.toFixed(3)) };
           contrastRatios.push(ratio);
           blockRead++;

@@ -2,10 +2,11 @@ export const DAY_MS = 24 * 60 * 60 * 1000;
 export const INVITE_CHANNEL = "wechat-group";
 export const TOOL_ID = /^[a-z][a-z0-9-]{0,39}$/;
 export const MAX_HOLD_MS = 30 * 60 * 1000;
+export const CREDIT_SCALE = 10;
 
 export const defaultCreditRules = {
   welcome: { newAccount: 3, existingMember: 3 },
-  costs: { "answer-sheet": 1 },
+  costs: { "answer-sheet": 0.1 },
   invite: { enabled: false, groups: false, reward: 2, monthlyLimit: 10, registerDays: 7, useDays: 7 },
   purchase: {
     directPurchase: false, tokenRecharge: false,
@@ -19,6 +20,29 @@ export const defaultCreditRules = {
 
 export function creditError(statusCode, message, errorId) {
   return Object.assign(new Error(message), { statusCode, errorId });
+}
+
+export function toCreditUnits(value, scale = CREDIT_SCALE) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  if (scale === 1) return Number.isSafeInteger(value) ? value : null;
+  if (Number(value.toFixed(1)) !== value) return null;
+  const scaled = value * scale;
+  const rounded = Math.round(scaled);
+  if (Math.abs(scaled - rounded) > 1e-6 || !Number.isSafeInteger(rounded)) return null;
+  return rounded;
+}
+
+export function fromCreditUnits(units, scale = CREDIT_SCALE) {
+  if (units === null || units === undefined) return null;
+  if (scale === 1) return units;
+  return Number((units / scale).toFixed(1));
+}
+
+export function validCreditAmount(value, { min = -10000, max = 10000, allowZero = true, scale = CREDIT_SCALE } = {}) {
+  const units = toCreditUnits(value, scale);
+  if (units === null) return false;
+  if (!allowZero && units === 0) return false;
+  return units >= Math.round(min * scale) && units <= Math.round(max * scale);
 }
 
 export const validId = (id) => typeof id === "string" && /^[\w-]{10,80}$/.test(id);
@@ -36,6 +60,13 @@ export function updateCreditRules(previous, input, { groupApproved, directPurcha
       throw creditError(400, `${label}须为 ${min} 到 ${max} 的整数。`);
     }
     return value;
+  };
+  const credit = (value, min, max, label) => {
+    const units = toCreditUnits(value, CREDIT_SCALE);
+    if (units === null || units < Math.round(min * CREDIT_SCALE) || units > Math.round(max * CREDIT_SCALE)) {
+      throw creditError(400, `${label}须为 ${min} 到 ${max} 之间、最多 1 位小数的数值。`);
+    }
+    return fromCreditUnits(units, CREDIT_SCALE);
   };
   const merge = (key) => ({ ...previous[key], ...input[key] });
   const welcome = merge("welcome");
@@ -69,13 +100,13 @@ export function updateCreditRules(previous, input, { groupApproved, directPurcha
   if (purchase.tokenRecharge && !packages.length) throw creditError(400, "请设置至少一个充值档位。");
   return {
     welcome: {
-      newAccount: integer(welcome.newAccount, 0, 100, "新人赠送"),
-      existingMember: integer(welcome.existingMember, 0, 100, "老卷友赠送"),
+      newAccount: credit(welcome.newAccount, 0, 100, "新人赠送"),
+      existingMember: credit(welcome.existingMember, 0, 100, "老卷友赠送"),
     },
-    costs: Object.fromEntries(Object.entries(costs).map(([key, value]) => [key, integer(value, 1, 100, "用量")])),
+    costs: Object.fromEntries(Object.entries(costs).map(([key, value]) => [key, credit(value, 0.1, 100, "用量")])),
     invite: {
       enabled: groupApproved && invite.enabled, groups: groupApproved && invite.groups,
-      reward: integer(invite.reward, 0, 100, "邀请奖励"),
+      reward: credit(invite.reward, 0, 100, "邀请奖励"),
       monthlyLimit: integer(invite.monthlyLimit, 1, 100, "每月奖励人数"),
       registerDays: integer(invite.registerDays, 1, 30, "邀请认领天数"),
       useDays: integer(invite.useDays, 1, 30, "首次有效使用天数"),
@@ -85,7 +116,7 @@ export function updateCreditRules(previous, input, { groupApproved, directPurcha
       packages,
     },
     ads: {
-      enabled: ads.enabled, reward: integer(ads.reward, 1, 100, "广告奖励"),
+      enabled: ads.enabled, reward: credit(ads.reward, 0.1, 100, "广告奖励"),
       dailyLimit: integer(ads.dailyLimit, 1, 20, "广告每日领取上限"),
     },
   };

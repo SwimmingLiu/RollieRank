@@ -414,4 +414,64 @@ test("支持 EXIF 方向自动转正、满屏近拍行式卡与阴影光照下�
   assert.equal(resSh.status, 200);
   const okSh = resSh.body.questions.filter((q) => keyB[String(q.number)] && q.answer === keyB[String(q.number)]).length;
   assert.ok(okSh >= 130, `阴影行式卡预期 >=130 对，实际 ${okSh}`);
+
+  // 4) 黑色印刷选项 + 底部粗黑体印刷栏（模拟四海公考等黑字答题卡，防止底噪拉低对比度或底栏抢行错位）
+  const blackPrint = new Uint8ClampedArray(imgB.data);
+  const W = imgB.width;
+  const H = imgB.height;
+  // 在答题区下方加一行 8 个粗黑印刷块模拟「本栏由工作人员填涂 / 缺考标记 / 违纪标记」
+  for (let i = 0; i < 8; i++) {
+    const bx = 360 + i * 95;
+    for (let y = 1904; y < Math.min(H, 1916); y++) {
+      for (let x = bx; x < Math.min(W, bx + 22); x++) {
+        const p = (y * W + x) * 4;
+        blackPrint[p] = 45; blackPrint[p + 1] = 45; blackPrint[p + 2] = 45;
+      }
+    }
+  }
+  // 给未涂黑的红/淡印选项字模拟成低饱和深灰黑字印刷（提高未涂格底噪）
+  for (let y = 1030; y < 1895; y++) {
+    for (let x = 350; x < 1100; x++) {
+      const p = (y * W + x) * 4;
+      const r = blackPrint[p], g = blackPrint[p + 1], b = blackPrint[p + 2];
+      const lum = (r * 299 + g * 587 + b * 114) / 1000;
+      if (r - g > 14 && lum < 175) {
+        const dark = Math.max(70, Math.round(lum * 0.65));
+        blackPrint[p] = dark; blackPrint[p + 1] = dark; blackPrint[p + 2] = dark;
+      }
+    }
+  }
+  const bpJpeg = jpeg.encode({ width: W, height: H, data: blackPrint }, 88).data;
+  const resBp = await callOmr(handler, "/api/omr/recognize", "POST", { image: bpJpeg.toString("base64"), expectedQuestions: 140 });
+  assert.equal(resBp.status, 200);
+  const okBp = resBp.body.questions.filter((q) => keyB[String(q.number)] && q.answer === keyB[String(q.number)]).length;
+  const wrongBp = resBp.body.questions.filter((q) => q.answer && q.answer !== keyB[String(q.number)]).length;
+  assert.ok(okBp >= 130 && wrongBp <= 2, `黑字印刷+底栏干扰行式卡预期 >=130 对且 <=2 错，实际 ok=${okBp}, wrong=${wrongBp}`);
+
+  // 5) 冷色 LED 白平衡偏移的蓝白列式卡（白纸区 R-B 也 < -12，旧版绝对阈值会把 4 条蓝带粘成一整块）
+  const coolLed = new Uint8ClampedArray(imgA.data);
+  for (let i = 0; i < coolLed.length; i += 4) {
+    coolLed[i] = Math.max(0, coolLed[i] - 12);
+    coolLed[i + 2] = Math.min(255, coolLed[i + 2] + 18);
+  }
+  const coolJpeg = jpeg.encode({ width: imgA.width, height: imgA.height, data: coolLed }, 88).data;
+  const resCool = await callOmr(handler, "/api/omr/recognize", "POST", { image: coolJpeg.toString("base64"), expectedQuestions: 140 });
+  assert.equal(resCool.status, 200);
+  const okCool = resCool.body.questions.filter((q) => keyA[String(q.number)] && q.answer === keyA[String(q.number)]).length;
+  assert.ok(okCool >= 125, `冷色白平衡列式卡预期至少答对 125 题，实际 ${okCool}`);
+
+  // 6) 纯黑白/白底无蓝带列式卡（模拟 A4 黑白打印列式卡，完全去除蓝色色带，依赖同步轨与 7 块周期定位）
+  const rawC = await readFile(path.join(ROOT, "test/fixtures/omr/sheet-c.jpg"));
+  const keyC = JSON.parse(await readFile(path.join(ROOT, "test/fixtures/omr/sheet-c.answers.json"), "utf8")).answers;
+  const imgC = decodeImage(rawC);
+  const monoCol = new Uint8ClampedArray(imgC.data);
+  for (let i = 0; i < monoCol.length; i += 4) {
+    const y = Math.round((monoCol[i] * 299 + monoCol[i + 1] * 587 + monoCol[i + 2] * 114) / 1000);
+    monoCol[i] = y; monoCol[i + 1] = y; monoCol[i + 2] = y;
+  }
+  const monoJpeg = jpeg.encode({ width: imgC.width, height: imgC.height, data: monoCol }, 88).data;
+  const resMono = await callOmr(handler, "/api/omr/recognize", "POST", { image: monoJpeg.toString("base64"), expectedQuestions: 140 });
+  assert.equal(resMono.status, 200);
+  const okMono = resMono.body.questions.filter((q) => keyC[String(q.number)] && q.answer === keyC[String(q.number)]).length;
+  assert.ok(okMono >= 125, `白底无蓝带列式卡预期至少答对 125 题，实际 ${okMono}`);
 });

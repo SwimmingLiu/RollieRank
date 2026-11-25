@@ -4,7 +4,7 @@ import { createWalletDatabase } from "./tool-credits-postgres.mjs";
 import { createToolCreditsCommerce, paymentPush } from "./tool-credits-commerce.mjs";
 import { createToolCreditsRecharge } from "./tool-credits-recharge.mjs";
 import { createWechatCoinPayment, createWechatToolPayment } from "./wechat-tool-payment.mjs";
-import { creditError, validAccountRef, validId } from "./tool-credits-rules.mjs";
+import { creditError, validAccountRef, validCreditAmount, validId } from "./tool-credits-rules.mjs";
 import { wechatProfilesByGuest } from "./wechat-profile.mjs";
 
 const ROOT = "/api/tool-credits";
@@ -171,8 +171,9 @@ export function createToolCredits({ readCatalog, mutateCatalog }, {
     } else if (sub === "tool-credits/adjust" && method === "POST") {
       const { accountId, amount, requestId } = input;
       const reason = typeof input.reason === "string" ? input.reason.trim() : "";
-      if (!validAccountRef(accountId) || !validId(requestId) || !Number.isInteger(amount) || !amount ||
-          Math.abs(amount) > 10000 || !reason || reason.length > 200) throw creditError(400, "请填写账号、调整颗数和原因。");
+      if (!validAccountRef(accountId) || !validId(requestId) ||
+          !validCreditAmount(amount, { min: -10000, max: 10000, allowZero: false }) ||
+          !reason || reason.length > 200) throw creditError(400, "请填写账号、调整颗数和原因。");
       send(200, await store.adjust({ accountId, amount, reason, requestId, actor: session.username }));
     } else {
       const context = { sub, method, input, query, send, session };

@@ -44,7 +44,7 @@ function cashState(order, trade) {
   throw mismatch();
 }
 
-export function createCoinRechargeStore({ transact, read, lockAccounts, rules, resolveAccountId, grant, record, clock }) {
+export function createCoinRechargeStore({ transact, read, lockAccounts, rules, resolveAccountId, grant, record, scaleFor, clock }) {
   async function find(client, id, accountId = null) {
     const row = await get(client, `SELECT ${columns} FROM wallet_coin_recharges o
       WHERE o.id = $1 AND ($2::text IS NULL OR o.account_id = $2)`, id, accountId);
@@ -112,6 +112,8 @@ export function createCoinRechargeStore({ transact, read, lockAccounts, rules, r
       const tradeUpdatedAt = Number.isSafeInteger(trade.update_time) && trade.update_time > 0 ? trade.update_time : 0;
       if (observed === "pending" || (tradeUpdatedAt && tradeUpdatedAt < order.tradeUpdatedAt)) return order;
 
+      const scale = await scaleFor(client);
+      const orderUnits = order.credits * scale;
       let { lotId } = order;
       let state = observed;
       let issue = null;
@@ -121,7 +123,7 @@ export function createCoinRechargeStore({ transact, read, lockAccounts, rules, r
         if (order.state === "review" || (order.state === "refund_pending" &&
             (!order.tradeUpdatedAt || (tradeUpdatedAt <= order.tradeUpdatedAt && !sameSecondFailure)))) return order;
         if (lotId === null && debited) {
-          lotId = await grant(client, { id: order.accountId, amount: order.credits,
+          lotId = await grant(client, { id: order.accountId, amountUnits: orderUnits,
             source: "purchase", ref: order.id, reason: "微信充值" });
         }
         if (lotId !== null) {
@@ -135,10 +137,10 @@ export function createCoinRechargeStore({ transact, read, lockAccounts, rules, r
         await freezeLot(client, lotId);
         const { remaining } = await get(client, "SELECT remaining FROM wallet_credit_lots WHERE id = $1", lotId);
         if (remaining) {
-          await record(client, { id: order.accountId, amount: -remaining, source: "refund", ref: order.id, reason: "微信充值退款" });
+          await record(client, { id: order.accountId, amountUnits: -remaining, source: "refund", ref: order.id, reason: "微信充值退款" });
           await run(client, "UPDATE wallet_credit_lots SET remaining = 0 WHERE id = $1", lotId);
         }
-        if (remaining < order.credits) {
+        if (remaining < orderUnits) {
           state = "review";
           issue = "refund-shortfall";
         }

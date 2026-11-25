@@ -41,7 +41,7 @@ test("卷豆迁移接入现有 PostgreSQL schema，保留已有会话表及迁�
   )));
   const applied = runs.flatMap(run => JSON.parse(run.stdout).applied);
   assert.deepEqual(applied, ["wallet/001_initial.sql", "wallet/002_account_uid.sql", "wallet/003_wechat_tool_purchases.sql",
-    "wallet/004_wechat_coin_recharges.sql", "wallet/005_wechat_coin_refund_polling.sql"]);
+    "wallet/004_wechat_coin_recharges.sql", "wallet/005_wechat_coin_refund_polling.sql", "wallet/006_fractional_credits.sql"]);
   assert.deepEqual(await migrateWalletDatabase(database), []);
   await database.transaction(async (client) => {
     assert.equal((await client.query("SELECT id FROM sessions")).rows[0].id, "existing-application-session");
@@ -54,6 +54,7 @@ test("卷豆迁移接入现有 PostgreSQL schema，保留已有会话表及迁�
       { name: "wallet/003_wechat_tool_purchases.sql" },
       { name: "wallet/004_wechat_coin_recharges.sql" },
       { name: "wallet/005_wechat_coin_refund_polling.sql" },
+      { name: "wallet/006_fractional_credits.sql" },
     ]);
   }, { readOnly: true });
   assert.deepEqual(await firstReleaseWalletCounts(database), {
@@ -307,13 +308,13 @@ test("购豆与广告关闭，邀请仅认可已获准渠道及首次有效使�
   const extraClaim = (await visit(first, extraGuest, 1044, "next-guest")).claim;
   const extra = await login(server, "next-guest", { visitorId: extraGuest, inviteClaim: extraClaim });
   const use = { accountId: extra.accountId, tool: "answer-sheet", operationId: "eligible-test" };
-  await store.reserve(use, { quotedCost: 1 });
+  await store.reserve(use, { quotedCost: 0.1 });
   await assert.rejects(() => store.recordToolUse(use), { statusCode: 409 });
   await store.settle(use, "result:ready");
   await store.recordToolUse(use);
   await store.recordToolUse(use);
   assert.equal((await store.wallet(inviter.accountId, 0)).balance, 5);
-  assert.equal((await store.wallet(extra.accountId, 0)).balance, 2);
+  assert.equal((await store.wallet(extra.accountId, 0)).balance, 2.9);
 
   const selfGuest = randomUUID();
   assert.equal((await visit(first, selfGuest, 1008, "first-inviter")).accepted, false);
@@ -329,7 +330,7 @@ test("购豆与广告关闭，邀请仅认可已获准渠道及首次有效使�
   assert.notEqual(fresh.claim, obsolete.claim);
   const freshSession = await login(server, "future-guest", { visitorId: futureGuest, inviteClaim: fresh.claim });
   const freshUse = { accountId: freshSession.accountId, tool: "answer-sheet", operationId: "fresh-use" };
-  await store.reserve(freshUse, { quotedCost: 1 });
+  await store.reserve(freshUse, { quotedCost: 0.1 });
   await store.settle(freshUse, "result:fresh");
   await store.recordToolUse(freshUse);
   assert.equal((await store.wallet(another.accountId, 0)).balance, 7);
@@ -393,4 +394,114 @@ test("未执行 002_account_uid 迁移时，卷豆登录、余额、明细与后
     actor: "admin",
   });
   assert.equal(adjusted.balance, 5);
+});
+
+test("答题卡扫描默认消耗 0.1 颗，3 颗赠豆可精确扫描 30 次且支持 0.1 颗调账", async (t) => {
+  const server = await serverFor(t);
+  const admin = await adminSession(server);
+  const session = await login(server, "fractional-scanner");
+  const store = createToolCreditStore({ database: server.database });
+
+  const quote = await server.json(walletRoutes + "quote?tool=answer-sheet", undefined, auth(session));
+  assert.deepEqual(quote.data, { tool: "answer-sheet", cost: 0.1 });
+
+  // Reject more than 1 decimal place in rules and manual adjustments.
+  assert.equal((await server.json(adminRoutes + "tool-credits/rules", { costs: { "answer-sheet": 0.05 } }, admin)).status, 400);
+  assert.equal((await server.json(adminRoutes + "tool-credits/adjust", {
+    accountId: session.accountId, amount: 0.05, reason: "非法精度", requestId: randomUUID(),
+  }, admin)).status, 400);
+
+  // 30 consecutive 0.1-credit scans exhaust 3.0 credits with zero floating-point drift.
+  for (let i = 1; i <= 30; i += 1) {
+    const key = { accountId: session.accountId, tool: "answer-sheet", operationId: `scan-${i}` };
+    const reserved = await store.reserve(key, { quotedCost: 0.1 });
+    assert.equal(reserved.cost, 0.1);
+    const settled = await store.settle(key, `scan-res-${i}`);
+    assert.equal(settled.state, "settled");
+    assert.equal(settled.cost, 0.1);
+    const expectedBalance = Number(((30 - i) / 10).toFixed(1));
+    assert.equal((await store.wallet(session.accountId, 0)).balance, expectedBalance);
+  }
+  await assert.rejects(
+    () => store.reserve({ accountId: session.accountId, tool: "answer-sheet", operationId: "scan-31" }, { quotedCost: 0.1 }),
+    { statusCode: 402, errorId: "balance" },
+  );
+
+  // Manual fractional adjustment (+0.3 then -0.1 -> 0.2)
+  const add = await server.json(adminRoutes + "tool-credits/adjust", {
+    accountId: session.accountId, amount: 0.3, reason: "补发三次扫描", requestId: randomUUID(),
+  }, admin);
+  assert.equal(add.status, 200);
+  assert.equal(add.data.balance, 0.3);
+  const sub = await server.json(adminRoutes + "tool-credits/adjust", {
+    accountId: session.accountId, amount: -0.1, reason: "扣回一次扫描", requestId: randomUUID(),
+  }, admin);
+  assert.equal(sub.status, 200);
+  assert.equal(sub.data.balance, 0.2);
+});
+
+test("006 迁移无损缩放历史整数余额与占用，并将默认扫描用量从 1 升级为 0.1", async (t) => {
+  const { readFile } = await import("node:fs/promises");
+  const { createHash } = await import("node:crypto");
+  const schema = `wallet_upgrade_006_${randomUUID().slice(0, 8)}`;
+  const database = createWalletDatabase({ env: { DATABASE_URL: postgres.url, DATABASE_SCHEMA: schema } });
+  t.after(() => database.close());
+
+  const preMigrations = [
+    "001_initial.sql",
+    "002_account_uid.sql",
+    "003_wechat_tool_purchases.sql",
+    "004_wechat_coin_recharges.sql",
+    "005_wechat_coin_refund_polling.sql",
+  ];
+  await database.transaction(async (client) => {
+    await client.query(`CREATE SCHEMA "${schema}"`);
+    await client.query(`SET LOCAL search_path TO "${schema}", pg_catalog`);
+    await client.query(`CREATE TABLE wallet_schema_migrations (
+      name text PRIMARY KEY, checksum text NOT NULL, applied_at timestamptz NOT NULL DEFAULT clock_timestamp()
+    )`);
+    for (const file of preMigrations) {
+      const sql = await readFile(new URL(`../server/migrations/wallet/${file}`, import.meta.url), "utf8");
+      await client.query(sql);
+      const checksum = createHash("sha256").update(sql).digest("hex");
+      await client.query("INSERT INTO wallet_schema_migrations (name, checksum) VALUES ($1, $2)", ["wallet/" + file, checksum]);
+    }
+    await client.query("INSERT INTO wallet_rules (id, value) VALUES (1, $1::jsonb)", [JSON.stringify({
+      welcome: { newAccount: 3, existingMember: 3 },
+      costs: { "answer-sheet": 1 },
+      invite: { enabled: false, groups: false, reward: 2, monthlyLimit: 10, registerDays: 7, useDays: 7 },
+      purchase: { directPurchase: false, tokenRecharge: true, packages: [{ credits: 1, cents: 100 }] },
+      ads: { enabled: false, reward: 1, dailyLimit: 2 },
+    })]);
+  });
+
+  // Seed a pre-006 account with 3 credits and an active 1-credit hold.
+  const preStore = createToolCreditStore({ database, groupApproved: false });
+  const user = await preStore.login({ wechatKey: "pre-006-user", visitorId: randomUUID() });
+  assert.equal(user.balance, 3);
+  const oldKey = { accountId: user.accountId, tool: "answer-sheet", operationId: "pre-006-op" };
+  await preStore.reserve(oldKey, { quotedCost: 1 });
+  assert.deepEqual(
+    [(await preStore.wallet(user.accountId, 0)).balance, (await preStore.wallet(user.accountId, 0)).held],
+    [2, 1],
+  );
+
+  // Run migration 006 and verify existing balances, holds, and default answer-sheet cost.
+  assert.deepEqual(await migrateWalletDatabase(database), ["wallet/006_fractional_credits.sql"]);
+  const postStore = createToolCreditStore({ database, groupApproved: false });
+  assert.equal(await postStore.quote("answer-sheet"), 0.1);
+  const afterMigrate = await postStore.wallet(user.accountId, 0);
+  assert.equal(afterMigrate.balance, 2);
+  assert.equal(afterMigrate.held, 1);
+  assert.equal(afterMigrate.records[0].amount, 3);
+
+  // Pre-006 1-credit reservation settles at its original 1 credit; new scan consumes 0.1 credit.
+  assert.equal((await postStore.settle(oldKey, "pre-006-result")).cost, 1);
+  assert.equal((await postStore.wallet(user.accountId, 0)).balance, 2);
+  const newKey = { accountId: user.accountId, tool: "answer-sheet", operationId: "post-006-op" };
+  await postStore.reserve(newKey, { quotedCost: 0.1 });
+  await postStore.settle(newKey, "post-006-result");
+  const finalWallet = await postStore.wallet(user.accountId, 0);
+  assert.equal(finalWallet.balance, 1.9);
+  assert.deepEqual(finalWallet.records.map(row => [row.amount, row.balanceAfter]), [[-0.1, 1.9], [-1, 2], [3, 3]]);
 });

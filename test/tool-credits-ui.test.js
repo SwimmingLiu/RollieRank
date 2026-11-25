@@ -156,49 +156,52 @@ test("admin console tool-credits view supports accounts, ledger, pricing preview
   await page.waitForSelector(`[data-credit-account-row="${newcomer.body.accountId}"]`);
   await page.waitForSelector(`[data-credit-account-row="${legacy.body.accountId}"]`);
 
-  // Capture accounts view at 1440px
+  // Capture accounts view at 1440px (default 3 credits @ 0.1/scan = 30 free scans)
+  await page.waitForFunction(() => document.body.textContent.includes("新人送 3 颗 · 每张用 0.1 颗"));
   await page.screenshot({ path: path.join(VISUAL_DIR, "admin-credits-accounts-1440.png"), fullPage: true });
 
-  // Open Rules modal, test real-time scan preview and save rules
+  // Open Rules modal, test real-time fractional scan preview and save rules
   await page.click('[data-action="open-credit-rules"]');
   await page.waitForSelector("#credit-rules-form");
+  assert.equal((await page.locator('[data-preview="new-scans"]').textContent()).trim(), "30 张");
+  assert.equal((await page.locator('[data-preview="existing-scans"]').textContent()).trim(), "30 张");
   await page.fill("#rule-welcome-new", "5");
-  await page.fill('[data-tool-cost="answer-sheet"]', "2");
-  assert.equal((await page.locator('[data-preview="new-scans"]').textContent()).trim(), "2 张");
-  assert.equal((await page.locator('[data-preview="existing-scans"]').textContent()).trim(), "1 张");
+  await page.fill('[data-tool-cost="answer-sheet"]', "0.2");
+  assert.equal((await page.locator('[data-preview="new-scans"]').textContent()).trim(), "25 张");
+  assert.equal((await page.locator('[data-preview="existing-scans"]').textContent()).trim(), "15 张");
   await page.screenshot({ path: path.join(VISUAL_DIR, "admin-credits-rules-modal-1440.png") });
   await page.click('button[form="credit-rules-form"]');
   await page.waitForFunction(() => !document.querySelector("#credit-rules-form"));
-  await page.waitForFunction(() => document.body.textContent.includes("新人送 5 颗 · 每张用 2 颗"));
+  await page.waitForFunction(() => document.body.textContent.includes("新人送 5 颗 · 每张用 0.2 颗"));
 
-  // Manual adjust (+4) then deduct (-1) on newcomer account
+  // Manual adjust (+0.5) then deduct (-0.2) on newcomer account
   await page.click(`[data-credit-account-row="${newcomer.body.accountId}"] [data-action="adjust-account"]`);
   await page.waitForSelector("#credit-adjust-form");
-  await page.fill("#adjust-count-input", "4");
-  await page.fill("#adjust-reason-input", "实拍验收补偿四颗");
+  await page.fill("#adjust-count-input", "0.5");
+  await page.fill("#adjust-reason-input", "实拍验收补偿 0.5 颗");
   await page.screenshot({ path: path.join(VISUAL_DIR, "admin-credits-adjust-modal-1440.png") });
   await page.click('button[form="credit-adjust-form"]');
   await page.waitForFunction(() => !document.querySelector("#credit-adjust-form"));
   await page.waitForFunction((id) => {
     const row = document.querySelector(`[data-credit-account-row="${id}"]`);
-    return row && row.textContent.includes("7 颗");
+    return row && row.textContent.includes("3.5 颗");
   }, newcomer.body.accountId);
 
   await page.click(`[data-credit-account-row="${newcomer.body.accountId}"] [data-action="adjust-account"]`);
   await page.waitForSelector("#credit-adjust-form");
   await page.click('[data-adjust-dir="deduct"]');
-  await page.fill("#adjust-count-input", "2");
+  await page.fill("#adjust-count-input", "0.2");
   await page.fill("#adjust-reason-input", "重复补偿扣回");
   await page.click('button[form="credit-adjust-form"]');
   await page.waitForFunction(() => !document.querySelector("#credit-adjust-form"));
   await page.waitForFunction((id) => {
     const row = document.querySelector(`[data-credit-account-row="${id}"]`);
-    return row && row.textContent.includes("5 颗");
+    return row && row.textContent.includes("3.3 颗");
   }, newcomer.body.accountId);
 
   // Switch to ledger tab & verify audit reasons + operator are visible
   await page.click('[data-filter-tab="records"]');
-  await page.waitForFunction(() => document.body.textContent.includes("实拍验收补偿四颗") && document.body.textContent.includes("重复补偿扣回"));
+  await page.waitForFunction(() => document.body.textContent.includes("实拍验收补偿 0.5 颗") && document.body.textContent.includes("重复补偿扣回"));
   await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
   await page.screenshot({ path: path.join(VISUAL_DIR, "admin-credits-records-1440.png"), fullPage: true });
 
@@ -286,8 +289,15 @@ test("miniprogram tool-credits service works end-to-end against real wallet serv
   assert.equal(credits.uid(), 10001);
 
   const quote = await credits.quote("answer-sheet");
-  assert.equal(quote.cost, 1);
-  assert.equal(credits.scannableCount(loginRes.balance, quote.cost), 3);
+  assert.equal(quote.cost, 0.1);
+  assert.equal(credits.scannableCount(loginRes.balance, quote.cost), 30);
+  assert.equal(credits.scannableCount(0.3, 0.1), 3);
+  assert.equal(credits.scannableCount(2.9, 0.1), 29);
+  const formattedSpend = credits.formatRecord({
+    id: 99, source: "tool", tool: "answer-sheet", amount: -0.1, balanceAfter: 2.9, reason: "使用工具", createdAt: Date.now(),
+  });
+  assert.equal(formattedSpend.amountText, "-0.1");
+  assert.equal(formattedSpend.balanceText, "余额 2.9 颗");
 
   const wallet = await credits.wallet(0);
   assert.equal(wallet.balance, 3);
@@ -465,8 +475,8 @@ img { display: block; }
               <span class="credits__item-time">2026-11-22 10:18</span>
             </div>
             <div class="credits__item-right">
-              <span class="num credits__item-amount credits__item-amount--neg">-1</span>
-              <span class="credits__item-balance">余额 6 颗</span>
+              <span class="num credits__item-amount credits__item-amount--neg">-0.1</span>
+              <span class="credits__item-balance">余额 6.9 颗</span>
             </div>
           </div>
           <div class="credits__item">

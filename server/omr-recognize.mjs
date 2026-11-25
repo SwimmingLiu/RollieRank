@@ -215,29 +215,40 @@ function evaluateOrientation(planes, options = {}) {
     }
   }
 
+  // 白底无蓝带的列式卡（如 A4 打印列式答题卡）：行式未高质量通过且有右侧同步轨时，尝试按斑块周期定位 7 块列式网格。
+  const strongHit = candidates.find((c) => c.check.valid && c.result.metrics.recognized >= QUESTION_COUNT * 0.55);
+  if (!strongHit && !blueStack && timingTrack && options.style !== "row") {
+    const col = recognizeColumnV3(planes, features, null, timingTrack, options);
+    if (col) {
+      const check = validateCandidate(col);
+      candidates.push({ result: col, check });
+    }
+  }
+
   candidates.sort((a, b) => b.check.score - a.check.score);
   const winner = candidates[0] || null;
   return { winner, timingTrack, blueStack, hasSheetLandmark, candidates };
 }
 
 function makeRejectedResult(hasSheetLandmark, candidates = []) {
-  // 只有在确有答题卡地标且没有因结构/多涂/网格错乱被否决时，才提示「检测到答题卡但未涂黑」；
-  // 书页、蓝色条纹等伪目标会因网格或单选对比失败被拒，直接提示「没有找到答题卡的选项框」。
-  const structuralFailure = candidates.some((c) =>
-    (c.check?.reasons || []).some(
-      (r) =>
-        r.startsWith("bad-") ||
-        r.startsWith("irregular-") ||
-        r.startsWith("high-multi-dark") ||
-        r.startsWith("low-on-grid") ||
-        r.startsWith("high-snap-") ||
-        r.startsWith("low-contrast-ratio"),
-    ),
+  // 只有在确有答题卡地标且没有因网格/多涂错乱被否决时，才区分「未涂黑」与「对比度不足」；
+  // 书页、蓝色条纹等伪目标会因网格几何或多涂失败被拒，直接提示「没有找到答题卡的选项框」。
+  const reasons = candidates.flatMap((c) => c.check?.reasons || []);
+  const gridFailure = reasons.some(
+    (r) =>
+      r.startsWith("bad-") ||
+      r.startsWith("irregular-") ||
+      r.startsWith("high-multi-dark") ||
+      r.startsWith("low-on-grid") ||
+      r.startsWith("high-snap-"),
   );
-  const isBlankSheet = hasSheetLandmark && !structuralFailure;
-  const reason = isBlankSheet
-    ? "检测到答题卡，但没有识别到有效填涂。请确认已用 2B 铅笔涂黑选项、光线均匀后重试。"
-    : "没有找到答题卡的选项框。请正对整张答题卡拍摄，保证四角完整入镜、光线均匀。";
+  const lowContrastOnly = hasSheetLandmark && !gridFailure && reasons.some((r) => r.startsWith("low-contrast-ratio"));
+  const isBlankSheet = hasSheetLandmark && !gridFailure && !lowContrastOnly;
+  const reason = lowContrastOnly
+    ? "检测到答题卡，但填涂与印刷底纹对比度偏低，没有识别到有效填涂。请用 2B 铅笔涂黑选项、避免反光或阴影后重试。"
+    : isBlankSheet
+      ? "检测到答题卡，但没有识别到有效填涂。请确认已用 2B 铅笔涂黑选项、光线均匀后重试。"
+      : "没有找到答题卡的选项框。请正对整张答题卡拍摄，保证四角完整入镜、光线均匀。";
   return {
     sheetValid: false,
     rejectionReason: reason,
@@ -313,8 +324,10 @@ function recognizeAtScale(planes, options = {}) {
 
 export function recognizeSheet(planes, sheet, options = {}) {
   const pageLongEdge = Math.max(planes.width, planes.height);
-  // 超高分辨率手机原图直接缩到标定尺度识别（速度快且精度稳）。
-  if (!options.noScale && pageLongEdge > OVERSIZE_LONG_EDGE) {
+  const pageShortEdge = Math.min(planes.width, planes.height);
+  // 超高分辨率手机原图直接缩到标定尺度识别（速度快且精度稳）；
+  // 细长屏截图/远拍图（如 1080×2399，短边 ≤ 1350）不强制降采样，避免把答题卡主体缩得过小。
+  if (!options.noScale && pageLongEdge > OVERSIZE_LONG_EDGE && pageShortEdge > 1350) {
     let best = null;
     let lastRejected = null;
     for (const target of SCALE_CANDIDATES) {
