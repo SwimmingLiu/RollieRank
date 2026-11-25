@@ -159,7 +159,7 @@ test("卷豆部署检查区分网页口令、旧后端和正确的未登录响�
       response.end(JSON.stringify({ login: true, purchase: { tokenRecharge: true, tokenRechargeIos: false,
         packages: [{ credits: 5, cents: 500 }] } }));
     } else if (request.url === "/api/tool-credits/quote?tool=answer-sheet") {
-      response.end(JSON.stringify({ tool: "answer-sheet", cost: 1 }));
+      response.end(JSON.stringify({ tool: "answer-sheet", cost: 0.1 }));
     } else {
       response.writeHead(401).end(JSON.stringify({ errorId: "login" }));
     }
@@ -176,7 +176,7 @@ test("卷豆部署检查区分网页口令、旧后端和正确的未登录响�
   await assert.rejects(verify(), /HTTP 状态有误/);
   mode = "live";
   assert.deepEqual(JSON.parse((await verify()).stdout), {
-    environment: "test", login: true, recharge: true, walletAuth: true, webAuth: false, scanCost: 1,
+    environment: "test", login: true, recharge: true, walletAuth: true, webAuth: false, scanCost: 0.1,
   });
 });
 

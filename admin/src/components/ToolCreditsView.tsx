@@ -41,8 +41,32 @@ const SOURCE_META: Record<string, { label: string; tone: "neutral" | "success" |
   manual: { label: "人工调整", tone: "warn" },
   tool: { label: "工具消耗", tone: "neutral" },
   invite: { label: "邀请奖励", tone: "success" },
+  purchase: { label: "微信充值", tone: "success" },
+  refund: { label: "微信充值退款", tone: "danger" },
   rules: { label: "规则变更", tone: "neutral" },
 };
+
+function formatCredit(value: number): string {
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+}
+
+function toCreditTenths(raw: string | number): number | null {
+  const value = typeof raw === "number" ? raw : Number(raw);
+  if ((typeof raw === "string" && !raw.trim()) || !Number.isFinite(value)) return null;
+  if (Number(value.toFixed(1)) !== value) return null;
+  const scaled = value * 10;
+  const rounded = Math.round(scaled);
+  if (Math.abs(scaled - rounded) > 1e-6 || !Number.isSafeInteger(rounded)) return null;
+  return rounded;
+}
+
+function calcScans(credits: number, cost: number): number {
+  const creditTenths = Math.round(credits * 10);
+  const costTenths = Math.round(cost * 10);
+  if (creditTenths <= 0 || costTenths <= 0) return 0;
+  return Math.floor(creditTenths / costTenths);
+}
 
 function toolLabel(tool: string | null | undefined): string {
   if (!tool) return "—";
@@ -148,37 +172,37 @@ export function ToolCreditsView({
   const groupApproved = Boolean(data?.groupApproved);
 
   const summary = useMemo(() => {
-    const totalBalance = accounts.reduce((sum, item) => sum + item.balance, 0);
-    const totalHeld = accounts.reduce((sum, item) => sum + item.held, 0);
-    const scanCost = rules?.costs["answer-sheet"] ?? 1;
-    const newScans = scanCost > 0 && rules ? Math.floor(rules.welcome.newAccount / scanCost) : 0;
-    const existingScans = scanCost > 0 && rules ? Math.floor(rules.welcome.existingMember / scanCost) : 0;
+    const totalBalance = accounts.reduce((sum, item) => sum + Math.round(item.balance * 10), 0) / 10;
+    const totalHeld = accounts.reduce((sum, item) => sum + Math.round(item.held * 10), 0) / 10;
+    const scanCost = rules?.costs["answer-sheet"] ?? 0.1;
+    const newScans = rules ? calcScans(rules.welcome.newAccount, scanCost) : 0;
+    const existingScans = rules ? calcScans(rules.welcome.existingMember, scanCost) : 0;
     return { totalBalance, totalHeld, scanCost, newScans, existingScans };
   }, [accounts, rules]);
 
-  const previewScanCost = useMemo(() => {
+  const previewScanCostTenths = useMemo(() => {
     const scanRow = costDrafts.find((item) => item.tool === "answer-sheet");
-    const parsed = Number(scanRow?.cost);
-    return Number.isInteger(parsed) && parsed > 0 ? parsed : 0;
+    const parsed = scanRow ? toCreditTenths(scanRow.cost) : null;
+    return parsed !== null && parsed > 0 ? parsed : 0;
   }, [costDrafts]);
 
   const previewNewScans = useMemo(() => {
-    const welcome = Number(welcomeNew);
-    if (!Number.isInteger(welcome) || welcome < 0 || previewScanCost <= 0) return null;
-    return Math.floor(welcome / previewScanCost);
-  }, [welcomeNew, previewScanCost]);
+    const welcome = toCreditTenths(welcomeNew);
+    if (welcome === null || welcome < 0 || previewScanCostTenths <= 0) return null;
+    return Math.floor(welcome / previewScanCostTenths);
+  }, [welcomeNew, previewScanCostTenths]);
 
   const previewExistingScans = useMemo(() => {
-    const welcome = Number(welcomeExisting);
-    if (!Number.isInteger(welcome) || welcome < 0 || previewScanCost <= 0) return null;
-    return Math.floor(welcome / previewScanCost);
-  }, [welcomeExisting, previewScanCost]);
+    const welcome = toCreditTenths(welcomeExisting);
+    if (welcome === null || welcome < 0 || previewScanCostTenths <= 0) return null;
+    return Math.floor(welcome / previewScanCostTenths);
+  }, [welcomeExisting, previewScanCostTenths]);
 
   const previewInviteBudget = useMemo(() => {
-    const w = Number(welcomeNew);
-    const r = Number(inviteReward);
-    if (!Number.isInteger(w) || !Number.isInteger(r) || w < 0 || r < 0) return null;
-    return w + r;
+    const w = toCreditTenths(welcomeNew);
+    const r = toCreditTenths(inviteReward);
+    if (w === null || r === null || w < 0 || r < 0) return null;
+    return (w + r) / 10;
   }, [welcomeNew, inviteReward]);
 
   const selectedAdjustAccount = useMemo(() => {
@@ -263,7 +287,7 @@ export function ToolCreditsView({
 
   function addToolCostRow() {
     const id = newToolId.trim();
-    const cost = Number(newToolCost);
+    const costTenths = toCreditTenths(newToolCost);
     if (!TOOL_ID_RE.test(id)) {
       setRulesError("工具标识须以小写字母开头，仅含小写字母、数字和连字符（最多 40 字）。");
       return;
@@ -272,12 +296,12 @@ export function ToolCreditsView({
       setRulesError(`工具「${id}」已在列表中。`);
       return;
     }
-    if (!Number.isInteger(cost) || cost < 1 || cost > 100) {
-      setRulesError("工具单次用量须为 1 到 100 的整数。");
+    if (costTenths === null || costTenths < 1 || costTenths > 1000) {
+      setRulesError("工具单次用量须为 0.1 到 100 之间、最多 1 位小数的数值。");
       return;
     }
     setRulesError("");
-    setCostDrafts((prev) => [...prev, { tool: id, cost: String(cost) }]);
+    setCostDrafts((prev) => [...prev, { tool: id, cost: formatCredit(costTenths / 10) }]);
     setNewToolId("");
     setNewToolCost("1");
   }
@@ -307,9 +331,18 @@ export function ToolCreditsView({
       return value;
     };
 
-    const newAccount = parseIntRange(welcomeNew, 0, 100, "新人赠送");
+    const parseCreditRange = (raw: string, min: number, max: number, label: string): number | null => {
+      const tenths = toCreditTenths(raw);
+      if (tenths === null || tenths < Math.round(min * 10) || tenths > Math.round(max * 10)) {
+        setRulesError(`${label}须为 ${min} 到 ${max} 之间、最多 1 位小数的数值。`);
+        return null;
+      }
+      return tenths / 10;
+    };
+
+    const newAccount = parseCreditRange(welcomeNew, 0, 100, "新人赠送");
     if (newAccount === null) return;
-    const existingMember = parseIntRange(welcomeExisting, 0, 100, "老卷友赠送");
+    const existingMember = parseCreditRange(welcomeExisting, 0, 100, "老卷友赠送");
     if (existingMember === null) return;
 
     const costs: Record<string, number> = {};
@@ -318,12 +351,12 @@ export function ToolCreditsView({
         setRulesError(`工具标识「${row.tool}」格式无效。`);
         return;
       }
-      const value = parseIntRange(row.cost, 1, 100, `工具 ${row.tool} 用量`);
+      const value = parseCreditRange(row.cost, 0.1, 100, `工具 ${row.tool} 用量`);
       if (value === null) return;
       costs[row.tool] = value;
     }
 
-    const invReward = parseIntRange(inviteReward, 0, 100, "邀请奖励");
+    const invReward = parseCreditRange(inviteReward, 0, 100, "邀请奖励");
     if (invReward === null) return;
     const invMonthly = parseIntRange(inviteMonthly, 1, 100, "每月奖励人数");
     if (invMonthly === null) return;
@@ -352,7 +385,7 @@ export function ToolCreditsView({
       packages.push({ credits, cents });
     }
 
-    const adReward = parseIntRange(adsReward, 1, 100, "广告奖励");
+    const adReward = parseCreditRange(adsReward, 0.1, 100, "广告奖励");
     if (adReward === null) return;
     const adDaily = parseIntRange(adsDailyLimit, 1, 20, "广告每日领取上限");
     if (adDaily === null) return;
@@ -401,11 +434,12 @@ export function ToolCreditsView({
       setAdjustError("请输入有效的 5 位 UID 或账号编号。");
       return;
     }
-    const rawCount = Number(adjustCount);
-    if (!Number.isInteger(rawCount) || rawCount < 1 || rawCount > 10000) {
-      setAdjustError("调整颗数须为 1 到 10000 的整数。");
+    const rawTenths = toCreditTenths(adjustCount);
+    if (rawTenths === null || rawTenths < 1 || rawTenths > 100000) {
+      setAdjustError("调整颗数须为 0.1 到 10000 之间、最多 1 位小数的数值。");
       return;
     }
+    const rawCount = rawTenths / 10;
     const amount = adjustDirection === "add" ? rawCount : -rawCount;
     const reason = adjustReason.trim();
     if (!reason || reason.length > 200) {
@@ -431,7 +465,7 @@ export function ToolCreditsView({
         requestId,
       });
       setAdjustOpen(false);
-      showToast(`${amount > 0 ? `已补发 +${amount}` : `已扣回 ${amount}`} 颗 · 当前余额 ${res.balance} 颗`);
+      showToast(`${amount > 0 ? `已补发 +${formatCredit(amount)}` : `已扣回 ${formatCredit(amount)}`} 颗 · 当前余额 ${formatCredit(res.balance)} 颗`);
       await onRefresh(accountFilter);
     } catch (err) {
       const message = (err as Error).message;
@@ -485,7 +519,7 @@ export function ToolCreditsView({
           <div className="text-[14px] font-medium text-[#6b645c]">可用卷豆合计</div>
           <div className="mt-2 flex items-baseline gap-1.5">
             <span className="text-[30px] font-semibold leading-none tabular-nums text-[#1c1917]">
-              {summary.totalBalance}
+              {formatCredit(summary.totalBalance)}
             </span>
             <span className="text-[13px] text-[#7a7268]">颗</span>
           </div>
@@ -501,7 +535,7 @@ export function ToolCreditsView({
                 summary.totalHeld > 0 ? "text-[#945c17]" : "text-[#1c1917]",
               )}
             >
-              {summary.totalHeld}
+              {formatCredit(summary.totalHeld)}
             </span>
             <span className="text-[13px] text-[#7a7268]">颗</span>
           </div>
@@ -517,7 +551,7 @@ export function ToolCreditsView({
             <span className="text-[13px] font-medium text-[#7b6238]">张可免费扫</span>
           </div>
           <div className="mt-2 text-[12.5px] tabular-nums text-[#7b6238]">
-            新人送 {rules.welcome.newAccount} 颗 · 每张用 {summary.scanCost} 颗
+            新人送 {formatCredit(rules.welcome.newAccount)} 颗 · 每张用 {formatCredit(summary.scanCost)} 颗
           </div>
         </div>
       </div>
@@ -561,7 +595,7 @@ export function ToolCreditsView({
           <div className="rounded-xl border border-[#eeeae3] bg-[#faf9f6] px-3.5 py-2.5">
             <div className="text-[12px] text-[#7a7268]">首登赠送</div>
             <div className="mt-0.5 font-medium tabular-nums text-[#1c1917]">
-              新人 {rules.welcome.newAccount} 颗 · 老卷友 {rules.welcome.existingMember} 颗
+              新人 {formatCredit(rules.welcome.newAccount)} 颗 · 老卷友 {formatCredit(rules.welcome.existingMember)} 颗
             </div>
           </div>
 
@@ -569,7 +603,7 @@ export function ToolCreditsView({
             <div className="text-[12px] text-[#7a7268]">工具单次用量</div>
             <div className="mt-0.5 truncate font-medium tabular-nums text-[#1c1917]">
               {Object.entries(rules.costs)
-                .map(([k, v]) => `${TOOL_LABELS[k] ?? k} ${v} 颗`)
+                .map(([k, v]) => `${TOOL_LABELS[k] ?? k} ${formatCredit(v)} 颗`)
                 .join(" · ")}
             </div>
           </div>
@@ -577,14 +611,14 @@ export function ToolCreditsView({
           <div className="rounded-xl border border-[#eeeae3] bg-[#faf9f6] px-3.5 py-2.5">
             <div className="text-[12px] text-[#7a7268]">邀请奖励配置</div>
             <div className="mt-0.5 font-medium tabular-nums text-[#1c1917]">
-              {rules.invite.reward} 颗/人 · 月上限 {rules.invite.monthlyLimit} 位
+              {formatCredit(rules.invite.reward)} 颗/人 · 月上限 {rules.invite.monthlyLimit} 位
             </div>
           </div>
 
           <div className="rounded-xl border border-[#eeeae3] bg-[#faf9f6] px-3.5 py-2.5">
             <div className="text-[12px] text-[#7a7268]">试价套餐 / 广告</div>
             <div className="mt-0.5 font-medium tabular-nums text-[#1c1917]">
-              {rules.purchase.packages.length} 档试价 · 广告 {rules.ads.reward} 颗/次
+              {rules.purchase.packages.length} 档试价 · 广告 {formatCredit(rules.ads.reward)} 颗/次
             </div>
           </div>
         </div>
@@ -697,11 +731,11 @@ export function ToolCreditsView({
                         )}
                       </td>
                       <td className="px-4 py-3.5 font-semibold tabular-nums text-[#1c1917]">
-                        {acc.balance} 颗
+                        {formatCredit(acc.balance)} 颗
                       </td>
                       <td className="px-4 py-3.5 tabular-nums">
                         {acc.held > 0 ? (
-                          <Badge tone="warn">{acc.held} 颗占用</Badge>
+                          <Badge tone="warn">{formatCredit(acc.held)} 颗占用</Badge>
                         ) : (
                           <span className="text-[#8c847a]">0</span>
                         )}
@@ -788,10 +822,10 @@ export function ToolCreditsView({
                               : "text-[#8c847a]",
                         )}
                       >
-                        {row.amount > 0 ? `+${row.amount}` : row.amount < 0 ? row.amount : "—"}
+                        {row.amount > 0 ? `+${formatCredit(row.amount)}` : row.amount < 0 ? formatCredit(row.amount) : "—"}
                       </td>
                       <td className="px-4 py-3.5 tabular-nums text-[#44403c]">
-                        {row.balanceAfter === null ? "—" : `${row.balanceAfter}`}
+                        {row.balanceAfter === null ? "—" : formatCredit(row.balanceAfter)}
                       </td>
                       <td className="max-w-[300px] px-4 py-3.5 text-[#44403c]">
                         <div className="truncate font-medium text-[#1c1917]">{row.reason}</div>
@@ -856,7 +890,7 @@ export function ToolCreditsView({
               <div>
                 <div className="text-[12px] text-[#8a724a]">有效邀请单次发放</div>
                 <div className="mt-0.5 text-[20px] font-semibold tabular-nums text-[#1c1917]">
-                  {previewInviteBudget === null ? "—" : `${previewInviteBudget} 颗`}
+                  {previewInviteBudget === null ? "—" : `${formatCredit(previewInviteBudget)} 颗`}
                 </div>
               </div>
             </div>
@@ -879,6 +913,7 @@ export function ToolCreditsView({
                 <input
                   id="rule-welcome-new"
                   type="number"
+                  step="0.1"
                   min={0}
                   max={100}
                   value={welcomeNew}
@@ -894,6 +929,7 @@ export function ToolCreditsView({
                 <input
                   id="rule-welcome-existing"
                   type="number"
+                  step="0.1"
                   min={0}
                   max={100}
                   value={welcomeExisting}
@@ -925,7 +961,8 @@ export function ToolCreditsView({
                       aria-label={`${row.tool} 用量`}
                       data-tool-cost={row.tool}
                       type="number"
-                      min={1}
+                      step="0.1"
+                      min={0.1}
                       max={100}
                       value={row.cost}
                       onChange={(e) => {
@@ -951,7 +988,8 @@ export function ToolCreditsView({
               />
               <input
                 type="number"
-                min={1}
+                step="0.1"
+                min={0.1}
                 max={100}
                 value={newToolCost}
                 onChange={(e) => setNewToolCost(e.target.value)}
@@ -999,6 +1037,7 @@ export function ToolCreditsView({
                 <input
                   id="rule-invite-reward"
                   type="number"
+                  step="0.1"
                   min={0}
                   max={100}
                   value={inviteReward}
@@ -1142,7 +1181,8 @@ export function ToolCreditsView({
                 <input
                   id="rule-ads-reward"
                   type="number"
-                  min={1}
+                  step="0.1"
+                  min={0.1}
                   max={100}
                   value={adsReward}
                   onChange={(e) => setAdsReward(e.target.value)}
@@ -1226,7 +1266,7 @@ export function ToolCreditsView({
                           : "border-[#e5e0d8] bg-[#faf9f6] text-[#575049] hover:border-[#cfc8bc]",
                       )}
                     >
-                      {accountLabel(acc.id, acc.uid)} · {acc.balance} 颗
+                      {accountLabel(acc.id, acc.uid)} · {formatCredit(acc.balance)} 颗
                     </button>
                   );
                 })}
@@ -1269,12 +1309,13 @@ export function ToolCreditsView({
 
             <div className="space-y-1.5">
               <label htmlFor="adjust-count-input" className="block text-[14px] font-medium text-[#44403c]">
-                颗数（1–10000）
+                颗数（0.1–10000）
               </label>
               <input
                 id="adjust-count-input"
                 type="number"
-                min={1}
+                step="0.1"
+                min={0.1}
                 max={10000}
                 value={adjustCount}
                 onChange={(e) => setAdjustCount(e.target.value)}
@@ -1286,11 +1327,13 @@ export function ToolCreditsView({
 
           {selectedAdjustAccount ? (
             <div className="flex items-center justify-between rounded-xl border border-[#eeeae3] bg-[#faf9f6] px-3.5 py-2.5 text-[13px] text-[#575049]">
-              <span>当前可用 {selectedAdjustAccount.balance} 颗{selectedAdjustAccount.held > 0 ? `（占用 ${selectedAdjustAccount.held} 颗）` : ""}</span>
+              <span>当前可用 {formatCredit(selectedAdjustAccount.balance)} 颗{selectedAdjustAccount.held > 0 ? `（占用 ${formatCredit(selectedAdjustAccount.held)} 颗）` : ""}</span>
               <span className="font-semibold tabular-nums text-[#1c1917]">
                 调整后预估：
-                {selectedAdjustAccount.balance +
-                  (adjustDirection === "add" ? 1 : -1) * (Number.isInteger(Number(adjustCount)) ? Number(adjustCount) : 0)}{" "}
+                {formatCredit(
+                  (Math.round(selectedAdjustAccount.balance * 10) +
+                    (adjustDirection === "add" ? 1 : -1) * (toCreditTenths(adjustCount) ?? 0)) / 10,
+                )}{" "}
                 颗
               </span>
             </div>

@@ -136,7 +136,8 @@ Page({
         if (this.unloaded || credits.accountId() !== wallet.accountId) return;
         pending = storage.toolCreditRecharge(wallet.accountId);
         if (paid && !pending?.cashierStarted && !activeRecharges.has(wallet.accountId)) {
-          pending = { credits: paid.credits, cents: paid.cents, yuanText: `¥${paid.credits}`, orderId: paid.id,
+          const yuan = (paid.cents / 100).toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
+          pending = { credits: paid.credits, cents: paid.cents, yuanText: `¥${yuan}`, orderId: paid.id,
             requestId: storage.uuid(), cashierStarted: true, paymentResult: "paid" };
           storage.setToolCreditRecharge(wallet.accountId, pending);
         }

@@ -3,7 +3,8 @@ import { postgresTransactionLock } from "./tool-credits-postgres.mjs";
 import { createToolPurchaseStore, ORDER_ID } from "./tool-credits-orders.mjs";
 import { createCoinRechargeStore } from "./tool-credits-recharge-orders.mjs";
 import {
-  creditError, DAY_MS, defaultCreditRules, INVITE_CHANNEL, MAX_HOLD_MS, TOOL_ID, updateCreditRules, usageDay, validId, validUid,
+  CREDIT_SCALE, creditError, DAY_MS, defaultCreditRules, fromCreditUnits, INVITE_CHANNEL, MAX_HOLD_MS,
+  toCreditUnits, TOOL_ID, updateCreditRules, usageDay, validId, validUid,
 } from "./tool-credits-rules.mjs";
 
 const hash = (value) => createHash("sha256").update(value).digest("hex");
@@ -20,6 +21,7 @@ const run = (client, sql, ...params) => client.query(sql, params);
 export function createToolCreditStore({ database, groupApproved, directPurchaseReady = false, tokenRechargeReady = false, clock = Date.now }) {
   let uidColumnState = { checkedAt: 0, present: false };
   let frozenColumnPresent = false;
+  let creditScale = 1;
 
   async function hasColumn(client, table, column) {
     const row = await get(client, `SELECT 1 AS ok FROM information_schema.columns
@@ -39,6 +41,29 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
     // Keep pre-migration wallets usable and pick up the refund column as soon as the migration commits.
     frozenColumnPresent ||= await hasColumn(client, "wallet_credit_lots", "frozen");
     return frozenColumnPresent;
+  }
+
+  async function scaleFor(client) {
+    if (creditScale === CREDIT_SCALE) return creditScale;
+    if (await hasColumn(client, "wallet_rules", "credit_scale")) creditScale = CREDIT_SCALE;
+    return creditScale;
+  }
+
+  function toUnits(value, scale) {
+    const units = toCreditUnits(value, scale);
+    if (units === null) {
+      if (scale === 1 && toCreditUnits(value, CREDIT_SCALE) !== null) {
+        throw creditError(503, "请先完成卷豆数据库迁移。", "wallet-migration-required");
+      }
+      throw creditError(400, "卷豆数值无效。");
+    }
+    return units;
+  }
+
+  function publicOperation(operation) {
+    if (!operation) return operation;
+    const { costUnits, ...rest } = operation;
+    return rest;
   }
 
   async function transact(operation, options) {
@@ -73,6 +98,7 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
 
   async function balances(client, ids, now = clock()) {
     // Refund processing freezes the original purchase lot alongside normal tool holds.
+    const scale = await scaleFor(client);
     const frozen = await hasFrozenLots(client) ?
       "COALESCE((SELECT SUM(remaining) FROM wallet_credit_lots WHERE account_id = a.id AND frozen), 0) +" : "";
     const rows = await all(client, `SELECT a.id,
@@ -81,31 +107,34 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
       COALESCE((SELECT SUM(h.amount) FROM wallet_tool_holds h JOIN wallet_tool_operations o ON o.id = h.operation_id
         WHERE o.account_id = a.id AND o.state = 'reserved' AND o.expires_at > $2), 0) AS held
       FROM wallet_accounts a WHERE a.id = ANY($1::text[])`, ids, now);
-    return new Map(rows.map(({ id, total, held }) => [id, { balance: total - held, held }]));
+    return new Map(rows.map(({ id, total, held }) => [id, {
+      balance: fromCreditUnits(total - held, scale),
+      held: fromCreditUnits(held, scale),
+    }]));
   }
 
   async function balance(client, id) {
     return (await balances(client, [id])).get(id);
   }
 
-  async function record(client, { id, amount, source, ref, reason, tool = null, actor = null, createdAt = clock() }) {
+  async function record(client, { id, amountUnits, source, ref, reason, tool = null, actor = null, createdAt = clock() }) {
     const row = await get(client, `INSERT INTO wallet_ledger
       (account_id, source, amount, balance_after, reference, reason, tool, operator, created_at)
       VALUES ($1, $2, $3::integer, CASE WHEN $1::text IS NOT NULL THEN
         COALESCE((SELECT SUM(remaining) FROM wallet_credit_lots WHERE account_id = $1), 0) + $3::integer END, $4, $5, $6, $7, $8)
-      RETURNING id`, id, source, amount, ref, reason, tool, actor, createdAt);
+      RETURNING id`, id, source, amountUnits, ref, reason, tool, actor, createdAt);
     return row.id;
   }
 
   async function grant(client, entry) {
     const ledgerId = await record(client, entry);
-    if (entry.amount > 0) {
-      await run(client, "INSERT INTO wallet_credit_lots (id, account_id, remaining) VALUES ($1, $2, $3)", ledgerId, entry.id, entry.amount);
+    if (entry.amountUnits > 0) {
+      await run(client, "INSERT INTO wallet_credit_lots (id, account_id, remaining) VALUES ($1, $2, $3)", ledgerId, entry.id, entry.amountUnits);
     }
     return ledgerId;
   }
 
-  async function allocate(client, accountId, amount) {
+  async function allocate(client, accountId, amountUnits) {
     const spendable = await hasFrozenLots(client) ? "AND NOT l.frozen" : "";
     const lots = await all(client, `SELECT l.id, l.remaining -
       COALESCE((SELECT SUM(h.amount) FROM wallet_tool_holds h WHERE h.lot_id = l.id), 0) AS available
@@ -114,10 +143,10 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
     const allocations = [];
     for (const lot of lots) {
       if (!lot.available) continue;
-      const take = Math.min(lot.available, amount);
+      const take = Math.min(lot.available, amountUnits);
       allocations.push({ lotId: lot.id, amount: take });
-      amount -= take;
-      if (!amount) return allocations;
+      amountUnits -= take;
+      if (!amountUnits) return allocations;
     }
     throw creditError(402, "可用卷豆不足。", "balance");
   }
@@ -155,8 +184,9 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
           await run(client, "INSERT INTO wallet_accounts (id, wechat_key, created_at, legacy_member) VALUES ($1, $2, $3, $4)",
             id, wechatKey, now, Boolean(legacyGuestId));
         }
-        const amount = legacyGuestId ? config.welcome.existingMember : config.welcome.newAccount;
-        await grant(client, { id, amount, source: "welcome", ref: id, reason: "首次登录赠送" });
+        const scale = await scaleFor(client);
+        const amountUnits = toUnits(legacyGuestId ? config.welcome.existingMember : config.welcome.newAccount, scale);
+        await grant(client, { id, amountUnits, source: "welcome", ref: id, reason: "首次登录赠送" });
         if (inviteEnabled(config) && visitorId && typeof inviteClaim === "string" && claimToken.test(inviteClaim)) {
           const visit = await get(client, `SELECT v.entered_at, c.account_id FROM wallet_invite_visits v
             JOIN wallet_invite_codes c ON c.code = v.code WHERE v.claim = $1 AND v.wechat_key = $2 AND v.visitor_id = $3
@@ -164,7 +194,7 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
           if (visit && visit.account_id !== id && visit.entered_at + config.invite.registerDays * DAY_MS > now) {
             await run(client, "UPDATE wallet_invite_visits SET claimed_by = $1 WHERE claim = $2", id, inviteClaim);
             await run(client, `INSERT INTO wallet_invitations (account_id, inviter_id, reward, monthly_limit, expires_at)
-              VALUES ($1, $2, $3, $4, $5)`, id, visit.account_id, config.invite.reward, config.invite.monthlyLimit, now + config.invite.useDays * DAY_MS);
+              VALUES ($1, $2, $3, $4, $5)`, id, visit.account_id, toUnits(config.invite.reward, scale), config.invite.monthlyLimit, now + config.invite.useDays * DAY_MS);
           }
         }
       }
@@ -182,18 +212,23 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
     });
   }
 
-  function ledger(client, accountId, limit, before = 0, withZero = true, hasUid = true) {
-    if (!hasUid) {
-      return all(client, `SELECT l.id, l.account_id AS "accountId", NULL::integer AS "accountUid", l.source, l.amount, l.balance_after AS "balanceAfter",
-        l.reference, l.reason, l.tool, l.operator, l.created_at AS "createdAt" FROM wallet_ledger l
-        WHERE ($1::text IS NULL OR l.account_id = $1) AND ($2::bigint = 0 OR l.id < $2)
-        AND ($3::boolean OR l.amount != 0) ORDER BY l.id DESC LIMIT $4`, accountId, before, withZero, limit);
-    }
-    return all(client, `SELECT l.id, l.account_id AS "accountId", a.uid AS "accountUid", l.source, l.amount, l.balance_after AS "balanceAfter",
-      l.reference, l.reason, l.tool, l.operator, l.created_at AS "createdAt" FROM wallet_ledger l
-      LEFT JOIN wallet_accounts a ON a.id = l.account_id
-      WHERE ($1::text IS NULL OR l.account_id = $1) AND ($2::bigint = 0 OR l.id < $2)
-      AND ($3::boolean OR l.amount != 0) ORDER BY l.id DESC LIMIT $4`, accountId, before, withZero, limit);
+  async function ledger(client, accountId, limit, before = 0, withZero = true, hasUid = true) {
+    const scale = await scaleFor(client);
+    const rows = !hasUid
+      ? await all(client, `SELECT l.id, l.account_id AS "accountId", NULL::integer AS "accountUid", l.source, l.amount, l.balance_after AS "balanceAfter",
+          l.reference, l.reason, l.tool, l.operator, l.created_at AS "createdAt" FROM wallet_ledger l
+          WHERE ($1::text IS NULL OR l.account_id = $1) AND ($2::bigint = 0 OR l.id < $2)
+          AND ($3::boolean OR l.amount != 0) ORDER BY l.id DESC LIMIT $4`, accountId, before, withZero, limit)
+      : await all(client, `SELECT l.id, l.account_id AS "accountId", a.uid AS "accountUid", l.source, l.amount, l.balance_after AS "balanceAfter",
+          l.reference, l.reason, l.tool, l.operator, l.created_at AS "createdAt" FROM wallet_ledger l
+          LEFT JOIN wallet_accounts a ON a.id = l.account_id
+          WHERE ($1::text IS NULL OR l.account_id = $1) AND ($2::bigint = 0 OR l.id < $2)
+          AND ($3::boolean OR l.amount != 0) ORDER BY l.id DESC LIMIT $4`, accountId, before, withZero, limit);
+    return rows.map(row => ({
+      ...row,
+      amount: fromCreditUnits(row.amount, scale),
+      balanceAfter: fromCreditUnits(row.balanceAfter, scale),
+    }));
   }
 
   function wallet(id, before) {
@@ -249,6 +284,8 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
   function adjust({ accountId, amount, reason, requestId, actor }) {
     return transact(async (client) => {
       await lock(client, "adjustment:" + requestId);
+      const scale = await scaleFor(client);
+      const amountUnits = toUnits(amount, scale);
       const hasUid = await hasAccountUid(client);
       const targetId = validUid(accountId) ? await resolveAccountId(client, accountId, hasUid) : accountId;
       if (!targetId) throw creditError(404, "找不到该微信账号。");
@@ -256,15 +293,15 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
       await expire(client, targetId, clock());
       const prior = await get(client, "SELECT account_id, amount, reason FROM wallet_ledger WHERE source = 'manual' AND reference = $1", requestId);
       if (prior) {
-        if (prior.account_id !== targetId || prior.amount !== amount || prior.reason !== reason) {
+        if (prior.account_id !== targetId || prior.amount !== amountUnits || prior.reason !== reason) {
           throw creditError(409, "该补发记录已存在，请刷新后重试。");
         }
       } else {
-        const entry = { id: targetId, amount, source: "manual", ref: requestId, reason, actor };
-        if (amount > 0) {
+        const entry = { id: targetId, amountUnits, source: "manual", ref: requestId, reason, actor };
+        if (amountUnits > 0) {
           await grant(client, entry);
         } else {
-          const allocations = await allocate(client, targetId, -amount);
+          const allocations = await allocate(client, targetId, -amountUnits);
           await record(client, entry);
           for (const item of allocations) {
             await run(client, "UPDATE wallet_credit_lots SET remaining = remaining - $1 WHERE id = $2", item.amount, item.lotId);
@@ -282,7 +319,7 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
         tokenRechargeReady: tokenRechargeReady && await hasFrozenLots(client) });
       await run(client, `INSERT INTO wallet_rules (id, value) VALUES (1, $1)
         ON CONFLICT (id) DO UPDATE SET value = excluded.value`, value);
-      await record(client, { id: null, amount: 0, source: "rules", ref: randomUUID(), reason: "更新卷豆规则", actor });
+      await record(client, { id: null, amountUnits: 0, source: "rules", ref: randomUUID(), reason: "更新卷豆规则", actor });
       return value;
     });
   }
@@ -302,11 +339,13 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
   }
 
   async function findOperation(client, { accountId, tool, operationId }, now = clock()) {
+    const scale = await scaleFor(client);
     const row = await get(client, `SELECT id, CASE WHEN state = 'reserved' AND expires_at <= $4 THEN 'expired' ELSE state END AS state,
       cost, expires_at AS "expiresAt", delivery_ref AS "deliveryRef", payment_order_id AS "paymentOrderId"
       FROM wallet_tool_operations WHERE account_id = $1 AND tool = $2 AND operation_id = $3`, accountId, tool, operationId, now);
-    if (row?.paymentOrderId === null) delete row.paymentOrderId;
-    return row;
+    if (!row) return row;
+    if (row.paymentOrderId === null) delete row.paymentOrderId;
+    return { ...row, costUnits: row.cost, cost: fromCreditUnits(row.cost, scale) };
   }
 
   function mutateOperation(key, fn) {
@@ -327,25 +366,27 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
     return mutateOperation(key, async (client, existing, now) => {
       if (existing) {
         if (paymentOrderId !== existing.paymentOrderId) throw creditError(409, "工具操作的付款来源已确认。", "purchase-conflict");
-        return { ...existing, created: false };
+        return { ...publicOperation(existing), created: false };
       }
+      const scale = await scaleFor(client);
       const { accountId, tool, operationId } = key;
       const cost = paymentOrderId ? 0 : await quote(client, tool);
+      const costUnits = paymentOrderId ? 0 : toUnits(cost, scale);
       if (paymentOrderId) {
         await purchases.assertUsable(client, accountId, tool, paymentOrderId);
-      } else if (cost !== quotedCost) {
+      } else if (toCreditUnits(quotedCost, scale) !== costUnits) {
         throw creditError(409, "工具用量有更新，请重新确认。", "quote");
       }
-      const allocations = cost ? await allocate(client, accountId, cost) : [];
+      const allocations = costUnits ? await allocate(client, accountId, costUnits) : [];
       const id = randomUUID();
       const expiresAt = now + holdMs;
       await run(client, `INSERT INTO wallet_tool_operations
         (id, account_id, tool, operation_id, state, cost, created_at, expires_at, payment_order_id)
-        VALUES ($1, $2, $3, $4, 'reserved', $5, $6, $7, $8)`, id, accountId, tool, operationId, cost, now, expiresAt, paymentOrderId ?? null);
+        VALUES ($1, $2, $3, $4, 'reserved', $5, $6, $7, $8)`, id, accountId, tool, operationId, costUnits, now, expiresAt, paymentOrderId ?? null);
       for (const item of allocations) {
         await run(client, "INSERT INTO wallet_tool_holds (operation_id, lot_id, amount) VALUES ($1, $2, $3)", id, item.lotId, item.amount);
       }
-      return { id, state: "reserved", cost, expiresAt, deliveryRef: null, created: true, ...(paymentOrderId ? { paymentOrderId } : {}) };
+      return { id, state: "reserved", cost: fromCreditUnits(costUnits, scale), expiresAt, deliveryRef: null, created: true, ...(paymentOrderId ? { paymentOrderId } : {}) };
     });
   }
 
@@ -356,7 +397,7 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
       if (operation.state === "settled" && operation.deliveryRef !== deliveryRef) {
         throw creditError(409, "这笔工具操作已有交付凭证。");
       }
-      if (operation.state !== "reserved") return operation;
+      if (operation.state !== "reserved") return publicOperation(operation);
       const { accountId, tool } = key;
       if (await get(client, "SELECT 1 FROM wallet_tool_operations WHERE account_id = $1 AND tool = $2 AND delivery_ref = $3", accountId, tool, deliveryRef)) {
         throw creditError(409, "该交付凭证已结算。");
@@ -364,23 +405,23 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
       if (operation.paymentOrderId) {
         await purchases.assertUsable(client, accountId, tool, operation.paymentOrderId, { held: true });
       } else {
-        await record(client, { id: accountId, amount: -operation.cost, source: "tool", tool, ref: operation.id, reason: "使用工具" });
+        await record(client, { id: accountId, amountUnits: -operation.costUnits, source: "tool", tool, ref: operation.id, reason: "使用工具" });
         await run(client, `UPDATE wallet_credit_lots l SET remaining = l.remaining - h.amount
           FROM wallet_tool_holds h WHERE l.id = h.lot_id AND h.operation_id = $1`, operation.id);
         await run(client, "DELETE FROM wallet_tool_holds WHERE operation_id = $1", operation.id);
       }
       await run(client, "UPDATE wallet_tool_operations SET state = 'settled', delivery_ref = $1, settled_at = $2 WHERE id = $3", deliveryRef, now, operation.id);
-      return { ...operation, state: "settled", deliveryRef };
+      return publicOperation({ ...operation, state: "settled", deliveryRef });
     });
   }
 
   function release(key) {
     return mutateOperation(key, async (client, operation) => {
       if (!operation) throw creditError(404, "找不到这笔工具操作。");
-      if (operation.state !== "reserved") return operation;
+      if (operation.state !== "reserved") return publicOperation(operation);
       await run(client, "DELETE FROM wallet_tool_holds WHERE operation_id = $1", operation.id);
       await run(client, "UPDATE wallet_tool_operations SET state = 'released' WHERE id = $1", operation.id);
-      return { ...operation, state: "released" };
+      return publicOperation({ ...operation, state: "released" });
     });
   }
 
@@ -441,7 +482,7 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
       WHERE inviter_id = $1 AND reward_month = $2`, invite.inviter_id, month);
     if (total >= invite.monthly_limit) return;
     await run(client, "UPDATE wallet_invitations SET reward_month = $1 WHERE account_id = $2", month, id);
-    await grant(client, { id: invite.inviter_id, amount: invite.reward, source: "invite", ref: id, reason: "邀请新卷友", createdAt });
+    await grant(client, { id: invite.inviter_id, amountUnits: invite.reward, source: "invite", ref: id, reason: "邀请新卷友", createdAt });
   }
 
   function recordToolUse(key) {
@@ -455,7 +496,7 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
 
   const purchases = createToolPurchaseStore({ transact, read, lockAccounts, expire, rules, resolveAccountId, clock });
   const recharges = createCoinRechargeStore({
-    transact, read, lockAccounts, rules, grant, record, clock,
+    transact, read, lockAccounts, rules, grant, record, scaleFor, clock,
     resolveAccountId: async (client, accountRef) => resolveAccountId(client, accountRef, await hasAccountUid(client)),
   });
   return {
@@ -464,7 +505,7 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
     quote: (tool) => read((client) => quote(client, tool)),
     operation: (key) => {
       validateKey(key);
-      return read(async (client) => (await findOperation(client, key)) ?? null);
+      return read(async (client) => publicOperation(await findOperation(client, key)) ?? null);
     },
     inviteEnabled: () => database && groupApproved ? read(async (client) => inviteEnabled(await rules(client))) : false,
     purchaseSettings: async () => {

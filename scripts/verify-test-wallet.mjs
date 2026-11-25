@@ -45,7 +45,7 @@ if (flags.includes("--login-ready")) {
   assert.equal(capability.login, true, "卷豆微信登录尚未配置");
   const quote = await walletJson("/api/tool-credits/quote?tool=answer-sheet", 200);
   assert.equal(quote.tool, "answer-sheet");
-  assert.ok(Number.isInteger(quote.cost) && quote.cost > 0, "卷豆报价无效");
+  assert.ok(typeof quote.cost === "number" && Number.isFinite(quote.cost) && quote.cost > 0 && Number(quote.cost.toFixed(1)) === quote.cost, "卷豆报价无效");
   scanCost = quote.cost;
 }
 

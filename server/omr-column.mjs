@@ -1,6 +1,6 @@
 // 列式版式答题卡（每题一列、A/B/C/D 竖排，7 块 × 20 题 = 140 题）的尺度无关全局网格判读。
 
-import { clamp01, iqrRatio, mean, median, percentile, relMad } from "./omr-features.mjs";
+import { clamp01, erode1, iqrRatio, labelComponents, mean, median, percentile, relMad } from "./omr-features.mjs";
 
 const OPTIONS = ["A", "B", "C", "D"];
 const OPTION_ROWS = 4;
@@ -86,6 +86,180 @@ function buildBlocksFromBlueBands(blueStack, timingTrack, W, H) {
       bottom: Math.min(H - 1, cy + span * 0.52),
     };
   });
+}
+
+// 白底无蓝带的列式答题卡（如 A4 打印国考/省考列式卡）：
+// 依托右侧同步轨确定右边界，用腐蚀后的实心铅笔斑块在纵轴拟合 7 块等距周期结构
+// （块内 4 行选项集中、块间题号行留空）。
+function buildBlocksFromMarks(planes, features, timingTrack) {
+  const { width: W, height: H } = planes;
+  if (!timingTrack || timingTrack.side !== "right") return null;
+  const minArea = Math.max(18, Math.round(W * H * 0.000014));
+  const eroded = Math.min(W, H) >= 750 ? erode1(features.ink, { width: W, height: H }) : features.ink;
+  const eComps = labelComponents(eroded, { width: W, height: H }, minArea);
+  const raw = eComps.filter((c) => {
+    const tx = timingTrack.intercept + timingTrack.slope * c.cy;
+    if (c.cx >= tx - timingTrack.medW * 0.75) return false;
+    if (c.fill < 0.45) return false;
+    if (c.w < Math.max(6, W * 0.009) || c.w > W * 0.065) return false;
+    if (c.h < Math.max(4, H * 0.003) || c.h > H * 0.032) return false;
+    if (c.w < c.h * 0.55 || c.w > c.h * 4.2) return false;
+    return true;
+  });
+  if (raw.length < 36) return null;
+  const medArea = median(raw.map((m) => m.area));
+  const medW = median(raw.map((m) => m.w));
+  const medH = median(raw.map((m) => m.h));
+  const marks = raw.filter(
+    (m) =>
+      m.area >= medArea * 0.25 && m.area <= medArea * 4.0 &&
+      m.w >= medW * 0.45 && m.w <= medW * 2.3 &&
+      m.h >= medH * 0.45 && m.h <= medH * 2.2,
+  );
+  if (marks.length < 36) return null;
+
+  // 透视俯拍时右侧同步轨可能向外张开而水平行仍接近水平，不能直接取 -timingTrack.slope；
+  // 在小倾角范围内（含 0 与 -timingTrack.slope）择优拟合 7 块周期。
+  const midX = median(marks.map((m) => m.cx));
+  const slopeCandidates = [0, -0.02, 0.02, -0.04, 0.04];
+  if (Math.abs(timingTrack.slope) > 0.01 && Math.abs(timingTrack.slope) < 0.12) {
+    slopeCandidates.push(-timingTrack.slope);
+  }
+
+  let best = { score: -Infinity, y0: 0, span: 100, slope: 0 };
+  for (const slope of slopeCandidates) {
+    const ys = marks.map((m) => m.cy - slope * (m.cx - midX));
+    const yMin = percentile(ys, 0.02);
+    const yMax = percentile(ys, 0.98);
+    const ySpan = yMax - yMin;
+    if (ySpan < H * 0.28) continue;
+
+    const evalBlocks = (y0, span) => {
+      let sc = 0;
+      const hitBlocks = new Uint8Array(BLOCK_COUNT);
+      for (let i = 0; i < ys.length; i++) {
+        const rel = (ys[i] - y0) / span;
+        if (rel < -0.45 || rel > BLOCK_COUNT - 0.55) continue;
+        const b = Math.max(0, Math.min(BLOCK_COUNT - 1, Math.round(rel)));
+        const d = Math.abs(rel - b);
+        if (d <= 0.37) {
+          sc += 1.0;
+          hitBlocks[b] = 1;
+        } else {
+          sc -= 2.2;
+        }
+      }
+      let blocksHit = 0;
+      for (let b = 0; b < BLOCK_COUNT; b++) blocksHit += hitBlocks[b];
+      return blocksHit >= 5 ? sc : -Infinity;
+    };
+
+    const estSpan = ySpan / 6.6;
+    for (let span = estSpan * 0.78; span <= estSpan * 1.25; span += Math.max(1.2, estSpan * 0.015)) {
+      const startLo = Math.max(0, yMin - span * 0.35);
+      const startHi = Math.min(H - (BLOCK_COUNT - 1) * span, yMin + span * 0.85);
+      for (let y0 = startLo; y0 <= startHi; y0 += Math.max(2, span * 0.03)) {
+        const sc = evalBlocks(y0, span);
+        if (sc > best.score) best = { score: sc, y0, span, slope };
+      }
+    }
+  }
+  if (!Number.isFinite(best.score) || best.score < marks.length * 0.50) return null;
+
+  // 以中心块 b=3 为基准搜 (yMid, span, quad)，使透视二次项 quad 与均值行距正交，
+  // 即使大俯拍梯形透视（块高从顶到底递增 35%）也能一次对齐 7 块。
+  const ysBest = marks.map((m) => m.cy - best.slope * (m.cx - midX));
+  const yMid0 = best.y0 + 3 * best.span;
+  const span0 = best.span;
+  let bestMid = yMid0;
+  let bestSpan = span0;
+  let bestQuad = 0;
+  for (let quad = -6.0; quad <= 6.51; quad += 1.0) {
+    for (let span = span0 - 10; span <= span0 + 10; span += 1.5) {
+      for (let yMid = yMid0 - 12; yMid <= yMid0 + 12; yMid += 2.0) {
+        const centers = Array.from({ length: BLOCK_COUNT }, (_, b) => {
+          const d = b - 3;
+          return yMid + d * span + d * d * quad;
+        });
+        const spans = centers.map((cy, b) =>
+          b === 0 ? centers[1] - centers[0] : b === BLOCK_COUNT - 1 ? centers[b] - centers[b - 1] : (centers[b + 1] - centers[b - 1]) / 2,
+        );
+        if (Math.min(...spans) < 25) continue;
+        let sc = 0;
+        for (let i = 0; i < ysBest.length; i++) {
+          const y = ysBest[i];
+          let bestD = Infinity;
+          for (let b = 0; b < BLOCK_COUNT; b++) {
+            const d = Math.abs(y - centers[b]) / spans[b];
+            if (d < bestD) bestD = d;
+          }
+          if (bestD > 0.52) continue;
+          if (bestD <= 0.37) sc += 1.0;
+          else sc -= 2.2;
+        }
+        if (sc > best.score) {
+          best.score = sc;
+          bestMid = yMid;
+          bestSpan = span;
+          bestQuad = quad;
+        }
+      }
+    }
+  }
+
+  const centers = Array.from({ length: BLOCK_COUNT }, (_, b) => {
+    const d = b - 3;
+    return bestMid + d * bestSpan + d * d * bestQuad;
+  });
+  const spans = centers.map((cy, b) =>
+    Math.max(20, b === 0 ? centers[1] - centers[0] : b === BLOCK_COUNT - 1 ? centers[b] - centers[b - 1] : (centers[b + 1] - centers[b - 1]) / 2),
+  );
+
+  // 每块左边界按跨块线性拟合（兼顾梯形透视张角，且不怕某块第 1 题留空把左边界拉偏）。
+  const leftPts = [];
+  for (let b = 0; b < BLOCK_COUNT; b++) {
+    const bMarks = marks.filter((m) => Math.abs((m.cy - best.slope * (m.cx - midX)) - centers[b]) <= spans[b] * 0.45);
+    if (bMarks.length >= 8) {
+      leftPts.push([b, Math.min(...bMarks.map((m) => m.cx)) - medW * 1.4]);
+    }
+  }
+  const globalLeft = Math.max(0, Math.round(percentile(marks.map((m) => m.cx), 0.01) - medW * 1.4));
+  let leftA = globalLeft;
+  let leftS = 0;
+  if (leftPts.length >= 3) {
+    const slopes = [];
+    for (let i = 0; i < leftPts.length; i++) {
+      for (let j = i + 1; j < leftPts.length; j++) {
+        slopes.push((leftPts[j][1] - leftPts[i][1]) / (leftPts[j][0] - leftPts[i][0]));
+      }
+    }
+    leftS = median(slopes);
+    leftA = median(leftPts.map(([b, x]) => x - leftS * b));
+  }
+
+  const out = [];
+  for (let b = 0; b < BLOCK_COUNT; b++) {
+    const cy = centers[b];
+    const sp = spans[b];
+    const left = Math.max(0, Math.round(leftA + leftS * b));
+    const trackX = timingTrack.intercept + timingTrack.slope * cy - timingTrack.medW * 0.7;
+    const right = Math.min(W - 1, Math.round(trackX));
+    if (right <= left + 40) return null;
+    out.push({
+      index: b,
+      blue: false,
+      left,
+      right,
+      width: Math.max(1, right - left),
+      midX: (left + right) / 2,
+      centerY: cy,
+      span: sp,
+      slope: best.slope,
+      top: Math.max(0, cy - sp * 0.52),
+      bottom: Math.min(H - 1, cy + sp * 0.52),
+    });
+  }
+  return out;
 }
 
 function extractBlockMarks(components, blocks, timingTrack) {
@@ -311,8 +485,11 @@ function fitColumnRowGrids(blocks, colGrid, marks, darkSums) {
 
 export function recognizeColumnV3(planes, features, blueStack, timingTrack, options = {}) {
   const { width: W, height: H, gray } = planes;
-  if (!blueStack || blueStack.length < 4) return null;
-  const blocks = buildBlocksFromBlueBands(blueStack, timingTrack, W, H);
+  const hasBlueBands = Boolean(blueStack && blueStack.length >= 4);
+  const blocks = hasBlueBands
+    ? buildBlocksFromBlueBands(blueStack, timingTrack, W, H)
+    : buildBlocksFromMarks(planes, features, timingTrack);
+  if (!blocks || blocks.length < BLOCK_COUNT) return null;
   const marks = extractBlockMarks(features.components, blocks, timingTrack);
   if (marks.length < 16) return null;
 
@@ -346,14 +523,17 @@ export function recognizeColumnV3(planes, features, blueStack, timingTrack, opti
       }
       let top = 0;
       for (let r = 1; r < OPTION_ROWS; r++) if (values[r] > values[top]) top = r;
-      let second = -1;
-      for (let r = 0; r < OPTION_ROWS; r++) if (r !== top && values[r] > second) second = values[r];
-      const dTop = values[top];
+      const sortedVals = [values[0], values[1], values[2], values[3]].sort((a, b) => b - a);
+      const dTop = sortedVals[0];
+      const second = sortedVals[1];
+      const printBase = Math.min(0.28, (sortedVals[2] + sortedVals[3]) * 0.5);
+      const excessTop = Math.max(0, dTop - printBase);
+      const excessSecond = Math.max(0, second - printBase);
       const margin = dTop - second;
-      const ratio = dTop / (second + 0.03);
-      if (dTop >= 0.16) {
+      const ratio = excessTop / (excessSecond + 0.045);
+      if (dTop >= 0.16 && excessTop >= 0.11) {
         activeCount++;
-        if (second >= 0.16 && second >= dTop * 0.55) multiDarkCount++;
+        if (excessSecond >= 0.10 && excessSecond >= excessTop * 0.52) multiDarkCount++;
       }
       const index = b * COLUMNS_PER_BLOCK + c;
       if (picks) {
@@ -365,8 +545,8 @@ export function recognizeColumnV3(planes, features, blueStack, timingTrack, opti
           margin: Number(margin.toFixed(3)),
         });
       }
-      if (dTop >= 0.19 && margin >= 0.105 && ratio >= 1.75) {
-        const confidence = clamp01(margin / 0.50);
+      if (dTop >= 0.19 && excessTop >= 0.145 && margin >= 0.105 && ratio >= 1.95) {
+        const confidence = clamp01(margin / 0.45);
         questions[index] = { number: index + 1, answer: OPTIONS[top], confidence: Number(confidence.toFixed(3)) };
         contrastRatios.push(ratio);
         blockRead++;
@@ -450,7 +630,7 @@ export function recognizeColumnV3(planes, features, blueStack, timingTrack, opti
     heightIqr: iqrRatio(marks.map((m) => m.h)),
     paperP75: percentile(paperSamples, 0.75),
     hasTimingTrack: Boolean(timingTrack),
-    hasBlueBands: true,
+    hasBlueBands,
     distinctOptions: new Set(answered.map((q) => q.answer)).size,
   };
 

@@ -146,7 +146,7 @@ test("卷豆按 1 元 1 颗签发代币订单，沙箱与现网分别使用各�
 });
 
 test("只信签名现金查单，重复确认和推送仅增加一笔可消费的卷豆", async (t) => {
-  const { server, owner, login, setPurchase, checkout, confirm, wallet, paid, push, debits } = await fixture(t);
+  const { server, operator, owner, login, setPurchase, checkout, confirm, wallet, paid, push, debits } = await fixture(t);
   assert.equal((await setPurchase()).status, 200);
   const { order } = (await checkout()).data;
   const message = { Event: "xpay_coin_pay_notify", OpenId: "wechat-owner", OutTradeNo: order.id, Env: 1 };
@@ -183,13 +183,21 @@ test("只信签名现金查单，重复确认和推送仅增加一笔可消费�
   assert.equal(debits.size, 1);
 
   const store = createToolCreditStore({ database: server.database });
-  const operations = Array.from({ length: 9 }, (_, index) => ({ accountId: owner.accountId,
+  const fractionalOps = Array.from({ length: 10 }, (_, index) => ({ accountId: owner.accountId,
+    tool: "answer-sheet", operationId: "paid-tool-tenth:" + index }));
+  const reservedTenths = await Promise.all(fractionalOps.map(key => store.reserve(key, { quotedCost: 0.1 })));
+  assert.equal(reservedTenths.length, 10);
+  await Promise.all(fractionalOps.map((key, index) => store.settle(key, "paid-tool-tenth-result:" + index)));
+  assert.equal((await wallet()).balance, 7);
+
+  assert.equal((await server.json(admin + "/rules", { costs: { "answer-sheet": 1 } }, operator)).status, 200);
+  const operations = Array.from({ length: 8 }, (_, index) => ({ accountId: owner.accountId,
     tool: "answer-sheet", operationId: "paid-tool:" + index }));
   const reserved = await Promise.allSettled(operations.map(key => store.reserve(key, { quotedCost: 1 })));
-  assert.equal(reserved.filter(result => result.status === "fulfilled").length, 8);
+  assert.equal(reserved.filter(result => result.status === "fulfilled").length, 7);
   const settled = await Promise.all(operations.map((key, index) => reserved[index].status === "fulfilled"
     ? store.settle(key, "paid-tool-result:" + index) : null));
-  assert.equal(settled.filter(item => item?.state === "settled").length, 8);
+  assert.equal(settled.filter(item => item?.state === "settled").length, 7);
   assert.equal((await wallet()).balance, 0);
 });
 
@@ -244,7 +252,8 @@ test("签名查单核对退款，暂冻结原批次并只扣回该笔未用卷�
   assert.equal((await wallet()).balance, 8);
 
   const spent = { ...key, operationId: "refund-tool-spent" };
-  await store.reserve(spent, { quotedCost: 4 });
+  assert.equal((await server.json(admin + "/rules", { costs: { "answer-sheet": 3.1 } }, operator)).status, 200);
+  await store.reserve(spent, { quotedCost: 3.1 });
   await store.settle(spent, "spent-result");
   paid(order.id, { status: 8, left_fee: 0, update_time: 30 });
   assert.equal((await push(refund)).status, 200);
@@ -255,7 +264,7 @@ test("签名查单核对退款，暂冻结原批次并只扣回该笔未用卷�
   assert.equal((await wallet()).held, 0);
   assert.equal((await wallet()).balance, 0);
   assert.deepEqual((await wallet()).records.map(row => [row.source, row.amount]), [
-    ["refund", -4], ["tool", -4], ["purchase", 5], ["welcome", 3],
+    ["refund", -4.9], ["tool", -3.1], ["purchase", 5], ["welcome", 3],
   ]);
 });
 

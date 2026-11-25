@@ -111,9 +111,16 @@ function legacyBindCandidate() {
   };
 }
 
+function formatCredit(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return "0";
+  const rounded = Math.round(num * 10) / 10;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+}
+
 function scannableCount(balance, cost) {
-  const safeBalance = Number(balance) || 0;
-  const safeCost = Number(cost) || 0;
+  const safeBalance = Math.round((Number(balance) || 0) * 10);
+  const safeCost = Math.round((Number(cost) || 0) * 10);
   if (safeBalance <= 0 || safeCost <= 0) return 0;
   return Math.floor(safeBalance / safeCost);
 }
@@ -141,9 +148,9 @@ function formatRecord(entry) {
     tool,
     amount,
     positive,
-    amountText: positive ? `+${amount}` : `${amount}`,
+    amountText: positive ? `+${formatCredit(amount)}` : formatCredit(amount),
     balanceAfter: entry?.balanceAfter ?? null,
-    balanceText: typeof entry?.balanceAfter === "number" ? `余额 ${entry.balanceAfter} 颗` : "",
+    balanceText: typeof entry?.balanceAfter === "number" ? `余额 ${formatCredit(entry.balanceAfter)} 颗` : "",
     timeText: format.dateTime(entry?.createdAt),
     createdAt: entry?.createdAt || 0,
   };
@@ -314,9 +321,10 @@ async function wallet(before = 0) {
 
 async function quote(tool = "answer-sheet") {
   const data = await authedRequest(`tool-credits/quote?tool=${encodeURIComponent(tool)}`, undefined, 15000, false);
+  const parsed = Number(data.cost);
   return {
     tool: data.tool || tool,
-    cost: Number(data.cost) || 1,
+    cost: Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed * 10) / 10 : 0.1,
   };
 }
 
@@ -372,6 +380,7 @@ module.exports = {
   formatPackages,
   DEFAULT_PACKAGES,
   legacyBindCandidate,
+  formatCredit,
   scannableCount,
   shortAccountId,
   formatRecord,
