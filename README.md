@@ -1,69 +1,103 @@
-# 卷卷小榜 · RollieRank
+<h1 align="center">
+  <img src="assets/readme/cover.webp" alt="卷卷小榜 · RollieRank" width="100%">
+</h1>
 
-<!-- 原 README 仅描述一期固定题量；新增机构和卷型后，目录数量、计分适用范围与导入依赖同步更新。 -->
-面向行测备考者的答题卡估分与练习记录原型，适配电脑和手机。内置花生一期、二期地市与副省卷，以及超格、粉笔、上岸村共 62 套主卷，包含 8,095 道参考答案；也可通过管理界面导入其他单选套卷。新增资料与计分依据见 [套卷导入记录](docs/import-question-banks.md)。
+<p align="center"><strong>行测计时、答题卡估分与同卷复盘</strong></p>
 
-## 启动
+<p align="center">
+  <a href="#微信小程序">小程序</a> ·
+  <a href="#界面预览">界面预览</a> ·
+  <a href="#本地开发">本地开发</a> ·
+  <a href="#项目文档">文档</a>
+</p>
 
-需要 Node.js 20 或更高版本，无需安装运行依赖。
+## 界面预览
 
-当前手机界面使用以下入口，包含计时、录答、群体分析、选岗、评论、四种分享和答案反馈：
+<p align="center">
+  <a href="assets/readme/mini-home.png"><img src="assets/readme/mini-home.png" alt="小程序首页，显示最近练习和机构选卷入口" width="30%"></a>&nbsp;
+  <a href="assets/readme/mini-practice.png"><img src="assets/readme/mini-practice.png" alt="录答案页，显示选项、存疑标记和扫卡入口" width="30%"></a>&nbsp;
+  <a href="assets/readme/mini-report.png"><img src="assets/readme/mini-report.png" alt="练习估分报告，显示总分、同卷排名和板块雷达图" width="30%"></a>
+</p>
+
+<p align="center"><strong>选卷计时 · 录答与扫卡 · 成绩报告</strong><br>
+点击查看原图，报告使用示例答卷。</p>
+
+## 功能一览
+
+- **选卷与计时**　从花生、超格、粉笔、上岸村选卷。整卷或分模块计时，分别记录做题和录答用时。
+- **录答与估分**　拍照或从相册选取答题卡，核对识别结果后填入。手动录答也支持标记存疑题和继续草稿。
+- **同卷复盘**　查看逐题对照、板块得分、全国榜和岗位榜，按考试类别追踪多次练习的成绩。
+- **分享与反馈**　保存报告长图、成绩卡、题型图或雷达图，参与同卷讨论或提交答案订正。
+
+估分使用本卷的参考答案和分值，实际成绩以考试组织方为准。 [计分口径](docs/scoring-reference.md)
+
+## 微信小程序
+
+<p align="center">
+  <img src="assets/miniprogram-qrcode.jpg" alt="卷卷小榜微信小程序码" width="168"><br>
+  微信扫一扫，打开卷卷小榜
+</p>
+
+## 本地开发
+
+需要 **Node.js 20 或以上**。在仓库根目录安装依赖并启动手机网页版。
 
 ```bash
+npm ci
 npm run dev:ios
 ```
 
-打开[手机界面](http://127.0.0.1:4781/ios-v3/?design=paper-cards-1114-v3)。该入口与 API 使用同一服务，具体页面和组件说明见 [iOS 界面说明](docs/ui-exploration/ios-v3/README.md)。
+打开 [手机网页版](http://127.0.0.1:4781/ios-v3/?design=paper-cards-1114-v3)。运行 `npm start` 可打开 [基础网页版](http://127.0.0.1:4173/)，体验批量粘贴答案、练习备份和套卷管理。
 
-基础练习入口可单独启动：
+开发原生小程序时，用微信开发者工具打开 `mini-program/`。本机联调可生成连接独立回环 API 的验收包。 [小程序开发与测试环境](mini-program/README.md#测试环境)
+
+### 验证与构建
+
+`npm test` 运行自动化测试。`npm run build` 构建基础网页版，`npm run preview` 启动构建产物。评分、导入与发布由 Node.js API 提供。
+
+<details>
+<summary>完整验收与浏览器截图</summary>
+
+完整验收需要 Python 3.10 或以上、uv、Playwright、Chromium 和手机网页版的 beUI 依赖。
 
 ```bash
-npm start
+npm ci --prefix docs/ui-exploration/ios-v3/ui
+uv sync --frozen --group verify
+uv run --frozen --group verify python -m playwright install --with-deps chromium
+npm run verify -- doctor
+npm run verify -- all
 ```
 
-打开 [本地原型](http://127.0.0.1:4173/)。`npm run dev` 启动相同服务；也可运行 `sh scripts/dev.sh`，脚本会尝试可用的 Codex 运行时或系统 Node.js。
+`npm run verify -- visual` 保存 320、390、430 像素和桌面布局截图。`npm run verify -- feature positions-rank` 可单独核对选岗与榜单。GitHub Actions 的 `RollieRank verification` 工作流保留日志、断言和截图。 [验证功能图谱](.agents/skills/verify-rollierank/features/README.md)
 
-## 可以体验的功能
+</details>
 
-<!-- 榜单已从浏览器演示改为服务端真实参与记录，相关页面及数据保存说明同步更新。 -->
-| 页面 | 实际行为 |
-| --- | --- |
-| 选卷 | 机构、项目、期数、卷别与练习状态筛选，卷名搜索，最近草稿优先 |
-| 套卷详情 | 当前版本、题量、分值和题型构成，继续作答与同卷记录 |
-| 专注答题 | A–D 录入、列表／单题、章节导航、复查标记与回看、答题卡、键盘、批量粘贴和草稿恢复 |
-| 做题计时 | 整卷与模块计划、预设、暂停恢复、切换模块、结束录答；做题与录答耗时分开保存，结果展开计划偏差 |
-| 提交与报告 | 漏答确认、本地服务评分、重复提交去重、独立成绩快照、最弱三项与全部题型 |
-| 逐题对照 | 参考选项、本人选项、对错和未答筛选、题型筛选、错题号复制、完整 CSV |
-| 分享 | 手机报告长图、精简成绩卡、题型图、雷达图，统一自动适配预览和 PNG 保存；基础入口保留三种海报 |
-| 同卷练习榜 | 全国与岗位范围、个人最佳、并列排名、超越比例、公开总分和六板块、交卷自动上榜 |
-| 群体分析 | 逐题 A–D 与留空分布、分数段筛选、个人与群体六板块对比、真实样本量和空态 |
-| 我的记录 | 本机体验身份、全部真实历史、同版趋势、JSON 备份与恢复、删除记录 |
-| 套卷管理 | CSV 整批校验、四类试算、草稿、预览、发布、下线、新版本修订和审计记录 |
-| 选岗 | 内置 2027 年国考官方 19,426 个岗位，支持岗位搜索、分页、个人选岗及首次提交提醒；可导入国考或省考 Excel |
-| 试卷讨论 | 正式提交后可发表文字和照片，正文自动识别链接；支持点赞、层内回复、展开收起、独立草稿和分页 |
-| 成长分析 | 上一刷 VS、本次各题型变化、多次曲线、按考试类别汇总的跨机构整体及题型趋势、时间和来源筛选 |
-| 答案反馈 | 多题真实反馈、待审核试算、维护者凭证、审核通知、答案修订审计、全部受影响答卷重新计分 |
+## 项目文档
 
-微信登录、云端身份认证和小程序码尚未接入。全国榜统计当前本地服务中正式提交的真实记录，岗位榜按个人选岗分组；同一服务的不同浏览器身份可以共同参与。群体统计每人只取同版本完整最佳总分答卷，分母包含留空；公开详情显示上榜昵称及分数，不公开私人答卷。此服务绑定 `127.0.0.1`，复制的同卷链接仅供运行服务的设备访问。套卷导入管理仍是本机原型，答案反馈审核由单独的服务端凭证控制。
+- **开发**　[小程序开发](mini-program/README.md) · [手机网页版](docs/ui-exploration/ios-v3/README.md)
+- **数据**　[套卷资料](docs/import-question-banks.md) · [计分](docs/scoring-reference.md) · [岗位导入](docs/import-positions.md)
+- **识别**　[答题卡识别（OMR）](docs/integration-omr.md)
+- **运维**　[部署与备份](deploy/README.md) · [产品站点](site/README.md)
 
-首页的示例报告使用独立虚构答案，不公开真实套卷的参考答案，也不计入个人历史。真实参考答案仅在答卷提交后出现在本人报告中。
+源码从 [`mini-program/`](mini-program/)、[`src/`](src/) 和 [`server/`](server/) 开始读，依次对应原生小程序、基础网页版与计分 API。
 
-## 录入与计分
+<details>
+<summary>基础网页版的批量录答与计分</summary>
 
-点击 A、B、C、D 录入；默认自动跳到下一题。电脑支持 A–D、左右方向键及 Backspace / Delete。手机答题页隐藏底部导航，答题卡与批量粘贴从底部打开。
+电脑可用 A–D 录答，左右方向键换题，Backspace 或 Delete 清除。手机网页可从录答页底部打开答题卡和批量粘贴。
 
-| 批量格式 | 示例 |
+| 粘贴格式 | 示例 |
 | --- | --- |
 | 连续选项 | `ABCD-ABCD` |
 | 带题号 | `1.A 2.B 3.C 130.D` |
 | 分组题号 | `1-5 ABCDA 6-10 BCDAB` |
 
-空题可用 `-`、`_` 或 `?`。重复题号、越界、非法选项或选项数量不匹配会阻止整批导入；确认前显示范围与覆盖数量。题号上限按当前套卷确定。
+`-`、`_` 和 `?` 表示留空。系统按当前套卷校验题号、范围和选项，确认前显示将覆盖的范围与数量。
 
-原花生一期保留地市级／行政执法类练习评分参考，130 题，满分 100 分。以下分值仅适用于一期；二期按随卷分值表，超格、粉笔与上岸村按平台参考权重折算为百分制：
+答对得对应分值，答错和留空计 0 分。得分率是得分除以满分，正确率是答对题数除以总题数。花生一期的 130 题按下表计分，其他套卷各用自己的分值表或参考权重。
 
 | 题型 | 题号 | 每题分值 | 满分 |
-| --- | --- | --- | --- |
+| --- | --- | ---: | ---: |
 | 政治理论 | 1–20 | 0.5 | 10 |
 | 常识判断 | 21–35 | 0.5 | 7.5 |
 | 言语理解 | 36–65 | 0.8 | 24 |
@@ -74,105 +108,35 @@ npm start
 | 逻辑判断 | 101–110 | 0.85 | 8.5 |
 | 资料分析 | 111–130 | 1 | 20 |
 
-答对得对应分值，答错、未答计 0 分。服务端以百分之一分的整数累计；得分率为得分除以满分，正确率为答对题数除以总题数。自定义套卷支持 1–300 题，满分由题目分值相加确定，不固定为 100 分。实际考试评分以考试组织方为准。官方考试类别与套卷练习分值的区别见 [计分口径核对](docs/scoring-reference.md)。
+</details>
 
-## 导入套卷
+<details>
+<summary>导入套卷与审核答案订正</summary>
 
-从侧栏进入「套卷管理」，选择「导入新套卷」。填写机构、项目、期数、卷别和卷名，再上传 CSV 或粘贴配置：
+启动服务时设置 `ROLLIERANK_REVIEW_TOKEN`，再从基础网页版侧栏解锁「套卷管理」。填写机构、项目、期数、卷别和卷名后上传 CSV。
 
 ```csv
 题号,题型,答案,分值
 1,政治理论,A,0.5
 2,政治理论,B,0.5
 3,言语理解,C,0.8
-4,言语理解,D,0.8
-5,数量关系,A,1
-6,资料分析,B,1
 ```
 
-题号必须连续唯一，答案为 A–D，分值最多两位小数。上述样卷全对为 4.6 分。校验、试算后先保存草稿，再预览和发布；发布时服务端重复校验并执行全对、全错、全空和混合作答试算。导入失败显示行号，整批不保存。
+自定义套卷支持 1–300 道单选题。题号须从 1 连续编号，答案为 A–D，分值最多两位小数。校验和试算后保存草稿，再预览和发布。修订导入会保留旧版报告，题量或题型结构变化时需新建套卷。
 
-管理端重新导入修订会创建新的规则版本，旧版记录保留。题量或题型结构变化时须新建套卷。下线停止新提交；此前已提交的报告仍可查看。答案反馈审核通过则在原版本内增加答案修订号，保留原作答和时间，并重新计算该版本的全部历史成绩。
+维护者可在「答案反馈审核」试算并确认订正。审核通过后，服务重算该版本的受影响成绩，并保留原作答、用时和审核记录。
 
-## 岗位、讨论与答案订正
+</details>
 
-在「我的记录」选择岗位。排行榜默认显示该岗位，也可切换全国或临时查看其他岗位；临时浏览不修改个人选择。内置目录附有官方来源及原始文件哈希，Excel 导入方法和省考表头映射见 [岗位表导入说明](docs/import-positions.md)。Excel 解析需要 Python 以及 `scripts/positions-requirements.txt` 中的依赖；内置岗位、查询、选岗、排行榜和规范化 JSON 导入无需 Python。
+<details>
+<summary>榜单口径与本机数据</summary>
 
-结果页的讨论按同一套卷聚合。手机评论支持文字、最多三张图片和正文中的 HTTP/HTTPS 链接。可以点赞、回复评论或回复他人，回复串按需展开和分页。不同回复对象的草稿在当前页面会话内独立保留，已发表内容由服务保存。
+同卷榜自动选用每人最高的正式成绩，公开昵称、总分与板块分数。个人选项保留在本人报告。网页版群体统计按同版本每人最佳完整答卷汇总，留空计入分母。
 
-手机从逐题对照的反馈图标提交一题或多题的建议答案和依据。待审反馈可以试算，正式成绩在审核通过后更新。维护者启动服务时配置审核凭证，再到「套卷管理」进入「答案反馈审核」：
+浏览器在 `localStorage` 保存草稿、身份和成绩快照，可在「我的记录」导出或恢复 JSON。服务端的套卷配置、提交记录、选岗、讨论、反馈及审核数据保存在 `.local/catalog.json`，可以通过 `ROLLIERANK_DATA_DIR` 指定独立目录。迁移本机服务时需一并备份浏览器导出文件和服务端数据目录。
 
-```bash
-ROLLIERANK_REVIEW_TOKEN='<自行设置的维护者凭证>' npm start
-```
+</details>
 
-未配置凭证时审核关闭。凭证仅用于服务端验证，审核页面在内存中保留，刷新或退出审核后清除。审批结果、答案修订及前后分数会持久化；考生重新进入报告、记录、排行榜或分析页时同步新成绩。
+## 许可证
 
-## 数据保存
-
-浏览器通过 `localStorage` 保存草稿、身份、成绩快照和公开选择。旧 H5 的 130 题草稿只迁移到对应初始版本，不自动生成提交历史。再次练习创建新答卷；经授权审核后的订正成绩可同步更新已有快照，原作答和时间保留。
-
-本地服务把版本配置、提交凭证、岗位选择、参与记录、讨论及媒体、反馈和管理审计保存在被 Git 忽略的 `.local/catalog.json`。它们共用串行事务，写入通过临时文件和重命名完成；失败会整体回滚。`ROLLIERANK_DATA_DIR` 可指定独立数据目录，测试使用临时目录。浏览器的 JSON 备份覆盖本机练习，服务端讨论、反馈及岗位数据另随该目录备份。
-
-在「我的记录」中可备份和恢复 JSON。恢复前核对成绩与套卷信息，确认后替换当前浏览器的数据。删除成绩同时移除本机服务中的对应提交凭证；删除全部记录后，旧 H5 草稿不会重新迁入。清除浏览器数据或更换设备前，请先备份。
-
-## 验证与构建
-
-统一验证入口会检查依赖、构建、类型检查、隔离启动真实服务、驱动全部页面并保留业务断言和截图：
-
-```bash
-npm run verify -- doctor
-npm run verify -- all
-```
-
-需要 Node.js 20 以上、Python 3.10 以上、uv 和 Chromium。首次安装：
-
-```bash
-npm ci
-npm ci --prefix docs/ui-exploration/ios-v3/ui
-uv sync --frozen --group verify
-uv run --frozen --group verify python -m playwright install --with-deps chromium
-```
-
-可用 `npm run verify -- visual` 只检查真实页面布局并保存 320/390/430 与桌面截图，或用 `npm run verify -- feature positions-rank` 运行单项测试。功能入口、驾驶方法和业务结果证明位于 [验证功能图谱](.agents/skills/verify-rollierank/features/README.md)。GitHub Actions 使用同一 CLI；失败时下载 `rollierank-verification-<run>` 产物查看证据。
-
-原有专项命令仍可用于定位问题：
-
-```bash
-npm test
-npm run build
-```
-
-停止开发服务后，可运行 `npm run preview` 检查 `dist/` 产物。构建排除原始资料和参考答案文件；评分、导入和发布仍需要 Node.js API，不能仅部署到纯静态服务器。
-
-完整浏览器联调用以下脚本，使用隔离端口和临时目录，涵盖选卷、草稿、真实提交、选岗、评论媒体、跨卷趋势、批量审核、重算同步及练习备份：
-
-```bash
-python3 scripts/verify-features.py
-python3 scripts/verify-features.py --dist
-```
-
-需要安装 Playwright 和 Chromium。结果写入 `test-results/features/`。专项测试的运行条件和已核验范围见各功能的 `docs/integration-*.md` 及 [公共集成 PR 草稿](docs/pr-feature-integration.md)。
-
-## 目录
-
-| 模块 | 职责 |
-| --- | --- |
-| `src/app.js` | 路由、交互、API 与弹窗 |
-| `src/ui.js`、`styles.css` | 紫粉视觉体系、响应式布局、图标和插图 |
-| `src/views-*.js` | 选卷、答题、报告、排行、历史与管理视图 |
-| `src/model.js` | 动态题量、导入校验、公开元数据、定点计分、CSV |
-| `src/prototype-state.js` | 草稿、成绩快照、存储校验、旧数据迁移 |
-| `src/leaderboard.js`、`src/poster.js` | 榜单计算与 PNG 导出 |
-| `server/api.mjs` | 本地评分、提交去重、套卷版本、发布与审计 |
-| `src/scoring.js`、`src/answers.js`、`src/storage.js` | 原 H5 规则、解析和旧草稿兼容 |
-| `src/data/papers.js` | 仅由本地服务读取的 12 套参考答案 |
-
-原始资料放在 `.raw/`，不进入 Git 和构建。重新导入需要 Python `pypdf`、`pymupdf`；扫描资料识别使用 macOS Vision 与 Swift，可重复利用 `.local/paper-import/` 中的识别缓存：
-
-```bash
-python3 scripts/import-papers.py
-python3 scripts/import-papers.py --check
-```
-
-`data/booklet-verification.json` 记录题本哈希、子题型范围与页码。产品及 UI 方案、Issue 草稿、实现方案和本地 PR 草稿均位于 `docs/`。
+[GPL-3.0](LICENSE)
