@@ -41,7 +41,7 @@
       <view class="practice__progress"><view style="width: {{progress}}%;"></view></view>
     </view>
 
-    <scroll-view wx:if="{{!single}}" class="practice__scroller" scroll-y scroll-into-view="{{scrollTarget}}" scroll-with-animation="{{scrollAnimated}}" enhanced show-scrollbar="{{false}}">
+    <scroll-view wx:if="{{!single}}" class="practice__scroller" scroll-y scroll-into-view="{{scrollTarget}}" scroll-with-animation="{{scrollAnimated}}" enhanced show-scrollbar="{{false}}" binddragstart="onListDragStart" bindtouchstart="onListTouchStart" bindtouchmove="onListTouchMove" bindtouchend="onListTouchEnd" bindtouchcancel="onListTouchEnd">
       <view class="practice__list">
         <block wx:for="{{questions}}" wx:key="number">
           <view wx:if="{{item.heading}}" class="practice__list-heading"><text>{{item.heading}}</text><text>{{item.range}}</text></view>

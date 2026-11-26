@@ -4,6 +4,7 @@ const storage = require("../../utils/storage.js");
 const catalogUtil = require("../../utils/catalog.js");
 const omrUtil = require("../../utils/omr.js");
 const timing = require("../../utils/timing.js");
+const practiceScroll = require("../../utils/practice-scroll.js");
 const { createPageSheetDrag } = require("../../utils/sheet-gesture.js");
 const { resumeEntryTimer, pauseEntryTimer } = require("../../vendor/practice-timer.js");
 
@@ -192,7 +193,7 @@ Page({
   },
 
   choose(event) {
-    if (this.swipeMoved) return;
+    if (this.swipeMoved || Date.now() < (this.autoScrollGuardUntil || 0)) return;
     const { number, choice } = event.currentTarget.dataset;
     const questionNumber = Number(number);
     const index = questionNumber - 1;
@@ -203,13 +204,13 @@ Page({
     this.setData({ answers, current: questionNumber, singleOffset: 0, singleOpacity: 1, singleDragging: false });
     this.reflect();
     if (answers[index] && (firstAnswer || this.data.single)) {
-      this.moveQuestion(1, true, { delayMs: this.data.single ? 110 : 90 });
+      this.moveQuestion(1, true, { delayMs: this.data.single ? 160 : practiceScroll.AUTO_TURN_DELAY_MS });
     }
     this.persist();
   },
 
   toggleMark(event) {
-    if (this.swipeMoved) return;
+    if (this.swipeMoved || Date.now() < (this.autoScrollGuardUntil || 0)) return;
     const number = Number(event.currentTarget.dataset.number);
     const marks = this.data.marks.slice();
     marks[number - 1] = !marks[number - 1];
@@ -232,13 +233,77 @@ Page({
 
   clearPageTurnTimers() {
     clearTimeout(this.listScrollTimer);
+    clearTimeout(this.listAnimTimer);
     clearTimeout(this.singleAdvanceTimer);
     clearTimeout(this.singleAnimTimer);
     this.pendingSingleNumber = 0;
+    this.autoScrollGuardUntil = 0;
+  },
+
+  onListTouchStart(event) {
+    const point = event.touches && event.touches[0];
+    this.listTouchY = point ? point.clientY : null;
+  },
+
+  onListTouchMove(event) {
+    const point = event.touches && event.touches[0];
+    if (!point || this.listTouchY === null || this.listTouchY === undefined) return;
+    // 只有用户主动拖动列表时才打断自动翻页与防误触锁，静止误点不解锁。
+    if (Math.abs(point.clientY - this.listTouchY) >= 10) {
+      this.cancelAutoListScroll();
+    }
+  },
+
+  onListTouchEnd() {
+    this.listTouchY = null;
+  },
+
+  onListDragStart() {
+    this.cancelAutoListScroll();
+  },
+
+  cancelAutoListScroll() {
+    clearTimeout(this.listScrollTimer);
+    clearTimeout(this.listAnimTimer);
+    this.autoScrollGuardUntil = 0;
+  },
+
+  isNativeSmoothDurationSupported() {
+    if (this.nativeScrollDurationSupported === undefined) {
+      const device = (wx.getDeviceInfo && wx.getDeviceInfo()) || (wx.getSystemInfoSync && wx.getSystemInfoSync()) || {};
+      this.nativeScrollDurationSupported = String(device.platform || "").toLowerCase() === "ios";
+    }
+    return this.nativeScrollDurationSupported;
+  },
+
+  runSmoothListScroll(scrollerNode, fromTop, targetTop, duration) {
+    clearTimeout(this.listAnimTimer);
+    if (!duration || duration <= 0) {
+      scrollerNode.scrollTo({ top: targetTop, duration: 0, animated: false });
+      return;
+    }
+    if (this.isNativeSmoothDurationSupported()) {
+      scrollerNode.scrollTo({ top: targetTop, duration, animated: true });
+      return;
+    }
+    // Android WebView 与开发者工具下 ScrollViewContext.scrollTo 不支持自定义 duration，改用三次缓动分步平滑推进。
+    const startedAt = Date.now();
+    const delta = targetTop - fromTop;
+    const step = () => {
+      if (this.data.single) return;
+      const progress = Math.min(1, (Date.now() - startedAt) / duration);
+      const eased = practiceScroll.easeInOutCubic(progress);
+      scrollerNode.scrollTo({ top: Math.round(fromTop + delta * eased), animated: false });
+      if (progress < 1) {
+        this.listAnimTimer = setTimeout(step, 24);
+      }
+    };
+    step();
   },
 
   scrollListToRow(number, { keepVisible = false, animated = true, delayMs = 0 } = {}) {
     clearTimeout(this.listScrollTimer);
+    clearTimeout(this.listAnimTimer);
     const id = "answer-" + number;
     const run = () => {
       if (this.data.single || this.data.current !== number) return;
@@ -249,17 +314,18 @@ Page({
       query.select("#" + id).boundingClientRect();
       query.exec(([list, offset, scroller, row]) => {
         if (this.data.single || this.data.current !== number) return;
-        if (!list || !row) {
+        if (!list || !row || !offset) {
           if (!keepVisible) this.setData({ scrollAnimated: animated, scrollTarget: id });
           return;
         }
-        const outOfView = row.bottom > list.bottom - 4 || row.top < list.top + 4;
-        if (keepVisible && !outOfView) return;
+        const plan = practiceScroll.planListScroll({ list, offset, row, keepVisible, animated });
+        if (!plan.shouldScroll) return;
         const scrollerNode = scroller && scroller.node;
-        if (scrollerNode && typeof scrollerNode.scrollTo === "function" && offset) {
-          const targetTop = Math.max(0, Math.round(offset.scrollTop + (row.top - list.top) - 10));
-          scrollerNode.scrollTo({ top: targetTop, duration: animated ? 320 : 0, animated });
+        if (scrollerNode && typeof scrollerNode.scrollTo === "function") {
+          if (plan.guardMs > 0) this.autoScrollGuardUntil = Date.now() + plan.guardMs;
+          this.runSmoothListScroll(scrollerNode, offset.scrollTop, plan.targetTop, plan.duration);
         } else {
+          if (plan.guardMs > 0) this.autoScrollGuardUntil = Date.now() + Math.min(plan.guardMs, 420);
           this.setData({ scrollAnimated: animated, scrollTarget: id });
         }
       });
@@ -295,7 +361,7 @@ Page({
     this.pendingSingleNumber = number;
     const exitOffset = direction > 0 ? -64 : 64;
     const enterOffset = direction > 0 ? 56 : -56;
-    const exitMs = fromDrag ? 105 : 135;
+    const exitMs = fromDrag ? 120 : 180;
 
     const startExit = () => {
       if (!this.data.single) return;

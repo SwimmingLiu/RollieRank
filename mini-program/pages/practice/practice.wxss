@@ -54,7 +54,7 @@
 .practice__sheet-answer { line-height: 1.1; font-weight: 650; }
 .practice__sheet-cell:not(.practice__sheet-cell--done) .practice__sheet-answer { color: #d4cec5; font-weight: 400; }
 .practice__single { padding: 18px 22px 18px; overflow-x: hidden; }
-.practice__single-card { display: flex; flex-direction: column; width: 100%; min-height: min(390px, calc(100vh - 230px)); padding: 20px 18px 12px; border: 1px solid #e7dcc9; border-radius: 23px; background: #fffdf8; box-shadow: 0 3px 0 #e9dfcf; transition: transform .24s cubic-bezier(.22, 1, .36, 1), opacity .2s ease; will-change: transform, opacity; }
+.practice__single-card { display: flex; flex-direction: column; width: 100%; min-height: min(390px, calc(100vh - 230px)); padding: 20px 18px 12px; border: 1px solid #e7dcc9; border-radius: 23px; background: #fffdf8; box-shadow: 0 3px 0 #e9dfcf; transition: transform .28s cubic-bezier(.22, 1, .36, 1), opacity .22s ease; will-change: transform, opacity; }
 .practice__single-card--dragging { transition: none; }
 .practice__single-head { display: flex; align-items: center; justify-content: space-between; min-height: 44px; margin-bottom: 18px; }
 .practice__single-mark { width: auto !important; min-height: 36px; padding: 0 11px; margin: 0 0 0 auto !important; border-radius: 11px; color: #8c775b; font-size: 12px; font-weight: 550; }
