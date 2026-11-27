@@ -34,7 +34,7 @@
             "name": "行测刷题、模考、真题怎么记分",
             "isPartOf": { "@id": "https://rank.swimmingliu.cn/#website" },
             "inLanguage": "zh-CN",
-            "dateModified": "2026-11-22",
+            "dateModified": "2026-11-26",
             "breadcrumb": { "@id": "https://rank.swimmingliu.cn/shua-ti-ji-fen.html#crumb" }
           },
           {
@@ -96,49 +96,140 @@
     </script>
   </head>
 
-  <body>
-    <header class="site wrap">
-      <img src="https://rollie-rank-oss.swimmingliu.cn/static/rollierank-site/logo-64.png" alt="卷卷小榜" width="34" height="34" />
-      <span class="name"><a href="/" style="color:inherit;text-decoration:none">卷卷小榜</a></span>
-      <nav>
-        <a href="/">首页</a>
-        <a href="/zenme-suan-fen.html">分值表</a>
-        <a href="/gu-fen-zhun-ma.html">估分准吗</a>
-      </nav>
+  <body class="page-topic">
+    <header class="topbar" data-topbar>
+      <div class="topbar__pill">
+        <a class="brand" href="/">
+          <img src="/assets/logo-64.png" alt="卷卷小榜" width="28" height="28" />
+          <span class="brand__name">卷卷小榜</span>
+        </a>
+        <nav class="topbar__nav" aria-label="主导航">
+          <a href="/">首页</a>
+          <a href="/zenme-suan-fen.html">分值表</a>
+          <a href="/gu-fen-zhun-ma.html">准不准</a>
+          <a href="/shua-ti-ji-fen.html" class="is-current">刷题记分</a>
+        </nav>
+        <button class="pill-btn pill-btn--ink pill-btn--sm" type="button" data-open-qr>
+          <span>小程序</span>
+        </button>
+      </div>
     </header>
 
-    <main class="wrap">
-      <p class="crumbs"><a href="/">首页</a> / 行测刷题怎么记分</p>
-      <h1>行测刷题、模考、真题怎么记分</h1>
+    <main>
+      <section class="topic-hero">
+        <div class="container topic-hero__inner">
+          <a class="crumbs-pill" href="/">← 首页</a>
+          <h1>刷题、模考、真题怎么记分</h1>
+          <p class="topic-hero__lead">不做题库，只把做完的卷子算清楚、自动归档。</p>
+        </div>
+      </section>
 
-      <p class="lead">
-        行测刷题和模考的分，多数人靠手记 Excel 或者干脆不记。做一套丢一套，几周下来只知道「好像有点进步」，
-        说不出哪个板块在涨。这一页讲怎么把每套卷的分记下来，并且让不同机构、不同期数的卷子能互相比较。
-      </p>
+      <section class="topic-band">
+        <div class="container">
+          <div class="icon-grid-4">
+            <article class="icard">
+              <span class="ico-badge ico-badge--coral" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2.5" /><path d="M9 9h6M9 13h6M9 17h4" /></svg>
+              </span>
+              <h3>整卷刷题</h3>
+              <p>录整套答案，看总得分率与分布。</p>
+            </article>
 
-      <div class="card accent">
-        <p style="margin:0">
-          <b>先说清楚边界：</b>卷卷小榜不是题库，不提供题目、课程或讲解。
+            <article class="icard">
+              <span class="ico-badge ico-badge--ochre" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M8 20h8M12 16v4M7 4h10v5a5 5 0 0 1-10 0z" /></svg>
+              </span>
+              <h3>机构模考</h3>
+              <p>按期归档，看同卷排名与对比。</p>
+            </article>
+
+            <article class="icard">
+              <span class="ico-badge ico-badge--sage" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" /><path d="M9 12.5l2 2 4.5-4.5" /></svg>
+              </span>
+              <h3>历年真题</h3>
+              <p>选年份卷别，聚焦错题板块。</p>
+            </article>
+
+            <article class="icard">
+              <span class="ico-badge ico-badge--ink" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 17l5-5 4 3 7-8" /><path d="M15 7h5v5" /></svg>
+              </span>
+              <h3>专项突破</h3>
+              <p>单板块建卷，追踪单一走势。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="topic-band">
+        <div class="container">
+          <div class="icon-grid-2">
+            <article class="icard icard--row">
+              <span class="ico-badge ico-badge--ochre" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7" /><path d="M12 9.5V13l2.5 1.5M9.5 3.5h5" /></svg>
+              </span>
+              <div>
+                <h3>做题与录答分开计时</h3>
+                <p>整卷或模块计划按整数分钟设，复盘只看真实做题耗时。</p>
+              </div>
+            </article>
+
+            <article class="icard icard--row">
+              <span class="ico-badge ico-badge--sage" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M6 16a3.5 3.5 0 0 1 0-7 4.5 4.5 0 0 1 8.6-1.2A3.5 3.5 0 1 1 16 16z" /><path d="M12 12v7m-2.5-2.5L12 19l2.5-2.5" /></svg>
+              </span>
+              <div>
+                <h3>本机归档，随时导出</h3>
+                <p>跨机构记录自动存本机，设置页一键导出备份。</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="closing-band">
+        <div class="container">
+          <div class="closing-card closing-card--compact" style="--closing-art: url('/assets/backdrop-paper-art.jpg')">
+            <div class="closing-card__left">
+              <h2>开始记录你的成长曲线</h2>
+              <p>免费免注册 · 微信搜「卷卷小榜」或打开网页版。</p>
+              <div class="closing-card__actions">
+                <a class="pill-btn pill-btn--ink pill-btn--lg" href="https://rollie-rank.swimmingliu.cn/ios-v3/app.html">打开网页版</a>
+                <button class="pill-btn pill-btn--paper pill-btn--lg" type="button" data-open-qr>扫码用小程序</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 不可见完整 SEO / GEO 语义内容层 ===== -->
+      <section class="seo-content" aria-label="行测刷题怎么记分完整说明与常见问题">
+        <h2>行测刷题、模考、真题怎么记分</h2>
+        <p>
+          行测刷题和模考的分，多数人靠手记 Excel 或者干脆不记。做一套丢一套，几周下来只知道「好像有点进步」，
+          说不出哪个板块在涨。这一页讲怎么把每套卷的分记下来，并且让不同机构、不同期数的卷子能互相比较。
+          行测备考通常要经过大量练习，而练习本身不产生记录。把每次的分数、板块得分率和错题分布留存下来，
+          才能看出哪一类题在反复失分。
+        </p>
+        <p>
+          先说清楚边界：卷卷小榜不是题库，不提供题目、课程或讲解。
           它负责你把一套卷做完之后的环节——录答案、算分、判分、复盘、记录成长。
           题目来源仍然是你自己手上的那套卷。
         </p>
-      </div>
 
-      <h2>记分流程</h2>
-      <ol class="steps">
-        <li><strong>选卷。</strong>按机构、期数、卷别挑出刚做完的那套卷；没有的卷子可以自建。</li>
-        <li><strong>录答案。</strong>逐题点选 A–D，或者把答题卡整段粘贴，支持 <code>1.A 2.B 3.C</code> 和 <code>1-5 ABCDA</code> 两种写法。</li>
-        <li><strong>出分。</strong>按这套卷的分值表逐题累计，折算百分制，同时给出各板块得分率。</li>
-        <li><strong>归档。</strong>记录自动按机构、期数归到一起，不用另行建表。</li>
-        <li><strong>看趋势。</strong>跨卷比较时看得分率，不看原始分。</li>
-      </ol>
+        <h2>记分流程</h2>
+        <ol>
+          <li>选卷。按机构、期数、卷别挑出刚做完的那套卷；没有的卷子可以自建。</li>
+          <li>录答案。逐题点选 A–D，或者把答题卡整段粘贴，支持 1.A 2.B 3.C 和 1-5 ABCDA 两种写法。</li>
+          <li>出分。按这套卷的分值表逐题累计，折算百分制，同时给出各板块得分率。</li>
+          <li>归档。记录自动按机构、期数归到一起，不用另行建表。</li>
+          <li>看趋势。跨卷比较时看得分率，不看原始分。</li>
+        </ol>
 
-      <h2>四种练习怎么记</h2>
-      <div class="table-wrap">
+        <h2>四种练习怎么记</h2>
         <table>
-          <thead>
-            <tr><th>练习类型</th><th>记法</th><th>看什么</th></tr>
-          </thead>
+          <thead><tr><th>练习类型</th><th>记法</th><th>看什么</th></tr></thead>
           <tbody>
             <tr><td>行测刷题（整卷）</td><td>按整套卷录答案，同模考</td><td>总得分率、板块分布</td></tr>
             <tr><td>行测模拟考试</td><td>选机构期数对应的卷子</td><td>同卷排名、与上期对比</td></tr>
@@ -146,67 +237,80 @@
             <tr><td>行测练习（专项）</td><td>按板块建卷，只录该板块</td><td>该板块得分率的变化</td></tr>
           </tbody>
         </table>
-      </div>
-      <p class="note">
-        备考期常见的三种节奏都能覆盖：整卷限时练、专项突破、真题回刷。
-        行测题库类的产品负责出题，卷卷小榜负责你做完之后的算分和归档，两者不冲突。
-      </p>
+        <p>
+          备考期常见的三种节奏都能覆盖：整卷限时练、专项突破、真题回刷。
+          行测题库类的产品负责出题，卷卷小榜负责你做完之后的算分和归档，两者不冲突。
+        </p>
 
-      <h2>为什么建议折算百分制</h2>
-      <p>
-        不同机构的卷子题量不同：站内既有 120 题的短卷，也有 130 题的地市卷和 135 题的副省卷。
-        原始得分没法直接比，折算成百分制后才有同一把尺子。
-        具体折算方法和分值表对照见<a href="/zenme-suan-fen.html">行测分数怎么算</a>。
-      </p>
+        <h2>为什么建议折算百分制</h2>
+        <p>
+          不同机构的卷子题量不同：站内既有 120 题的短卷，也有 130 题的地市卷和 135 题的副省卷。
+          原始得分没法直接比，折算成百分制后才有同一把尺子。
+          具体折算方法和分值表对照见<a href="/zenme-suan-fen.html">行测分数怎么算</a>。
+        </p>
 
-      <h2>计时和记分分开</h2>
-      <p>
-        做题耗时本身就是复盘的一部分。卷卷小榜把做题计时和录入答案的计时分开保存，
-        整卷计时或按模块计时都可以暂停、切模块。复盘时看到的是真实做题耗时，不含录答案的时间。
-        模块计划按整数分钟填，和总时长能对上，顺序也可以自己调。
-      </p>
+        <h2>计时和记分分开</h2>
+        <p>
+          做题耗时本身就是复盘的一部分。卷卷小榜把做题计时和录入答案的计时分开保存，
+          整卷计时或按模块计时都可以暂停、切模块。复盘时看到的是真实做题耗时，不含录答案的时间。
+          模块计划按整数分钟填，和总时长能对上，顺序也可以自己调。
+        </p>
 
-      <h2>常见问题</h2>
-      <div class="faq">
-        <h3>行测刷题的成绩怎么记下来？</h3>
-        <p>行测刷题、模考、真题和专项练习都走同一套流程：选对那套卷，把答题卡答案录进去，系统按该卷分值表判分并折算百分制，记录会自动按机构和期数归档，不需要另建表格。</p>
+        <h2>常见问题</h2>
+        <dl>
+          <dt>行测刷题的成绩怎么记下来？</dt>
+          <dd>行测刷题、模考、真题和专项练习都走同一套流程：选对那套卷，把答题卡答案录进去，系统按该卷分值表判分并折算百分制，记录会自动按机构和期数归档，不需要另建表格。</dd>
+          <dt>卷卷小榜是题库吗？</dt>
+          <dd>不是题库，不提供题目、课程或讲解。它负责的是你把一套卷做完之后的环节：录答案、算分、判分、复盘和记录成长，题目来源仍然是你自己手上的那套卷。</dd>
+          <dt>不同机构的卷子能放在一起比较吗？</dt>
+          <dd>可以比较，但要折算成百分制得分率再比，不能比原始得分。各套卷的题量和分值表都不一样，折算之后才变成同一把尺子，多期练习的成长曲线才有意义。</dd>
+          <dt>做题时间和录入答案的时间会混在一起吗？</dt>
+          <dd>不会。做题计时和录入答案的计时分开保存，整卷计时或按模块计时都可以暂停、切模块，复盘时看到的是真实做题耗时，不含录答案的时间。</dd>
+          <dt>刷题记录会丢吗？</dt>
+          <dd>练习记录保存在本机，也可以在设置里导出备份。换设备前建议先导出，否则记录不会跟着走。</dd>
+          <dt>只做单板块的练习也能记吗？</dt>
+          <dd>可以。按板块建卷、只录该板块的答案，得到的就是这个板块的得分率，适合专项突破阶段跟踪单一板块的变化。</dd>
+        </dl>
 
-        <h3>卷卷小榜是题库吗？</h3>
-        <p>不是题库，不提供题目、课程或讲解。它负责的是你把一套卷做完之后的环节：录答案、算分、判分、复盘和记录成长，题目来源仍然是你自己手上的那套卷。</p>
-
-        <h3>不同机构的卷子能放在一起比较吗？</h3>
-        <p>可以比较，但要折算成百分制得分率再比，不能比原始得分。各套卷的题量和分值表都不一样，折算之后才变成同一把尺子，多期练习的成长曲线才有意义。</p>
-
-        <h3>做题时间和录入答案的时间会混在一起吗？</h3>
-        <p>不会。做题计时和录入答案的计时分开保存，整卷计时或按模块计时都可以暂停、切模块，复盘时看到的是真实做题耗时，不含录答案的时间。</p>
-
-        <h3>刷题记录会丢吗？</h3>
-        <p>练习记录保存在本机，也可以在设置里导出备份。换设备前建议先导出，否则记录不会跟着走。</p>
-
-        <h3>只做单板块的练习也能记吗？</h3>
-        <p>可以。按板块建卷、只录该板块的答案，得到的就是这个板块的得分率，适合专项突破阶段跟踪单一板块的变化。</p>
-      </div>
-
-      <h2>用卷卷小榜记</h2>
-      <p>免费，无需注册。微信里搜「卷卷小榜」打开小程序，或者先用网页版试一下。</p>
-      <a class="cta" href="https://rollie-rank.swimmingliu.cn/ios-v3/app.html">打开网页版试用</a>
-
-      <h2>继续看</h2>
-      <ul class="plain">
-        <li><a href="/zenme-suan-fen.html">行测分数怎么算：分值表与百分制折算</a></li>
-        <li><a href="/gu-fen-zhun-ma.html">行测估分准吗：和实际分数差在哪</a></li>
-        <li><a href="/">卷卷小榜：行测估分工具首页</a></li>
-      </ul>
+        <ul>
+          <li><a href="/zenme-suan-fen.html">行测分数怎么算：分值表与百分制折算</a></li>
+          <li><a href="/gu-fen-zhun-ma.html">行测估分准吗：和实际分数差在哪</a></li>
+          <li><a href="/">卷卷小榜：行测估分工具首页</a></li>
+        </ul>
+      </section>
     </main>
 
-    <footer class="site wrap">
-      <p>
-        卷卷小榜 · 行测估分与练习记录工具 ·
-        <a href="/llms.txt">llms.txt</a> ·
-        <a href="/sitemap.xml">sitemap</a>
-      </p>
-      <p class="note">本站内容用于介绍产品功能，不构成考试预测。</p>
+    <footer class="site-footer">
+      <div class="container footer-row">
+        <a class="brand brand--sm" href="/">
+          <img src="/assets/logo-64.png" alt="卷卷小榜" width="22" height="22" />
+          <span class="brand__name">卷卷小榜</span>
+        </a>
+        <div class="footer-links">
+          <a href="/">首页</a>
+          <a href="/zenme-suan-fen.html">分值表</a>
+          <a href="/gu-fen-zhun-ma.html">准不准</a>
+          <a href="/llms.txt">llms.txt</a>
+          <a href="/sitemap.xml">sitemap.xml</a>
+        </div>
+        <span class="footer-note">本站仅介绍产品功能，不构成考试预测。</span>
+      </div>
     </footer>
+
+    <div class="qr-modal" id="qr-modal" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title" hidden>
+      <div class="qr-modal__card">
+        <button class="qr-modal__close" type="button" data-close-qr aria-label="关闭弹窗">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15" /></svg>
+        </button>
+        <img class="qr-modal__logo" src="/assets/logo-64.png" alt="卷卷小榜" width="34" height="34" />
+        <h3 id="qr-modal-title">微信扫码 · 卷卷小榜</h3>
+        <div class="qr-modal__frame">
+          <img data-qr-img src="/assets/miniapp-qr.jpg" alt="卷卷小榜微信小程序码" width="204" height="204" />
+        </div>
+      </div>
+    </div>
+
+    <script src="/site.js" defer></script>
+    <script src="/miniapp-entry.js" defer></script>
   </body>
-  <script src="/miniapp-entry.js" defer></script>
 </html>
