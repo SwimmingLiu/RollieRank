@@ -1,5 +1,6 @@
 {
   "name": "rollierank-miniprogram",
+  "version": "1.1.10",
   "private": true,
   "type": "commonjs",
   "description": "卷卷小榜微信小程序（原生 WXML/WXSS/JS）",

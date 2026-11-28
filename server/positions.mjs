@@ -8,6 +8,14 @@ import { promisify } from "node:util";
 import { resolveSubjectDimension, subjectDimensions } from "../src/subjects.js";
 import { buildInsights, publicLeaderboardRow, publicParticipants, publicResult, SCORE_BANDS } from "./insights.mjs";
 import { defaultNickname, isDefaultNickname } from "./wechat-profile.mjs";
+import {
+  accountIdForGuest,
+  assertGuestNotOwnedByOther,
+  findReceiptForIdentity,
+  linkAccountGuest,
+  linkedGuestIds,
+  resolveRequestAccount,
+} from "./account-identity.mjs";
 
 const run = promisify(execFile);
 const guestPattern = /^[\w-]{10,80}$/;
@@ -135,21 +143,46 @@ const memberFor = (store, id) => {
 const anonymous = (id) => defaultNickname(id);
 
 // 正式提交在同一落盘事务内默认入榜；明确撤回的成员保持退出，重试不会复制回执。
-export function includeSubmittedAttempt(store, { guestId, attempt, name }) {
+export function includeSubmittedAttempt(store, { guestId, attempt, name, accountId = null }) {
   if (!attempt || attempt.isSample || !guestPattern.test(attempt.id) || !Array.isArray(attempt.answers) || !attempt.report ||
       !store.versions.some((version) => version.id === attempt.versionId && version.status !== "draft")) return false;
   const id = guest(guestId);
-  const members = namespace(store).members;
+  const state = namespace(store);
+  const members = state.members;
   const previous = memberFor(store, id) ?? {};
+  const existingOwner = previous.accountId ?? accountIdForGuest(store, id) ?? null;
+  if (typeof accountId === "string" && guestPattern.test(accountId) && existingOwner && existingOwner !== accountId) {
+    fail("该本机身份已关联其他微信账号，请重新登录后再试。", 403);
+  }
+  const resolvedAccountId = existingOwner || (typeof accountId === "string" && guestPattern.test(accountId) ? accountId : null);
   if (previous.participationOptOut === true) return false;
+  if (resolvedAccountId && state.accountOptOut?.[resolvedAccountId]?.optOut === true) return false;
   const suppliedName = typeof name === "string" ? name.normalize("NFKC").trim().replace(/\s+/g, " ") : "";
   const validSupplied = suppliedName && suppliedName.length <= 16 && !/[\x00-\x1f]/.test(suppliedName) && !isDefaultNickname(suppliedName);
   const displayName = validSupplied
     ? suppliedName
     : (!isDefaultNickname(previous.name) ? previous.name : anonymous(id));
   const attemptIds = [...new Set([...(previous.attemptIds ?? []), attempt.id])];
-  if (previous.name === displayName && previous.attemptIds?.length === attemptIds.length && previous.attemptIds?.includes(attempt.id)) return false;
-  members[id] = { ...previous, name: displayName, attemptIds, participationOptOut: false, updatedAt: Date.now() };
+  const hasAccountSelection = Boolean(resolvedAccountId && state.accountSelections && Object.hasOwn(state.accountSelections, resolvedAccountId));
+  const inheritedPositionId = hasAccountSelection
+    ? state.accountSelections[resolvedAccountId].positionId
+    : previous.positionId;
+  if (
+    previous.name === displayName &&
+    previous.attemptIds?.length === attemptIds.length &&
+    previous.attemptIds?.includes(attempt.id) &&
+    (previous.accountId ?? null) === resolvedAccountId &&
+    previous.positionId === inheritedPositionId
+  ) return false;
+  members[id] = {
+    ...previous,
+    name: displayName,
+    attemptIds,
+    participationOptOut: false,
+    ...(resolvedAccountId ? { accountId: resolvedAccountId } : {}),
+    ...(inheritedPositionId !== undefined ? { positionId: inheritedPositionId } : {}),
+    updatedAt: Date.now(),
+  };
   return true;
 }
 
@@ -269,7 +302,7 @@ export function positionHierarchy(datasets, query) {
     autoAdvance: nodes.length === 1 && options.length === 1 && (level === "source" || options[0].automatic === true) };
 }
 
-export async function createPositionsService({ readCatalog, mutateCatalog, dataDirectory, datasets,
+export async function createPositionsService({ readCatalog, mutateCatalog, dataDirectory, datasets, billing,
   pythonExecutable = process.env.POSITIONS_PYTHON || "python3" }) {
   const bundled = (datasets ?? [JSON.parse(await readFile(new URL("../data/positions/guokao-2027.json", import.meta.url), "utf8"))])
     .map(validatePositionsDataset);
@@ -278,21 +311,58 @@ export async function createPositionsService({ readCatalog, mutateCatalog, dataD
     ...Object.values(readNamespace(store).catalogs ?? {}).map((d) => ({ ...d, origin: "user-import" }))];
   const allPositions = (store) => directories(store).flatMap((d) => d.positions);
   const findPosition = (store, id) => id ? allPositions(store).find((p) => p.id === id) ?? null : null;
-  const profile = (store, id) => {
+  const effectivePositionId = (store, id, authAccountId = null) => {
     const member = memberFor(store, id);
-    const attempts = (member?.attemptIds ?? []).filter((aid) => store.receipts?.[`${id}:${aid}`] && !store.receipts[`${id}:${aid}`].isSample);
-    return { positionId: member?.positionId ?? null, position: findPosition(store, member?.positionId),
-      participation: { name: !isDefaultNickname(member?.name) ? member.name : anonymous(id), attemptIds: attempts }, updatedAt: member?.updatedAt ?? null };
+    if (!authAccountId) return member?.positionId ?? null;
+    const selections = readNamespace(store).accountSelections;
+    if (selections && Object.hasOwn(selections, authAccountId)) {
+      return selections[authAccountId].positionId ?? null;
+    }
+    let latest = null;
+    for (const linkedId of linkedGuestIds(store, { accountId: authAccountId, guestId: id })) {
+      const linked = memberFor(store, linkedId);
+      if (!linked || linked.positionId === undefined) continue;
+      if (!latest || (linked.updatedAt || 0) >= (latest.updatedAt || 0)) latest = linked;
+    }
+    return latest?.positionId ?? null;
+  };
+  const profile = (store, id, authAccountId = null) => {
+    const member = memberFor(store, id);
+    const selectedPositionId = effectivePositionId(store, id, authAccountId);
+    const guests = linkedGuestIds(store, { accountId: authAccountId, guestId: id });
+    const attemptSet = new Set();
+    let bestName = !isDefaultNickname(member?.name) ? member.name : "";
+    let latestUpdatedAt = member?.updatedAt ?? null;
+    for (const linkedId of guests) {
+      const linked = memberFor(store, linkedId);
+      if (!linked) continue;
+      if (!bestName && !isDefaultNickname(linked.name)) bestName = linked.name;
+      if ((linked.updatedAt || 0) > (latestUpdatedAt || 0)) latestUpdatedAt = linked.updatedAt;
+      for (const aid of linked.attemptIds ?? []) {
+        const receipt = store.receipts?.[`${linkedId}:${aid}`]
+          ?? (authAccountId ? findReceiptForIdentity(store, { guestId: linkedId, attemptId: aid, accountId: authAccountId })?.receipt : null);
+        if (receipt && !receipt.isSample) attemptSet.add(aid);
+      }
+    }
+    const accountSelection = authAccountId ? readNamespace(store).accountSelections?.[authAccountId] : null;
+    if ((accountSelection?.updatedAt || 0) > (latestUpdatedAt || 0)) latestUpdatedAt = accountSelection.updatedAt;
+    return {
+      positionId: selectedPositionId,
+      position: findPosition(store, selectedPositionId),
+      participation: { name: bestName || anonymous(id), attemptIds: [...attemptSet] },
+      updatedAt: latestUpdatedAt,
+      scope: authAccountId ? "account" : "guest",
+    };
   };
   // 榜单、群体统计和公开详情共用范围校验，避免岗位切换后出现跨范围的数据。
-  const rankingScope = (store, query, requireViewer = false) => {
+  const rankingScope = (store, query, requireViewer = false, viewerAccountId = null) => {
     const versionId = query.get("versionId");
     const version = store.versions.find((item) => item.id === versionId && item.status !== "draft");
     if (!version) fail("找不到这套卷版本。", 404);
     const viewerId = requireViewer || query.has("guestId") ? guest(query.get("guestId")) : null;
     const requestedScope = query.get("scope") || "selected";
     if (!["selected", "nationwide", "position"].includes(requestedScope)) fail("榜单范围无效。");
-    const selected = viewerId ? memberFor(store, viewerId)?.positionId : null;
+    const selected = viewerId ? effectivePositionId(store, viewerId, viewerAccountId) : null;
     const targetId = requestedScope === "selected" ? selected : requestedScope === "position" ? query.get("positionId") : null;
     const position = findPosition(store, targetId);
     if (targetId && !position) fail("该岗位不存在，请重新选择。", 404);
@@ -342,7 +412,7 @@ export async function createPositionsService({ readCatalog, mutateCatalog, dataD
 
   // The hierarchical browser is a separate read path so existing flat catalog and selection callers remain compatible.
   const paths = new Set(["hierarchy", "catalog", "profile", "selection", "participation", "withdraw", "leaderboard", "insights", "public-result", "import", "import/start", "import/chunk", "import/finish", "import/cancel"]);
-  async function handle({ pathname, method, input = {}, query = new URLSearchParams(), send }) {
+  async function handle({ request, pathname, method, input = {}, query = new URLSearchParams(), send }) {
     if (!pathname.startsWith("/api/positions/")) return false;
     const path = pathname.slice("/api/positions/".length);
     if (!paths.has(path)) return false;
@@ -366,20 +436,46 @@ export async function createPositionsService({ readCatalog, mutateCatalog, dataD
         facets: { years: [...new Set(all.map((p) => p.year))].sort((a, b) => b - a), exams: [...new Set(all.map((p) => p.exam))], regions: [...new Set(all.map((p) => p.region))] },
         sources: directories(store).map((d) => ({ ...d.source, origin: d.origin })) });
     } else if (path === "profile") {
-      send(200, profile(store, guest(query.get("guestId"))));
+      const authAccount = await resolveRequestAccount(billing, request);
+      const id = guest(query.get("guestId"));
+      send(200, profile(store, id, authAccount?.id ?? null));
     } else if (path === "selection") {
+      const authAccount = await resolveRequestAccount(billing, request);
       const id = guest(input.guestId);
       const result = await mutateCatalog((current) => {
         if (input.positionId !== null && !findPosition(current, input.positionId)) fail("岗位不存在，请刷新目录后重新选择。", 404);
         const state = namespace(current);
-        state.members[id] = { ...memberFor(current, id), positionId: input.positionId, updatedAt: Date.now() };
-        return profile(current, id);
+        const now = Date.now();
+        const accountId = authAccount?.id ?? null;
+        if (accountId) assertGuestNotOwnedByOther(current, accountId, id);
+        const existingMember = memberFor(current, id);
+        const ownerAccountId = accountId && (accountIdForGuest(current, id) === accountId || linkAccountGuest(current, accountId, id))
+          ? accountId
+          : null;
+        state.members[id] = {
+          ...existingMember,
+          positionId: input.positionId,
+          ...(ownerAccountId ? { accountId: ownerAccountId } : {}),
+          updatedAt: now,
+        };
+        if (accountId) {
+          state.accountSelections ??= {};
+          state.accountSelections[accountId] = { positionId: input.positionId, updatedAt: now };
+          for (const linkedId of linkedGuestIds(current, { accountId, guestId: id })) {
+            if (linkedId === id || !Object.hasOwn(state.members, linkedId)) continue;
+            state.members[linkedId] = { ...state.members[linkedId], positionId: input.positionId, updatedAt: now };
+          }
+        }
+        return profile(current, id, accountId);
       });
       send(200, result);
     } else if (path === "participation" || path === "withdraw") {
+      const authAccount = await resolveRequestAccount(billing, request);
       const id = guest(input.guestId);
       const result = await mutateCatalog((current) => {
         const state = namespace(current);
+        const accountId = authAccount?.id ?? null;
+        if (accountId) assertGuestNotOwnedByOther(current, accountId, id);
         const previous = memberFor(current, id) ?? {};
         let attemptIds = [];
         let name = previous.name || anonymous(id);
@@ -391,27 +487,51 @@ export async function createPositionsService({ readCatalog, mutateCatalog, dataD
           if (input.versionId !== undefined && !current.versions.some((v) => v.id === input.versionId)) fail("找不到这套卷版本。", 404);
           for (const aid of input.attemptIds) {
             if (typeof aid !== "string" || !guestPattern.test(aid)) fail("答卷凭证无效。");
-            const receipt = current.receipts?.[`${id}:${aid}`];
+            const receipt = findReceiptForIdentity(current, { guestId: id, attemptId: aid, accountId })?.receipt;
             if (!receipt || receipt.isSample || (input.versionId && receipt.versionId !== input.versionId)) fail("请选择当前身份已提交的同版本真实答卷。", 403);
           }
           const otherVersions = input.versionId ? (previous.attemptIds ?? []).filter((aid) => {
-            const receipt = current.receipts?.[`${id}:${aid}`];
+            const receipt = findReceiptForIdentity(current, { guestId: id, attemptId: aid, accountId })?.receipt;
             return receipt && !receipt.isSample && receipt.versionId !== input.versionId;
           }) : [];
           attemptIds = [...otherVersions, ...input.attemptIds];
         }
+        const now = Date.now();
+        const optOut = path === "withdraw" || attemptIds.length === 0;
+        const ownerAccountId = accountId && (accountIdForGuest(current, id) === accountId || linkAccountGuest(current, accountId, id))
+          ? accountId
+          : null;
         // 兼容管理接口继续支持明确撤回；默认提交与一次性迁移都尊重这一选择。
-        state.members[id] = { ...previous, name, attemptIds, participationOptOut: path === "withdraw" || attemptIds.length === 0, updatedAt: Date.now() };
-        return profile(current, id);
+        state.members[id] = {
+          ...previous,
+          name,
+          attemptIds,
+          participationOptOut: optOut,
+          ...(ownerAccountId ? { accountId: ownerAccountId } : {}),
+          updatedAt: now,
+        };
+        if (accountId) {
+          state.accountOptOut ??= {};
+          state.accountOptOut[accountId] = { optOut, updatedAt: now };
+          for (const linkedId of linkedGuestIds(current, { accountId, guestId: id })) {
+            if (linkedId === id || !Object.hasOwn(state.members, linkedId)) continue;
+            state.members[linkedId] = optOut
+              ? { ...state.members[linkedId], attemptIds: [], participationOptOut: true, updatedAt: now }
+              : { ...state.members[linkedId], participationOptOut: false, updatedAt: now };
+          }
+        }
+        return profile(current, id, accountId);
       });
       send(200, result);
     } else if (path === "insights" || path === "public-result") {
-      const context = rankingScope(store, query, path === "insights");
+      const authAccount = await resolveRequestAccount(billing, request);
+      const viewerAccountId = authAccount?.id ?? null;
+      const context = rankingScope(store, query, path === "insights", viewerAccountId);
       const { version, viewerId, targetId, position, scope, selectionMissing } = context;
       const participants = publicParticipants({ store, members: readNamespace(store).members ?? {}, version, positionId: targetId });
       if (path === "insights") {
         const attemptId = guest(query.get("attemptId"));
-        const ownReceipt = store.receipts?.[`${viewerId}:${attemptId}`];
+        const ownReceipt = findReceiptForIdentity(store, { guestId: viewerId, attemptId, accountId: viewerAccountId })?.receipt;
         if (!ownReceipt || ownReceipt.isSample || ownReceipt.versionId !== version.id)
           fail("完成本卷练习后可查看统计。", 403);
         const band = query.get("band") || "all";
@@ -427,12 +547,14 @@ export async function createPositionsService({ readCatalog, mutateCatalog, dataD
           result: publicResult(person), asOf: Date.now() });
       }
     } else if (path === "leaderboard") {
-      const { version, viewerId, targetId, position, scope, selectionMissing } = rankingScope(store, query);
+      const authAccount = await resolveRequestAccount(billing, request);
+      const viewerAccountId = authAccount?.id ?? null;
+      const { version, viewerId, targetId, position, scope, selectionMissing } = rankingScope(store, query, false, viewerAccountId);
       // 按完整板块选一次最佳；公开成员标识和超越比例沿用同一范围、同一去重口径。
       const dimension = resolveSubjectDimension(version.questions, query.get("dimension") || "total");
       if (dimension !== "total" && !subjectDimensions(version.questions).some((type) => type.id === dimension)) fail("题型不存在。");
       const participants = publicParticipants({ store, members: readNamespace(store).members ?? {}, version, positionId: targetId, dimension });
-      const rows = participants.map((person) => publicLeaderboardRow(person, viewerId));
+      const rows = participants.map((person) => publicLeaderboardRow(person, viewerId, viewerAccountId));
       const { page, pageSize } = paging(query);
       const pages = Math.max(1, Math.ceil(rows.length / pageSize));
       const current = Math.min(page, pages);

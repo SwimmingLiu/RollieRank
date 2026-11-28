@@ -1,4 +1,5 @@
 const storage = require("../../utils/storage.js");
+const cloudSync = require("../../services/cloud-sync.js");
 const format = require("../../utils/format.js");
 const catalog = require("../../utils/catalog.js");
 const { createPageSheetDrag } = require("../../utils/sheet-gesture.js");
@@ -66,6 +67,11 @@ Page({
 
   onShow() {
     this.build();
+    if (!storage.history().length) {
+      cloudSync.syncAll().then(result => {
+        if (result && result.attemptCount) this.build();
+      }).catch(() => {});
+    }
   },
 
   build() {

@@ -1,14 +1,39 @@
 const api = require("../../services/api.js");
+const credits = require("../../services/tool-credits.js");
 const storage = require("../../utils/storage.js");
 const catalogUtil = require("../../utils/catalog.js");
 const omrUtil = require("../../utils/omr.js");
 const timing = require("../../utils/timing.js");
+const practiceScroll = require("../../utils/practice-scroll.js");
 const { createPageSheetDrag } = require("../../utils/sheet-gesture.js");
 const { resumeEntryTimer, pauseEntryTimer } = require("../../vendor/practice-timer.js");
 
 const { ASSET } = require("../../config.js");
 
 const CHOICES = ["A", "B", "C", "D"];
+const DEFAULT_SCAN_COST = 0.1;
+
+function creditUnits(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? Math.round(num * 10) : 0;
+}
+
+function showConfirmModal({ title, content, confirmText = "确定", cancelText = "取消", showCancel = true }) {
+  // 微信原生 wx.showModal 严格限制按钮文字不超过 4 个字符，超长会直接走 fail 回调。
+  const safeConfirm = String(confirmText || "确定").slice(0, 4);
+  const safeCancel = String(cancelText || "取消").slice(0, 4);
+  return new Promise((resolve) => {
+    wx.showModal({
+      title,
+      content,
+      confirmText: safeConfirm,
+      cancelText: safeCancel,
+      showCancel,
+      success: (res) => resolve(Boolean(res && res.confirm)),
+      fail: () => resolve(false),
+    });
+  });
+}
 
 function sectionsOf(version) {
   // 章节来自逐题题型，不把题量或题号写死；服务端公开目录保持原始顺序。
@@ -43,6 +68,7 @@ Page({
     single: false,
     markOnly: false,
     scrollTarget: "",
+    scrollAnimated: true,
     sheet: "",
     progress: 0,
     publisherLogo: "",
@@ -65,6 +91,12 @@ Page({
     scanLowConfidenceText: "",
     scanMode: "fill-blank",
     scanCanApply: false,
+    scanCost: DEFAULT_SCAN_COST,
+    scanCostText: credits.formatCredit(DEFAULT_SCAN_COST),
+    scanBalance: null,
+    scanBalanceText: "",
+    scanCreditSignedIn: false,
+    scanChargedText: "",
     uiBase: "/assets/ui",
     choices: CHOICES,
   },
@@ -79,6 +111,7 @@ Page({
   onShow() {
     this.entryVisible = true;
     this.startEntryClock();
+    if (this.data.sheet === "scan") this.refreshScanCredits();
   },
 
   startEntryClock() {
@@ -113,10 +146,12 @@ Page({
       });
       if (!this.attemptId) this.attemptId = draft.id || storage.pendingId(version.id);
       this.version = version;
+      const versionTitle = catalogUtil.versionTitle(version);
+      wx.setNavigationBarTitle?.({ title: `${versionTitle}估分录答 · 卷卷小榜` });
       this.setData({
         loading: false,
         version: { id: version.id, questionCount: version.questionCount, invigilator: version.timeLimitMinutes || 0 },
-        title: catalogUtil.versionTitle(version),
+        title: versionTitle,
         identity: catalogUtil.practiceIdentity(version),
         publisherLogo: ASSET[catalogUtil.LOGO[version.institution]] || "",
         current: Math.min(version.questionCount, Math.max(1, Number(draft.current) || 1)),
@@ -127,7 +162,7 @@ Page({
       });
       this.reflect();
       this.startEntryClock();
-      if (this.data.current > 1) this.jump(this.data.current);
+      if (this.data.current > 1) this.jump(this.data.current, false, false);
     } catch (error) {
       this.setData({ loading: false, error: error.message });
     }
@@ -165,24 +200,77 @@ Page({
   choose(event) {
     if (this.swipeMoved) return;
     const { number, choice } = event.currentTarget.dataset;
-    const index = Number(number) - 1;
+    const questionNumber = Number(number);
+    const index = questionNumber - 1;
+    const prevValue = this.data.answers[index] || "";
+    const nextValue = prevValue === choice ? "" : choice;
+    const firstAnswer = !prevValue;
+    this.clearPageTurnTimers();
+
+    if (!this.data.single) {
+      const answers = this.data.answers.slice();
+      answers[index] = nextValue;
+      const answered = this.data.answered + (nextValue && !prevValue ? 1 : (!nextValue && prevValue ? -1 : 0));
+      const rowIndex = this.data.questions.findIndex(item => item.number === questionNumber);
+      const shouldAdvance = Boolean(nextValue && firstAnswer && rowIndex >= 0 && rowIndex + 1 < this.data.questions.length);
+      const nextCurrent = shouldAdvance ? this.data.questions[rowIndex + 1].number : questionNumber;
+      const activeSection = Math.max(0, this.data.sections.findIndex(section => nextCurrent >= section.start && nextCurrent <= section.end));
+
+      // 局部路径单次 setData（避免全量 135 题数组反复跨线程序列化导致滚动掉帧）
+      const patch = {
+        [`answers[${index}]`]: nextValue,
+        [`allQuestions[${index}].answer`]: nextValue,
+        current: nextCurrent,
+        activeSection,
+        answered,
+        progress: answered / this.version.questionCount * 100,
+      };
+      if (rowIndex >= 0) patch[`questions[${rowIndex}].answer`] = nextValue;
+      this.setData(patch);
+      if (shouldAdvance) {
+        this.scrollListToRow(nextCurrent, {
+          keepVisible: true,
+          animated: true,
+          delayMs: practiceScroll.AUTO_TURN_DELAY_MS,
+        });
+      }
+      this.schedulePersist();
+      return;
+    }
+
     const answers = this.data.answers.slice();
-    const firstAnswer = !answers[index];
-    answers[index] = answers[index] === choice ? "" : choice;
-    this.setData({ answers, current: Number(number) });
+    answers[index] = nextValue;
+    this.setData({ answers, current: questionNumber, singleOffset: 0, singleOpacity: 1, singleDragging: false });
     this.reflect();
-    if (answers[index] && (firstAnswer || this.data.single)) this.moveQuestion(1, true);
-    this.persist();
+    if (nextValue) {
+      this.moveQuestion(1, true, { delayMs: 140 });
+    }
+    this.schedulePersist();
   },
 
   toggleMark(event) {
     if (this.swipeMoved) return;
     const number = Number(event.currentTarget.dataset.number);
+    const index = number - 1;
+    const nextMarked = !this.data.marks[index];
+    if (!this.data.single && !this.data.markOnly) {
+      const rowIndex = this.data.questions.findIndex(item => item.number === number);
+      const uncertain = this.data.uncertain + (nextMarked ? 1 : -1);
+      const patch = {
+        [`marks[${index}]`]: nextMarked,
+        [`allQuestions[${index}].marked`]: nextMarked,
+        uncertain,
+      };
+      if (rowIndex >= 0) patch[`questions[${rowIndex}].marked`] = nextMarked;
+      this.setData(patch);
+      this.schedulePersist();
+      return;
+    }
     const marks = this.data.marks.slice();
-    marks[number - 1] = !marks[number - 1];
+    marks[index] = nextMarked;
     this.setData({ marks });
     this.reflect();
-    this.persist();
+    this.schedulePersist();
   },
 
   switchSection(event) {
@@ -197,21 +285,115 @@ Page({
     this.jump(Number(event.currentTarget.dataset.number));
   },
 
-  jump(number, keepVisible = false) {
-    this.setData({ current: number, scrollTarget: "" });
-    this.reflect();
+  clearPageTurnTimers() {
+    clearTimeout(this.listScrollTimer);
+    clearTimeout(this.listAnimTimer);
+    clearTimeout(this.singleAdvanceTimer);
+    clearTimeout(this.singleAnimTimer);
+    this.pendingSingleNumber = 0;
+    this.autoScrollGuardUntil = 0;
+  },
+
+  onListTouchStart(event) {
+    const point = event.touches && event.touches[0];
+    this.listTouchY = point ? point.clientY : null;
+  },
+
+  onListTouchMove(event) {
+    const point = event.touches && event.touches[0];
+    if (!point || this.listTouchY === null || this.listTouchY === undefined) return;
+    // 只有用户主动拖动列表时才打断自动翻页与防误触锁，静止误点不解锁。
+    if (Math.abs(point.clientY - this.listTouchY) >= 10) {
+      this.cancelAutoListScroll();
+    }
+  },
+
+  onListTouchEnd() {
+    this.listTouchY = null;
+  },
+
+  onListDragStart() {
+    this.cancelAutoListScroll();
+  },
+
+  cancelAutoListScroll() {
+    clearTimeout(this.listScrollTimer);
+    clearTimeout(this.listAnimTimer);
+    this.autoScrollGuardUntil = 0;
+  },
+
+  isNativeSmoothDurationSupported() {
+    if (this.nativeScrollDurationSupported === undefined) {
+      const device = (wx.getDeviceInfo && wx.getDeviceInfo()) || (wx.getSystemInfoSync && wx.getSystemInfoSync()) || {};
+      this.nativeScrollDurationSupported = String(device.platform || "").toLowerCase() === "ios";
+    }
+    return this.nativeScrollDurationSupported;
+  },
+
+  runSmoothListScroll(scrollerNode, fromTop, targetTop, duration) {
+    clearTimeout(this.listAnimTimer);
+    if (!duration || duration <= 0) {
+      scrollerNode.scrollTo({ top: targetTop, duration: 0, animated: false });
+      return;
+    }
+    if (this.isNativeSmoothDurationSupported()) {
+      scrollerNode.scrollTo({ top: targetTop, duration, animated: true });
+      return;
+    }
+    // Android WebView 与开发者工具下 ScrollViewContext.scrollTo 不支持自定义 duration，改用 60fps 干脆缓出推进。
+    const startedAt = Date.now();
+    const delta = targetTop - fromTop;
+    const step = () => {
+      if (this.data.single) return;
+      const progress = Math.min(1, (Date.now() - startedAt) / duration);
+      const eased = practiceScroll.easeOutCubic(progress);
+      scrollerNode.scrollTo({ top: Math.round(fromTop + delta * eased), animated: false });
+      if (progress < 1) {
+        this.listAnimTimer = setTimeout(step, 16);
+      }
+    };
+    step();
+  },
+
+  scrollListToRow(number, { keepVisible = false, animated = true, delayMs = 0 } = {}) {
+    clearTimeout(this.listScrollTimer);
+    clearTimeout(this.listAnimTimer);
     const id = "answer-" + number;
-    if (!this.data.single && keepVisible) {
+    const run = () => {
+      if (this.data.single || this.data.current !== number) return;
       const query = this.createSelectorQuery();
       query.select(".practice__scroller").boundingClientRect();
+      query.select(".practice__scroller").scrollOffset();
+      query.select(".practice__scroller").node();
       query.select("#" + id).boundingClientRect();
-      query.exec(([list, row]) => {
-        if (this.data.current === number && list && row && (row.bottom > list.bottom || row.top < list.top)) {
-          this.setData({ scrollTarget: id });
+      query.exec(([list, offset, scroller, row]) => {
+        if (this.data.single || this.data.current !== number) return;
+        if (!list || !row || !offset) {
+          if (!keepVisible) this.setData({ scrollAnimated: animated, scrollTarget: id });
+          return;
+        }
+        const plan = practiceScroll.planListScroll({ list, offset, row, keepVisible, animated });
+        if (!plan.shouldScroll) return;
+        const scrollerNode = scroller && scroller.node;
+        if (scrollerNode && typeof scrollerNode.scrollTo === "function") {
+          if (plan.guardMs > 0) this.autoScrollGuardUntil = Date.now() + plan.guardMs;
+          this.runSmoothListScroll(scrollerNode, offset.scrollTop, plan.targetTop, plan.duration);
+        } else {
+          if (plan.guardMs > 0) this.autoScrollGuardUntil = Date.now() + Math.min(plan.guardMs, 420);
+          this.setData({ scrollAnimated: animated, scrollTarget: id });
         }
       });
-    } else if (!this.data.single) {
-      this.setData({ scrollTarget: id });
+    };
+    if (animated && delayMs > 0) this.listScrollTimer = setTimeout(run, delayMs);
+    else run();
+  },
+
+  jump(number, keepVisible = false, animated = true, delayMs = 0) {
+    this.clearPageTurnTimers();
+    this.setData({ current: number, scrollTarget: "", singleOffset: 0, singleOpacity: 1, singleDragging: false });
+    this.reflect();
+    if (!this.data.single) {
+      this.scrollListToRow(number, { keepVisible, animated, delayMs });
     }
     this.persist();
   },
@@ -225,25 +407,52 @@ Page({
 
   toggleMode() {
     this.setData({ single: !this.data.single });
-    this.jump(this.data.current);
+    this.jump(this.data.current, false, false);
   },
 
-  animateSingleTransition(direction) {
-    clearTimeout(this.singleAnimTimer);
-    this.setData({ singleOffset: direction > 0 ? 44 : -44, singleOpacity: 0.35, singleDragging: true }, () => {
+  transitionSingleTo(number, direction, { delayMs = 0, fromDrag = false } = {}) {
+    this.clearPageTurnTimers();
+    this.pendingSingleNumber = number;
+    const exitOffset = direction > 0 ? -64 : 64;
+    const enterOffset = direction > 0 ? 56 : -56;
+    const exitMs = fromDrag ? 120 : 180;
+
+    const startExit = () => {
+      if (!this.data.single) return;
+      this.setData({ singleOffset: exitOffset, singleOpacity: 0, singleDragging: false });
       this.singleAnimTimer = setTimeout(() => {
-        this.setData({ singleOffset: 0, singleOpacity: 1, singleDragging: false });
-      }, 16);
-    });
+        if (!this.data.single) return;
+        this.pendingSingleNumber = 0;
+        this.setData(
+          { current: number, singleOffset: enterOffset, singleOpacity: 0, singleDragging: true },
+          () => {
+            this.reflect();
+            this.persist();
+            // 留出两帧让微信双线程先提交离场起点的无过渡位置，再平滑滑入。
+            this.singleAnimTimer = setTimeout(() => {
+              if (!this.data.single) return;
+              this.setData({ singleOffset: 0, singleOpacity: 1, singleDragging: false });
+            }, 32);
+          },
+        );
+      }, exitMs);
+    };
+
+    if (delayMs > 0) this.singleAdvanceTimer = setTimeout(startExit, delayMs);
+    else startExit();
   },
 
-  moveQuestion(direction, keepVisible = false) {
+  moveQuestion(direction, keepVisible = false, options = {}) {
     const { questions, currentQuestion, single } = this.data;
-    const position = questions.findIndex(question => question.number === currentQuestion?.number);
+    const baseNumber = (single && this.pendingSingleNumber) || currentQuestion?.number;
+    const position = questions.findIndex(question => question.number === baseNumber);
     const next = questions[position + direction];
     if (!next) return false;
-    this.jump(next.number, keepVisible);
-    if (single) this.animateSingleTransition(direction);
+    if (single) {
+      this.transitionSingleTo(next.number, direction, options);
+    } else {
+      this.jump(next.number, keepVisible, true, options.delayMs || 0);
+    }
     return true;
   },
 
@@ -309,7 +518,7 @@ Page({
     const horizontal = distance > Math.abs(dy) * 1.2;
     const deliberate = distance >= 36 || (distance >= 22 && velocity >= 0.45);
     if ((axis === "x" || (!axis && horizontal && distance >= 22)) && horizontal && deliberate) {
-      const moved = this.moveQuestion(dx < 0 ? 1 : -1);
+      const moved = this.moveQuestion(dx < 0 ? 1 : -1, false, { fromDrag: true });
       if (moved) return;
     }
     if (this.data.singleOffset || this.data.singleOpacity !== 1 || this.data.singleDragging) {
@@ -326,7 +535,17 @@ Page({
     }
   },
 
+  schedulePersist() {
+    clearTimeout(this.persistTimer);
+    this.persistTimer = setTimeout(() => {
+      this.persistTimer = null;
+      this.persist();
+    }, 300);
+  },
+
   persist() {
+    clearTimeout(this.persistTimer);
+    this.persistTimer = null;
     if (!this.version || !this.attemptId) return;
     const { answers, marks, current, single, answered, title, identity } = this.data;
     if (!answered && !marks.some(Boolean) && current === 1 && !single && !this.savedDraft) return;
@@ -342,6 +561,54 @@ Page({
     this.setData({ sheet: "sections" });
   },
 
+  async refreshScanCredits() {
+    let cost = this.data.scanCost || DEFAULT_SCAN_COST;
+    let walletAvailable = true;
+    try {
+      const quoted = await credits.quote("answer-sheet");
+      if (quoted && Number.isFinite(quoted.cost) && quoted.cost > 0) cost = quoted.cost;
+    } catch (error) {
+      if (error?.errorId === "wallet-unavailable" || error?.statusCode === 503) walletAvailable = false;
+    }
+    let signedIn = false;
+    let balance = null;
+    if (walletAvailable && credits.hasSession()) {
+      try {
+        const wallet = await credits.wallet(0);
+        signedIn = true;
+        balance = wallet.balance;
+      } catch (error) {
+        if (error?.errorId === "wallet-unavailable" || error?.statusCode === 503) walletAvailable = false;
+        signedIn = false;
+        balance = null;
+      }
+    }
+    this.setData({
+      scanCost: cost,
+      scanCostText: credits.formatCredit(cost),
+      scanCreditSignedIn: signedIn,
+      scanBalance: balance,
+      scanBalanceText: balance === null ? "" : credits.formatCredit(balance),
+    });
+    return { cost, signedIn, balance, walletAvailable };
+  },
+
+  async showInsufficientCreditsModal(cost, balance) {
+    const costText = credits.formatCredit(cost || DEFAULT_SCAN_COST);
+    const balanceLine = typeof balance === "number" && Number.isFinite(balance)
+      ? `当前可用余额 ${credits.formatCredit(balance)} 卷豆，`
+      : "";
+    const goRecharge = await showConfirmModal({
+      title: "卷豆不足",
+      content: `本次扫描答题卡需要消耗 ${costText} 卷豆，${balanceLine}卷豆不足，请先充值或领取后再试。`,
+      confirmText: "获取卷豆",
+      cancelText: "手动录入",
+    });
+    if (goRecharge) {
+      wx.navigateTo({ url: "/pages/credits/credits" });
+    }
+  },
+
   openScan() {
     this.scanSeq = (this.scanSeq || 0) + 1;
     this.scanResult = null;
@@ -353,9 +620,11 @@ Page({
       scanError: "",
       scanSummary: null,
       scanLowConfidenceText: "",
+      scanChargedText: "",
       scanMode: this.data.answered > 0 ? "fill-blank" : "replace",
       scanCanApply: false,
     });
+    this.refreshScanCredits();
   },
 
   chooseScanImage() {
@@ -368,7 +637,7 @@ Page({
       success: (res) => {
         const file = res && Array.isArray(res.tempFiles) ? res.tempFiles[0] : null;
         if (!file || !file.tempFilePath) return;
-        this.runScan(file.tempFilePath, Number(file.size) || 0);
+        this.confirmAndRunScan(file.tempFilePath, Number(file.size) || 0);
       },
       fail: (error) => {
         const msg = String((error && error.errMsg) || "");
@@ -379,6 +648,100 @@ Page({
         });
       },
     });
+  },
+
+  async confirmAndRunScan(filePath, fileSize) {
+    const seq = (this.scanSeq || 0) + 1;
+    this.scanSeq = seq;
+    const priorPreview = this.data.scanPreview;
+    const priorPhase = this.data.scanPhase;
+    const restorePrior = () => {
+      if (this.scanResult && priorPhase === "ready") {
+        this.setData({ scanPhase: "ready", scanPreview: priorPreview });
+      } else {
+        this.setData({ scanPhase: "idle", scanPreview: "" });
+      }
+    };
+    this.setData({
+      scanPhase: "idle",
+      scanPreview: filePath,
+      scanError: "",
+      scanChargedText: "",
+    });
+    const status = await this.refreshScanCredits();
+    if (seq !== this.scanSeq || this.data.sheet !== "scan") return;
+    const cost = status.cost || DEFAULT_SCAN_COST;
+    const costText = credits.formatCredit(cost);
+
+    if (status.walletAvailable && !status.signedIn) {
+      const ok = await showConfirmModal({
+        title: "确认消耗卷豆识图",
+        content: `本次识别答题卡将消耗 ${costText} 卷豆（识别失败不扣豆）。\n请先登录微信账号核验卷豆余额，新账号首次登录即赠 3 卷豆。`,
+        confirmText: "登录识图",
+        cancelText: "取消",
+      });
+      if (seq !== this.scanSeq || this.data.sheet !== "scan") return;
+      if (!ok) {
+        restorePrior();
+        return;
+      }
+      wx.showLoading({ title: "正在登录", mask: true });
+      let wallet;
+      try {
+        await credits.login({ bindLegacy: false });
+        wallet = await credits.wallet(0);
+      } catch (error) {
+        wx.hideLoading();
+        if (seq !== this.scanSeq || this.data.sheet !== "scan") return;
+        this.setData({
+          scanPhase: "error",
+          scanError: (error && error.message) || "微信登录失败，请重试。",
+        });
+        return;
+      }
+      wx.hideLoading();
+      if (seq !== this.scanSeq || this.data.sheet !== "scan") return;
+      this.setData({
+        scanCreditSignedIn: true,
+        scanBalance: wallet.balance,
+        scanBalanceText: credits.formatCredit(wallet.balance),
+      });
+      if (creditUnits(wallet.balance) < creditUnits(cost)) {
+        this.setData({
+          scanPhase: "error",
+          scanError: `可用卷豆不足（需 ${costText} 卷豆，当前 ${credits.formatCredit(wallet.balance)} 卷豆）。`,
+        });
+        await this.showInsufficientCreditsModal(cost, wallet.balance);
+        return;
+      }
+      this.runScan(filePath, fileSize, cost);
+      return;
+    }
+
+    if (status.walletAvailable && status.signedIn && creditUnits(status.balance) < creditUnits(cost)) {
+      this.setData({
+        scanPhase: "error",
+        scanError: `可用卷豆不足（需 ${costText} 卷豆，当前 ${credits.formatCredit(status.balance)} 卷豆）。`,
+      });
+      await this.showInsufficientCreditsModal(cost, status.balance);
+      return;
+    }
+
+    const balanceTip = status.signedIn && status.balance !== null
+      ? `\n当前可用余额：${credits.formatCredit(status.balance)} 卷豆`
+      : "";
+    const confirmed = await showConfirmModal({
+      title: "确认消耗卷豆识图",
+      content: `本次识别答题卡将消耗 ${costText} 卷豆（识别失败不扣豆）。${balanceTip}`,
+      confirmText: "开始识图",
+      cancelText: "取消",
+    });
+    if (seq !== this.scanSeq || this.data.sheet !== "scan") return;
+    if (!confirmed) {
+      restorePrior();
+      return;
+    }
+    this.runScan(filePath, fileSize, cost);
   },
 
   readFileBase64(filePath) {
@@ -407,10 +770,6 @@ Page({
 
   convertToJpegViaCanvas(filePath, width, height) {
     return new Promise((resolve, reject) => {
-      const longEdge = Math.max(width, height);
-      const scale = longEdge > omrUtil.OMR_TARGET_EDGE ? omrUtil.OMR_TARGET_EDGE / longEdge : 1;
-      const targetWidth = Math.max(1, Math.round(width * scale));
-      const targetHeight = Math.max(1, Math.round(height * scale));
       this.createSelectorQuery()
         .select("#omr-canvas")
         .fields({ node: true })
@@ -420,11 +779,19 @@ Page({
             reject(new Error("当前环境无法转换照片格式，请直接拍摄 JPG 照片。"));
             return;
           }
-          canvas.width = targetWidth;
-          canvas.height = targetHeight;
           const ctx = canvas.getContext("2d");
           const img = canvas.createImage();
           img.onload = () => {
+            // 使用解码后的实际宽高计算缩放，避免 iPhone 竖拍 EXIF 旋转导致画面被拉伸变形。
+            const srcWidth = Number(img.width) || width;
+            const srcHeight = Number(img.height) || height;
+            const longEdge = Math.max(srcWidth, srcHeight);
+            const scale = longEdge > omrUtil.OMR_TARGET_EDGE ? omrUtil.OMR_TARGET_EDGE / longEdge : 1;
+            const targetWidth = Math.max(1, Math.round(srcWidth * scale));
+            const targetHeight = Math.max(1, Math.round(srcHeight * scale));
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, targetWidth, targetHeight);
             ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
@@ -432,13 +799,35 @@ Page({
               canvas,
               fileType: "jpg",
               quality: 0.92,
-              success: (out) => resolve(out.tempFilePath),
+              // 离屏 canvas 的 CSS 尺寸为 1×1px，必须显式传 destWidth/destHeight，否则微信会导出 2×2/3×3 残图。
+              destWidth: targetWidth,
+              destHeight: targetHeight,
+              success: (out) => resolve({ tempFilePath: out.tempFilePath, targetWidth, targetHeight }),
               fail: () => reject(new Error("照片转码失败，请重新拍摄。")),
             });
           };
           img.onerror = () => reject(new Error("照片解码失败，请重新选择。"));
           img.src = filePath;
         });
+    });
+  },
+
+  compressJpegNative(filePath) {
+    return new Promise((resolve, reject) => {
+      if (typeof wx.compressImage !== "function") {
+        reject(new Error("compressImage unavailable"));
+        return;
+      }
+      wx.compressImage({
+        src: filePath,
+        quality: 88,
+        compressedWidth: omrUtil.OMR_TARGET_EDGE,
+        success: (res) => {
+          if (res && res.tempFilePath) resolve(res.tempFilePath);
+          else reject(new Error("compressImage empty"));
+        },
+        fail: reject,
+      });
     });
   },
 
@@ -453,8 +842,28 @@ Page({
     if (isJpeg && longEdge <= omrUtil.OMR_DIRECT_MAX_EDGE && (!fileSize || fileSize <= omrUtil.OMR_DIRECT_MAX_BYTES)) {
       return this.readFileBase64(filePath);
     }
-    const convertedPath = await this.convertToJpegViaCanvas(filePath, width, height);
-    return this.readFileBase64(convertedPath);
+    const canFallbackToOriginalJpeg = isJpeg && (!fileSize || fileSize <= 10 * 1024 * 1024);
+    try {
+      const converted = await this.convertToJpegViaCanvas(filePath, width, height);
+      const outInfo = await this.getImageInfo(converted.tempFilePath).catch(() => null);
+      const outLongEdge = outInfo ? Math.max(Number(outInfo.width) || 0, Number(outInfo.height) || 0) : 0;
+      const expectedLongEdge = Math.max(converted.targetWidth, converted.targetHeight);
+      if (!outLongEdge || outLongEdge >= Math.min(600, Math.round(expectedLongEdge * 0.6))) {
+        return this.readFileBase64(converted.tempFilePath);
+      }
+      if (!canFallbackToOriginalJpeg) {
+        throw new Error("照片转码后分辨率异常，请重拍清晰的 JPG 照片。");
+      }
+    } catch (error) {
+      if (!canFallbackToOriginalJpeg) throw error;
+    }
+    // 兜底：若 Canvas 转码异常但原图本身是合法 JPEG（<= 10 MB），优先走微信原生压缩，失败则直传由服务端 EXIF 转正并缩放。
+    try {
+      const compressedPath = await this.compressJpegNative(filePath);
+      return await this.readFileBase64(compressedPath);
+    } catch {
+      return this.readFileBase64(filePath);
+    }
   },
 
   canApplyScan(summary, mode) {
@@ -463,7 +872,7 @@ Page({
     return true;
   },
 
-  async runScan(filePath, fileSize) {
+  async runScan(filePath, fileSize, quotedCost = this.data.scanCost || DEFAULT_SCAN_COST) {
     const seq = (this.scanSeq || 0) + 1;
     this.scanSeq = seq;
     this.scanResult = null;
@@ -473,6 +882,7 @@ Page({
       scanError: "",
       scanSummary: null,
       scanLowConfidenceText: "",
+      scanChargedText: "",
       scanCanApply: false,
     });
     try {
@@ -481,6 +891,8 @@ Page({
       const result = await api.recognizeAnswerSheet({
         image: base64,
         expectedQuestions: this.version.questionCount,
+        quotedCost,
+        operationId: storage.uuid(),
       });
       if (seq !== this.scanSeq) return;
       const summary = omrUtil.summarizeOmrResult(result, {
@@ -490,24 +902,60 @@ Page({
       if (summary.recognized === 0) {
         this.setData({
           scanPhase: "error",
-          scanError: summary.warnings[0] || "未识别到有效涂黑，请重拍",
+          scanError: summary.warnings[0] || "未识别到有效涂黑，请重拍（本次未扣卷豆）",
         });
+        this.refreshScanCredits();
         return;
       }
       const mode = this.data.answered > 0 ? "fill-blank" : "replace";
       const lowConfidenceText = summary.lowConfidenceCount > 0
         ? `${summary.lowConfidence.slice(0, 6).join("、")}${summary.lowConfidenceCount > 6 ? ` 等 ${summary.lowConfidenceCount} 题` : " 题"}`
         : "";
+      const charged = result && result.billing && Number(result.billing.charged);
+      const scanChargedText = Number.isFinite(charged) && charged > 0
+        ? `本次已消耗 ${credits.formatCredit(charged)} 卷豆`
+        : "";
       this.scanResult = result;
       this.setData({
         scanPhase: "ready",
         scanSummary: summary,
         scanLowConfidenceText: lowConfidenceText,
+        scanChargedText,
         scanMode: mode,
         scanCanApply: this.canApplyScan(summary, mode),
       });
+      if (Number.isFinite(charged) && charged > 0) this.refreshScanCredits();
     } catch (error) {
       if (seq !== this.scanSeq) return;
+      if (error && (error.statusCode === 402 || error.errorId === "balance")) {
+        const status = await this.refreshScanCredits();
+        const costText = credits.formatCredit(status.cost || quotedCost);
+        this.setData({
+          scanPhase: "error",
+          scanError: `可用卷豆不足（需 ${costText} 卷豆），请充值后再试或手动录入。`,
+        });
+        await this.showInsufficientCreditsModal(status.cost || quotedCost, status.balance);
+        return;
+      }
+      if (error && (error.statusCode === 401 || error.errorId === "login")) {
+        storage.clearToolCreditSession();
+        this.setData({
+          scanCreditSignedIn: false,
+          scanBalance: null,
+          scanBalanceText: "",
+          scanPhase: "error",
+          scanError: "卷豆账号登录已过期，请点击重拍重新登录后识图。",
+        });
+        return;
+      }
+      if (error && error.statusCode === 409 && error.errorId === "quote") {
+        await this.refreshScanCredits();
+        this.setData({
+          scanPhase: "error",
+          scanError: `扫卡用量已更新为 ${this.data.scanCostText} 卷豆，请点击重拍重新确认。`,
+        });
+        return;
+      }
       this.setData({
         scanPhase: "error",
         scanError: (error && error.message) || "识别失败，请重拍或手动录入。",
@@ -597,6 +1045,7 @@ Page({
   cancelSheetDrag() { this.sheetDrag?.cancel(); },
 
   submit() {
+    this.persist();
     if (!this.data.submitting) this.setData({ sheet: "submit" });
   },
 
@@ -643,7 +1092,7 @@ Page({
   onUnload() {
     this.scanSeq = (this.scanSeq || 0) + 1;
     this.sheetDrag?.reset();
-    clearTimeout(this.singleAnimTimer);
+    this.clearPageTurnTimers();
     clearTimeout(this.swipeClickTimer);
     this.stopEntryClock();
     this.persist();
@@ -651,7 +1100,31 @@ Page({
 
   onHide() {
     this.entryVisible = false;
+    this.clearPageTurnTimers();
     this.stopEntryClock();
     this.persist();
+  },
+
+  onShareAppMessage() {
+    const shareUtil = require("../../utils/share.js");
+    const label = this.data.title || "行测套卷";
+    const path = this.versionId
+      ? `/pages/practice/practice?versionId=${encodeURIComponent(this.versionId)}`
+      : "/pages/home/home";
+    return {
+      title: `${label}拍照扫卡/录答估分 · 卷卷小榜`,
+      path: shareUtil.withReferralPath(path),
+      imageUrl: ASSET.logo,
+    };
+  },
+
+  onShareTimeline() {
+    const shareUtil = require("../../utils/share.js");
+    const label = this.data.title || "行测套卷";
+    return {
+      title: `${label}行测估分与同卷排名 · 卷卷小榜`,
+      query: shareUtil.withReferralQuery(this.versionId ? `versionId=${encodeURIComponent(this.versionId)}` : ""),
+      imageUrl: ASSET.logo,
+    };
   },
 });

@@ -8,15 +8,16 @@
 
 | 文件 | 用途 |
 | --- | --- |
-| `index.html` | 首页：产品说明、用法、行测分数怎么算、刷题记分、对比、FAQ。JSON-LD 含 WebSite / Organization / WebPage / SoftwareApplication / HowTo / FAQPage |
-| `zenme-suan-fen.html` | 专题页「行测分数怎么算」：130 题与 135 题分值表、单题分值、百分制折算 |
-| `gu-fen-zhun-ma.html` | 专题页「行测估分准吗」：与实际分数的差异来源、可复核的估分做法 |
-| `shua-ti-ji-fen.html` | 专题页「行测刷题怎么记分」：刷题、模考、真题、专项练习的归档方式 |
-| `styles.css` | 样式，沿用 `paper-cards-1114-v3` 的暖纸与珊瑚色 |
+| `index.html` | 首页：低密度图标化产品展示（滚动胶囊、三步交互演示、深色 3D 插画区、130/135 分值矩阵）；完整 SEO/GEO 文案与 FAQ 放在视觉不可见但可抓取的 `.seo-content` 语义层；JSON-LD 含 WebSite / Organization / WebPage / SoftwareApplication / HowTo / FAQPage |
+| `zenme-suan-fen.html` | 专题页「行测分数怎么算」：交互式 130/135 题分值可视化对照 + `.seo-content` 完整分值表与 FAQ |
+| `gu-fen-zhun-ma.html` | 专题页「行测估分准吗」：五项分差来源图标卡 + `.seo-content` 完整拆解与 FAQ |
+| `shua-ti-ji-fen.html` | 专题页「行测刷题怎么记分」：四类练习归档与双计时卡片 + `.seo-content` 完整说明与 FAQ |
+| `styles.css` | 暖纸卡片（`paper-cards-1114-v3`）与深色浓缩咖啡展示带样式，以及 `.seo-content` 视觉隐藏规则 |
+| `site.js` | 首屏胶囊轮播、三步交互切换、130/135 分值矩阵切换、复制提示、桌面扫码弹层与深色区顶栏反色 |
 | `llms.txt` | 给 AI 助手读的站点摘要（关键词、关键事实、分值表、FAQ 速答） |
 | `robots.txt` | 放行主流搜索引擎与 AI 爬虫，指向 sitemap |
 | `sitemap.xml` | 站点地图（4 个页面） |
-| `assets/logo-256.png`、`assets/logo-64.png` | 源图。**线上不从这里加载**，见下方「图片资源」 |
+| `assets/*` | 站点图标（`logo-64.png`/`logo-256.png`）、小程序码（`miniapp-qr.jpg`）、水彩底纹与 3D 纸艺插画素材 |
 
 ### 为什么拆成专题页
 
@@ -247,10 +248,11 @@ ROLLIERANK_MINIPROGRAM_PAGE=pages/home/home
 
 | 接口 | 用途 | 需要口令 |
 | --- | --- | --- |
-| `POST /api/links` | 创建短链 `{page?, title?, channel?}` | ✅ |
+| `POST /api/links` | 创建短链 `{page?, title?, channel?, weappLink?}` | ✅ |
 | `GET /api/links` | 列出全部短链 | ✅ |
 | `GET /api/links/<code>` | 单条详情，`?visit=1` 记一次点击 | ❌ |
 | `GET /api/links/<code>/qrcode` | 小程序码（base64 JPEG，缓存 24h） | ❌ |
+| `POST /api/links/<code>/weapp` | 补录 `#小程序://` 口令 | ✅ |
 | `GET /s/<code>` | 落地页，按 UA 展示小程序码 | — |
 
 口令取自 `ROLLIERANK_SHORTLINK_TOKEN`，未设置时回退到 `ROLLIERANK_REVIEW_TOKEN`。
@@ -272,6 +274,69 @@ curl -X POST https://rank.swimmingliu.cn/api/links \
 ### 索引
 
 落地页带 `noindex`，`robots.txt` 对 `/s/` 设 `Disallow`：短链是分享入口，内容与首页重复。
+
+## 微信内点一下就进：`#小程序://` 口令
+
+这一节是**个人主体唯一能做到「微信内点击直达」**的方式，值得单独说明。
+
+### 三条官方路都走不通
+
+全部实测或查证过，口径一致：
+
+| 方案 | 个人主体 | 依据 |
+| --- | --- | --- |
+| URL Link（`wxaurl.cn`） | ❌ 40002 | 官方「仅针对国内**非个人主体**」 |
+| 加密 Scheme（`?t=TICKET`） | ❌ 40002 | 同上 |
+| 明文 Scheme（`?appid=&path=`） | ❌ | 需在后台「设置→隐私与安全→明文Scheme拉起此小程序」声明，个人主体无此入口 |
+| `<wx-open-launch-weapp>` 开放标签 | ❌ | 需**已认证服务号** |
+| 扫普通链接二维码打开小程序 | ❌ 85075 | 开放范围「企业、媒体、政府及其他组织」 |
+| `web-view` / 业务域名 | ❌ | 个人类型与海外类型暂不支持 |
+| 移动应用拉起小程序 | ❌ | 开放平台需营业执照认证 |
+
+注意：**明文 Scheme 看似能自己拼、不用调接口**，但它在后台的声明开关对个人主体不开放。
+第三方付费短链服务（小码至营、趣码短链）也都要求用户自己去后台声明——如果存在绕过，
+这就是它们的护城河，没有理由不卖。这条反证比文档更硬。
+
+### 能用的：`#小程序://` 文本口令
+
+在小程序里点右上角「…」→「复制链接」，拿到形如：
+
+```
+#小程序://卷卷小榜/pages/home/home/AbCdEf123
+```
+
+粘到微信聊天里，**好友点一下直接进对应页面，没有中间页**。这是微信内真正的点击即唤起，
+且**不经过任何服务端接口**，所以不受主体限制。
+
+关键区别：
+- **手动复制**的 `#小程序://` → 只要页面开了分享就能拿到，个人主体可用
+- **服务端 API 生成**的 Short Link → 个人主体受限
+
+### 接进短链的流程
+
+口令只能在小程序里手动复制，服务端造不出来，所以是「先建链、后补口令」：
+
+```sh
+# 1. 建链
+curl -X POST https://rank.swimmingliu.cn/api/links \
+  -H "Content-Type: application/json" \
+  -H "x-rollierank-token: $ROLLIERANK_REVIEW_TOKEN" \
+  -d '{"page":"pages/home/home","title":"行测估分工具"}'
+
+# 2. 在小程序里「…→复制链接」拿到口令，补录进去
+curl -X POST https://rank.swimmingliu.cn/api/links/<code>/weapp \
+  -H "Content-Type: application/json" \
+  -H "x-rollierank-token: $ROLLIERANK_REVIEW_TOKEN" \
+  -d '{"weappLink":"#小程序://卷卷小榜/pages/home/home/AbCdEf123"}'
+```
+
+补录后，微信内打开 `/s/<code>` 会多出一个「复制口令」按钮；非微信环境不显示，只展示小程序码。
+
+### 前提：首页必须能分享
+
+口令的「复制链接」菜单项只在**页面开启分享**时可用（`onShareAppMessage`）。
+`pages/home/home.js` 已补上 `onShareAppMessage` 与 `onShareTimeline`，
+否则首页右上角转发是灰的，也拿不到口令。
 
 ## 内容维护约定
 

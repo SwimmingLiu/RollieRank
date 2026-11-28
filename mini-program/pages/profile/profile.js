@@ -3,10 +3,10 @@ const storage = require("../../utils/storage.js");
 const profile = require("../../services/profile.js");
 
 Page({
-  data: { name: "", hasCustomName: false, avatar: "", defaultAvatar: ASSET.profile, phoneEnabled: false, phoneLast4: "", busy: false },
+  data: { name: "", hasCustomName: false, avatar: "", defaultAvatar: "/assets/avatars/rank-1.svg", phoneEnabled: false, phoneLast4: "", busy: false },
 
   async onShow() {
-    this.setData({ name: storage.name(), hasCustomName: storage.hasCustomName(), avatar: profile.avatarUrl() });
+    this.setData({ name: storage.name(), hasCustomName: storage.hasCustomName(), avatar: profile.avatarUrl(), defaultAvatar: profile.defaultAvatar() });
     try {
       const [cap, current] = await Promise.all([
         profile.capabilities().catch(() => ({ phoneEnabled: false })),

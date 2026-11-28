@@ -147,6 +147,9 @@ export function ToolCreditsView({
   const [inviteMonthly, setInviteMonthly] = useState("10");
   const [inviteRegisterDays, setInviteRegisterDays] = useState("7");
   const [inviteUseDays, setInviteUseDays] = useState("7");
+  const [referralEnabled, setReferralEnabled] = useState(true);
+  const [referralReward, setReferralReward] = useState("1");
+  const [referralMonthly, setReferralMonthly] = useState("20");
   const [packageDrafts, setPackageDrafts] = useState<PackageDraft[]>([]);
   const [adsReward, setAdsReward] = useState("1");
   const [adsDailyLimit, setAdsDailyLimit] = useState("2");
@@ -224,6 +227,10 @@ export function ToolCreditsView({
     setInviteMonthly(String(rules.invite.monthlyLimit));
     setInviteRegisterDays(String(rules.invite.registerDays));
     setInviteUseDays(String(rules.invite.useDays));
+    const refRule = rules.referral ?? { enabled: true, reward: 1, monthlyLimit: 0 };
+    setReferralEnabled(refRule.enabled);
+    setReferralReward(String(refRule.reward));
+    setReferralMonthly(String(refRule.monthlyLimit));
     setPackageDrafts(
       rules.purchase.packages.map((pack, index) => ({
         key: `${pack.credits}-${index}`,
@@ -365,6 +372,11 @@ export function ToolCreditsView({
     const invUseDays = parseIntRange(inviteUseDays, 1, 30, "首次有效使用天数");
     if (invUseDays === null) return;
 
+    const refReward = parseCreditRange(referralReward, 0, 100, "分享注册奖励");
+    if (refReward === null) return;
+    const refMonthly = parseIntRange(referralMonthly, 0, 10000, "分享奖励每月上限");
+    if (refMonthly === null) return;
+
     const packages: ToolCreditPackage[] = [];
     const seenCredits = new Set<number>();
     for (let i = 0; i < packageDrafts.length; i += 1) {
@@ -400,6 +412,11 @@ export function ToolCreditsView({
         monthlyLimit: invMonthly,
         registerDays: invRegDays,
         useDays: invUseDays,
+      },
+      referral: {
+        enabled: referralEnabled,
+        reward: refReward,
+        monthlyLimit: refMonthly,
       },
       purchase: {
         directPurchase: false,
@@ -562,6 +579,11 @@ export function ToolCreditsView({
           <div className="flex flex-wrap items-center gap-2">
             <Sparkles className="h-4 w-4 text-[#9e6d2b]" />
             <h2 className="text-[15px] font-semibold text-[#1c1917]">当前卷豆规则</h2>
+            <Badge tone={(rules.referral?.enabled ?? true) && (rules.referral?.reward ?? 1) > 0 ? "success" : "neutral"}>
+              {(rules.referral?.enabled ?? true) && (rules.referral?.reward ?? 1) > 0
+                ? `分享注册送 ${formatCredit(rules.referral?.reward ?? 1)} 颗`
+                : "分享注册奖励已关闭"}
+            </Badge>
             <Badge tone={groupApproved && rules.invite.enabled && rules.invite.groups ? "success" : "neutral"}>
               {groupApproved && rules.invite.enabled && rules.invite.groups ? "微信群邀请已开启" : "邀请未开启"}
             </Badge>
@@ -609,9 +631,11 @@ export function ToolCreditsView({
           </div>
 
           <div className="rounded-xl border border-[#eeeae3] bg-[#faf9f6] px-3.5 py-2.5">
-            <div className="text-[12px] text-[#7a7268]">邀请奖励配置</div>
+            <div className="text-[12px] text-[#7a7268]">分享注册奖励</div>
             <div className="mt-0.5 font-medium tabular-nums text-[#1c1917]">
-              {formatCredit(rules.invite.reward)} 颗/人 · 月上限 {rules.invite.monthlyLimit} 位
+              {(rules.referral?.enabled ?? true)
+                ? `${formatCredit(rules.referral?.reward ?? 1)} 颗/人 · ${(rules.referral?.monthlyLimit ?? 0) > 0 ? `月上限 ${rules.referral?.monthlyLimit} 位` : "无上限"}`
+                : "已关闭"}
             </div>
           </div>
 
@@ -1002,7 +1026,55 @@ export function ToolCreditsView({
             </div>
           </div>
 
-          {/* 3. 邀请奖励 */}
+          {/* 3. 分享注册奖励 */}
+          <div className="space-y-3 border-t border-[#eeeae3] pt-5">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-[14px] font-semibold text-[#1c1917]">分享注册奖励</h3>
+              <Badge tone={referralEnabled ? "success" : "neutral"}>
+                {referralEnabled ? "全站分享与专属码生效" : "已关闭"}
+              </Badge>
+            </div>
+            <div className="rounded-xl border border-[#eeeae3] bg-[#faf9f6] px-4 py-2.5">
+              <ToggleSwitch
+                checked={referralEnabled}
+                onCheckedChange={setReferralEnabled}
+                label="新用户通过分享入口或专属码首次注册，奖励分享者卷豆"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label htmlFor="rule-referral-reward" className="block text-[13px] font-medium text-[#44403c]">
+                  每位新用户奖励（颗）
+                </label>
+                <input
+                  id="rule-referral-reward"
+                  type="number"
+                  step="0.1"
+                  min={0}
+                  max={100}
+                  value={referralReward}
+                  onChange={(e) => setReferralReward(e.target.value)}
+                  className={INPUT_CLASS}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="rule-referral-monthly" className="block text-[13px] font-medium text-[#44403c]">
+                  每人每月奖励上限（0 为无上限）
+                </label>
+                <input
+                  id="rule-referral-monthly"
+                  type="number"
+                  min={0}
+                  max={10000}
+                  value={referralMonthly}
+                  onChange={(e) => setReferralMonthly(e.target.value)}
+                  className={INPUT_CLASS}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 4. 微信群邀请奖励 */}
           <div className="space-y-3 border-t border-[#eeeae3] pt-5">
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-[14px] font-semibold text-[#1c1917]">邀请奖励</h3>

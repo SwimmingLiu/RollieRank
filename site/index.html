@@ -6,7 +6,7 @@
     <title>行测估分工具 · 卷卷小榜｜录答案自动算分判分、折算行测分数、看同卷排名</title>
     <meta
       name="description"
-      content="卷卷小榜是行测估分工具：把答题卡录进来，按这套卷的分值表自动算分判分，折算成行测分数，给出板块得分率、逐题对照和同卷排名。平时刷题模考也能记分，免费，微信搜「卷卷小榜」。"
+      content="卷卷小榜是行测估分工具：支持拍照扫答题卡、手工录答与整段批量粘贴，按这套卷的分值表自动算分判分，折算成行测分数，给出板块得分率、逐题对照和同卷排名。平时刷题模考也能记分，免费，微信搜「卷卷小榜」。"
     />
     <link rel="canonical" href="https://rank.swimmingliu.cn/" />
     <meta name="theme-color" content="#fcf8f1" />
@@ -57,19 +57,19 @@
             "isPartOf": { "@id": "https://rank.swimmingliu.cn/#website" },
             "about": { "@id": "https://rank.swimmingliu.cn/#app" },
             "inLanguage": "zh-CN",
-            "dateModified": "2026-11-22",
+            "dateModified": "2026-11-26",
             "datePublished": "2026-11-21"
           },
           {
             "@type": "SoftwareApplication",
             "@id": "https://rank.swimmingliu.cn/#app",
             "name": "卷卷小榜",
-            "alternateName": "RollieRank 行测估分、算分、判分、对答案工具",
+            "alternateName": "RollieRank 行测估分、扫卡算分、判分、对答案工具",
             "url": "https://rank.swimmingliu.cn/",
-            "description": "行测考后估分与练习记录工具。录入答题卡答案后按该套卷的分值表自动判分，折算成百分制行测分数，给出总分、各板块得分率、逐题对照和同卷排名，也记录平时刷题与模考成绩。",
+            "description": "行测考后估分与练习记录工具。支持拍照/相册扫描答题卡、手工逐题点选与整段批量粘贴录答案，按该套卷的分值表自动判分，折算成百分制行测分数，给出总分、各板块得分率、逐题对照和同卷排名，也记录平时刷题与模考成绩。",
             "applicationCategory": "EducationalApplication",
-            "applicationSubCategory": "行测估分、行测算分、行测分数计算、行测判分、行测对答案工具",
-            "keywords": "行测估分, 行测算分, 行测分数, 行测分数计算器, 行测计算, 行测判分, 行测对答案, 行测录分, 行测刷题, 行测备考, 行测题库, 行测真题, 行测模拟, 行测小助手, 行测小助理, 行测助手, 行测助理, 行测分值",
+            "applicationSubCategory": "行测估分、行测算分、扫答题卡估分、行测分数计算、行测判分、行测对答案工具",
+            "keywords": "行测估分, 行测算分, 扫答题卡估分, 拍照估分, 行测分数, 行测分数计算器, 行测计算, 行测判分, 行测对答案, 行测录分, 行测刷题, 行测备考, 行测题库, 行测真题, 行测模拟, 花生十三估分, 超格模考估分, 粉笔模考估分, 行测小助手, 行测小助理, 行测助手, 行测助理, 行测分值",
             "operatingSystem": "Web, iOS, Android",
             "inLanguage": "zh-CN",
             "isAccessibleForFree": true,
@@ -80,7 +80,8 @@
               "availability": "https://schema.org/InStock"
             },
             "featureList": [
-              "行测答题卡答案录入与整段批量粘贴",
+              "拍照或相册扫描答题卡识别（OMR），核对后一键填入",
+              "行测答题卡手工逐题录入与整段批量粘贴",
               "按每套卷自己的分值表自动算分、判分",
               "折算百分制行测分数，跨卷可比",
               "总分与各板块得分率",
@@ -114,7 +115,7 @@
                 "@type": "HowToStep",
                 "position": 2,
                 "name": "录入答题卡答案",
-                "text": "逐题点选 A 到 D，或者把答题卡整段粘贴进来，支持连续选项、带题号 1.A 2.B、分组题号 1-5 ABCDA 三种格式。"
+                "text": "支持拍照或相册扫描答题卡核对填入、逐题点选 A 到 D，或把答题卡整段粘贴进来（支持连续选项、带题号 1.A 2.B、分组题号 1-5 ABCDA 三种格式）。"
               },
               {
                 "@type": "HowToStep",
@@ -203,7 +204,7 @@
                 "name": "和行测小助手、行测小助理有什么区别？",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "都属于行测考后估分工具。行测小助手、行测小助理、行测助手、行测助理这类产品多数提供拍照或扫码识别答题卡；卷卷小榜主打手工录入、整段批量粘贴，以及基于真实提交记录的同卷排名和跨机构成长分析。选择哪个取决于你更习惯拍照还是手输答案。"
+                  "text": "都属于行测考后估分工具。卷卷小榜同时支持拍照/相册扫描答题卡核对填入、手工逐题录入和整段批量粘贴，重点提供同一套卷真实提交记录的全国榜与岗位榜排名、逐题复盘以及跨机构成长分析。"
                 }
               },
               {
@@ -221,196 +222,778 @@
     </script>
   </head>
 
-  <body>
-    <header class="site wrap">
-      <img src="https://rollie-rank-oss.swimmingliu.cn/static/rollierank-site/logo-64.png" alt="卷卷小榜" width="34" height="34" />
-      <span class="name">卷卷小榜</span>
-      <nav>
-        <a href="#how">怎么用</a>
-        <a href="/zenme-suan-fen.html">分值表</a>
-        <a href="#faq">常见问题</a>
-      </nav>
+  <body class="page-home">
+    <!-- ===== 悬浮毛玻璃胶囊页头（滚入深色展带自动反色） ===== -->
+    <header class="topbar" data-topbar>
+      <div class="topbar__pill">
+        <a class="brand" href="/">
+          <img src="/assets/logo-64.png" alt="卷卷小榜" width="28" height="28" />
+          <span class="brand__name">卷卷小榜</span>
+        </a>
+
+        <nav class="topbar__nav" aria-label="主导航">
+          <a href="#bento">交互台</a>
+          <a href="#gallery">核心能力</a>
+          <a href="/zenme-suan-fen.html">分值表</a>
+          <a href="/gu-fen-zhun-ma.html">准不准</a>
+          <a href="/shua-ti-ji-fen.html">刷题记分</a>
+        </nav>
+
+        <button class="pill-btn pill-btn--ink pill-btn--sm" type="button" data-open-qr>
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <rect x="3" y="3" width="5.2" height="5.2" rx="1.1" />
+            <rect x="11.8" y="3" width="5.2" height="5.2" rx="1.1" />
+            <rect x="3" y="11.8" width="5.2" height="5.2" rx="1.1" />
+            <path d="M12 12h1.7v1.7H12zm3 0h2v2h-2zm-3 3h2v2h-2zm3.3.3H17V17h-1.7z" fill="currentColor" stroke="none" />
+          </svg>
+          <span>小程序</span>
+        </button>
+      </div>
     </header>
 
-    <main class="wrap">
-      <h1>行测估分工具：录答案自动算分判分，折算行测分数，看同卷排名</h1>
+    <main>
+      <!-- ===== 首屏：居中低密度 + 滚动图标胶囊 + 双按钮 + 深色停靠条 ===== -->
+      <section class="hero">
+        <div class="hero__aura" aria-hidden="true"></div>
+        <div class="container hero__inner">
+          <h1 class="hero__title">
+            <span class="hero__seg">行测考后</span>
+            <button
+              class="hero__rotator"
+              type="button"
+              data-hero-rotator
+              aria-label="切换核心能力：拍照扫卡、自动算分、六维诊断、同卷排名"
+            >
+              <span class="rotator__track">
+                <span class="rotator__item is-active" data-rotator-item>
+                  <span class="rotator__ico rotator__ico--coral" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2" />
+                      <path d="M7 12h10" />
+                    </svg>
+                  </span>
+                  <span>拍照扫卡</span>
+                </span>
+                <span class="rotator__item is-next" data-rotator-item aria-hidden="true">
+                  <span class="rotator__ico rotator__ico--ochre" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <rect x="4" y="4" width="16" height="16" rx="3" />
+                      <path d="M8 9h8M8 13h4M8 17h6" />
+                      <circle cx="15.5" cy="14.5" r="1.4" />
+                    </svg>
+                  </span>
+                  <span>自动算分</span>
+                </span>
+                <span class="rotator__item" data-rotator-item aria-hidden="true">
+                  <span class="rotator__ico rotator__ico--sage" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <polygon points="12 3 20 7.5 20 16.5 12 21 4 16.5 4 7.5" />
+                      <polygon points="12 7.2 16.2 9.6 16.2 14.4 12 16.8 7.8 14.4 7.8 9.6" opacity="0.45" />
+                    </svg>
+                  </span>
+                  <span>六维诊断</span>
+                </span>
+                <span class="rotator__item is-prev" data-rotator-item aria-hidden="true">
+                  <span class="rotator__ico rotator__ico--ink" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z" />
+                      <path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3" />
+                    </svg>
+                  </span>
+                  <span>同卷排名</span>
+                </span>
+              </span>
+            </button>
+            <span class="hero__seg">一步出分</span>
+          </h1>
 
-      <p class="lead">
-        卷卷小榜是一个行测考后估分工具。把答题卡上的 A、B、C、D 录进来，按这套卷自己的分值表算分判分，
-        折算成百分制行测分数，给出总分、各板块得分率、逐题对照和同卷排名，也把每次练习记下来。
-      </p>
+          <p class="hero__tagline">扫卡手点粘贴，按分值表折算。</p>
 
-      <p>
-        行测估分、行测算分、行测判分、行测对答案、行测录分，说的都是考完以后把答案核对一遍、
-        看看大概能拿多少分这件事。行测分数计算之所以麻烦，是因为国考行测满分 100 分但每题分值并不相同，
-        官方也没公布统一的分值表——卷卷小榜把这几个步骤放在一个页面里：录入答案即出分，不用自己对着分值表逐题加。
-      </p>
+          <div class="hero__cta">
+            <a class="pill-btn pill-btn--ink pill-btn--lg" href="https://rollie-rank.swimmingliu.cn/ios-v3/app.html">
+              <span>打开网页版</span>
+              <svg class="ico-arrow" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M5.5 3.5 10 8l-4.5 4.5" />
+              </svg>
+            </a>
+            <button class="pill-btn pill-btn--paper pill-btn--lg" type="button" data-open-qr>
+              <svg viewBox="0 0 20 20" aria-hidden="true">
+                <rect x="3" y="3" width="5.2" height="5.2" rx="1.1" />
+                <rect x="11.8" y="3" width="5.2" height="5.2" rx="1.1" />
+                <rect x="3" y="11.8" width="5.2" height="5.2" rx="1.1" />
+                <path d="M12 12h1.7v1.7H12zm3 0h2v2h-2zm-3 3h2v2h-2zm3.3.3H17V17h-1.7z" fill="currentColor" stroke="none" />
+              </svg>
+              <span>扫码用小程序</span>
+            </button>
+          </div>
 
-      <p>
-        习惯用「行测小助手」「行测小助理」「行测助手」「行测助理」这类工具的同学，
-        可以把卷卷小榜当成同一类工具来看：都是考后估分，区别在于卷卷小榜主打手工录入与整段批量粘贴，
-        并且提供同卷真实排名和跨机构成长分析。微信里搜「卷卷小榜」即可打开小程序。
-      </p>
-
-      <a class="cta" href="https://rollie-rank.swimmingliu.cn/ios-v3/app.html">打开网页版试用</a>
-      <p class="note" style="margin-top: 10px">
-        也可以直接在微信里搜索小程序「卷卷小榜」。
-      </p>
-
-      <div class="grid">
-        <div class="cell">
-          <strong>录答案</strong>
-          <span>逐题点选 A–D，也支持整段粘贴答题卡。</span>
+          <div class="hero__dock">
+            <span class="dock__tag">
+              <svg viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M10 3.2c-3.8 0-6.8 2.8-6.8 6.2 0 1.9 1 3.7 2.6 4.8l-.6 2.2 2.3-1.1c.8.2 1.6.3 2.5.3 3.8 0 6.8-2.8 6.8-6.2S13.8 3.2 10 3.2z" />
+              </svg>
+              <span>小程序</span>
+            </span>
+            <code class="dock__code">微信搜「卷卷小榜」</code>
+            <button class="dock__copy" type="button" data-copy-text="卷卷小榜" aria-label="复制卷卷小榜">
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <rect x="5" y="5" width="8" height="8" rx="1.6" />
+                <path d="M3 10.5V4a1 1 0 0 1 1-1h6.5" />
+              </svg>
+              <span data-copy-label>复制</span>
+            </button>
+          </div>
         </div>
-        <div class="cell">
-          <strong>自动算分</strong>
-          <span>按套卷自己的分值表折算百分制，不同卷可比。</span>
-        </div>
-        <div class="cell">
-          <strong>板块得分率</strong>
-          <span>按政治理论、常识判断、言语理解等板块分别给得分率。</span>
-        </div>
-        <div class="cell">
-          <strong>同卷排名</strong>
-          <span>同一套卷、同一版本的真实提交记录排名。</span>
-        </div>
-      </div>
+      </section>
 
-      <h2 id="how">行测估分怎么用</h2>
-      <ol class="steps">
-        <li><strong>选卷。</strong>按机构、期数、卷别挑出你刚做完的那套卷，地市卷和副省卷分开列。</li>
-        <li><strong>录答案。</strong>对着答题卡逐题录入，或者把 <code>1.A 2.B 3.C</code> 这样的文本整段粘进去。</li>
-        <li><strong>交卷出分。</strong>系统按该卷的分值表算出总分与各板块得分率，留空的题计入分母。</li>
-        <li><strong>复盘。</strong>逐题对照里可以只看错题、只看存疑题，或按板块筛；错题号能一键复制。</li>
-        <li><strong>看排名。</strong>同一套卷按最佳成绩排名，可切全国范围或你选的岗位范围。</li>
-      </ol>
+      <!-- ===== 浅色纸面：非对称交互式触感 Bento 舞台 ===== -->
+      <section class="bento-band" id="bento">
+        <div class="container">
+          <div class="band-head">
+            <h2>点选即试，所见即所得</h2>
+            <div class="rule-chips" aria-label="支持卷别">
+              <span>130 地市</span>
+              <span>135 副省</span>
+              <span>120 短卷</span>
+            </div>
+          </div>
 
-      <div class="card">
-        <strong>做题时间与录答时间分开记</strong>
-        <p style="margin: 6px 0 0" class="note">
-          整卷计时或按模块计时都可以暂停、切模块。做题时间和录答案的时间分开保存，复盘时不会混在一起。
+          <div class="bento-grid">
+            <!-- Card 1: 实时交互式 OMR 扫卡组件（融合柔和珊瑚光束） -->
+            <article class="bcard bcard--omr" data-omr-widget>
+              <div class="bcard__head bcard__head--omr">
+                <div class="bcard__title">
+                  <span class="ico-badge ico-badge--coral" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2" />
+                      <path d="M7 12h10" />
+                    </svg>
+                  </span>
+                  <h3>交互扫卡</h3>
+                </div>
+
+                <div class="omr-controls">
+                  <span class="live-score" aria-live="polite">
+                    <b data-omr-score>78.40</b>
+                    <small>/100</small>
+                  </span>
+                  <button class="scan-btn" type="button" data-omr-scan>
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                      <path d="M2.5 5.5V4A1.5 1.5 0 0 1 4 2.5h1.5M10.5 2.5H12A1.5 1.5 0 0 1 13.5 4v1.5M13.5 10.5V12a1.5 1.5 0 0 1-1.5 1.5h-1.5M5.5 13.5H4A1.5 1.5 0 0 1 2.5 12v-1.5" />
+                      <path d="M3.5 8h9" />
+                    </svg>
+                    <span>模拟扫卡</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="omr-sheet" data-omr-sheet>
+                <div class="omr-beam-ambient" aria-hidden="true"></div>
+                <div class="omr-laser" aria-hidden="true"></div>
+                <div class="omr-cols">
+                  <div class="omr-row" data-omr-row="0" data-key="D" data-weight="0.5">
+                    <span class="omr-num">01</span>
+                    <span class="omr-mod">政</span>
+                    <div class="omr-opts" role="radiogroup" aria-label="第1题">
+                      <button type="button" class="bub" data-opt="A" aria-pressed="false">A</button>
+                      <button type="button" class="bub" data-opt="B" aria-pressed="false">B</button>
+                      <button type="button" class="bub" data-opt="C" aria-pressed="false">C</button>
+                      <button type="button" class="bub is-picked" data-opt="D" aria-pressed="true">D</button>
+                    </div>
+                  </div>
+                  <div class="omr-row" data-omr-row="1" data-key="A" data-weight="0.5">
+                    <span class="omr-num">02</span>
+                    <span class="omr-mod">常</span>
+                    <div class="omr-opts" role="radiogroup" aria-label="第2题">
+                      <button type="button" class="bub is-picked" data-opt="A" aria-pressed="true">A</button>
+                      <button type="button" class="bub" data-opt="B" aria-pressed="false">B</button>
+                      <button type="button" class="bub" data-opt="C" aria-pressed="false">C</button>
+                      <button type="button" class="bub" data-opt="D" aria-pressed="false">D</button>
+                    </div>
+                  </div>
+                  <div class="omr-row" data-omr-row="2" data-key="B" data-weight="0.8">
+                    <span class="omr-num">03</span>
+                    <span class="omr-mod">言</span>
+                    <div class="omr-opts" role="radiogroup" aria-label="第3题">
+                      <button type="button" class="bub" data-opt="A" aria-pressed="false">A</button>
+                      <button type="button" class="bub is-picked" data-opt="B" aria-pressed="true">B</button>
+                      <button type="button" class="bub" data-opt="C" aria-pressed="false">C</button>
+                      <button type="button" class="bub" data-opt="D" aria-pressed="false">D</button>
+                    </div>
+                  </div>
+                  <div class="omr-row" data-omr-row="3" data-key="C" data-weight="1.0">
+                    <span class="omr-num">04</span>
+                    <span class="omr-mod">数</span>
+                    <div class="omr-opts" role="radiogroup" aria-label="第4题">
+                      <button type="button" class="bub" data-opt="A" aria-pressed="false">A</button>
+                      <button type="button" class="bub" data-opt="B" aria-pressed="false">B</button>
+                      <button type="button" class="bub" data-opt="C" aria-pressed="false">C</button>
+                      <button type="button" class="bub is-picked is-wrong" data-opt="D" aria-pressed="true">D</button>
+                    </div>
+                  </div>
+                  <div class="omr-row" data-omr-row="4" data-key="C" data-weight="0.85">
+                    <span class="omr-num">05</span>
+                    <span class="omr-mod">判</span>
+                    <div class="omr-opts" role="radiogroup" aria-label="第5题">
+                      <button type="button" class="bub" data-opt="A" aria-pressed="false">A</button>
+                      <button type="button" class="bub" data-opt="B" aria-pressed="false">B</button>
+                      <button type="button" class="bub is-picked" data-opt="C" aria-pressed="true">C</button>
+                      <button type="button" class="bub" data-opt="D" aria-pressed="false">D</button>
+                    </div>
+                  </div>
+                  <div class="omr-row" data-omr-row="5" data-key="B" data-weight="1.0">
+                    <span class="omr-num">06</span>
+                    <span class="omr-mod">资</span>
+                    <div class="omr-opts" role="radiogroup" aria-label="第6题">
+                      <button type="button" class="bub" data-opt="A" aria-pressed="false">A</button>
+                      <button type="button" class="bub is-picked" data-opt="B" aria-pressed="true">B</button>
+                      <button type="button" class="bub" data-opt="C" aria-pressed="false">C</button>
+                      <button type="button" class="bub" data-opt="D" aria-pressed="false">D</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bcard__foot omr-foot">
+                <div class="mode-pills" aria-label="三种录答方式">
+                  <span class="mpill is-on">
+                    <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3.5" width="12" height="9" rx="2"/><circle cx="8" cy="8" r="2.1"/></svg>
+                    <span>扫卡</span>
+                  </span>
+                  <span class="mpill">
+                    <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="5.5" cy="8" r="2.2"/><circle cx="11" cy="8" r="2.2" fill="currentColor" stroke="none"/></svg>
+                    <span>点选</span>
+                  </span>
+                  <span class="mpill">
+                    <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2.5" width="10" height="11" rx="1.8"/><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3"/></svg>
+                    <span>粘贴</span>
+                  </span>
+                </div>
+                <button class="paste-cycle" type="button" data-paste-cycle title="点击切换粘贴格式示例">
+                  <code data-paste-sample>1-5 DABDC</code>
+                </button>
+              </div>
+            </article>
+
+            <!-- Card 2: 水彩画框六维诊断雷达 -->
+            <article class="bcard bcard--radar" style="--art-bg: url('/assets/backdrop-sage-art.jpg')">
+              <div class="radar-glass">
+                <div class="bcard__head">
+                  <div class="bcard__title">
+                    <span class="ico-badge ico-badge--sage" aria-hidden="true">
+                      <svg viewBox="0 0 24 24">
+                        <polygon points="12 3 20 7.5 20 16.5 12 21 4 16.5 4 7.5" />
+                        <circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none" />
+                      </svg>
+                    </span>
+                    <h3>六维诊断</h3>
+                  </div>
+                  <span class="micro-pill">百分制</span>
+                </div>
+
+                <div class="score-hero">
+                  <strong class="score-hero__val" data-radar-score>78.40</strong>
+                  <span class="score-hero__max">/ 100</span>
+                </div>
+
+                <div class="radar-box">
+                  <svg viewBox="0 0 230 202" class="radar-svg" role="img" aria-label="行测六大板块能力雷达图">
+                    <g class="radar-grid">
+                      <polygon points="115,24 181,62 181,138 115,176 49,138 49,62" />
+                      <polygon points="115,50 159,75 159,125 115,150 71,125 71,75" />
+                      <polygon points="115,75 137,88 137,112 115,125 93,112 93,88" />
+                      <line x1="115" y1="24" x2="115" y2="176" />
+                      <line x1="49" y1="62" x2="181" y2="138" />
+                      <line x1="181" y1="62" x2="49" y2="138" />
+                    </g>
+                    <polygon
+                      class="radar-area"
+                      data-radar-poly
+                      points="115,33 166,70 165,129 115,147 61,131 59,68"
+                    />
+                    <g class="radar-dots" data-radar-dots>
+                      <circle cx="115" cy="33" r="3.6" />
+                      <circle cx="166" cy="70" r="3.6" />
+                      <circle cx="165" cy="129" r="3.6" />
+                      <circle cx="115" cy="147" r="3.6" />
+                      <circle cx="61" cy="131" r="3.6" />
+                      <circle cx="59" cy="68" r="3.6" />
+                    </g>
+                    <g class="radar-labels">
+                      <text x="115" y="14" text-anchor="middle">政治</text>
+                      <text x="190" y="66" text-anchor="start">常识</text>
+                      <text x="190" y="142" text-anchor="start">言语</text>
+                      <text x="115" y="194" text-anchor="middle">数量</text>
+                      <text x="40" y="142" text-anchor="end">判断</text>
+                      <text x="40" y="66" text-anchor="end">资料</text>
+                    </g>
+                  </svg>
+                </div>
+
+                <div class="stat-chips">
+                  <span>政治 <b>88%</b></span>
+                  <span>资料 <b>85%</b></span>
+                  <span>言语 <b>76%</b></span>
+                </div>
+              </div>
+            </article>
+
+            <!-- Card 3: 130 <-> 135 紧凑交互分值矩阵 -->
+            <article class="bcard bcard--matrix" data-paper-switcher>
+              <div class="bcard__head">
+                <div class="bcard__title">
+                  <span class="ico-badge ico-badge--ochre" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <rect x="4" y="13" width="4" height="7" rx="1.4" />
+                      <rect x="10" y="9" width="4" height="11" rx="1.4" />
+                      <rect x="16" y="4" width="4" height="16" rx="1.4" />
+                    </svg>
+                  </span>
+                  <h3>分值结构</h3>
+                </div>
+
+                <div class="seg-pill" role="group" aria-label="切换地市卷或副省卷">
+                  <button class="seg-pill__btn is-active" type="button" data-paper-btn="130" aria-pressed="true">130 地市</button>
+                  <button class="seg-pill__btn" type="button" data-paper-btn="135" aria-pressed="false">135 副省</button>
+                </div>
+              </div>
+
+              <div class="wgrid" data-paper-grid>
+                <div class="wrow">
+                  <span class="wrow__name">政治</span>
+                  <span class="wrow__bar"><i style="width:35%"></i></span>
+                  <span class="wrow__val"><b>20</b>题 · 10分</span>
+                  <span class="wrow__unit">0.50/题</span>
+                </div>
+                <div class="wrow">
+                  <span class="wrow__name">常识</span>
+                  <span class="wrow__bar"><i style="width:26%"></i></span>
+                  <span class="wrow__val"><b>15</b>题 · 7.5分</span>
+                  <span class="wrow__unit">0.50/题</span>
+                </div>
+                <div class="wrow">
+                  <span class="wrow__name">言语</span>
+                  <span class="wrow__bar"><i style="width:84%"></i></span>
+                  <span class="wrow__val"><b>30</b>题 · 24分</span>
+                  <span class="wrow__unit">0.80/题</span>
+                </div>
+                <div class="wrow is-diff">
+                  <span class="wrow__name">数量<i class="diff-dot" aria-hidden="true"></i></span>
+                  <span class="wrow__bar"><i style="width:35%"></i></span>
+                  <span class="wrow__val"><b>10</b>题 · 10分</span>
+                  <span class="wrow__unit">1.00/题</span>
+                </div>
+                <div class="wrow is-diff">
+                  <span class="wrow__name">判断<i class="diff-dot" aria-hidden="true"></i></span>
+                  <span class="wrow__bar"><i style="width:100%"></i></span>
+                  <span class="wrow__val"><b>35</b>题 · 28.5分</span>
+                  <span class="wrow__unit">0.81/题</span>
+                </div>
+                <div class="wrow">
+                  <span class="wrow__name">资料</span>
+                  <span class="wrow__bar"><i style="width:70%"></i></span>
+                  <span class="wrow__val"><b>20</b>题 · 20分</span>
+                  <span class="wrow__unit">1.00/题</span>
+                </div>
+              </div>
+
+              <div class="bcard__foot">
+                <span class="diff-legend"><i class="diff-dot" aria-hidden="true"></i>差异项</span>
+                <a class="text-link" href="/zenme-suan-fen.html">
+                  <span>完整分值表</span>
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 8h8M8.5 4.5 12 8l-3.5 3.5" /></svg>
+                </a>
+              </div>
+            </article>
+
+            <!-- Card 4: 同卷排名 & 双轨计时双段卡 -->
+            <article class="bcard bcard--duo">
+              <div class="duo-block" data-rank-widget>
+                <div class="bcard__head">
+                  <div class="bcard__title">
+                    <span class="ico-badge ico-badge--ink" aria-hidden="true">
+                      <svg viewBox="0 0 24 24">
+                        <path d="M8 20h8M12 16v4M7 4h10v5a5 5 0 0 1-10 0z" />
+                        <path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3" />
+                      </svg>
+                    </span>
+                    <h3>同卷排名</h3>
+                  </div>
+
+                  <div class="seg-pill" role="group" aria-label="切换榜单范围">
+                    <button class="seg-pill__btn is-active" type="button" data-rank-btn="national" aria-pressed="true">全国榜</button>
+                    <button class="seg-pill__btn" type="button" data-rank-btn="position" aria-pressed="false">岗位榜</button>
+                  </div>
+                </div>
+
+                <div class="rlist" data-rank-list>
+                  <div class="rrow">
+                    <span class="rpos">1</span>
+                    <span class="rbar"><i style="width:92%"></i></span>
+                    <b class="rval">83.6</b>
+                  </div>
+                  <div class="rrow is-me">
+                    <span class="rpos">2</span>
+                    <span class="rbar"><i style="width:82%"></i></span>
+                    <b class="rval">78.4 · 我</b>
+                  </div>
+                  <div class="rrow">
+                    <span class="rpos">3</span>
+                    <span class="rbar"><i style="width:72%"></i></span>
+                    <b class="rval">74.2</b>
+                  </div>
+                </div>
+              </div>
+
+              <div class="duo-sep" aria-hidden="true"></div>
+
+              <div class="duo-block duo-block--timer" data-timer-widget>
+                <div class="timer-head">
+                  <span class="timer-label">
+                    <svg viewBox="0 0 18 18" aria-hidden="true">
+                      <circle cx="9" cy="10" r="6" />
+                      <path d="M9 7v3.2l2 1.3M7 2.5h4" />
+                    </svg>
+                    <span>双轨计时</span>
+                  </span>
+                  <button class="timer-play" type="button" data-timer-toggle aria-pressed="false" aria-label="切换计时演示">
+                    <span class="timer-dot" aria-hidden="true"></span>
+                    <span data-timer-state>暂停</span>
+                  </button>
+                </div>
+
+                <div class="timer-pills">
+                  <button class="tpill is-active" type="button" data-timer-mode="solve" aria-pressed="true">
+                    <span class="tpill__k">做题计时</span>
+                    <strong class="tpill__v" data-timer-solve>118:42</strong>
+                  </button>
+                  <button class="tpill" type="button" data-timer-mode="entry" aria-pressed="false">
+                    <span class="tpill__k">录答计时</span>
+                    <strong class="tpill__v" data-timer-entry>03:15</strong>
+                  </button>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 深色浓缩咖啡 3D 纸艺展带（无缝径向融合 + 珊瑚聚光高亮） ===== -->
+      <section class="gallery-band" id="gallery" data-dark-zone>
+        <div class="container">
+          <div class="band-head band-head--dark">
+            <h2>纸艺细节，直奔结果</h2>
+          </div>
+
+          <div class="gallery-grid" data-gallery-grid>
+            <article class="gcard is-featured" tabindex="0" data-gcard>
+              <div class="gcard__art">
+                <img src="/assets/illus-omr-scan.jpg" alt="拍照扫描答题卡 3D 示意" width="400" height="400" loading="lazy" />
+              </div>
+              <span class="gcard__code">01 · OMR</span>
+              <h3>拍卡即填</h3>
+              <p>扫卡识别，粘贴兜底</p>
+            </article>
+
+            <article class="gcard" tabindex="0" data-gcard>
+              <div class="gcard__art">
+                <img src="/assets/illus-score-calc.jpg" alt="按套卷分值表折算百分制 3D 示意" width="400" height="400" loading="lazy" />
+              </div>
+              <span class="gcard__code">02 · 100</span>
+              <h3>套卷折算</h3>
+              <p>按卷计权，折算百分</p>
+            </article>
+
+            <article class="gcard" tabindex="0" data-gcard>
+              <div class="gcard__art">
+                <img src="/assets/illus-dark-showcase.jpg" alt="错题与存疑题快速复盘 3D 示意" width="400" height="400" loading="lazy" />
+              </div>
+              <span class="gcard__code">03 · REVIEW</span>
+              <h3>错题复盘</h3>
+              <p>留空入母，错疑速筛</p>
+            </article>
+
+            <article class="gcard" tabindex="0" data-gcard>
+              <div class="gcard__art">
+                <img src="/assets/illus-rank-growth.jpg" alt="同卷排名与跨期成长曲线 3D 示意" width="400" height="400" loading="lazy" />
+              </div>
+              <span class="gcard__code">04 · RANK</span>
+              <h3>成长追踪</h3>
+              <p>同卷双榜，跨卷归档</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 紧凑图标专题导览条 ===== -->
+      <section class="topics-band" aria-label="专题速览">
+        <div class="container">
+          <div class="topic-strip">
+            <a class="topic-pill" href="/zenme-suan-fen.html">
+              <span class="ico-badge ico-badge--ochre" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4" /></svg>
+              </span>
+              <span class="topic-pill__body">
+                <strong>行测分数怎么算</strong>
+                <small>分值折算</small>
+              </span>
+              <span class="topic-pill__go" aria-hidden="true">→</span>
+            </a>
+
+            <a class="topic-pill" href="/gu-fen-zhun-ma.html">
+              <span class="ico-badge ico-badge--coral" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" /><path d="M12 8v4l2.5 2.5" /></svg>
+              </span>
+              <span class="topic-pill__body">
+                <strong>行测估分准吗</strong>
+                <small>分差拆解</small>
+              </span>
+              <span class="topic-pill__go" aria-hidden="true">→</span>
+            </a>
+
+            <a class="topic-pill" href="/shua-ti-ji-fen.html">
+              <span class="ico-badge ico-badge--sage" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 17l5-5 4 3 7-8" /><path d="M15 7h5v5" /></svg>
+              </span>
+              <span class="topic-pill__body">
+                <strong>刷题模考记分</strong>
+                <small>归档曲线</small>
+              </span>
+              <span class="topic-pill__go" aria-hidden="true">→</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 收束小程序码卡（融合柔和暖纸水彩微晕） ===== -->
+      <section class="closing-band">
+        <div class="container">
+          <div class="closing-card" style="--closing-art: url('/assets/backdrop-paper-art.jpg')">
+            <div class="closing-card__left">
+              <img class="closing-card__logo" src="/assets/logo-256.png" alt="卷卷小榜" width="48" height="48" />
+              <h2>下一套卷，立刻出分</h2>
+              <p>免费免注册 · 手机小程序 · 电脑网页版</p>
+              <div class="closing-card__actions">
+                <a class="pill-btn pill-btn--ink pill-btn--lg" href="https://rollie-rank.swimmingliu.cn/ios-v3/app.html">
+                  <span>打开网页版</span>
+                  <svg class="ico-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 3.5 10 8l-4.5 4.5" /></svg>
+                </a>
+                <button class="pill-btn pill-btn--paper pill-btn--lg" type="button" data-open-qr>
+                  <span>放大扫码</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="closing-card__qr">
+              <img src="/assets/miniapp-qr.jpg" alt="卷卷小榜微信小程序码" width="136" height="136" loading="lazy" />
+              <span>微信扫一扫</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================================
+           完整 SEO / GEO 语义内容层（对搜索引擎与 AI 检索工具完整可见，页面视觉不可见）
+           ========================================================================= -->
+      <section class="seo-content" aria-label="行测估分完整说明与常见问题">
+        <h2>录完答题卡，立刻知道能考多少分</h2>
+        <p>
+          卷卷小榜是行测考后估分与练习记录工具。按这套卷自己的分值表算分判分，折算成百分制行测分数，
+          给出板块得分率、逐题对照和同卷排名。免费，不用注册，也可以直接在微信里搜索小程序「卷卷小榜」。
         </p>
-      </div>
 
-      <h2 id="score">行测分数怎么算：先确认卷子，再谈分数</h2>
-      <p>
-        行测算分不是「答对题数 × 固定分值」。国考行测满分 100 分，但每题多少分官方一直没有公布，
-        各家机构给出的分值表也不完全一样。所以同一套卷，用不同机构的分值表算出来的行测分数会差几分。
-        卷卷小榜的做法是按每套卷自带的分值表逐题累计，再折算成百分制。
-      </p>
-      <p>
-        题量决定分值结构：130 题对应地市卷，135 题对应副省卷，两者的差别主要落在数量关系上——
-        地市卷 10 题 10 分，副省卷 15 题 12 分，多出来的 5 题全在这里。判断推理内部的四个子类也有微调。
-        同一套卷里，政治理论每题 0.5 分，言语理解 0.8 分，资料分析 1 分，所以只盯正确率推不出分数。
-      </p>
-      <p><a href="/zenme-suan-fen.html">看 130 题与 135 题的完整分值表和百分制折算方法 →</a></p>
+        <h2>能做什么：这些叫法说的都是同一件事</h2>
+        <p>
+          行测估分、行测算分、行测判分、行测对答案、行测录分，说的都是考完以后把答案核对一遍、
+          看看大概能拿多少分这件事。行测分数计算之所以麻烦，是因为国考行测满分 100 分但每题分值并不相同，
+          官方也没公布统一的分值表——卷卷小榜把这几个步骤放在一个页面里：录入答案即出分，不用自己对着分值表逐题加。
+        </p>
+        <p>
+          习惯用「行测小助手」「行测小助理」「行测助手」「行测助理」这类工具的同学，
+          可以把卷卷小榜当成同一类工具来看：都是考后估分，卷卷小榜同时支持拍照/相册扫描答题卡、手工录入与整段批量粘贴，
+          并且提供同卷真实排名和跨机构成长分析。微信里搜「卷卷小榜」即可打开小程序。
+        </p>
+        <ul>
+          <li>扫卡或录答：支持拍照/相册扫答题卡核对填入，也支持逐题点选与整段粘贴。</li>
+          <li>自动算分：按套卷自己的分值表折算百分制，不同卷可比。</li>
+          <li>板块得分率：按政治理论、常识判断、言语理解等板块分别给得分率。</li>
+          <li>同卷排名：同一套卷、同一版本的真实提交记录排名。</li>
+        </ul>
 
-      <h2 id="shuati">行测刷题、模考、真题也能记分</h2>
-      <p>
-        除了考后估分，平时行测刷题、模考、真题练习也可以用同一套流程录答案出分。
-        记录按机构、期数归档，不需要每次手动记 Excel，也能比较不同阶段的板块得分率变化。
-        它不是题库类刷题产品，不提供题目和课程，只负责把你已经做完的那套卷算清楚、存下来。
-      </p>
-      <p><a href="/shua-ti-ji-fen.html">看刷题和模考怎么记分 →</a></p>
+        <h2>行测估分怎么用</h2>
+        <ol>
+          <li>选卷。按机构、期数、卷别挑出你刚做完的那套卷，地市卷和副省卷分开列。</li>
+          <li>录答案。拍照或从相册扫描答题卡核对填入，也可手工逐题录入，或把 1.A 2.B 3.C 这样的文本整段粘进去。</li>
+          <li>交卷出分。系统按该卷的分值表算出总分与各板块得分率，留空的题计入分母。</li>
+          <li>复盘。逐题对照里可以只看错题、只看存疑题，或按板块筛；错题号能一键复制。</li>
+          <li>看排名。同一套卷按最佳成绩排名，可切全国范围或你选的岗位范围。</li>
+        </ol>
+        <p>
+          做题时间与录答时间分开记：整卷计时或按模块计时都可以暂停、切模块。做题时间和录答案的时间分开保存，复盘时不会混在一起。
+        </p>
 
-      <h2 id="compare">和行测小助手、行测助理这类工具的区别</h2>
-      <p>
-        「行测小助手」「行测小助理」「行测助手」「行测助理」是同类里被搜得比较多的几个名字，
-        多数主打拍照或扫码识别答题卡，省去手动录入。
-        卷卷小榜走的是另一条路：不依赖图像识别，靠手工录入和批量粘贴，并把重点放在考后的复盘和同卷比较上。
-      </p>
-      <div class="table-wrap">
+        <h2>行测分数怎么算</h2>
+        <p>
+          不是「答对题数 × 固定分值」，而是按这套卷的分值表逐题累计，再折算百分制。
+          题量决定分值结构：130 题对应地市卷，135 题对应副省卷。
+          同一套卷里，政治理论每题 0.5 分，言语理解 0.8 分，资料分析 1 分——所以只盯正确率推不出分数。
+        </p>
+        <p>
+          行测算分不是「答对题数 × 固定分值」。国考行测满分 100 分，但每题多少分官方一直没有公布，
+          各家机构给出的分值表也不完全一样。所以同一套卷，用不同机构的分值表算出来的行测分数会差几分。
+          卷卷小榜的做法是按每套卷自带的分值表逐题累计，再折算成百分制。
+        </p>
+        <p>
+          题量决定分值结构：130 题对应地市卷，135 题对应副省卷，两者的差别主要落在数量关系上——
+          地市卷 10 题 10 分，副省卷 15 题 12 分，多出来的 5 题全在这里。判断推理内部的四个子类也有微调。
+          同一套卷里，政治理论每题 0.5 分，言语理解 0.8 分，资料分析 1 分，所以只盯正确率推不出分数。
+        </p>
+        <p>
+          这也是为什么「行测分数计算器」这类说法容易让人误解：没有一套通用的行测分值，
+          任何算分工具都必须先确认是哪一套卷、用哪一版分值表，否则算出来的数只是看着像答案。
+          <a href="/zenme-suan-fen.html">看 130 题与 135 题的完整分值表和百分制折算方法</a>。
+        </p>
+
+        <h2>行测刷题、模考、真题也能记分</h2>
+        <p>
+          考后估分之外，平时的练习也走同一套流程。记录按机构、期数归档，不需要每次手动记 Excel，也能比较不同阶段的板块得分率变化。
+          除了考后估分，平时行测刷题、模考、真题练习也可以用同一套流程录答案出分。
+          它不是题库类刷题产品，不提供题目和课程，只负责把你已经做完的那套卷算清楚、存下来。
+        </p>
+        <p>
+          行测备考阶段常见的做法是「刷题、模考、做真题、专项练习」轮着来，
+          这四类练习在卷卷小榜里都按同一套流程计分：行测题库和行测真题来自你自己的资料，
+          行测模拟和行测练习也一样，产品只负责算分与归档。
+          <a href="/shua-ti-ji-fen.html">看刷题和模考怎么记分</a>。
+        </p>
+
+        <h2>和其他行测估分工具的区别</h2>
+        <p>同属行测考后估分工具，卷卷小榜兼顾扫卡效率与手工可控，并把重点放在同卷排名与复盘。</p>
         <table>
           <thead>
             <tr><th>环节</th><th>卷卷小榜的做法</th></tr>
           </thead>
           <tbody>
-            <tr><td>录答案</td><td>手工逐题录入，或整段批量粘贴答题卡文本</td></tr>
+            <tr><td>录答案</td><td>拍照/相册扫答题卡核对填入，或手工逐题录入、整段批量粘贴</td></tr>
             <tr><td>算分</td><td>按每套卷自己的分值表计算，再折算百分制</td></tr>
             <tr><td>复盘</td><td>逐题对照、错题筛选、板块筛选</td></tr>
             <tr><td>比较</td><td>同一套卷的真实提交记录排名，含岗位范围</td></tr>
             <tr><td>长期记录</td><td>跨机构、跨期数的练习记录与成长曲线</td></tr>
           </tbody>
         </table>
-      </div>
-      <p class="note">
-        两种方式各有取舍：拍照识别省事，手输和批量粘贴更可控、不依赖识别准确率。你习惯哪种就用哪种。
-      </p>
+        <p>
+          「行测小助手」「行测小助理」「行测助手」「行测助理」是同类里被搜得比较多的几个名字，
+          多数主打拍照识别答题卡。卷卷小榜三种方式都支持：拍完答题卡可逐题核对修改后再交卷，
+          不方便拍照时也可以直接逐题点选或整段批量粘贴。两种方式并不冲突：扫卡图省事，手输和批量粘贴兜底可控，
+          交卷后重点落到逐题复盘、同卷排名和跨机构成长分析上。
+        </p>
 
-      <h2 id="faq">常见问题</h2>
-      <div class="faq">
-        <h3>行测估分准吗？</h3>
-        <p>行测估分只能接近真实成绩，不能保证准。它按某套卷的参考答案和该卷分值表计算，和真实成绩的差距主要来自答案版本不同、涂卡失误、分值表版本差异，以及不同机构答案不一致。把每题答案如实录入、留空也计入分母，结果才有参考价值。</p>
+        <h2>常见问题</h2>
+        <dl>
+          <dt>行测考完怎么估分？</dt>
+          <dd>选对那套卷，把答题卡上的 A、B、C、D 录进去，提交后系统按该套卷的分值表累计得分，折算成百分制行测分数，同时给出板块得分率、逐题对错和同卷排名。留空的题计入分母。</dd>
 
-        <h3>行测估分和实际分数差距大吗？为什么差很多？</h3>
-        <p>行测估分和实际成绩的差距大小，主要取决于所用答案和分值表是否与考试一致。同卷同版本、答案来源一致时，差异多来自涂卡和记错答案；跨机构答案有分歧、分值表版本不同，差距就会明显。常见原因还有留空题没算进分母。没有固定差值，任何「一般差几分」的说法都不可靠。</p>
+          <dt>行测估分准吗？</dt>
+          <dd>行测估分只能接近真实成绩，不能保证准。它按某套卷的参考答案和该卷分值表计算，和真实成绩的差距主要来自答案版本不同、涂卡失误、分值表版本差异，以及不同机构答案不一致。把每题答案如实录入、留空也计入分母，结果才有参考价值。</dd>
 
-        <h3>行测怎么估分比较准确？</h3>
-        <p>行测估分想算得靠谱，关键是同卷、同答案、同分值表，并且一题不落地录入。先选对卷子，用这套卷对应的机构参考答案，按该卷分值表计分再折算百分制；留空题计入分母，不能跳过。之后看逐题对错和板块得分率，比只盯总分更容易发现问题。</p>
+          <dt>行测估分和实际分数差距大吗？为什么差很多？</dt>
+          <dd>行测估分和实际成绩的差距大小，主要取决于所用答案和分值表是否与考试一致。同卷同版本、答案来源一致时，差异多来自涂卡和记错答案；跨机构答案有分歧、分值表版本不同，差距就会明显。常见原因还有留空题没算进分母。没有固定差值，任何「一般差几分」的说法都不可靠。</dd>
 
-        <h3>行测分数怎么算？每题多少分？</h3>
-        <p>行测分数没有固定换算：国考行测满分 100 分，但每题具体分值官方并未公布，各机构给的分值表并不完全一致。通行做法是按该套卷自己的分值表累计每题得分，再折算成百分制。所以同一套卷用不同机构的分值表，算出的分数会有几分差别。</p>
+          <dt>行测怎么估分比较准确？</dt>
+          <dd>行测估分想算得靠谱，关键是同卷、同答案、同分值表，并且一题不落地录入。先选对卷子，用这套卷对应的机构参考答案，按该卷分值表计分再折算百分制；留空题计入分母，不能跳过。之后看逐题对错和板块得分率，比只盯总分更容易发现问题。</dd>
 
-        <h3>行测如何算分，135 道题怎么算？</h3>
-        <p>行测 135 题对应副省卷，先按这套卷自己的分值表累计每题得分，再用得分折算成百分制。不能简单用答对题数乘以固定分值，因为各板块单题分值并不相同。<a href="/zenme-suan-fen.html">详细分值表</a>。</p>
+          <dt>行测分数怎么算？每题多少分？</dt>
+          <dd>行测分数没有固定换算：国考行测满分 100 分，但每题具体分值官方并未公布，各机构给的分值表并不完全一致。通行做法是按该套卷自己的分值表累计每题得分，再折算成百分制。所以同一套卷用不同机构的分值表，算出的分数会有几分差别。</dd>
 
-        <h3>130 题和 135 题的卷子分怎么算？</h3>
-        <p>行测 130 题对应地市卷，135 题对应副省卷，题型分值和题量都不同，主要差在数量关系和判断推理。卷卷小榜按每套卷自己的分值表算，再折算成百分制，所以不同卷之间可以比得分率。</p>
+          <dt>行测如何算分，135 道题怎么算？</dt>
+          <dd>行测 135 题对应副省卷，先按这套卷自己的分值表累计每题得分，再用得分折算成百分制。不能简单用答对题数乘以固定分值，因为各板块单题分值并不相同。<a href="/zenme-suan-fen.html">详细分值表</a>。</dd>
 
-        <h3>行测正确率多少能考 70 分？</h3>
-        <p>只看正确率，判断不了行测能不能到 70 分，因为每题分值不同。同样的正确率在不同卷、不同板块分布下，折算出的百分制分数会不一样。要判断能不能到 70 分，得按这套卷的分值表逐题累计，再折算百分制。</p>
+          <dt>130 题和 135 题的卷子分怎么算？</dt>
+          <dd>行测 130 题对应地市卷，135 题对应副省卷，题型分值和题量都不同，主要差在数量关系和判断推理。卷卷小榜按每套卷自己的分值表算，再折算成百分制，所以不同卷之间可以比得分率。</dd>
 
-        <h3>行测估分 60 分左右，实际大概多少分？</h3>
-        <p>行测估分 60 分对应多少实际分，没有固定换算。实际成绩会受答案版本、涂卡、分值表版本和机构答案分歧影响，可能高也可能低。与其猜一个数字，不如确认这套卷的分值表和答案来源，把每题如实录入，再对照逐题结果看哪些分是自己丢的。</p>
+          <dt>行测正确率多少能考 70 分？</dt>
+          <dd>只看正确率，判断不了行测能不能到 70 分，因为每题分值不同。同样的正确率在不同卷、不同板块分布下，折算出的百分制分数会不一样。要判断能不能到 70 分，得按这套卷的分值表逐题累计，再折算百分制。</dd>
 
-        <h3>录答案可以批量粘贴吗？</h3>
-        <p>可以。支持连续选项、带题号和分组题号三种格式，例如 <code>1.A 2.B 3.C</code>，也可以用 <code>1-5 ABCDA</code> 整段导入。</p>
+          <dt>行测估分 60 分左右，实际大概多少分？</dt>
+          <dd>行测估分 60 分对应多少实际分，没有固定换算。实际成绩会受答案版本、涂卡、分值表版本和机构答案分歧影响，可能高也可能低。与其猜一个数字，不如确认这套卷的分值表和答案来源，把每题如实录入，再对照逐题结果看哪些分是自己丢的。</dd>
 
-        <h3>答案以哪个为准？</h3>
-        <p>用的是各套卷对应的机构参考答案。不同机构、不同期数的卷子可能有差异，卷卷小榜按每套卷自己的参考答案独立计算，不会混用。</p>
+          <dt>录答案可以批量粘贴吗？</dt>
+          <dd>可以。支持连续选项、带题号和分组题号三种格式，例如 1.A 2.B 3.C，也可以用 1-5 ABCDA 整段导入。</dd>
 
-        <h3>平时刷题、模考的成绩能记下来吗？</h3>
-        <p>可以。行测刷题、模考、真题和专项练习都按同一套流程录答案出分，记录按机构、期数归档，形成跨卷的成长曲线。<a href="/shua-ti-ji-fen.html">看具体做法</a>。</p>
+          <dt>答案以哪个为准？</dt>
+          <dd>用的是各套卷对应的机构参考答案。不同机构、不同期数的卷子可能有差异，卷卷小榜按每套卷自己的参考答案独立计算，不会混用。</dd>
 
-        <h3>和行测小助手、行测助理有什么区别？</h3>
-        <p>都属于行测考后估分工具。这类产品多数提供拍照或扫码识别答题卡；卷卷小榜主打手工录入和整段批量粘贴，并提供基于真实提交记录的同卷排名和跨机构成长分析。</p>
+          <dt>平时刷题、模考的成绩能记下来吗？</dt>
+          <dd>可以。行测刷题、模考、真题和专项练习都按同一套流程录答案出分，记录按机构、期数归档，形成跨卷的成长曲线。<a href="/shua-ti-ji-fen.html">看具体做法</a>。</dd>
 
-        <h3>要注册或付费吗？</h3>
-        <p>不用。打开就能用，草稿和存疑标记保存在本机。</p>
+          <dt>和行测小助手、行测助理有什么区别？</dt>
+          <dd>都属于行测考后估分工具。卷卷小榜同时支持拍照/相册扫答题卡核对填入、手工录入与整段批量粘贴，并提供基于真实提交记录的同卷排名（全国榜与岗位榜）和跨机构成长分析。</dd>
 
-        <h3>数据会丢吗？</h3>
-        <p>练习记录在本机保存，也可以在设置里导出备份。换设备前建议先导出。</p>
+          <dt>要注册或付费吗？</dt>
+          <dd>不用。打开就能用，草稿和存疑标记保存在本机。</dd>
 
-        <h3>手机上怎么打开？</h3>
-        <p>在微信里搜索「卷卷小榜」即可打开小程序。用手机浏览器访问本站时，页面会展示小程序码，长按识别或扫码都能进入。</p>
-      </div>
+          <dt>数据会丢吗？</dt>
+          <dd>练习记录在本机保存，也可以在设置里导出备份。换设备前建议先导出。</dd>
 
-      <h2>适用场景</h2>
-      <ul class="plain">
-        <li>国考、省考行测考完当天，想先估个分心里有底</li>
-        <li>机构模考结束后，想看到自己在这套卷里的位置</li>
-        <li>多期连续练习，想比较各板块得分率的变化</li>
-        <li>做完真题想复盘的错题分布，找出最该补的板块</li>
-      </ul>
+          <dt>手机上怎么打开？</dt>
+          <dd>在微信里搜索「卷卷小榜」即可打开小程序。用手机浏览器访问本站时，页面会展示小程序码，长按识别或扫码都能进入。</dd>
+        </dl>
 
-      <h2>继续看</h2>
-      <ul class="plain">
-        <li><a href="/zenme-suan-fen.html">行测分数怎么算：分值表与百分制折算</a></li>
-        <li><a href="/gu-fen-zhun-ma.html">行测估分准吗：差异从哪来</a></li>
-        <li><a href="/shua-ti-ji-fen.html">行测刷题、模考、真题怎么记分</a></li>
-      </ul>
+        <h2>适用场景</h2>
+        <ul>
+          <li>国考、省考行测考完当天，想先估个分心里有底</li>
+          <li>机构模考结束后，想看到自己在这套卷里的位置</li>
+          <li>多期连续练习，想比较各板块得分率的变化</li>
+          <li>做完真题想复盘的错题分布，找出最该补的板块</li>
+        </ul>
+
+        <h2>延伸阅读</h2>
+        <ul>
+          <li><a href="/zenme-suan-fen.html">行测分数怎么算：130 题与 135 题分值表、百分制折算</a></li>
+          <li><a href="/gu-fen-zhun-ma.html">行测估分准吗：和实际分数的差异从哪来</a></li>
+          <li><a href="/shua-ti-ji-fen.html">刷题怎么记分：刷题、模考、真题的归档方式</a></li>
+        </ul>
+      </section>
     </main>
 
-    <footer class="site wrap">
-      <p>
-        卷卷小榜 · 行测估分与练习记录工具 ·
-        <a href="/llms.txt">llms.txt</a> ·
-        <a href="/sitemap.xml">sitemap</a>
-      </p>
-      <p class="note">
-        本站内容用于介绍产品功能。数值和排名均来自卷卷小榜内的真实提交记录，不构成考试预测。
-      </p>
+    <!-- ===== 极简单行页脚 ===== -->
+    <footer class="site-footer">
+      <div class="container footer-row">
+        <a class="brand brand--sm" href="/">
+          <img src="/assets/logo-64.png" alt="卷卷小榜" width="22" height="22" />
+          <span class="brand__name">卷卷小榜</span>
+        </a>
+
+        <div class="footer-links">
+          <a href="/zenme-suan-fen.html">分值表</a>
+          <a href="/gu-fen-zhun-ma.html">准不准</a>
+          <a href="/shua-ti-ji-fen.html">刷题记分</a>
+          <a href="https://rollie-rank.swimmingliu.cn/ios-v3/app.html">网页版</a>
+          <button type="button" class="footer-btn" data-open-qr>小程序码</button>
+          <a href="/llms.txt">llms.txt</a>
+          <a href="/sitemap.xml">sitemap.xml</a>
+        </div>
+
+        <span class="footer-note">排名源于真实提交，不构成考试预测。</span>
+      </div>
     </footer>
+
+    <!-- ===== 桌面端小程序扫码弹层 ===== -->
+    <div class="qr-modal" id="qr-modal" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title" hidden>
+      <div class="qr-modal__card">
+        <button class="qr-modal__close" type="button" data-close-qr aria-label="关闭弹窗">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15" /></svg>
+        </button>
+        <img class="qr-modal__logo" src="/assets/logo-64.png" alt="卷卷小榜" width="34" height="34" />
+        <h3 id="qr-modal-title">微信扫码 · 卷卷小榜</h3>
+        <div class="qr-modal__frame">
+          <img data-qr-img src="/assets/miniapp-qr.jpg" alt="卷卷小榜微信小程序码" width="204" height="204" />
+        </div>
+        <a class="pill-btn pill-btn--paper pill-btn--sm" href="https://rollie-rank.swimmingliu.cn/ios-v3/app.html">打开网页版</a>
+      </div>
+    </div>
+
+    <script src="/site.js" defer></script>
+    <script src="/miniapp-entry.js" defer></script>
   </body>
-  <script src="/miniapp-entry.js" defer></script>
 </html>

@@ -1,0 +1,76 @@
+<view class="sheet-layer {{sheetDragging ? 'sheet-layer--dragging' : ''}} {{sheetClosing ? 'sheet-layer--closing' : ''}}">
+  <view
+    class="sheet-shade"
+    style="{{sheetShadeOpacity < 1 ? 'opacity: ' + sheetShadeOpacity + ';' : ''}}"
+    catchtap="dismiss"
+    catchtouchmove="noop"
+  ></view>
+  <view
+    class="sheet-panel profile-sheet"
+    style="{{sheetDragY ? 'transform: translateY(' + sheetDragY + 'px);' : ''}}"
+    aria-role="dialog"
+    aria-label="完善头像与昵称"
+    bindtouchstart="startDrag"
+    bindtouchmove="moveDrag"
+    bindtouchend="endDrag"
+    bindtouchcancel="cancelDrag"
+  >
+    <view
+      class="sheet-grabber-zone"
+      data-sheet-zone="handle"
+      catchtouchstart="startDrag"
+      catchtouchmove="moveDrag"
+      catchtouchend="endDrag"
+      catchtouchcancel="cancelDrag"
+    >
+      <view class="sheet-grabber"></view>
+    </view>
+
+    <view class="sheet-head">
+      <text>同步微信头像与昵称</text>
+      <button class="sheet-close" data-sheet-no-drag="1" catchtap="dismiss" aria-label="关闭">
+        <image data-sheet-no-drag="1" src="/assets/ui/close.svg" mode="aspectFit" />
+      </button>
+    </view>
+
+    <form class="profile-sheet__body" bindsubmit="submit">
+      <button
+        class="profile-sheet__avatar-btn"
+        open-type="chooseAvatar"
+        bindchooseavatar="onChooseAvatar"
+        disabled="{{saving}}"
+        aria-label="点击选用微信头像"
+      >
+        <view class="profile-sheet__avatar-wrap">
+          <image class="profile-sheet__avatar" src="{{previewAvatar}}" mode="aspectFill" />
+          <view class="profile-sheet__cam">
+            <image src="/assets/ui/camera.svg" mode="aspectFit" />
+          </view>
+        </view>
+        <text class="profile-sheet__avatar-tip">{{pickedAvatar ? '已选好头像，点击可更换' : '点头像一键选用微信头像'}}</text>
+      </button>
+
+      <view class="profile-sheet__field">
+        <text class="profile-sheet__label">微信昵称</text>
+        <input
+          class="profile-sheet__input"
+          name="name"
+          type="nickname"
+          maxlength="12"
+          value="{{draftName}}"
+          placeholder="点击键盘上方自动填入微信昵称"
+          bindinput="onNameInput"
+          bindblur="onNameInput"
+          disabled="{{saving}}"
+        />
+      </view>
+
+      <text wx:if="{{error}}" class="profile-sheet__error">{{error}}</text>
+
+      <button class="btn btn--primary profile-sheet__submit" form-type="submit" loading="{{saving}}" disabled="{{saving}}">
+        {{saving ? '保存中…' : '保存并同步'}}
+      </button>
+      <text class="profile-sheet__note">保存后自动随微信账号记住，下次无需重复获取</text>
+    </form>
+  </view>
+</view>

@@ -461,6 +461,6 @@ Page({
 
   copySource(event) {
     const url = event.currentTarget.dataset.url;
-    if (url) wx.setClipboardData({ data: url });
+    if (url) require("../../utils/clipboard.js").copyText(this, url, "已复制来源链接");
   },
 });

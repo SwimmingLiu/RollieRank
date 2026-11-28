@@ -17,6 +17,14 @@ import { createAdminConsoleService, resolveAdminBasePath } from "./admin-console
 import { createOmrService } from "./omr.mjs";
 import { createOmrGradeService } from "./omr-grade.mjs";
 import { createToolCredits } from "./tool-credits.mjs";
+import {
+  accountIdForGuest,
+  assertGuestNotOwnedByOther,
+  linkAccountGuest,
+  linkedGuestIds,
+  listReceiptsForIdentity,
+  resolveRequestAccount,
+} from "./account-identity.mjs";
 import { resolveTimerLimit, timerSectionsForQuestions, validateTimingSummary } from "../src/practice-timer.js";
 import {
   gradeVersion,
@@ -195,11 +203,11 @@ export async function createApi({
   const services = [];
   // 小程序链接缓存独立于业务数据：Redis 不可用时自动降级为进程内缓存。
   const linkCache = await createRedisCache();
-  // 答题卡识别是纯计算：不进落盘事务，识别结果按图片摘要缓存，重复请求不重复计算。
-  const omrService = createOmrService();
+  const toolCredits = createToolCredits({ readCatalog, mutateCatalog }, toolCreditOptions);
+  // 答题卡识别是纯计算：不进落盘事务，识别结果按图片摘要缓存；启用卷豆库时按单次识别扣减卷豆。
+  const omrService = createOmrService({ billing: toolCredits.billing });
   services.push(await omrService);
   services.push(await createOmrGradeService({ readCatalog }));
-  const toolCredits = createToolCredits({ readCatalog, mutateCatalog }, toolCreditOptions);
   services.push(toolCredits.handle);
   const flushInviteUses = () => toolCredits.flushInviteUses().catch(() => {
     // 正式答卷已持久化，奖励事件在服务重启或下次提交时继续处理。
@@ -335,19 +343,22 @@ export async function createApi({
       if (!input || typeof input !== "object" || Array.isArray(input))
         throw new Error("请求内容无效。");
       if (await dispatchFeatures(input)) return true;
-      // 历史快照原来只存在浏览器，审核订正后需按本机凭证取回服务端的新成绩。
+      // 历史快照原来只存在浏览器，审核订正与跨设备恢复需按本机凭证或已登录微信账号取回服务端成绩。
       if (pathname === "/api/attempts/sync") {
         if (!/^[\w-]{10,80}$/.test(input.guestId ?? "") ||
           (input.attemptIds !== undefined && (!Array.isArray(input.attemptIds) ||
             !input.attemptIds.every((id) => typeof id === "string"))))
           throw new Error("本机记录凭证无效。");
         await queue.catch(() => {});
-        const ids = input.attemptIds ? new Set(input.attemptIds) : null;
-        const attempts = Object.entries(receipts)
-          .filter(([key, attempt]) => key.startsWith(input.guestId + ":") &&
-            (!ids || ids.has(attempt.id)))
-          .map(([, attempt]) => attempt);
-        send(response, 200, { attempts });
+        const authAccount = await resolveRequestAccount(toolCredits.billing, request);
+        const catalog = readCatalog();
+        if (authAccount?.id) assertGuestNotOwnedByOther(catalog, authAccount.id, input.guestId);
+        const attempts = listReceiptsForIdentity(catalog, {
+          guestId: input.guestId,
+          accountId: authAccount?.id ?? null,
+          attemptIds: input.attemptIds ?? null,
+        });
+        send(response, 200, { attempts, scope: authAccount?.id ? "account" : "guest" });
         return true;
       }
       if (pathname === "/api/attempts/delete") {
@@ -357,20 +368,34 @@ export async function createApi({
           !input.attemptIds.every((id) => typeof id === "string")
         )
           throw new Error("本机记录凭证无效。");
+        const authAccount = await resolveRequestAccount(toolCredits.billing, request);
         const ids = new Set(input.attemptIds);
         await mutate(() => {
-          for (const key of Object.keys(receipts))
+          const catalog = readCatalog();
+          if (authAccount?.id) assertGuestNotOwnedByOther(catalog, authAccount.id, input.guestId);
+          const guests = linkedGuestIds(catalog, {
+            accountId: authAccount?.id ?? null,
+            guestId: input.guestId,
+          });
+          for (const key of Object.keys(receipts)) {
+            const sep = key.indexOf(":");
+            const owner = sep > 0 ? key.slice(0, sep) : "";
+            const receipt = receipts[key];
             if (
-              key.startsWith(input.guestId + ":") &&
-              ids.has(receipts[key].id)
-            )
+              receipt &&
+              ids.has(receipt.id) &&
+              (guests.has(owner) || (authAccount?.id && receipt.accountId === authAccount.id))
+            ) {
               delete receipts[key];
+            }
+          }
         });
         send(response, 200, { deleted: true });
         return true;
       }
       if (pathname === "/api/submit" || pathname === "/api/sample") {
         const isSample = pathname === "/api/sample";
+        const authAccount = isSample ? null : await resolveRequestAccount(toolCredits.billing, request);
         const invitedAccountId = isSample ? null : await toolCredits.invitedAccount(request, input.guestId);
         const createAttempt = () => {
           let version = versions.find((v) => v.id === input.versionId);
@@ -421,6 +446,14 @@ export async function createApi({
           const timing = !isSample && input.timing !== undefined ? validateTimingSummary(input.timing,
             { versionId: version.id, attemptId: input.attemptId, sections: timerSectionsForQuestions(version.questions), timeLimitMinutes: resolveTimerLimit(version).minutes }) : null;
           const report = gradeVersion(version, answers);
+          let boundAccountId = null;
+          if (!isSample && authAccount?.id) {
+            const catalog = readCatalog();
+            assertGuestNotOwnedByOther(catalog, authAccount.id, input.guestId);
+            if (accountIdForGuest(catalog, input.guestId) === authAccount.id || linkAccountGuest(catalog, authAccount.id, input.guestId)) {
+              boundAccountId = authAccount.id;
+            }
+          }
           const attempt = {
             id: isSample ? `sample-${version.id}` : input.attemptId,
             versionId: version.id,
@@ -438,13 +471,16 @@ export async function createApi({
             report,
             ...(timing ? { timing } : {}),
             ...(version.scoringRule ? { scoringRule: structuredClone(version.scoringRule) } : {}),
+            ...(boundAccountId ? { accountId: boundAccountId } : {}),
             isSample,
             ...(isSample ? { practiceVersionId } : {}),
           };
           if (!isSample) {
+            const catalog = readCatalog();
             receipts[key] = attempt;
             // 上榜与计分在同一事务保存，避免交卷成功但榜单漏记或重复加入。
-            includeSubmittedAttempt(readCatalog(), { guestId: input.guestId, attempt,
+            includeSubmittedAttempt(catalog, { guestId: input.guestId, attempt,
+              ...(boundAccountId ? { accountId: boundAccountId } : {}),
               ...(typeof input.name === "string" ? { name: input.name } : {}) });
             toolCredits.stageInviteUse(invitedAccountId, key, attempt);
           }

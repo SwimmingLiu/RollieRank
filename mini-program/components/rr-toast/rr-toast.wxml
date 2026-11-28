@@ -1,0 +1,8 @@
+<view wx:if="{{visible}}" class="rr-toast" style="bottom: calc({{bottom}}px + env(safe-area-inset-bottom));" aria-role="status" aria-live="polite">
+  <view class="rr-toast__card rr-toast__card--{{tone}}">
+    <view class="rr-toast__badge rr-toast__badge--{{tone}}">
+      <image class="rr-toast__icon" src="{{uiBase}}/{{tone === 'warn' ? 'warn-ochre.svg' : 'share-ok.svg'}}" mode="aspectFit" />
+    </view>
+    <text class="rr-toast__text">{{text}}</text>
+  </view>
+</view>

@@ -1,6 +1,7 @@
 const api = require("../../services/api.js");
 const storage = require("../../utils/storage.js");
 const catalogUtil = require("../../utils/catalog.js");
+const { ASSET } = require("../../config.js");
 const { scoreCard: formatScore } = require("../../utils/format.js");
 
 Page({
@@ -36,8 +37,16 @@ Page({
     this.setData({ loading: !this.data.projects.length, error: "" });
     try {
       const versions = await api.catalog(force);
-      const group = catalogUtil.groupByInstitution(versions).find(g => g.name === this.data.institution);
+      const groups = catalogUtil.groupByInstitution(versions);
+      const group = (this.data.institution
+        ? groups.find(g => g.name === this.data.institution)
+        : groups[0]) || null;
       if (!group) throw new Error("没有找到这个机构的已发布套卷。");
+      if (!this.data.institution) {
+        this.setData({ institution: group.name, publisher: catalogUtil.publisherName(group.name) });
+      }
+      const publisher = catalogUtil.publisherName(group.name);
+      wx.setNavigationBarTitle?.({ title: `${publisher}行测估分套卷 · 卷卷小榜` });
       // 每张卷卡显示本机真实状态：草稿、已提交或可开始。
       const drafts = storage.draftIndex();
       const projects = group.projects.map(project => {
@@ -119,5 +128,27 @@ Page({
     // 继续录入沿用原答卷标识，交卷后仍是同一次练习。
     const draft = paper && paper.draftId ? `&attemptId=${paper.draftId}` : "";
     wx.navigateTo({ url: `/pages/practice/practice?versionId=${id}${draft}` });
+  },
+
+  onShareAppMessage() {
+    const shareUtil = require("../../utils/share.js");
+    const publisher = this.data.publisher || "行测模考";
+    const institution = this.data.institution ? `?institution=${encodeURIComponent(this.data.institution)}` : "";
+    return {
+      title: `${publisher}行测模考估分与同卷排名 · 卷卷小榜`,
+      path: shareUtil.withReferralPath(`/pages/catalog/catalog${institution}`),
+      imageUrl: ASSET.logo,
+    };
+  },
+
+  onShareTimeline() {
+    const shareUtil = require("../../utils/share.js");
+    const publisher = this.data.publisher || "行测模考";
+    const query = this.data.institution ? `institution=${encodeURIComponent(this.data.institution)}` : "";
+    return {
+      title: `${publisher}行测估分套卷目录 · 卷卷小榜`,
+      query: shareUtil.withReferralQuery(query),
+      imageUrl: ASSET.logo,
+    };
   },
 });

@@ -10,6 +10,7 @@ import { randomUUID } from "node:crypto";
 import { createApi } from "../server/api.mjs";
 import { createPositionsService, positionId } from "../server/positions.mjs";
 import { createCorrectionsService } from "../server/corrections.mjs";
+import { createWechatProfileService } from "../server/wechat-profile.mjs";
 
 const viewer = "insight-viewer-0001", peer = "insight-peer-000002", zero = "insight-zero-000003", privateGuest = "insight-private-004";
 const types = ["政治理论", "常识判断", "言语理解", "数量关系", "资料分析", "图形推理", "定义判断", "类比推理", "逻辑判断", "言语理解"];
@@ -34,6 +35,7 @@ async function fixture(t) {
   process.env.ROLLIERANK_REVIEW_TOKEN = token;
   const startApi = () => createApi({ dataDirectory: pathToFileURL(directory + "/"), featureFactories: [
     (context) => createPositionsService({ ...context, datasets: [dataset] }), createCorrectionsService,
+    (context) => createWechatProfileService(context, { config: { appId: "", secret: "", phoneKey: null, qiniu: {} } }),
   ] });
   let api = await startApi();
   const server = createServer((request, response) => api(request, response, new URL(request.url, "http://localhost").pathname));
@@ -270,4 +272,35 @@ test("an approved answer correction immediately changes distributions, cohorts, 
   assert.equal(afterPart.averageRate, beforePart.averageRate);
   const lowerBand = (await app.request(app.query("insights", { attemptId: first.id, band: "60-70" }))).data;
   assert.equal(lowerBand.questions[6].options.find((item) => item.answer === "A").rate, 1);
+});
+
+test("leaderboard and public results expose real WeChat profile avatars and synced nicknames without leaking credentials", async (t) => {
+  const app = await fixture(t);
+  await app.submit(viewer, "avatar-rank-viewer01", answers(9));
+  const session = await app.request("miniprogram-profile/session", {});
+  assert.equal(session.status, 200);
+  const png = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2dIAAAAASUVORK5CYII=",
+    "base64",
+  ).toString("base64");
+  const saved = await app.request("miniprogram-profile/profile", {
+    token: session.data.token,
+    guestId: viewer,
+    name: "刘杰",
+    avatar: png,
+  });
+  assert.equal(saved.status, 200);
+  assert.ok(saved.data.profile.avatarId);
+
+  const board = (await app.request(app.query("leaderboard"))).data;
+  assert.equal(board.rows.length, 1);
+  assert.equal(board.rows[0].name, "刘杰");
+  assert.equal(board.rows[0].avatarUrl, `/api/miniprogram-profile/avatar?id=${saved.data.profile.avatarId}`);
+  assert.equal(board.self.avatarUrl, board.rows[0].avatarUrl);
+  assert.equal(JSON.stringify(board).includes(session.data.token), false);
+
+  const details = (await app.request(app.query("public-result", { publicId: board.rows[0].publicId }))).data;
+  assert.equal(details.result.name, "刘杰");
+  assert.equal(details.result.avatarUrl, board.rows[0].avatarUrl);
+  assert.equal(JSON.stringify(details).includes(session.data.token), false);
 });

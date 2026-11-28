@@ -260,16 +260,25 @@ test("Web 与小程序答题卡草稿合并口径一致（补空题、整份替�
   assert.equal(mpOmr.formatOmrApplyToast({ appliedCount: 4, lowConfidenceMarked: [], mode: "replace" }), "已填入 4 题");
 });
 
-test("小程序录答案页正确接线答题卡识别入口与离屏画布", async () => {
+test("小程序录答案页正确接线答题卡识别入口、0.1 卷豆确认与余额不足弹窗", async () => {
   const wxml = await readFile(path.join(ROOT, "mini-program/pages/practice/practice.wxml"), "utf8");
   const wxss = await readFile(path.join(ROOT, "mini-program/pages/practice/practice.wxss"), "utf8");
   const js = await readFile(path.join(ROOT, "mini-program/pages/practice/practice.js"), "utf8");
+  const apiJs = await readFile(path.join(ROOT, "mini-program/services/api.js"), "utf8");
   assert.match(wxml, /bindtap="openScan"/);
   assert.match(wxml, /bindtap="chooseScanImage"/);
   assert.match(wxml, /bindtap="applyScanResult"/);
   assert.match(wxml, /id="omr-canvas"/);
+  assert.match(wxml, /每次识图消耗 \{\{scanCostText\}\} 卷豆/);
+  assert.match(wxml, /scanChargedText/);
   assert.match(wxss, /\.practice__omr-canvas\s*\{[^}]*left:\s*-9999px/);
   assert.match(js, /recognizeAnswerSheet/);
+  assert.match(js, /DEFAULT_SCAN_COST\s*=\s*0\.1/);
+  assert.match(js, /confirmAndRunScan\(/);
+  assert.match(js, /showInsufficientCreditsModal\(/);
+  assert.match(js, /\/pages\/credits\/credits/);
+  assert.match(js, /quotedCost/);
+  assert.match(apiJs, /recognizeAnswerSheet[\s\S]*Authorization/);
 });
 
 test("非答题卡图片（纯白、书页文字、随机杂斑、键盘网格、蓝底条纹、二维码）全部返回 422 拒绝而非硬凑答案", async () => {
@@ -474,4 +483,176 @@ test("支持 EXIF 方向自动转正、满屏近拍行式卡与阴影光照下�
   assert.equal(resMono.status, 200);
   const okMono = resMono.body.questions.filter((q) => keyC[String(q.number)] && q.answer === keyC[String(q.number)]).length;
   assert.ok(okMono >= 125, `白底无蓝带列式卡预期至少答对 125 题，实际 ${okMono}`);
+});
+
+test("小程序录答案扫卡回归：严格校验微信 4 字弹窗、离屏 Canvas destWidth/destHeight 与 EXIF 比例及异常回退", async () => {
+  const vm = await import("node:vm");
+  const { readFileSync } = await import("node:fs");
+  const mpRoot = path.join(ROOT, "mini-program");
+
+  function mountPractice({ signedIn = false, balance = 3, canvasExportsTiny = false, recognizeResult = null } = {}) {
+    const store = new Map();
+    if (signedIn) {
+      store.set("rr-release:rr:credit-token", "a".repeat(64));
+      store.set("rr-release:rr:credit-account", "acc-test-12345");
+    }
+    const modals = [];
+    const exportsSeen = [];
+    const navigated = [];
+    const recognizeCalls = [];
+    let pageDef = null;
+
+    const wxMock = {
+      getStorageSync: (k) => store.get(k),
+      setStorageSync: (k, v) => store.set(k, v),
+      removeStorageSync: (k) => store.delete(k),
+      getAccountInfoSync: () => ({ miniProgram: { envVersion: "release" } }),
+      getWindowInfo: () => ({ statusBarHeight: 24, windowWidth: 390, windowHeight: 844, pixelRatio: 3 }),
+      showLoading: () => {},
+      hideLoading: () => {},
+      showToast: () => {},
+      navigateTo: (opts) => navigated.push(opts.url),
+      login: ({ success }) => success({ code: "wx-code-test" }),
+      // 模拟微信真机严格校验：按钮文字超 4 字直接走 fail。
+      showModal: (opts) => {
+        modals.push({ title: opts.title, confirmText: opts.confirmText, cancelText: opts.cancelText });
+        if ([...String(opts.confirmText || "")].length > 4 || [...String(opts.cancelText || "")].length > 4) {
+          opts.fail?.({ errMsg: "showModal:fail confirmText length should not larger than 4 Chinese characters" });
+          return;
+        }
+        opts.success?.({ confirm: true, cancel: false });
+      },
+      getImageInfo: ({ src, success }) => {
+        if (src === "/tmp/phone-portrait.jpg") {
+          // 模拟 iPhone 竖拍 EXIF：getImageInfo 报原始横图 4032x3024，解码后 img 为竖图 3024x4032。
+          success({ width: 4032, height: 3024, type: "jpeg" });
+        } else if (src === "/tmp/canvas-out.jpg") {
+          success(canvasExportsTiny ? { width: 3, height: 3, type: "jpeg" } : { width: 1536, height: 2048, type: "jpeg" });
+        } else {
+          success({ width: 1536, height: 2048, type: "jpeg" });
+        }
+      },
+      canvasToTempFilePath: (opts) => {
+        exportsSeen.push({ destWidth: opts.destWidth, destHeight: opts.destHeight, width: opts.canvas.width, height: opts.canvas.height });
+        if (!opts.destWidth || !opts.destHeight) {
+          opts.fail?.({ errMsg: "missing destWidth/destHeight" });
+          return;
+        }
+        opts.success?.({ tempFilePath: "/tmp/canvas-out.jpg" });
+      },
+      compressImage: ({ src, success }) => success({ tempFilePath: `${src}.compressed.jpg` }),
+      getFileSystemManager: () => ({
+        readFile: ({ filePath, success }) => success({ data: `BASE64:${filePath}` }),
+      }),
+      request: ({ url, method, data, header, success }) => {
+        if (url.endsWith("/api/tool-credits/quote?tool=answer-sheet")) {
+          return success({ statusCode: 200, data: { tool: "answer-sheet", cost: 0.1 }, header: {} });
+        }
+        if (url.endsWith("/api/tool-credits/login")) {
+          return success({ statusCode: 200, data: { token: "b".repeat(64), accountId: "acc-new-12345", uid: 10002, created: true, balance }, header: {} });
+        }
+        if (url.includes("/api/tool-credits/wallet")) {
+          return success({ statusCode: 200, data: { accountId: "acc-new-12345", uid: 10002, balance, held: 0, records: [], nextBefore: null }, header: {} });
+        }
+        if (url.endsWith("/api/omr/recognize")) {
+          recognizeCalls.push({ data, header });
+          return success({
+            statusCode: 200,
+            data: recognizeResult || {
+              questions: [{ number: 1, answer: "A", confidence: 0.95 }, { number: 2, answer: "B", confidence: 0.9 }],
+              recognized: 2,
+              warnings: [],
+              billing: { charged: 0.1, cost: 0.1, state: "settled" },
+            },
+            header: {},
+          });
+        }
+        return success({ statusCode: 200, data: {}, header: {} });
+      },
+    };
+
+    const context = vm.createContext({
+      console, setTimeout, clearTimeout, setInterval, clearInterval,
+      wx: wxMock,
+      Page: (def) => { pageDef = def; },
+      getApp: () => ({ globalData: { versions: [] } }),
+    });
+    const cache = new Map();
+    const loadModule = (targetPath) => {
+      const abs = path.resolve(targetPath);
+      if (cache.has(abs)) return cache.get(abs).exports;
+      const mod = { exports: {} };
+      cache.set(abs, mod);
+      const source = readFileSync(abs, "utf8");
+      const wrapper = vm.runInContext(`(function(exports, require, module, __filename, __dirname){\n${source}\n})`, context, { filename: abs });
+      wrapper(mod.exports, (req) => loadModule(path.resolve(path.dirname(abs), req)), mod, abs, path.dirname(abs));
+      return mod.exports;
+    };
+    loadModule(path.join(mpRoot, "pages/practice/practice.js"));
+
+    const canvasNode = {
+      width: 0,
+      height: 0,
+      getContext: () => ({ setTransform: () => {}, fillStyle: "", fillRect: () => {}, drawImage: () => {} }),
+      createImage: () => {
+        const img = { width: 3024, height: 4032 };
+        Object.defineProperty(img, "src", {
+          set() { setTimeout(() => img.onload?.(), 0); },
+        });
+        return img;
+      },
+    };
+
+    const instance = {
+      ...pageDef,
+      data: JSON.parse(JSON.stringify(pageDef.data)),
+      version: { id: "v1", questionCount: 2 },
+      setData(patch, cb) {
+        Object.assign(this.data, patch);
+        cb?.();
+      },
+      createSelectorQuery: () => ({
+        select: () => ({
+          fields: () => ({
+            exec: (cb) => cb([{ node: canvasNode }]),
+          }),
+        }),
+      }),
+    };
+    instance.data.answers = ["", ""];
+    instance.data.marks = [false, false];
+    return { instance, modals, exportsSeen, navigated, recognizeCalls };
+  }
+
+  // 1) 未登录用户扫码 4032x3024 竖拍大图：弹窗通过 4 字校验 -> 自动登录 -> Canvas 按解码竖图 1536x2048 显式 destWidth/destHeight 导出 -> 识别成功
+  const flow1 = mountPractice({ signedIn: false, balance: 3 });
+  flow1.instance.openScan();
+  await flow1.instance.confirmAndRunScan("/tmp/phone-portrait.jpg", 3_500_000);
+  await new Promise((r) => setTimeout(r, 40));
+  assert.equal(flow1.modals.length, 1);
+  assert.ok([...flow1.modals[0].confirmText].length <= 4, `弹窗按钮超 4 字: ${flow1.modals[0].confirmText}`);
+  assert.equal(flow1.exportsSeen.length, 1);
+  assert.equal(flow1.exportsSeen[0].destWidth, 1536);
+  assert.equal(flow1.exportsSeen[0].destHeight, 2048);
+  assert.equal(flow1.recognizeCalls.length, 1);
+  assert.equal(flow1.recognizeCalls[0].data.image, "BASE64:/tmp/canvas-out.jpg");
+  assert.equal(flow1.instance.data.scanPhase, "ready");
+  assert.equal(flow1.instance.data.scanSummary.recognized, 2);
+
+  // 2) 若机型 Canvas 导出异常残图（3x3px），自动回退到原生压缩/原图 JPEG，不上传残图
+  const flow2 = mountPractice({ signedIn: true, balance: 3, canvasExportsTiny: true });
+  flow2.instance.openScan();
+  await flow2.instance.confirmAndRunScan("/tmp/phone-portrait.jpg", 3_500_000);
+  await new Promise((r) => setTimeout(r, 40));
+  assert.equal(flow2.recognizeCalls.length, 1);
+  assert.equal(flow2.recognizeCalls[0].data.image, "BASE64:/tmp/phone-portrait.jpg.compressed.jpg");
+  assert.equal(flow2.instance.data.scanPhase, "ready");
+
+  // 3) 卷豆不足弹窗按钮严格 <= 4 字且确认后可正常跳转卷豆页
+  const flow3 = mountPractice({ signedIn: true, balance: 0 });
+  flow3.instance.openScan();
+  await flow3.instance.confirmAndRunScan("/tmp/phone-portrait.jpg", 3_500_000);
+  assert.equal(flow3.modals.length, 1);
+  assert.ok([...flow3.modals[0].confirmText].length <= 4, `余额不足按钮超 4 字: ${flow3.modals[0].confirmText}`);
+  assert.deepEqual(flow3.navigated, ["/pages/credits/credits"]);
 });

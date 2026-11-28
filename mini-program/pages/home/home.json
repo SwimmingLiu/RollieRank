@@ -4,6 +4,7 @@
     "rr-nav": "/components/rr-nav/rr-nav",
     "rr-timer-sheet": "/components/rr-timer-sheet/rr-timer-sheet"
   },
+  "navigationBarTitleText": "卷卷小榜 · 行测估分与同卷排名",
   "navigationStyle": "custom",
   "disableScroll": true
 }

@@ -1,10 +1,8 @@
-const { ASSET } = require("../../config.js");
-
 Component({
+  options: { virtualHost: true, styleIsolation: "apply-shared" },
   properties: {
     name: { type: String, value: "" },
-    size: { type: Number, value: 40 },
-    color: { type: String, value: "" },
+    size: { type: Number, value: 16 },
   },
   data: { src: "" },
   observers: {

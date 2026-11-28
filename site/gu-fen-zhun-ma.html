@@ -34,7 +34,7 @@
             "name": "行测估分准吗：和实际分数差在哪",
             "isPartOf": { "@id": "https://rank.swimmingliu.cn/#website" },
             "inLanguage": "zh-CN",
-            "dateModified": "2026-11-22",
+            "dateModified": "2026-11-26",
             "breadcrumb": { "@id": "https://rank.swimmingliu.cn/gu-fen-zhun-ma.html#crumb" }
           },
           {
@@ -96,129 +96,218 @@
     </script>
   </head>
 
-  <body>
-    <header class="site wrap">
-      <img src="https://rollie-rank-oss.swimmingliu.cn/static/rollierank-site/logo-64.png" alt="卷卷小榜" width="34" height="34" />
-      <span class="name"><a href="/" style="color:inherit;text-decoration:none">卷卷小榜</a></span>
-      <nav>
-        <a href="/">首页</a>
-        <a href="/zenme-suan-fen.html">分值表</a>
-        <a href="/shua-ti-ji-fen.html">刷题记分</a>
-      </nav>
+  <body class="page-topic">
+    <header class="topbar" data-topbar>
+      <div class="topbar__pill">
+        <a class="brand" href="/">
+          <img src="/assets/logo-64.png" alt="卷卷小榜" width="28" height="28" />
+          <span class="brand__name">卷卷小榜</span>
+        </a>
+        <nav class="topbar__nav" aria-label="主导航">
+          <a href="/">首页</a>
+          <a href="/zenme-suan-fen.html">分值表</a>
+          <a href="/gu-fen-zhun-ma.html" class="is-current">准不准</a>
+          <a href="/shua-ti-ji-fen.html">刷题记分</a>
+        </nav>
+        <button class="pill-btn pill-btn--ink pill-btn--sm" type="button" data-open-qr>
+          <span>小程序</span>
+        </button>
+      </div>
     </header>
 
-    <main class="wrap">
-      <p class="crumbs"><a href="/">首页</a> / 行测估分准吗</p>
-      <h1>行测估分准吗：和实际分数差在哪</h1>
+    <main>
+      <section class="topic-hero">
+        <div class="container topic-hero__inner">
+          <a class="crumbs-pill" href="/">← 首页</a>
+          <h1>行测估分准吗</h1>
+          <p class="topic-hero__lead">没有固定分差——对准口径，结果才可复核。</p>
+        </div>
+      </section>
 
-      <p class="lead">
-        行测估分只能接近真实成绩，不能保证准。它按某套卷的参考答案和该卷分值表计算，
-        而真实成绩由官方阅卷产生，两者之间天然有一段距离。这段距离有多大，取决于几个可以查明的原因。
-      </p>
+      <section class="topic-band">
+        <div class="container">
+          <div class="icon-grid-3">
+            <article class="icard">
+              <span class="ico-badge ico-badge--coral" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h9M5 17h11" /></svg>
+              </span>
+              <h3>1. 答案版本</h3>
+              <p>争议题各家答案有分歧，按卷独立对照。</p>
+            </article>
 
-      <div class="card accent">
-        <p style="margin:0">
-          <b>一句话结论：</b>行测估分的准确度取决于「同卷、同答案、同分值表、一题不落」这四个条件，
+            <article class="icard">
+              <span class="ico-badge ico-badge--ochre" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><rect x="4" y="13" width="4" height="7" rx="1.4" /><rect x="10" y="9" width="4" height="11" rx="1.4" /><rect x="16" y="4" width="4" height="16" rx="1.4" /></svg>
+              </span>
+              <h3>2. 分值表版本</h3>
+              <p>单题分值未官方公布，换表会差几分。</p>
+            </article>
+
+            <article class="icard">
+              <span class="ico-badge ico-badge--sage" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M16 4l4 4-10 10H6v-4z" /></svg>
+              </span>
+              <h3>3. 涂卡与记忆</h3>
+              <p>草稿与答题卡错位、考后回忆偏差。</p>
+            </article>
+
+            <article class="icard">
+              <span class="ico-badge ico-badge--ink" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" /><path d="M8.5 12h7" /></svg>
+              </span>
+              <h3>4. 留空题口径</h3>
+              <p>跳过留空会虚高，站内统一计入分母。</p>
+            </article>
+
+            <article class="icard">
+              <span class="ico-badge ico-badge--coral" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 17l5-5 4 3 7-8" /></svg>
+              </span>
+              <h3>5. 跨卷误用</h3>
+              <p>130 题与 135 题看百分制，不比原始分。</p>
+            </article>
+
+            <article class="icard icard--accent">
+              <span class="ico-badge ico-badge--ochre" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M6 12.5l4 4L18.5 8" /></svg>
+              </span>
+              <h3>四条复核原则</h3>
+              <p>同卷 · 同答案 · 同分值表 · 一题不落。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="closing-band">
+        <div class="container">
+          <div class="closing-card closing-card--compact" style="--closing-art: url('/assets/backdrop-paper-art.jpg')">
+            <div class="closing-card__left">
+              <h2>逐题对照，查清每一分</h2>
+              <p>保留套卷答案来源与存疑标记，方便复核。</p>
+              <div class="closing-card__actions">
+                <a class="pill-btn pill-btn--ink pill-btn--lg" href="https://rollie-rank.swimmingliu.cn/ios-v3/app.html">打开网页版</a>
+                <a class="pill-btn pill-btn--paper pill-btn--lg" href="/zenme-suan-fen.html">看分值表</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 不可见完整 SEO / GEO 语义内容层 ===== -->
+      <section class="seo-content" aria-label="行测估分准吗完整说明与常见问题">
+        <h2>行测估分准吗：和实际分数差在哪</h2>
+        <p>
+          行测估分只能接近真实成绩，不能保证准。它按某套卷的参考答案和该卷分值表计算，
+          而真实成绩由官方阅卷产生，两者之间天然有一段距离。这段距离有多大，取决于几个可以查明的原因。
+          一句话结论：行测估分的准确度取决于「同卷、同答案、同分值表、一题不落」这四个条件，
           任何一个不满足，分差就会被放大。没有固定的「一般差几分」。
         </p>
-      </div>
 
-      <h2>差异从哪来：五个可查的原因</h2>
+        <h2>差异从哪来：五个可查的原因</h2>
+        <h3>1. 答案版本不同</h3>
+        <p>
+          机构给的参考答案本身可能和官方答案有出入，尤其是言语理解和判断推理里的争议题。
+          不同机构的答案不一致时，同一份答题卡能算出不同的分数。
+          卷卷小榜按每套卷对应的机构参考答案独立计算，不会把 A 机构的答案套到 B 机构的卷子上。
+        </p>
 
-      <h3>1. 答案版本不同</h3>
-      <p>
-        机构给的参考答案本身可能和官方答案有出入，尤其是言语理解和判断推理里的争议题。
-        不同机构的答案不一致时，同一份答题卡能算出不同的分数。
-        卷卷小榜按每套卷对应的机构参考答案独立计算，不会把 A 机构的答案套到 B 机构的卷子上。
-      </p>
+        <h3>2. 分值表版本不同</h3>
+        <p>
+          国考行测每题分值官方没有统一公布，各家机构的分值表并不完全一样。
+          哪怕答案一致，用不同的行测分值表算出的分数也会差几分。
+          行测分数计算之所以容易出现分歧，根源就在这里。
+          <a href="/zenme-suan-fen.html">分值表对照</a>里有 130 题和 135 题的具体数字。
+        </p>
 
-      <h3>2. 分值表版本不同</h3>
-      <p>
-        国考行测每题分值官方没有统一公布，各家机构的分值表并不完全一样。
-        哪怕答案一致，用不同的行测分值表算出的分数也会差几分。
-        行测分数计算之所以容易出现分歧，根源就在这里。
-        <a href="/zenme-suan-fen.html">分值表对照</a>里有 130 题和 135 题的具体数字。
-      </p>
+        <h3>3. 记错答案、涂卡与草稿不一致</h3>
+        <p>
+          这是最常见也最容易忽略的一项。考场上先写在草稿上再涂卡，或者最后几分钟集中涂卡，
+          都可能出现涂卡和实际选择不一致。估分时凭记忆录入，记忆本身也会有偏差。
+        </p>
 
-      <h3>3. 记错答案、涂卡与草稿不一致</h3>
-      <p>
-        这是最常见也最容易忽略的一项。考场上先写在草稿上再涂卡，或者最后几分钟集中涂卡，
-        都可能出现涂卡和实际选择不一致。估分时凭记忆录入，记忆本身也会有偏差。
-      </p>
+        <h3>4. 留空题算不算进分母</h3>
+        <p>
+          留空的题如果被跳过，等于人为提高了正确率；如实计入分母，才和真实阅卷口径一致。
+          行测算分时要特别注意这一点，卷卷小榜把留空计入分母，不跳过。
+        </p>
 
-      <h3>4. 留空题算不算进分母</h3>
-      <p>
-        留空的题如果被跳过，等于人为提高了正确率；如实计入分母，才和真实阅卷口径一致。
-        行测算分时要特别注意这一点，卷卷小榜把留空计入分母，不跳过。
-      </p>
+        <h3>5. 跨卷比较的误用</h3>
+        <p>
+          130 题地市卷和 135 题副省卷的分值表不同，直接比原始得分没有意义，要比得分率。
+          折算百分制就是为了让它们变成同一把尺子，这也是行测分数计算器必须先选对卷子的原因。
+        </p>
 
-      <h3>5. 跨卷比较的误用</h3>
-      <p>
-        130 题地市卷和 135 题副省卷的分值表不同，直接比原始得分没有意义，要比得分率。
-        折算百分制就是为了让它们变成同一把尺子，这也是行测分数计算器必须先选对卷子的原因。
-      </p>
+        <h2>怎么估得更靠谱</h2>
+        <ol>
+          <li>选对卷子。机构、期数、地市卷还是副省卷，一处不对，后面全偏。</li>
+          <li>用这套卷对应的参考答案。不要拿另一家机构的答案往里套。</li>
+          <li>一题不落地录。不确定的题也要选一个，或者明确标成存疑。</li>
+          <li>留空计入分母。没做的题就是没得分，不能从分母里拿掉。</li>
+          <li>看逐题对照。比分差更有用的是知道哪些分是自己丢的、丢在哪个板块。</li>
+        </ol>
 
-      <h2>怎么估得更靠谱</h2>
-      <ol class="steps">
-        <li><strong>选对卷子。</strong>机构、期数、地市卷还是副省卷，一处不对，后面全偏。</li>
-        <li><strong>用这套卷对应的参考答案。</strong>不要拿另一家机构的答案往里套。</li>
-        <li><strong>一题不落地录。</strong>不确定的题也要选一个，或者明确标成存疑。</li>
-        <li><strong>留空计入分母。</strong>没做的题就是没得分，不能从分母里拿掉。</li>
-        <li><strong>看逐题对照。</strong>比分差更有用的是知道哪些分是自己丢的、丢在哪个板块。</li>
-      </ol>
+        <h2>估分和实际差很多，怎么查</h2>
+        <p>
+          按上面的顺序逐项核对：先确认卷子对不对，再确认答案来源是不是同一家，
+          然后看分值表版本，最后核对留空题的口径。这四项都对齐之后如果还有明显差异，
+          多半是涂卡或记忆偏差。逐题对照能直接定位到具体题号。
+        </p>
 
-      <h2>估分和实际差很多，怎么查</h2>
-      <p>
-        按上面的顺序逐项核对：先确认卷子对不对，再确认答案来源是不是同一家，
-        然后看分值表版本，最后核对留空题的口径。这四项都对齐之后如果还有明显差异，
-        多半是涂卡或记忆偏差。逐题对照能直接定位到具体题号。
-      </p>
+        <h2>常见问题</h2>
+        <dl>
+          <dt>行测估分准吗？</dt>
+          <dd>只能接近真实成绩，不能保证准。它按某套卷的参考答案和该卷分值表计算，和真实成绩的差距主要来自答案版本不同、涂卡失误、分值表版本差异，以及不同机构答案不一致。</dd>
+          <dt>行测估分和实际分数差距大吗？</dt>
+          <dd>差距大小主要取决于所用答案和分值表是否与考试一致。同卷同版本、答案来源一致时，差异多来自涂卡和记错答案；跨机构答案有分歧、分值表版本不同，差距就会明显。</dd>
+          <dt>行测估分和实际分差很多为什么？</dt>
+          <dd>通常不是算错，而是输入和口径不一致。常见原因有记错考场答案、涂卡与草稿不一致、用了别家机构答案、分值表版本不同，以及留空题没算进分母。</dd>
+          <dt>行测估分与实际一般差多少？</dt>
+          <dd>没有固定差值。差多少取决于答案版本、分值表版本、涂卡准确度和机构答案分歧，个体之间差别很大，所以任何「一般差几分」的说法都不可靠。</dd>
+          <dt>行测估分 60 分左右，实际大概多少分？</dt>
+          <dd>没有固定换算。实际成绩会受答案版本、涂卡、分值表版本和机构答案分歧影响，可能高也可能低。与其猜一个数字，不如确认这套卷的分值表和答案来源，把每题如实录入，再对照逐题结果看哪些分是自己丢的。</dd>
+          <dt>估的分比实际高还是低？</dt>
+          <dd>两个方向都可能。记忆里把不确定的题记成自己选的、涂卡和草稿不一致，会偏高；漏算某些题、用错分值表，会偏低。没有系统性偏向。</dd>
+        </dl>
 
-      <h2>常见问题</h2>
-      <div class="faq">
-        <h3>行测估分准吗？</h3>
-        <p>只能接近真实成绩，不能保证准。它按某套卷的参考答案和该卷分值表计算，和真实成绩的差距主要来自答案版本不同、涂卡失误、分值表版本差异，以及不同机构答案不一致。</p>
-
-        <h3>行测估分和实际分数差距大吗？</h3>
-        <p>差距大小主要取决于所用答案和分值表是否与考试一致。同卷同版本、答案来源一致时，差异多来自涂卡和记错答案；跨机构答案有分歧、分值表版本不同，差距就会明显。</p>
-
-        <h3>行测估分和实际分差很多为什么？</h3>
-        <p>通常不是算错，而是输入和口径不一致。常见原因有记错考场答案、涂卡与草稿不一致、用了别家机构答案、分值表版本不同，以及留空题没算进分母。</p>
-
-        <h3>行测估分与实际一般差多少？</h3>
-        <p>没有固定差值。差多少取决于答案版本、分值表版本、涂卡准确度和机构答案分歧，个体之间差别很大，所以任何「一般差几分」的说法都不可靠。</p>
-
-        <h3>行测估分 60 分左右，实际大概多少分？</h3>
-        <p>没有固定换算。实际成绩会受答案版本、涂卡、分值表版本和机构答案分歧影响，可能高也可能低。与其猜一个数字，不如确认这套卷的分值表和答案来源，把每题如实录入，再对照逐题结果看哪些分是自己丢的。</p>
-
-        <h3>估的分比实际高还是低？</h3>
-        <p>两个方向都可能。记忆里把不确定的题记成自己选的、涂卡和草稿不一致，会偏高；漏算某些题、用错分值表，会偏低。没有系统性偏向。</p>
-      </div>
-
-      <h2>用卷卷小榜复核</h2>
-      <p>
-        卷卷小榜保留每套卷的答案来源和逐题对错，方便你回头查差异出在哪一题。
-        同卷排名按同一套卷、同一版本的真实提交记录计算，每人取最佳成绩。
-      </p>
-      <a class="cta" href="https://rollie-rank.swimmingliu.cn/ios-v3/app.html">打开网页版试用</a>
-      <p class="note" style="margin-top:10px">也可以在微信里搜索小程序「卷卷小榜」。</p>
-
-      <h2>继续看</h2>
-      <ul class="plain">
-        <li><a href="/zenme-suan-fen.html">行测分数怎么算：分值表与百分制折算</a></li>
-        <li><a href="/shua-ti-ji-fen.html">行测刷题、模考、真题怎么记分</a></li>
-        <li><a href="/">卷卷小榜：行测估分工具首页</a></li>
-      </ul>
+        <ul>
+          <li><a href="/zenme-suan-fen.html">行测分数怎么算：分值表与百分制折算</a></li>
+          <li><a href="/shua-ti-ji-fen.html">行测刷题、模考、真题怎么记分</a></li>
+          <li><a href="/">卷卷小榜：行测估分工具首页</a></li>
+        </ul>
+      </section>
     </main>
 
-    <footer class="site wrap">
-      <p>
-        卷卷小榜 · 行测估分与练习记录工具 ·
-        <a href="/llms.txt">llms.txt</a> ·
-        <a href="/sitemap.xml">sitemap</a>
-      </p>
-      <p class="note">本站内容不构成考试预测，估分结果仅供复盘参考。</p>
+    <footer class="site-footer">
+      <div class="container footer-row">
+        <a class="brand brand--sm" href="/">
+          <img src="/assets/logo-64.png" alt="卷卷小榜" width="22" height="22" />
+          <span class="brand__name">卷卷小榜</span>
+        </a>
+        <div class="footer-links">
+          <a href="/">首页</a>
+          <a href="/zenme-suan-fen.html">分值表</a>
+          <a href="/shua-ti-ji-fen.html">刷题记分</a>
+          <a href="/llms.txt">llms.txt</a>
+          <a href="/sitemap.xml">sitemap.xml</a>
+        </div>
+        <span class="footer-note">估分结果仅供复盘参考，不构成考试预测。</span>
+      </div>
     </footer>
+
+    <div class="qr-modal" id="qr-modal" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title" hidden>
+      <div class="qr-modal__card">
+        <button class="qr-modal__close" type="button" data-close-qr aria-label="关闭弹窗">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15" /></svg>
+        </button>
+        <img class="qr-modal__logo" src="/assets/logo-64.png" alt="卷卷小榜" width="34" height="34" />
+        <h3 id="qr-modal-title">微信扫码 · 卷卷小榜</h3>
+        <div class="qr-modal__frame">
+          <img data-qr-img src="/assets/miniapp-qr.jpg" alt="卷卷小榜微信小程序码" width="204" height="204" />
+        </div>
+      </div>
+    </div>
+
+    <script src="/site.js" defer></script>
+    <script src="/miniapp-entry.js" defer></script>
   </body>
-  <script src="/miniapp-entry.js" defer></script>
 </html>

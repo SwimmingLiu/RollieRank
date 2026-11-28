@@ -3,6 +3,7 @@
     "rr-nav": "/components/rr-nav/rr-nav",
     "rr-tabbar": "/components/rr-tabbar/rr-tabbar"
   },
+  "navigationBarTitleText": "行测跨机构成长曲线 · 卷卷小榜",
   "navigationStyle": "custom",
   "disableScroll": true
 }

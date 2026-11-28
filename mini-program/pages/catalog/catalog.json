@@ -4,6 +4,7 @@
     "rr-nav": "/components/rr-nav/rr-nav",
     "rr-option-sheet": "/components/rr-option-sheet/rr-option-sheet"
   },
+  "navigationBarTitleText": "行测模考套卷目录 · 卷卷小榜",
   "navigationStyle": "custom",
   "disableScroll": true
 }

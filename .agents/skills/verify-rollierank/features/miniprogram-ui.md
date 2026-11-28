@@ -4,7 +4,7 @@
 
 运行 `npm run verify -- feature miniprogram-ui`，检查旧记录和草稿的接续、一次性连接凭证、同卷邀请、四种海报，以及 `npm --prefix mini-program run check` 的原生静态与安卓无 `Intl`/ES2020 沙箱启动门禁。浏览器流程加载真实原稿和隔离 API，仅替代微信相册和聊天转发的调用边界。完整门禁也运行这一流程。
 
-安卓微信精简 V8 引擎默认不包含 `Intl` 对象，模块顶层直接调用 `new Intl.Collator` 等接口会导致首页 `Page(...)` 注册失败而直接白屏。`mini-program/tools/check.mjs` 与 `test/miniprogram-timer.test.js` 在移除 `Intl`、`Array.prototype.at` 与 `String.prototype.replaceAll` 的独立沙箱中逐一加载 `app.js`、全部已注册页面、`components/*`、`custom-tab-bar/index.js` 和 `vendor/practice-timer.js`，强制校验零报错并完成注册；同时 `check.mjs` 与 `test/miniprogram-layout.test.js` 校验 `tabBar.custom: true` 时必须具备合规的 `custom-tab-bar/index.{js,json,wxml,wxss}` 组件。
+安卓微信精简 V8 引擎默认不包含 `Intl` 对象，模块顶层直接调用 `new Intl.Collator` 等接口会导致首页 `Page(...)` 注册失败而直接白屏。`mini-program/tools/check.mjs` 与 `test/miniprogram-timer.test.js` 在移除 `Intl`、`Array.prototype.at` 与 `String.prototype.replaceAll` 的独立沙箱中逐一加载 `app.js`、全部已注册页面、`components/*`、`custom-tab-bar/index.js` 和 `vendor/practice-timer.js`，强制校验零报错并完成注册；同时 `check.mjs` 校验 `tabBar.custom: true` 时具备合规 `custom-tab-bar` 组件、全站 `wx.showModal` 按钮文案不超过 4 字符、以及所有 `wx.canvasToTempFilePath` 调用显式传入 `destWidth` 与 `destHeight`。全站复制动作统一通过 `mini-program/utils/clipboard.js` 与纸卡主题提示组件 `rr-toast` 完成（屏蔽微信原生英文/灰底弹窗）。
 
 开发版和体验版使用测试 HTTPS，只有正式版使用生产 HTTPS。用开发者工具核对运行包版本、API 地址和存储前缀，再扫码在开发版或体验版录答，并在测试库查回执。测试域名必须返回测试环境标识，缺少标识时不得交卷、写评论或保存资料。首次正式发布前执行[生产首发检查](../../../../deploy/README.md#首次上线检查)。
 

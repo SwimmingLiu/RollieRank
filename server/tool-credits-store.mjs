@@ -4,15 +4,43 @@ import { createToolPurchaseStore, ORDER_ID } from "./tool-credits-orders.mjs";
 import { createCoinRechargeStore } from "./tool-credits-recharge-orders.mjs";
 import {
   CREDIT_SCALE, creditError, DAY_MS, defaultCreditRules, fromCreditUnits, INVITE_CHANNEL, MAX_HOLD_MS,
-  toCreditUnits, TOOL_ID, updateCreditRules, usageDay, validId, validUid,
+  REFERRAL_CHANNEL, toCreditUnits, TOOL_ID, updateCreditRules, usageDay, validId, validUid,
 } from "./tool-credits-rules.mjs";
 
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 const sessionToken = /^[a-f0-9]{64}$/;
 const inviteCode = /^[a-zA-Z0-9_-]{16}$/;
+const shareCode = /^[a-zA-Z0-9]{5,16}$/;
+const SHARE_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
 const claimToken = /^[a-f0-9]{48}$/;
 const operationRef = /^[\w:.-]{1,180}$/;
 const SESSION_MS = 30 * DAY_MS;
+
+function generateShareCode(length = 8) {
+  const bytes = randomBytes(length);
+  let out = "";
+  for (let i = 0; i < length; i += 1) out += SHARE_ALPHABET[bytes[i] % SHARE_ALPHABET.length];
+  return out;
+}
+
+function monthStartMs(now) {
+  return Date.parse(`${usageDay(now).slice(0, 7)}-01T00:00:00+08:00`);
+}
+
+function normalizeRules(raw) {
+  const base = structuredClone(defaultCreditRules);
+  if (!raw || typeof raw !== "object") return base;
+  return {
+    ...base,
+    ...raw,
+    welcome: { ...base.welcome, ...(raw.welcome || {}) },
+    costs: raw.costs && typeof raw.costs === "object" ? { ...raw.costs } : base.costs,
+    invite: { ...base.invite, ...(raw.invite || {}) },
+    referral: { ...base.referral, ...(raw.referral || {}) },
+    purchase: { ...base.purchase, ...(raw.purchase || {}) },
+    ads: { ...base.ads, ...(raw.ads || {}) },
+  };
+}
 
 const all = async (client, sql, ...params) => (await client.query(sql, params)).rows;
 const get = async (client, sql, ...params) => (await all(client, sql, ...params))[0];
@@ -87,7 +115,7 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
 
   async function rules(client) {
     const row = await get(client, "SELECT value FROM wallet_rules WHERE id = 1");
-    return row?.value ?? structuredClone(defaultCreditRules);
+    return normalizeRules(row?.value);
   }
 
   async function account(token) {
@@ -162,7 +190,28 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
     return Boolean(groupApproved && config.invite.enabled && config.invite.groups);
   }
 
-  async function login({ wechatKey, legacyGuestId, visitorId, inviteClaim }) {
+  function referralEnabled(config) {
+    return Boolean(config.referral?.enabled && Number(config.referral?.reward) > 0);
+  }
+
+  async function ensureShareCode(client, accountId) {
+    const prior = await get(client, "SELECT code FROM wallet_invite_codes WHERE account_id = $1 AND channel = $2", accountId, REFERRAL_CHANNEL);
+    if (prior?.code) return prior.code;
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const code = generateShareCode(8);
+      const inserted = await run(
+        client,
+        "INSERT INTO wallet_invite_codes (code, account_id, channel) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+        code, accountId, REFERRAL_CHANNEL,
+      );
+      if (inserted.rowCount) return code;
+      const raced = await get(client, "SELECT code FROM wallet_invite_codes WHERE account_id = $1 AND channel = $2", accountId, REFERRAL_CHANNEL);
+      if (raced?.code) return raced.code;
+    }
+    throw creditError(500, "专属分享码生成失败，请重试。");
+  }
+
+  async function login({ wechatKey, legacyGuestId, expectedLegacyAccountId, visitorId, inviteClaim, referralCode }) {
     const token = randomBytes(32).toString("hex");
     return transact(async (client) => {
       await lock(client, "identity:" + wechatKey);
@@ -175,6 +224,7 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
       const id = existing?.id ?? randomUUID();
       let uid = existing?.uid ?? null;
       const created = !existing;
+      let referralRewarded = false;
       if (created) {
         if (hasUid) {
           const inserted = await get(client, "INSERT INTO wallet_accounts (id, wechat_key, created_at, legacy_member) VALUES ($1, $2, $3, $4) RETURNING uid",
@@ -187,6 +237,7 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
         const scale = await scaleFor(client);
         const amountUnits = toUnits(legacyGuestId ? config.welcome.existingMember : config.welcome.newAccount, scale);
         await grant(client, { id, amountUnits, source: "welcome", ref: id, reason: "首次登录赠送" });
+        let claimedGroupInvite = false;
         if (inviteEnabled(config) && visitorId && typeof inviteClaim === "string" && claimToken.test(inviteClaim)) {
           const visit = await get(client, `SELECT v.entered_at, c.account_id FROM wallet_invite_visits v
             JOIN wallet_invite_codes c ON c.code = v.code WHERE v.claim = $1 AND v.wechat_key = $2 AND v.visitor_id = $3
@@ -195,20 +246,99 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
             await run(client, "UPDATE wallet_invite_visits SET claimed_by = $1 WHERE claim = $2", id, inviteClaim);
             await run(client, `INSERT INTO wallet_invitations (account_id, inviter_id, reward, monthly_limit, expires_at)
               VALUES ($1, $2, $3, $4, $5)`, id, visit.account_id, toUnits(config.invite.reward, scale), config.invite.monthlyLimit, now + config.invite.useDays * DAY_MS);
+            claimedGroupInvite = true;
+          }
+        }
+        const cleanRef = typeof referralCode === "string" ? referralCode.trim() : "";
+        if (!claimedGroupInvite && referralEnabled(config) && shareCode.test(cleanRef) && validId(visitorId)) {
+          let inviter = await get(
+            client,
+            "SELECT account_id FROM wallet_invite_codes WHERE code = $1 AND channel = $2",
+            cleanRef, REFERRAL_CHANNEL,
+          );
+          if (!inviter && hasUid && validUid(cleanRef)) {
+            const byUid = await get(client, "SELECT id AS account_id FROM wallet_accounts WHERE uid = $1", Number(cleanRef));
+            if (byUid?.account_id) inviter = byUid;
+          }
+          const inviterId = inviter?.account_id;
+          if (inviterId && inviterId !== id) {
+            await lock(client, "share-device:" + visitorId);
+            const seenDeviceKey = "seen-device:" + visitorId;
+            const shareDeviceKey = "share-device:" + visitorId;
+            const reusedDevice = await get(
+              client,
+              `SELECT 1 AS ok FROM wallet_account_devices WHERE guest_id = $1
+               UNION ALL
+               SELECT 1 AS ok FROM wallet_sessions WHERE guest_id = $1
+               UNION ALL
+               SELECT 1 AS ok FROM wallet_first_use_events WHERE reference IN ($2, $3)
+               LIMIT 1`,
+              visitorId, seenDeviceKey, shareDeviceKey,
+            );
+            if (!reusedDevice?.ok) {
+              await lockAccounts(client, [id, inviterId]);
+              const limit = Number(config.referral.monthlyLimit) || 0;
+              let withinLimit = true;
+              if (limit > 0) {
+                const { total } = await get(
+                  client,
+                  `SELECT COUNT(*)::integer AS total FROM wallet_ledger
+                   WHERE account_id = $1 AND source = 'invite' AND reference LIKE 'share:%' AND created_at >= $2`,
+                  inviterId, monthStartMs(now),
+                );
+                withinLimit = Number(total) < limit;
+              }
+              const rewardUnits = toUnits(config.referral.reward, scale);
+              if (rewardUnits > 0 && withinLimit) {
+                const accountClaim = await run(
+                  client,
+                  "INSERT INTO wallet_first_use_events (reference) VALUES ($1) ON CONFLICT DO NOTHING",
+                  "share-account:" + id,
+                );
+                const deviceClaim = accountClaim.rowCount
+                  ? await run(
+                    client,
+                    "INSERT INTO wallet_first_use_events (reference) VALUES ($1) ON CONFLICT DO NOTHING",
+                    shareDeviceKey,
+                  )
+                  : { rowCount: 0 };
+                if (accountClaim.rowCount && deviceClaim.rowCount) {
+                  await grant(client, {
+                    id: inviterId,
+                    amountUnits: rewardUnits,
+                    source: "invite",
+                    ref: "share:" + id,
+                    reason: "好友通过分享注册",
+                    createdAt: now,
+                  });
+                  referralRewarded = true;
+                }
+              }
+            }
           }
         }
       }
       if (legacyGuestId) {
+        if (expectedLegacyAccountId && expectedLegacyAccountId !== id) {
+          throw creditError(409, "这份本机资料已绑定其他微信账号。");
+        }
         await run(client, "INSERT INTO wallet_account_devices (guest_id, account_id) VALUES ($1, $2) ON CONFLICT (guest_id) DO NOTHING",
           legacyGuestId, id);
         const owner = await get(client, "SELECT account_id FROM wallet_account_devices WHERE guest_id = $1", legacyGuestId);
         if (owner.account_id !== id) throw creditError(409, "这份本机资料已绑定其他微信账号。");
         if (!created) await run(client, "UPDATE wallet_accounts SET legacy_member = true WHERE id = $1", id);
       }
+      if (validId(visitorId)) {
+        await run(
+          client,
+          "INSERT INTO wallet_first_use_events (reference) VALUES ($1) ON CONFLICT DO NOTHING",
+          "seen-device:" + visitorId,
+        );
+      }
       await run(client, "DELETE FROM wallet_sessions WHERE expires_at <= $1", now);
       await run(client, "INSERT INTO wallet_sessions (token_hash, account_id, guest_id, expires_at) VALUES ($1, $2, $3, $4)",
         hash(token), id, visitorId ?? null, now + SESSION_MS);
-      return { token, accountId: id, uid, created, ...(await balance(client, id)) };
+      return { token, accountId: id, uid, created, referralRewarded, ...(await balance(client, id)) };
     });
   }
 
@@ -229,6 +359,14 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
       amount: fromCreditUnits(row.amount, scale),
       balanceAfter: fromCreditUnits(row.balanceAfter, scale),
     }));
+  }
+
+  function linkedDevices(accountId) {
+    if (!database || !validId(accountId)) return Promise.resolve([]);
+    return read(async (client) => {
+      const rows = await all(client, "SELECT guest_id FROM wallet_account_devices WHERE account_id = $1", accountId);
+      return rows.map(row => row.guest_id).filter(validId);
+    });
   }
 
   function wallet(id, before) {
@@ -425,6 +563,34 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
     });
   }
 
+  function referralInfo(id) {
+    return transact(async (client) => {
+      const now = clock();
+      const config = await rules(client);
+      const scale = await scaleFor(client);
+      await lockAccounts(client, [id]);
+      const code = await ensureShareCode(client, id);
+      const stats = await get(
+        client,
+        `SELECT COUNT(*)::integer AS total_count,
+                COALESCE(SUM(amount), 0)::integer AS total_units,
+                COUNT(*) FILTER (WHERE created_at >= $2)::integer AS month_count
+         FROM wallet_ledger
+         WHERE account_id = $1 AND source = 'invite' AND reference LIKE 'share:%'`,
+        id, monthStartMs(now),
+      );
+      return {
+        enabled: referralEnabled(config),
+        reward: config.referral.reward,
+        monthlyLimit: config.referral.monthlyLimit,
+        code,
+        rewardedCount: Number(stats?.total_count || 0),
+        rewardedTotal: fromCreditUnits(Number(stats?.total_units || 0), scale),
+        monthCount: Number(stats?.month_count || 0),
+      };
+    });
+  }
+
   function makeInvite(id) {
     return transact(async (client) => {
       const config = await rules(client);
@@ -501,13 +667,31 @@ export function createToolCreditStore({ database, groupApproved, directPurchaseR
   });
   return {
     purchases, recharges,
-    account, wallet, login, adminView, adjust, setRules, reserve, settle, release, recordToolUse, makeInvite, enterInvite,
+    account, wallet, linkedDevices, login, adminView, adjust, setRules, reserve, settle, release, recordToolUse, makeInvite, enterInvite, referralInfo,
     quote: (tool) => read((client) => quote(client, tool)),
     operation: (key) => {
       validateKey(key);
       return read(async (client) => publicOperation(await findOperation(client, key)) ?? null);
     },
     inviteEnabled: () => database && groupApproved ? read(async (client) => inviteEnabled(await rules(client))) : false,
+    referralSettings: async () => {
+      const fallback = {
+        enabled: Boolean(defaultCreditRules.referral.enabled && defaultCreditRules.referral.reward > 0),
+        reward: defaultCreditRules.referral.reward,
+        monthlyLimit: defaultCreditRules.referral.monthlyLimit,
+      };
+      if (!database) return fallback;
+      try {
+        const config = await read(rules);
+        return {
+          enabled: referralEnabled(config),
+          reward: config.referral.reward,
+          monthlyLimit: config.referral.monthlyLimit,
+        };
+      } catch {
+        return fallback;
+      }
+    },
     purchaseSettings: async () => {
       if (!database) return structuredClone(defaultCreditRules.purchase);
       try { return (await read(rules)).purchase; } catch { return structuredClone(defaultCreditRules.purchase); }

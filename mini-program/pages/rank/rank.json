@@ -1,8 +1,13 @@
 {
   "usingComponents": {
     "rr-nav": "/components/rr-nav/rr-nav",
-    "rr-position-picker": "/components/rr-position-picker/rr-position-picker"
+    "rr-icon": "/components/rr-icon/rr-icon",
+    "rr-rank-podium": "/components/rr-rank-podium/rr-rank-podium",
+    "rr-rank-row": "/components/rr-rank-row/rr-rank-row",
+    "rr-position-picker": "/components/rr-position-picker/rr-position-picker",
+    "rr-profile-sheet": "/components/rr-profile-sheet/rr-profile-sheet"
   },
+  "navigationBarTitleText": "行测同卷排行榜 · 卷卷小榜",
   "navigationStyle": "custom",
   "disableScroll": true
 }

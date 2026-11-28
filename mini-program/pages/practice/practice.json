@@ -3,6 +3,7 @@
     "rr-nav": "/components/rr-nav/rr-nav",
     "rr-position-picker": "/components/rr-position-picker/rr-position-picker"
   },
+  "navigationBarTitleText": "行测录答与扫卡估分 · 卷卷小榜",
   "navigationStyle": "custom",
   "disableScroll": true
 }

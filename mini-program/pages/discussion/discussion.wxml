@@ -104,4 +104,6 @@
         </button>
       </view>
     </view>
+  <rr-profile-sheet wx:if="{{profileSheetOpen}}" bind:dismiss="closeProfileSheet" bind:saved="onProfileSaved" />
+  <rr-toast id="rr-toast" bottom="{{92}}" />
 </view>

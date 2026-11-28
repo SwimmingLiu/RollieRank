@@ -1,5 +1,10 @@
 {
-  "usingComponents": { "rr-nav": "/components/rr-nav/rr-nav" },
+  "usingComponents": {
+    "rr-nav": "/components/rr-nav/rr-nav",
+    "rr-profile-sheet": "/components/rr-profile-sheet/rr-profile-sheet",
+    "rr-toast": "/components/rr-toast/rr-toast"
+  },
+  "navigationBarTitleText": "行测同卷讨论与复盘 · 卷卷小榜",
   "navigationStyle": "custom",
   "disableScroll": true
 }

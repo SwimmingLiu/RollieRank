@@ -177,4 +177,5 @@
   </view>
 
   <rr-tabbar active="records" />
+  <rr-toast id="rr-toast" bottom="{{104}}" />
 </view>

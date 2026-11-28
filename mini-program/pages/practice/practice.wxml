@@ -41,7 +41,7 @@
       <view class="practice__progress"><view style="width: {{progress}}%;"></view></view>
     </view>
 
-    <scroll-view wx:if="{{!single}}" class="practice__scroller" scroll-y scroll-into-view="{{scrollTarget}}" enhanced show-scrollbar="{{false}}">
+    <scroll-view wx:if="{{!single}}" class="practice__scroller" scroll-y scroll-into-view="{{scrollTarget}}" scroll-with-animation="{{scrollAnimated}}" enhanced show-scrollbar="{{false}}" binddragstart="onListDragStart" bindtouchstart="onListTouchStart" bindtouchmove="onListTouchMove" bindtouchend="onListTouchEnd" bindtouchcancel="onListTouchEnd">
       <view class="practice__list">
         <block wx:for="{{questions}}" wx:key="number">
           <view wx:if="{{item.heading}}" class="practice__list-heading"><text>{{item.heading}}</text><text>{{item.range}}</text></view>
@@ -138,12 +138,17 @@
             </button>
           </view>
           <view wx:elif="{{sheet === 'scan'}}" class="practice__omr">
-            <view wx:if="{{scanPhase === 'idle'}}" class="practice__omr-guide" bindtap="chooseScanImage">
+            <view wx:if="{{scanPhase === 'idle' && !scanPreview}}" class="practice__omr-guide" bindtap="chooseScanImage">
               <image class="practice__omr-art" src="{{uiBase}}/omr-guide.svg" mode="aspectFit" />
               <view class="practice__omr-cues">
                 <view class="practice__omr-cue"><image src="{{uiBase}}/omr-frame.svg" mode="aspectFit" /><text>四角入镜</text></view>
                 <view class="practice__omr-cue"><image src="{{uiBase}}/omr-flat.svg" mode="aspectFit" /><text>纸面平整</text></view>
                 <view class="practice__omr-cue"><image src="{{uiBase}}/omr-sun.svg" mode="aspectFit" /><text>光线均匀</text></view>
+              </view>
+              <view class="practice__omr-cost">
+                <text>每次识图消耗 {{scanCostText}} 卷豆</text>
+                <text wx:if="{{scanCreditSignedIn && scanBalanceText}}"> · 余额 {{scanBalanceText}}</text>
+                <text> · 失败不扣</text>
               </view>
             </view>
 
@@ -172,6 +177,11 @@
                   <text class="display-num practice__omr-metric-num">{{scanSummary.blank}}</text>
                   <text class="practice__omr-metric-label">留空</text>
                 </view>
+              </view>
+
+              <view wx:if="{{scanChargedText}}" class="practice__omr-charged">
+                <text>{{scanChargedText}}</text>
+                <text wx:if="{{scanCreditSignedIn && scanBalanceText}}"> · 剩余 {{scanBalanceText}} 卷豆</text>
               </view>
 
               <view wx:if="{{scanLowConfidenceText}}" class="practice__omr-suspect">

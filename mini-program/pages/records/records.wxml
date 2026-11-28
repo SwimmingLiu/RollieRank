@@ -5,22 +5,35 @@
   <view class="page-scroll__body">
   <view class="records {{tabSwiping ? 'records--swiping' : ''}}" style="{{tabSwipeOffset ? 'transform: translateX(' + tabSwipeOffset + 'px);' : ''}}">
     <view class="records__profile" bindtap="openProfile" hover-class="press" aria-role="button" aria-label="编辑个人资料">
-      <image class="records__avatar" src="{{avatar || asset.profile}}" mode="aspectFill" />
+      <image class="records__avatar" src="{{avatar || defaultAvatar}}" mode="aspectFill" />
       <view class="records__profile-main grow">
         <text class="records__name ellipsis">{{name}}</text>
-        <view
-          wx:if="{{creditUid}}"
-          class="records__uid"
-          catchtap="copyUid"
-          hover-class="press"
-          hover-stop-propagation="{{true}}"
-          aria-role="button"
-          aria-label="复制 UID {{creditUid}}"
-        >
-          <text class="num">UID {{creditUid}}</text>
-          <image class="records__uid-copy" src="{{uiBase}}/copy.svg" mode="aspectFit" />
+        <view class="records__profile-meta">
+          <view
+            wx:if="{{creditUid}}"
+            class="records__uid"
+            catchtap="copyUid"
+            hover-class="press"
+            hover-stop-propagation="{{true}}"
+            aria-role="button"
+            aria-label="复制 UID {{creditUid}}"
+          >
+            <text class="num">UID {{creditUid}}</text>
+            <image class="records__uid-copy" src="{{uiBase}}/copy.svg" mode="aspectFit" />
+          </view>
+          <view
+            wx:if="{{!hasWechatProfile}}"
+            class="records__sync-pill"
+            catchtap="openProfileSheet"
+            hover-class="press"
+            hover-stop-propagation="{{true}}"
+            aria-role="button"
+            aria-label="同步微信头像和昵称"
+          >
+            <text>同步头像昵称</text>
+            <image class="records__sync-arrow" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+          </view>
         </view>
-        <text wx:elif="{{!hasWechatProfile}}" class="records__profile-hint">点击同步微信头像和昵称</text>
       </view>
       <image class="records__art" src="/assets/answer-paper.svg" mode="aspectFit" />
     </view>
@@ -86,4 +99,6 @@
 
   <rr-tabbar active="records" />
   <rr-position-picker wx:if="{{positionOpen}}" bind:dismiss="closePosition" bind:selection="selectPosition" />
+  <rr-profile-sheet wx:if="{{profileSheetOpen}}" bind:dismiss="closeProfileSheet" bind:saved="onProfileSaved" />
+  <rr-toast id="rr-toast" bottom="{{104}}" />
 </view>

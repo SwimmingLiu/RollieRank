@@ -1,6 +1,7 @@
 {
   "usingComponents": {
-    "rr-nav": "/components/rr-nav/rr-nav"
+    "rr-nav": "/components/rr-nav/rr-nav",
+    "rr-toast": "/components/rr-toast/rr-toast"
   },
   "navigationStyle": "custom",
   "disableScroll": true

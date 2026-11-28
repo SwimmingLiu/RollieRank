@@ -373,7 +373,8 @@ if (rank.count === 0) {
   rank = await page.data();
 }
 check("榜单已取数", rank.count > 0, `count=${rank.count}`);
-const podiumPlace = await page.$$(".rank__card-top text");
+const podiumRoot = (await page.$("rr-rank-podium")) || page;
+const podiumPlace = await podiumRoot.$$(".rank__card-top text");
 const podiumPlaces = [];
 for (const node of podiumPlace.slice(0, 3)) podiumPlaces.push((await node.text()).trim());
 check("榜单前三按实际位置显示", podiumPlaces.every((value, index) => value === String(index + 1).padStart(2, "0")), podiumPlaces.join(","));
@@ -387,7 +388,7 @@ if (dims[1]) {
   check("题型榜可取", true);
 }
 await shot("09-rank");
-const podium = await page.$(".rank__podium-card");
+const podium = await ((await page.$("rr-rank-podium")) || page).$(".rank__podium-card");
 if (podium) {
   await podium.tap();
   const publicPage = await waitForPath("pages/report/report", 6000);

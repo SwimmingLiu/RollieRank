@@ -1,8 +1,10 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { OMR_IMAGE_LIMIT, decodeImage, toPlanes } from "./omr-image.mjs";
 import { detectSheet, recognizeSheet } from "./omr-recognize.mjs";
 
 const fault = (statusCode, message) => Object.assign(new Error(message), { statusCode });
+const OMR_TOOL = "answer-sheet";
+const OPERATION_ID = /^[\w:.-]{1,180}$/;
 
 export const OMR_MAX_QUESTIONS = 300;
 
@@ -33,7 +35,7 @@ export function summarize(result, expected) {
 }
 
 // 识别过程可能超过浏览器默认等待；服务端按图片摘要缓存结果，重试同一张图不会重复计算。
-export function createOmrService({ maxCache = 40 } = {}) {
+export function createOmrService({ maxCache = 40, billing = null } = {}) {
   const cache = new Map();
   const remember = (key, value) => {
     cache.delete(key);
@@ -64,6 +66,8 @@ export function createOmrService({ maxCache = 40 } = {}) {
   return async function handle({ pathname, method, input, send, request }) {
     if (!pathname.startsWith("/api/omr/")) return false;
     if (method === "POST" && pathname === "/api/omr/recognize") {
+      const shouldBill = Boolean(billing?.enabled);
+      const account = shouldBill ? await billing.requireAccount(request) : null;
       const base64 = input?.image;
       if (typeof base64 !== "string" || !base64)
         throw fault(400, "请先把答题卡照片转成 base64 再上传。");
@@ -73,9 +77,41 @@ export function createOmrService({ maxCache = 40 } = {}) {
         throw fault(400, "图片内容不是有效的 base64。");
       const bytes = Buffer.from(payload, "base64");
       if (bytes.length > OMR_IMAGE_LIMIT) throw fault(413, "图片不能超过 12 MB。");
-      const message = {};
-      const result = summarize(recognize(bytes, input), input?.expectedQuestions);
-      send(200, { ...message, ...result });
+      if (!shouldBill) {
+        const result = summarize(recognize(bytes, input), input?.expectedQuestions);
+        send(200, result);
+        return true;
+      }
+      const operationId = typeof input?.operationId === "string" && OPERATION_ID.test(input.operationId)
+        ? input.operationId
+        : randomUUID();
+      const quotedCost = input?.quotedCost !== undefined && input?.quotedCost !== null
+        ? input.quotedCost
+        : await billing.quote(OMR_TOOL);
+      const key = { accountId: account.id, tool: OMR_TOOL, operationId };
+      const reserved = await billing.reserve(key, { quotedCost, holdMs: 2 * 60 * 1000 });
+      let result;
+      try {
+        result = summarize(recognize(bytes, input), input?.expectedQuestions);
+      } catch (error) {
+        await billing.release(key).catch(() => {});
+        throw error;
+      }
+      if (!result.recognized) {
+        await billing.release(key).catch(() => {});
+        send(200, {
+          ...result,
+          billing: { charged: 0, cost: reserved.cost, state: "released", operationId },
+        });
+        return true;
+      }
+      const deliveryRef = `${operationId}:${String(result.imageDigest || "").slice(0, 16) || "ok"}`;
+      const settled = await billing.settle(key, deliveryRef);
+      await billing.recordToolUse(key).catch(() => {});
+      send(200, {
+        ...result,
+        billing: { charged: settled.cost, cost: settled.cost, state: settled.state, operationId },
+      });
       return true;
     }
     if (method === "POST" && pathname === "/api/omr/recognize-url") {

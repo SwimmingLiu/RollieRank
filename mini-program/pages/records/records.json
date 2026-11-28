@@ -2,7 +2,9 @@
   "usingComponents": {
     "rr-tabbar": "/components/rr-tabbar/rr-tabbar",
     "rr-nav": "/components/rr-nav/rr-nav",
-    "rr-position-picker": "/components/rr-position-picker/rr-position-picker"
+    "rr-position-picker": "/components/rr-position-picker/rr-position-picker",
+    "rr-profile-sheet": "/components/rr-profile-sheet/rr-profile-sheet",
+    "rr-toast": "/components/rr-toast/rr-toast"
   },
   "navigationStyle": "custom",
   "disableScroll": true

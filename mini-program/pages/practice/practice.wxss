@@ -12,18 +12,19 @@
 .practice__filter--scan image { width: 14px; height: 14px; opacity: .88; }
 .practice__filter--on { color: #a36d52; background: #f3e6d6; border-radius: 9px; }
 .practice__progress { height: 3px; background: #eae2d5; border-radius: 2px; overflow: hidden; }
-.practice__progress view { height: 100%; background: #ba945e; }
+.practice__progress view { height: 100%; background: #ba945e; transition: width .28s cubic-bezier(.22, 1, .36, 1); }
 .practice__scroller { flex: 1; min-height: 0; height: 0; }
 .practice__list { padding: 6px 16px 20px; }
 .practice__list-heading { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 44px; padding: 0 6px; color: #777379; font-size: 12px; }
 .practice__list-heading text:last-child { color: #9e9aa1; }
-.practice__row { position: relative; display: grid; grid-template-columns: 34px repeat(4, minmax(0, 1fr)) 46px; align-items: center; gap: 5px; min-height: 66px; border-bottom: 1px solid #ece3d4; }
+.practice__row { position: relative; display: grid; grid-template-columns: 34px repeat(4, minmax(0, 1fr)) 46px; align-items: center; gap: 5px; min-height: 66px; border-bottom: 1px solid #ece3d4; transition: background-color .22s ease; }
 .practice__row--current { background: #fff6f2; border-radius: 12px; }
 .practice__row--current:before { content: ""; position: absolute; left: -6px; height: 22px; width: 3px; border-radius: 3px; background: #f27076; }
 .practice__row--marked { background: #f8efde55; border-radius: 14px; }
-.practice__no { padding-left: 4px; color: #a1a1aa; font-size: 13px; white-space: nowrap; }
+.practice__no { padding-left: 4px; color: #a1a1aa; font-size: 13px; white-space: nowrap; transition: color .18s ease; }
 .practice__row--current .practice__no { color: #18181b; }
-.practice__choice { display: grid; place-items: center; width: 100% !important; height: 44px; border: 1px solid #e7dece; border-radius: 13px; box-shadow: 0 2px 0 #e3d8c4; background: #fff; color: #71717a; font-size: 15px; }
+.practice__choice { display: grid; place-items: center; width: 100% !important; height: 44px; border: 1px solid #e7dece; border-radius: 13px; box-shadow: 0 2px 0 #e3d8c4; background: #fff; color: #71717a; font-size: 15px; transition: background-color .14s ease, border-color .14s ease, color .14s ease, transform .12s cubic-bezier(.22, 1, .36, 1); }
+.practice__choice:active { transform: scale(.95); }
 .practice__choice--on { border-color: #292a24; background: #292a24; color: #fffaf0; box-shadow: 0 2px 0 #1e211b; }
 .practice__mark { display: grid; place-items: center; min-height: 44px; width: 100% !important; }
 .practice__mark image { width: 17px; height: 17px; opacity: .64; }
@@ -53,7 +54,7 @@
 .practice__sheet-answer { line-height: 1.1; font-weight: 650; }
 .practice__sheet-cell:not(.practice__sheet-cell--done) .practice__sheet-answer { color: #d4cec5; font-weight: 400; }
 .practice__single { padding: 18px 22px 18px; overflow-x: hidden; }
-.practice__single-card { display: flex; flex-direction: column; width: 100%; min-height: min(390px, calc(100vh - 230px)); padding: 20px 18px 12px; border: 1px solid #e7dcc9; border-radius: 23px; background: #fffdf8; box-shadow: 0 3px 0 #e9dfcf; transition: transform .22s cubic-bezier(.2,.8,.2,1), opacity .2s ease; will-change: transform, opacity; }
+.practice__single-card { display: flex; flex-direction: column; width: 100%; min-height: min(390px, calc(100vh - 230px)); padding: 20px 18px 12px; border: 1px solid #e7dcc9; border-radius: 23px; background: #fffdf8; box-shadow: 0 3px 0 #e9dfcf; transition: transform .28s cubic-bezier(.22, 1, .36, 1), opacity .22s ease; will-change: transform, opacity; }
 .practice__single-card--dragging { transition: none; }
 .practice__single-head { display: flex; align-items: center; justify-content: space-between; min-height: 44px; margin-bottom: 18px; }
 .practice__single-mark { width: auto !important; min-height: 36px; padding: 0 11px; margin: 0 0 0 auto !important; border-radius: 11px; color: #8c775b; font-size: 12px; font-weight: 550; }
@@ -77,6 +78,8 @@
 .practice__omr-cues { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; color: #7d694f; font-size: 11px; font-weight: 500; }
 .practice__omr-cue { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
 .practice__omr-cue image { width: 13px; height: 13px; flex: none; }
+.practice__omr-cost { padding: 4px 10px; border-radius: 999px; background: #f2e6cf; color: #7a5d36; font-size: 11px; font-weight: 550; line-height: 1.3; text-align: center; }
+.practice__omr-charged { padding: 6px 10px; border-radius: 10px; background: #f5efe2; color: #7a6549; font-size: 11px; font-weight: 500; text-align: center; }
 .practice__omr-preview { position: relative; display: flex; align-items: center; justify-content: center; height: 172px; border: 1px solid #e8dcc8; border-radius: 14px; background: #f7efe0; overflow: hidden; }
 .practice__omr-preview image { width: 100%; height: 100%; }
 .practice__omr-preview--loading image { opacity: .42; }

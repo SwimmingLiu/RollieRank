@@ -3,6 +3,13 @@ import { inflateSync } from "node:zlib";
 import { DISCUSSION_LIMITS, normalizeDiscussionLink } from "../src/features/discussions.js";
 import { createWechatModeration, labelName, matchKeywords, normalizeKeywords } from "./wechat-moderation.mjs";
 import { avatarUrlForProfile, defaultNickname, isDefaultNickname, wechatProfilesByGuest } from "./wechat-profile.mjs";
+import {
+  assertGuestNotOwnedByOther,
+  findReceiptForIdentity,
+  linkAccountGuest,
+  linkedGuestIds,
+  resolveRequestAccount,
+} from "./account-identity.mjs";
 import { createQiniuStorage } from "./qiniu-oss.mjs";
 
 const fail = (message, statusCode = 400) => { throw Object.assign(new Error(message), { statusCode }); };
@@ -135,10 +142,14 @@ function parseComment(input) {
   return { nickname, text, links: normalizedLinks, images: normalizedImages, audio };
 }
 
-function findReceipt(store, input) {
+function findReceipt(store, input, accountId = null) {
   if (!token(input.guestId) || !token(input.attemptId) || typeof input.paperId !== "string" || !input.paperId || input.paperId.length > 200 || input.paperId === "sample-preview")
     fail("请从已提交试卷的成绩报告进入讨论区。", 403);
-  const receipt = store.receipts?.[`${input.guestId}:${input.attemptId}`];
+  const receipt = findReceiptForIdentity(store, {
+    guestId: input.guestId,
+    attemptId: input.attemptId,
+    accountId,
+  })?.receipt;
   if (!receipt || receipt.isSample || receipt.id !== input.attemptId || receipt.paperId !== input.paperId)
     fail("找不到这份试卷的提交凭证，请返回真实成绩报告。", 403);
   return receipt;
@@ -180,10 +191,13 @@ function commentStatus(comment) {
   return ["approved", "pending", "flagged", "rejected"].includes(status) ? status : "approved";
 }
 
-function isVisibleToViewer(comment, viewerId) {
+function isVisibleToViewer(comment, viewerId, viewerGuests = null, viewerAccountId = null) {
   const status = commentStatus(comment);
   if (status === "approved") return true;
-  if (comment.guestId === viewerId && (status === "pending" || status === "flagged")) return true;
+  const isAuthor = comment.guestId === viewerId ||
+    Boolean(viewerGuests && viewerGuests.has(comment.guestId)) ||
+    Boolean(viewerAccountId && comment.accountId === viewerAccountId);
+  if (isAuthor && (status === "pending" || status === "flagged")) return true;
   return false;
 }
 
@@ -225,10 +239,11 @@ function projectDiscussionImages(images) {
   }));
 }
 
-function publicComment(comment, viewerId, visibleComments, profilesByGuest) {
-  const { guestId, clientId, bodyHash, likedBy, moderation, reports, ...publicFields } = comment;
+function publicComment(comment, viewerId, visibleComments, profilesByGuest, viewerGuests = null) {
+  const { guestId, accountId, clientId, bodyHash, likedBy, moderation, reports, ...publicFields } = comment;
   const likes = [...new Set(Array.isArray(likedBy) ? likedBy : [])];
   const status = commentStatus(comment);
+  const likedByMe = viewerGuests ? likes.some((id) => viewerGuests.has(id)) : likes.includes(viewerId);
   const projected = {
     ...publicFields,
     images: projectDiscussionImages(comment.images),
@@ -237,7 +252,7 @@ function publicComment(comment, viewerId, visibleComments, profilesByGuest) {
     rootId: rootOf(comment),
     replyTo: resolveReplyTo(comment, visibleComments, profilesByGuest),
     likeCount: likes.length,
-    likedByMe: likes.includes(viewerId),
+    likedByMe,
     replyCount: parentOf(comment) ? 0 : visibleComments.filter(item => parentOf(item) && rootOf(item) === comment.id).length,
   };
   if (status !== "approved") {
@@ -360,7 +375,7 @@ function collectOssKeys(comments) {
 }
 
 export function createDiscussionsService(
-  { readCatalog, mutateCatalog, moderation = createWechatModeration() },
+  { readCatalog, mutateCatalog, moderation = createWechatModeration(), billing },
   { oss } = {},
 ) {
   const imageStorage = oss ?? createQiniuStorage();
@@ -640,45 +655,62 @@ export function createDiscussionsService(
     const allowed = pathname.endsWith("/replies") ? ["GET"] : (pathname.endsWith("/like") || pathname.endsWith("/report")) ? ["POST"] : ["GET", "POST"];
     if (!allowed.includes(method)) { send(405, { error: "此评论操作不支持该请求方法。" }); return true; }
 
+    const authAccount = await resolveRequestAccount(billing, request);
+    const authAccountId = authAccount?.id ?? null;
+
     if (method === "GET") {
       const scope = Object.fromEntries(["paperId", "guestId", "attemptId"].map(key => [key, query.get(key)]));
       const store = await readCatalog();
-      findReceipt(store, scope);
-      const visible = paperComments(store, scope.paperId).filter((comment) => isVisibleToViewer(comment, scope.guestId));
+      if (authAccountId) assertGuestNotOwnedByOther(store, authAccountId, scope.guestId);
+      findReceipt(store, scope, authAccountId);
+      const viewerGuests = linkedGuestIds(store, { accountId: authAccountId, guestId: scope.guestId });
+      const visible = paperComments(store, scope.paperId).filter((comment) => isVisibleToViewer(comment, scope.guestId, viewerGuests, authAccountId));
       const profilesByGuest = wechatProfilesByGuest(store);
       if (pathname.endsWith("/replies")) {
         const root = targetComment(visible, query.get("rootId"));
         if (parentOf(root)) fail("请从主评论展开回复。");
         const replies = visible.filter(comment => parentOf(comment) && rootOf(comment) === root.id).reverse();
         const { page, nextCursor } = commentPage(replies, query.get("before"));
-        send(200, { paperId: scope.paperId, rootId: root.id, comments: page.map(comment => publicComment(comment, scope.guestId, visible, profilesByGuest)), total: replies.length, nextCursor });
+        send(200, { paperId: scope.paperId, rootId: root.id, comments: page.map(comment => publicComment(comment, scope.guestId, visible, profilesByGuest, viewerGuests)), total: replies.length, nextCursor });
       } else {
         const roots = visible.filter(comment => !parentOf(comment));
         const { page, nextCursor } = commentPage(roots, query.get("before"));
-        send(200, { paperId: scope.paperId, comments: page.map(comment => publicComment(comment, scope.guestId, visible, profilesByGuest)),
+        send(200, { paperId: scope.paperId, comments: page.map(comment => publicComment(comment, scope.guestId, visible, profilesByGuest, viewerGuests)),
           total: visible.length, rootTotal: roots.length, nextCursor });
       }
       return true;
     }
 
     const initial = await readCatalog();
-    findReceipt(initial, input);
-    if (pathname === "/api/discussions" && initial.features?.users?.[input.guestId]?.muted) {
-      const muteReason = initial.features.users[input.guestId].muteReason;
-      fail(muteReason ? `账号已被禁言：${muteReason}` : "您的账号暂不可发表评论，请联系管理员。", 403);
+    if (authAccountId) assertGuestNotOwnedByOther(initial, authAccountId, input.guestId);
+    findReceipt(initial, input, authAccountId);
+    if (pathname === "/api/discussions") {
+      const actorGuests = linkedGuestIds(initial, { accountId: authAccountId, guestId: input.guestId });
+      for (const gid of actorGuests) {
+        if (initial.features?.users?.[gid]?.muted) {
+          const muteReason = initial.features.users[gid].muteReason;
+          fail(muteReason ? `账号已被禁言：${muteReason}` : "您的账号暂不可发表评论，请联系管理员。", 403);
+        }
+      }
     }
     if (pathname.endsWith("/like")) {
       if (typeof input.liked !== "boolean") fail("请选择点赞或取消点赞。");
       // Set membership is idempotent under retries and the catalog transaction serializes simultaneous voters.
       const result = await mutateCatalog(store => {
-        findReceipt(store, input);
-        const visible = paperComments(store, input.paperId).filter((comment) => isVisibleToViewer(comment, input.guestId));
+        if (authAccountId) {
+          assertGuestNotOwnedByOther(store, authAccountId, input.guestId);
+          linkAccountGuest(store, authAccountId, input.guestId);
+        }
+        findReceipt(store, input, authAccountId);
+        const viewerGuests = linkedGuestIds(store, { accountId: authAccountId, guestId: input.guestId });
+        const visible = paperComments(store, input.paperId).filter((comment) => isVisibleToViewer(comment, input.guestId, viewerGuests, authAccountId));
         const profilesByGuest = wechatProfilesByGuest(store);
         const comment = targetComment(visible, input.commentId);
         const likes = new Set(Array.isArray(comment.likedBy) ? comment.likedBy : []);
-        if (input.liked) likes.add(input.guestId); else likes.delete(input.guestId);
+        for (const gid of viewerGuests) likes.delete(gid);
+        if (input.liked) likes.add(input.guestId);
         comment.likedBy = [...likes];
-        return { comment: publicComment(comment, input.guestId, visible, profilesByGuest), total: visible.length };
+        return { comment: publicComment(comment, input.guestId, visible, profilesByGuest, viewerGuests), total: visible.length };
       });
       send(200, result); return true;
     }
@@ -686,11 +718,16 @@ export function createDiscussionsService(
     if (pathname.endsWith("/report")) {
       const reason = cleanText(input.reason, "举报说明", 200, true);
       const result = await mutateCatalog((store) => {
-        findReceipt(store, input);
-        const visible = paperComments(store, input.paperId).filter((comment) => isVisibleToViewer(comment, input.guestId));
+        if (authAccountId) {
+          assertGuestNotOwnedByOther(store, authAccountId, input.guestId);
+          linkAccountGuest(store, authAccountId, input.guestId);
+        }
+        findReceipt(store, input, authAccountId);
+        const viewerGuests = linkedGuestIds(store, { accountId: authAccountId, guestId: input.guestId });
+        const visible = paperComments(store, input.paperId).filter((comment) => isVisibleToViewer(comment, input.guestId, viewerGuests, authAccountId));
         const comment = targetComment(visible, input.commentId);
         comment.reports ??= [];
-        const existing = comment.reports.find((item) => item.guestId === input.guestId);
+        const existing = comment.reports.find((item) => viewerGuests.has(item.guestId));
         if (!existing) {
           comment.reports.push({ guestId: input.guestId, reason, createdAt: Date.now() });
         }
@@ -712,14 +749,15 @@ export function createDiscussionsService(
       if (prior.paperId !== input.paperId || prior.bodyHash !== bodyHash && prior.bodyHash !== legacyHash) {
         fail("这条评论已提交，请刷新讨论后再发表新内容。", 409);
       }
-      const visible = paperComments(initial, input.paperId).filter((comment) => isVisibleToViewer(comment, input.guestId));
+      const viewerGuests = linkedGuestIds(initial, { accountId: authAccountId, guestId: input.guestId });
+      const visible = paperComments(initial, input.paperId).filter((comment) => isVisibleToViewer(comment, input.guestId, viewerGuests, authAccountId));
       const profilesByGuest = wechatProfilesByGuest(initial);
       send(200, {
-        comment: publicComment(prior, input.guestId, visible, profilesByGuest),
+        comment: publicComment(prior, input.guestId, visible, profilesByGuest, viewerGuests),
         replayed: true,
         total: visible.length,
         ...(parentOf(prior) && visible.some((item) => item.id === rootOf(prior))
-          ? { rootComment: publicComment(targetComment(visible, rootOf(prior)), input.guestId, visible, profilesByGuest) }
+          ? { rootComment: publicComment(targetComment(visible, rootOf(prior)), input.guestId, visible, profilesByGuest, viewerGuests) }
           : {}),
       });
       return true;
@@ -901,19 +939,24 @@ export function createDiscussionsService(
 
     let createdId = "";
     const result = await mutateCatalog(store => {
-      const receipt = findReceipt(store, input);
+      if (authAccountId) {
+        assertGuestNotOwnedByOther(store, authAccountId, input.guestId);
+        linkAccountGuest(store, authAccountId, input.guestId);
+      }
+      const receipt = findReceipt(store, input, authAccountId);
       const allPaper = paperComments(store, input.paperId);
+      const viewerGuests = linkedGuestIds(store, { accountId: authAccountId, guestId: input.guestId });
       const profilesByGuest = wechatProfilesByGuest(store);
       const existing = store.features?.discussions?.comments?.find(comment => comment.guestId === input.guestId && comment.clientId === input.clientId);
       if (existing) {
         if (existing.paperId !== input.paperId || existing.bodyHash !== bodyHash && existing.bodyHash !== legacyHash) fail("这条评论已提交，请刷新讨论后再发表新内容。", 409);
-        const visible = allPaper.filter((comment) => isVisibleToViewer(comment, input.guestId));
-        return { comment: publicComment(existing, input.guestId, visible, profilesByGuest), replayed: true, total: visible.length,
+        const visible = allPaper.filter((comment) => isVisibleToViewer(comment, input.guestId, viewerGuests, authAccountId));
+        return { comment: publicComment(existing, input.guestId, visible, profilesByGuest, viewerGuests), replayed: true, total: visible.length,
           ...(parentOf(existing) && visible.some((item) => item.id === rootOf(existing))
-            ? { rootComment: publicComment(targetComment(visible, rootOf(existing)), input.guestId, visible, profilesByGuest) }
+            ? { rootComment: publicComment(targetComment(visible, rootOf(existing)), input.guestId, visible, profilesByGuest, viewerGuests) }
             : {}) };
       }
-      const visibleBefore = allPaper.filter((comment) => isVisibleToViewer(comment, input.guestId));
+      const visibleBefore = allPaper.filter((comment) => isVisibleToViewer(comment, input.guestId, viewerGuests, authAccountId));
       const parent = parentId ? targetComment(visibleBefore, parentId) : null;
       const section = writableDiscussions(store);
       const id = randomUUID();
@@ -928,7 +971,7 @@ export function createDiscussionsService(
       const authorAvatarUrl = avatarUrlForProfile(authorProfile);
       const comment = {
         id, paperId: input.paperId, versionId: receipt.versionId,
-        versionLabel: receipt.versionLabel ?? "", guestId: input.guestId, clientId: input.clientId, bodyHash,
+        versionLabel: receipt.versionLabel ?? "", guestId: input.guestId, ...(authAccountId ? { accountId: authAccountId } : {}), clientId: input.clientId, bodyHash,
         parentId, rootId: parent ? rootOf(parent) : id, replyTo: parent ? { id: parent.id, name: resolveAuthor(parent, profilesByGuest).name } : null,
         author: {
           name: authorName,
@@ -939,9 +982,9 @@ export function createDiscussionsService(
         ...(moderationRecord ? { moderation: moderationRecord } : {}),
       };
       section.comments.unshift(comment);
-      const visibleAfter = paperComments(store, input.paperId).filter((item) => isVisibleToViewer(item, input.guestId));
-      return { comment: publicComment(comment, input.guestId, visibleAfter, profilesByGuest), replayed: false, total: visibleAfter.length,
-        ...(parent ? { rootComment: publicComment(targetComment(visibleAfter, rootOf(parent)), input.guestId, visibleAfter, profilesByGuest) } : {}) };
+      const visibleAfter = paperComments(store, input.paperId).filter((item) => isVisibleToViewer(item, input.guestId, viewerGuests, authAccountId));
+      return { comment: publicComment(comment, input.guestId, visibleAfter, profilesByGuest, viewerGuests), replayed: false, total: visibleAfter.length,
+        ...(parent ? { rootComment: publicComment(targetComment(visibleAfter, rootOf(parent)), input.guestId, visibleAfter, profilesByGuest, viewerGuests) } : {}) };
     });
 
     // 第 3 层：提交微信图片/语音异步安全检测（含图片内文字 OCR 检测）。

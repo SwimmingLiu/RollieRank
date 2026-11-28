@@ -2,11 +2,11 @@
 
 ## Sub-features
 
-微信换码、首次赠送、可核实的旧游客身份绑定、余额与流水、工具独立定价、并发占用、结算和释放、人工调整、渠道受控的邀请归因与奖励、微信道具直购和代币充值。
+微信换码、首次赠送、可核实的旧游客身份绑定、余额与流水、工具独立定价、并发占用、结算和释放、人工调整、可配置的分享注册送卷豆与专属小程序码、渠道受控的微信群邀请归因与奖励、微信道具直购和代币充值。
 
 ## How to get to it (user POV)
 
-小程序通过「个人中心 / 练习记录（`pages/records/records`）-> 我的卷豆（`pages/credits/credits`）」直接进入，服务层位于 `mini-program/services/tool-credits.js`，调用 `/api/tool-credits/capabilities`、`/api/tool-credits/login`、`/api/tool-credits/wallet`、`/api/tool-credits/quote`、`/api/tool-credits/logout`、`/api/tool-credits/invite/code` 与 `/api/tool-credits/invite/visit`。正式交卷（`mini-program/services/api.js`）在存在本机卷豆 token 时自动附带 `Authorization: Bearer <token>`。
+小程序通过「个人中心 / 练习记录（`pages/records/records`）-> 我的卷豆（`pages/credits/credits`）」直接进入，服务层位于 `mini-program/services/tool-credits.js`，调用 `/api/tool-credits/capabilities`、`/api/tool-credits/login`、`/api/tool-credits/wallet`、`/api/tool-credits/quote`、`/api/tool-credits/logout`、`/api/tool-credits/referral`、`/api/tool-credits/referral/qrcode`、`/api/tool-credits/invite/code` 与 `/api/tool-credits/invite/visit`。正式交卷与答题卡识别（`mini-program/services/api.js`）在存在本机卷豆 token 时自动附带 `Authorization: Bearer <token>`；全站转发链接与成绩海报专属码通过 `mini-program/utils/share.js` 自动携带推荐归因并在新用户首次注册时即时发放可配置的分享奖励卷豆（默认 1 颗）。
 
 运营后台通过侧边栏「卷豆」（`/admin/#credits`，实现位于 `admin/src/components/ToolCreditsView.tsx`）进入，使用 `/admin/api/tool-credits` 下的查询、规则和调整接口以及现有管理员会话。参数和状态写在[产品与前端对接方案](../../../../docs/solution-tool-credits.md#前端对接)。
 

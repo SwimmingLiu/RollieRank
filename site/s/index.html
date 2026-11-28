@@ -77,6 +77,43 @@
         margin: 4px 0 10px;
       }
       .shortlink__cta:hover { color: #fff; background: #443b38; }
+      .shortlink__weapp {
+        display: none;
+        margin: 2px 0 16px;
+      }
+      .shortlink__weapp pre {
+        margin: 0;
+        padding: 11px 12px;
+        background: #f4efe6;
+        border: 1px dashed var(--line, #d9cdb8);
+        border-radius: 12px;
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--ink, #302b29);
+        white-space: pre-wrap;
+        word-break: break-all;
+        text-align: left;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .shortlink__weapp .label {
+        display: block;
+        font-size: 12.5px;
+        color: var(--muted, #79767d);
+        margin: 0 0 6px;
+      }
+      .shortlink__copy {
+        display: block;
+        width: 100%;
+        margin: 10px 0 0;
+        padding: 10px 18px;
+        border: 1px solid var(--ink, #302b29);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--ink, #302b29);
+        font-size: 14.5px;
+        cursor: pointer;
+      }
+      .shortlink__copy:active { background: #f4efe6; }
       .shortlink__error {
         color: #b87569;
         font-size: 14px;
@@ -94,6 +131,11 @@
         <p id="subtitle">行测估分工具：录入答题卡自动出分，看板块得分率和同卷排名。</p>
         <div class="shortlink__code" id="codeBox" hidden></div>
         <p class="shortlink__hint" id="hint" hidden></p>
+        <div class="shortlink__weapp" id="weappBox">
+          <span class="label">在微信里最省事：复制下面这句，粘到聊天里，点一下就进。</span>
+          <pre id="weappText"></pre>
+          <button class="shortlink__copy" id="weappCopy" type="button">复制口令</button>
+        </div>
         <p class="shortlink__loading" id="loading">正在加载…</p>
         <p class="shortlink__error" id="error" hidden></p>
         <a class="shortlink__cta" id="cta" href="/" hidden>了解卷卷小榜</a>
@@ -115,6 +157,9 @@
           loading: document.getElementById("loading"),
           error: document.getElementById("error"),
           cta: document.getElementById("cta"),
+          weappBox: document.getElementById("weappBox"),
+          weappText: document.getElementById("weappText"),
+          weappCopy: document.getElementById("weappCopy"),
         };
 
         // 短码来自路径 /s/<code>；nginx 用 try_files 把任意 /s/* 都兜到这个页面。
@@ -146,6 +191,24 @@
             : "长按或截屏保存小程序码，在微信里扫一扫即可打开。";
           els.hint.hidden = false;
 
+          // 微信内提供 #小程序:// 口令：粘进聊天点一下就进，比长按识别少一步。
+          if (inWeChat && link.weappLink) {
+            els.weappText.textContent = link.weappLink;
+            els.weappBox.style.display = "block";
+            els.weappCopy.addEventListener("click", function () {
+              var text = link.weappLink;
+              var done = function () {
+                els.weappCopy.textContent = "已复制，粘到聊天里发出去";
+                setTimeout(function () { els.weappCopy.textContent = "复制口令"; }, 2400);
+              };
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text, done); });
+              } else {
+                fallbackCopy(text, done);
+              }
+            });
+          }
+
           if (!isMobile) {
             els.subtitle.textContent = "用手机微信扫下方小程序码，或直接打开网页版。";
             els.cta.href = "https://rollie-rank.swimmingliu.cn/ios-v3/app.html";
@@ -155,6 +218,25 @@
             els.cta.href = "/";
             els.cta.textContent = "看看卷卷小榜是什么";
             els.cta.hidden = false;
+          }
+        }
+
+        // 微信内置浏览器的剪贴板 API 不一定可用，退回选中 + execCommand。
+        function fallbackCopy(text, done) {
+          try {
+            var area = document.createElement("textarea");
+            area.value = text;
+            area.setAttribute("readonly", "");
+            area.style.position = "fixed";
+            area.style.opacity = "0";
+            document.body.appendChild(area);
+            area.select();
+            area.setSelectionRange(0, text.length);
+            document.execCommand("copy");
+            document.body.removeChild(area);
+            done();
+          } catch (e) {
+            els.weappText.textContent = text + "\n（长按上方文字手动复制）";
           }
         }
 
@@ -178,7 +260,7 @@
                 .then(function (res) { return res.json(); })
                 .then(function (qr) {
                   if (!qr || !qr.image) throw new Error((qr && qr.error) || "小程序码生成失败。");
-                  render({ title: link.title, image: qr.image, mime: qr.mime });
+                  render({ title: link.title, image: qr.image, mime: qr.mime, weappLink: link.weappLink });
                 });
             })
             .catch(function (error) {

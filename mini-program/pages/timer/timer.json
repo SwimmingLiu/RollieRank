@@ -1,5 +1,6 @@
 {
   "usingComponents": { "rr-timer-sheet": "/components/rr-timer-sheet/rr-timer-sheet" },
+  "navigationBarTitleText": "行测整卷与分模块计时 · 卷卷小榜",
   "navigationStyle": "custom",
   "disableScroll": true
 }
