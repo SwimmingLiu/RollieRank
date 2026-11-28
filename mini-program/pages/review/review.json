@@ -1,8 +1,10 @@
 {
   "usingComponents": {
     "rr-nav": "/components/rr-nav/rr-nav",
-    "rr-option-sheet": "/components/rr-option-sheet/rr-option-sheet"
+    "rr-option-sheet": "/components/rr-option-sheet/rr-option-sheet",
+    "rr-toast": "/components/rr-toast/rr-toast"
   },
+  "navigationBarTitleText": "行测逐题对照与错题复盘 · 卷卷小榜",
   "navigationStyle": "custom",
   "disableScroll": true
 }

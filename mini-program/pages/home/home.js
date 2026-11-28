@@ -1,5 +1,7 @@
 const api = require("../../services/api.js");
+const cloudSync = require("../../services/cloud-sync.js");
 const storage = require("../../utils/storage.js");
+const shareUtil = require("../../utils/share.js");
 const catalogUtil = require("../../utils/catalog.js");
 const tabSwipe = require("../../utils/tab-swipe.js");
 const { homeTimerView } = require("../../utils/timing.js");
@@ -28,6 +30,7 @@ Page({
   },
 
   onLoad(options) {
+    shareUtil.captureReferral(options);
     const inviteCode = typeof options?.inviteCode === "string" ? options.inviteCode.trim() : "";
     if (/^[a-zA-Z0-9_-]{16}$/.test(inviteCode)) {
       getApp().globalData.pendingInviteCode = inviteCode;
@@ -50,6 +53,9 @@ Page({
     this.timerTick = setInterval(() => this.refreshTimer(), 1000);
     // 从练习返回时刷新最近记录，不重新拉取目录缓存。
     this.refreshRecent();
+    cloudSync.syncAll().then(result => {
+      if (result && result.attemptCount) this.refreshRecent();
+    }).catch(() => {});
   },
 
   onHide() {
@@ -303,5 +309,22 @@ Page({
   closeTimer() {
     this.setData({ timerOpen: false });
     this.refreshTimer();
+  },
+
+  // 首页是小程序主入口，原来没有分享，右上角转发是灰的。分享卡片在微信内点开即直达。
+  onShareAppMessage() {
+    return {
+      title: "卷卷小榜 · 行测拍照扫答题卡/录答估分与同卷排名",
+      path: shareUtil.withReferralPath("/pages/home/home"),
+      imageUrl: ASSET.logo,
+    };
+  },
+
+  onShareTimeline() {
+    return {
+      title: "卷卷小榜 · 行测估分、扫答题卡算分与同卷排名",
+      query: shareUtil.withReferralQuery(""),
+      imageUrl: ASSET.logo,
+    };
   },
 });

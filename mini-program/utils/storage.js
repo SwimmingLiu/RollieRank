@@ -17,6 +17,9 @@ const KEYS = {
   creditUid: storageKey("rr:credit-uid"),
   creditRecharge: id => storageKey(`rr:credit-recharge:${id}`),
   inviteClaim: storageKey("rr:invite-claim"),
+  referralCode: storageKey("rr:referral-code"),
+  pendingReferral: storageKey("rr:pending-referral"),
+  referralMeta: storageKey("rr:referral-meta"),
 };
 
 function uuid() {
@@ -144,6 +147,13 @@ function upsertAttempt(attempt) {
   return record;
 }
 
+function replaceHistory(attempts) {
+  const list = (Array.isArray(attempts) ? attempts : []).map(recordOf);
+  list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  saveHistory(list);
+  return list;
+}
+
 function getAttempt(id) {
   return history().find(item => item.id === id) || null;
 }
@@ -249,6 +259,7 @@ function clearToolCreditSession() {
   wx.removeStorageSync(KEYS.creditToken);
   wx.removeStorageSync(KEYS.creditAccount);
   wx.removeStorageSync(KEYS.creditUid);
+  wx.removeStorageSync(KEYS.referralCode);
 }
 
 function toolCreditRecharge(id) {
@@ -276,12 +287,64 @@ function setInviteClaim(claim) {
   }
 }
 
+function referralCode() {
+  const code = wx.getStorageSync(KEYS.referralCode);
+  return typeof code === "string" && /^[a-zA-Z0-9]{5,16}$/.test(code) ? code : "";
+}
+
+function setReferralCode(code) {
+  if (typeof code === "string" && /^[a-zA-Z0-9]{5,16}$/.test(code)) {
+    wx.setStorageSync(KEYS.referralCode, code);
+  } else {
+    wx.removeStorageSync(KEYS.referralCode);
+  }
+}
+
+function pendingReferral() {
+  const code = wx.getStorageSync(KEYS.pendingReferral);
+  return typeof code === "string" && /^[a-zA-Z0-9]{5,16}$/.test(code) ? code : "";
+}
+
+function setPendingReferral(code) {
+  if (typeof code === "string" && /^[a-zA-Z0-9]{5,16}$/.test(code)) {
+    wx.setStorageSync(KEYS.pendingReferral, code);
+  } else {
+    wx.removeStorageSync(KEYS.pendingReferral);
+  }
+}
+
+function referralMeta() {
+  const value = wx.getStorageSync(KEYS.referralMeta);
+  if (!value || typeof value !== "object") return null;
+  const reward = Number(value.reward);
+  const monthlyLimit = Number(value.monthlyLimit);
+  return {
+    enabled: Boolean(value.enabled && Number.isFinite(reward) && reward > 0),
+    reward: Number.isFinite(reward) && reward > 0 ? Math.round(reward * 10) / 10 : 0,
+    monthlyLimit: Number.isInteger(monthlyLimit) && monthlyLimit >= 0 ? monthlyLimit : 0,
+  };
+}
+
+function setReferralMeta(meta) {
+  if (meta && typeof meta === "object") {
+    const rawLimit = Number(meta.monthlyLimit);
+    wx.setStorageSync(KEYS.referralMeta, {
+      enabled: Boolean(meta.enabled),
+      reward: Number(meta.reward) || 0,
+      monthlyLimit: Number.isInteger(rawLimit) && rawLimit >= 0 ? rawLimit : 0,
+    });
+  } else {
+    wx.removeStorageSync(KEYS.referralMeta);
+  }
+}
+
 module.exports = {
   uuid, guestId, defaultNickname, isDefaultNickname, name, hasCustomName, setName, avatarId, setAvatarId, avatarUrl, setAvatarUrl, hasWechatProfile,
-  history, saveHistory, upsertAttempt, getAttempt,
+  history, saveHistory, replaceHistory, recordOf, upsertAttempt, getAttempt,
   saveDraft, loadDraft, dropDraft, position, setPosition, pendingId, clearPendingId, KEYS,
   draftIndex, setDraftEntry, bestAttempt,
   toolCreditToken, setToolCreditToken, toolCreditAccountId, setToolCreditAccountId, toolCreditUid, setToolCreditUid, clearToolCreditSession,
   toolCreditRecharge, setToolCreditRecharge,
   inviteClaim, setInviteClaim,
+  referralCode, setReferralCode, pendingReferral, setPendingReferral, referralMeta, setReferralMeta,
 };

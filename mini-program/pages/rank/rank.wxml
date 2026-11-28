@@ -19,59 +19,75 @@
   </view>
 
   <view wx:else class="rank">
-    <view class="rank__identity">
-      <image wx:if="{{logo}}" src="{{logo}}" mode="aspectFit" />
-      <text class="rank__publisher">{{publisher}}</text><text class="grow">{{identity}}</text>
+    <!-- 无框纸本报头：机构与套卷信息直接落纸 -->
+    <view class="rank__masthead">
+      <image wx:if="{{logo}}" class="rank__masthead-logo" src="{{logo}}" mode="aspectFit" />
+      <text class="rank__publisher">{{publisher}}</text>
+      <text class="rank__masthead-dot">·</text>
+      <text class="rank__identity-text grow ellipsis">{{identity}}</text>
     </view>
+
+    <!-- 报刊细底线维度栏：克制赭石指示条 -->
     <scroll-view class="rank__dimensions" scroll-x enhanced show-scrollbar="{{false}}">
       <view class="rank__dimension-row">
-        <button wx:for="{{dimensions}}" wx:key="key" class="rank__dimension {{dimension === item.key ? 'rank__dimension--on' : ''}}" data-key="{{item.key}}" bindtap="setDimension">{{item.label}}</button>
+        <button wx:for="{{dimensions}}" wx:key="key" class="rank__dimension {{dimension === item.key ? 'rank__dimension--on' : ''}}" data-key="{{item.key}}" bindtap="setDimension">
+          <text>{{item.label}}</text>
+          <view wx:if="{{dimension === item.key}}" class="rank__dimension-bar"></view>
+        </button>
       </view>
     </scroll-view>
-    <view class="rank__scope">
-      <button wx:for="{{scopes}}" wx:key="key" class="rank__scope-tab {{scope === item.key ? 'rank__scope-tab--on' : ''}}" data-key="{{item.key}}" bindtap="setScope" aria-label="{{item.name}}" aria-pressed="{{scope === item.key}}">
-        <image src="{{uiBase}}/{{item.icon}}.svg" mode="aspectFit" />
-        <text>{{item.short}}</text>
+
+    <!-- 范围切换与当前岗位合一纸卡 -->
+    <view class="rank__scope-card">
+      <view class="rank__scope">
+        <button wx:for="{{scopes}}" wx:key="key" class="rank__scope-tab {{scope === item.key ? 'rank__scope-tab--on' : ''}}" data-key="{{item.key}}" bindtap="setScope" aria-label="{{item.name}}" aria-pressed="{{scope === item.key}}">
+          <rr-icon name="{{scope === item.key ? item.activeIcon : item.icon}}" size="{{15}}" />
+          <text>{{item.short}}</text>
+        </button>
+      </view>
+      <button class="rank__position {{scope === 'nationwide' ? 'rank__position--static' : ''}}" bindtap="changePosition" disabled="{{scope === 'nationwide'}}" hover-class="{{scope === 'nationwide' ? 'none' : 'press'}}">
+        <view wx:if="{{scope === 'nationwide'}}" class="rank__position-globe">
+          <rr-icon name="rank-globe-on" size="{{15}}" />
+        </view>
+        <view wx:else class="rank__position-bar"></view>
+        <view class="rank__position-title grow ellipsis">{{scopeLabel}}</view>
+        <view class="rank__count">
+          <rr-icon name="rank-users" size="{{13}}" />
+          <text class="num">{{count}}人</text>
+        </view>
+        <rr-icon wx:if="{{scope !== 'nationwide'}}" name="rank-chevron" size="{{13}}" />
       </button>
     </view>
-    <button class="rank__position" bindtap="changePosition" disabled="{{scope === 'nationwide'}}">
-      <view class="rank__position-icon"><image src="{{uiBase}}/{{scope === 'nationwide' ? 'globe' : 'map-pin'}}.svg" mode="aspectFit" /></view>
-      <view class="stack grow">
-        <text class="rank__position-title ellipsis">{{scopeLabel}}</text>
-      </view>
-      <view class="rank__count"><image src="{{uiBase}}/users.svg" mode="aspectFit" />{{count}}</view>
+
+    <!-- 未设置微信资料时的温和一步引导 -->
+    <button wx:if="{{!hasWechatProfile && (self || winners.length)}}" class="rank__profile-tip" bindtap="openProfileSheet" hover-class="press">
+      <image class="rank__profile-avatar" src="{{defaultAvatar}}" mode="aspectFill" />
+      <text class="grow ellipsis">同步微信头像与昵称，榜单实时展示</text>
+      <rr-icon name="rank-chevron" size="{{13}}" />
     </button>
 
-    <view wx:if="{{winners.length}}" class="rank__podium">
-      <button wx:for="{{winners}}" wx:key="publicId" class="rank__podium-card rank__podium-card--{{item.place}}" bindtap="openResult" data-id="{{item.publicId}}"
-        aria-label="榜单第 {{item.place}} 位，{{item.name}}，{{item.scoreText}} 分{{item.rank !== item.place ? '，并列第 ' + item.rank + ' 名' : ''}}">
-        <view class="rank__card-top">
-          <text>{{item.placeText}}</text><image wx:if="{{index === 0}}" src="{{uiBase}}/trophy.svg" mode="aspectFit" />
-        </view>
-        <view class="rank__podium-avatar">{{item.initials}}</view>
-        <text class="rank__podium-name">{{item.name}}{{item.isMe ? '（我）' : ''}}</text>
-        <text class="display-num rank__podium-score {{item.scoreText.length > 5 ? 'rank__podium-score--wide' : ''}}">{{item.scoreText}}</text>
-        <text class="rank__muted">分</text>
-        <view class="rank__percentile" aria-label="超越 {{item.surpassed}} 的考生"><image src="{{uiBase}}/trend.svg" mode="aspectFit" /><text>{{item.surpassed}}</text></view>
-      </button>
+    <!-- 领奖台 / 单人叠纸主角卡组件 -->
+    <rr-rank-podium wx:if="{{winners.length}}" winners="{{winners}}" bind:select="openResult" />
+
+    <!-- 第四名及以后列表组件 -->
+    <view wx:if="{{self || otherRows.length}}" class="rank__list">
+      <rr-rank-row wx:if="{{self}}" item="{{self}}" variant="self" bind:select="openResult" />
+      <view wx:if="{{otherRows.length}}" class="rank__list-card">
+        <rr-rank-row wx:for="{{otherRows}}" wx:key="publicId" item="{{item}}" variant="row" is-last="{{index === otherRows.length - 1}}" bind:select="openResult" />
+      </view>
     </view>
 
-    <view wx:if="{{self || otherRows.length}}" class="rank__list">
-      <button wx:if="{{self}}" class="rank__row rank__row--self" bindtap="openResult" data-id="{{self.publicId}}">
-        <text class="rank__row-rank">{{self.rank}}</text><text class="rank__row-name grow">我的同卷最佳</text><text class="display-num rank__row-score">{{self.scoreText}}</text>
-      </button>
-      <button wx:for="{{otherRows}}" wx:key="publicId" class="rank__row" bindtap="openResult" data-id="{{item.publicId}}"
-        aria-label="榜单第 {{item.place}} 位，{{item.name}}{{item.isMe ? '（我）' : ''}}，{{item.scoreText}} 分{{item.rank !== item.place ? '，并列第 ' + item.rank + ' 名' : ''}}">
-        <text class="rank__row-rank">{{item.placeText}}</text>
-        <view class="rank__list-avatar">{{item.initials}}</view>
-        <text class="rank__row-name grow">{{item.name}}{{item.isMe ? '（我）' : ''}}</text>
-        <text class="display-num rank__row-score">{{item.scoreText}}</text>
-      </button>
+    <button wx:if="{{canLoadMore}}" class="rank__more" hover-class="press" bindtap="loadMore">继续加载</button>
+
+    <view wx:if="{{!winners.length}}" class="rank__empty">
+      <view class="rank__empty-badge">
+        <rr-icon name="trophy-ochre" size="{{20}}" />
+      </view>
+      <text class="rank__empty-text">{{scope === 'nationwide' ? '这份卷还没有人参与' : '该岗位暂无考生参与'}}</text>
     </view>
-    <button wx:if="{{canLoadMore}}" class="rank__more" bindtap="loadMore">继续加载</button>
-    <view wx:if="{{!winners.length}}" class="empty">{{scope === 'nationwide' ? '这份卷还没有人参与' : '该岗位暂无考生参与'}}</view>
   </view>
   </view>
   </scroll-view>
   <rr-position-picker wx:if="{{positionMode}}" mode="{{positionMode}}" bind:dismiss="closePosition" bind:selection="selectPosition" />
+  <rr-profile-sheet wx:if="{{profileSheetOpen}}" bind:dismiss="closeProfileSheet" bind:saved="onProfileSaved" />
 </view>

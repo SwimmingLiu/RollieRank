@@ -208,7 +208,24 @@ export function createShortLinkService({
     channel: link.channel || "",
     clicks: link.clicks || 0,
     url: publicUrl(link.code),
+    // 小程序里「…→复制链接」得到的 #小程序:// 口令，微信内粘贴可点开直达。空表示还没录。
+    weappLink: link.weappLink || "",
   });
+
+  /**
+   * #小程序:// 口令格式校验。
+   * 形如 #小程序://卷卷小榜/pages/home/home/AbCdEf123，只能由微信生成，
+   * 我们只负责存和展示，所以这里只做浅校验：必须以 #小程序:// 开头且足够长。
+   */
+  function normalizeWeappLink(raw) {
+    const value = typeof raw === "string" ? raw.trim() : "";
+    if (!value) return "";
+    if (!/^#小程序:\/\/.+/.test(value)) {
+      throw failure(400, "口令必须以 #小程序:// 开头，请在小程序里点右上角「…→复制链接」获取。");
+    }
+    if (value.length > 300) throw failure(400, "口令过长，请重新复制。");
+    return value;
+  }
 
   return async function handle({ pathname, method, query, input, request, send }) {
     if (pathname !== PATH && !pathname.startsWith(`${PATH}/`)) return false;
@@ -254,6 +271,7 @@ export function createShortLinkService({
           page,
           title: typeof body.title === "string" ? body.title.trim().slice(0, 60) : "",
           channel: typeof body.channel === "string" ? body.channel.trim().slice(0, 40) : "",
+          weappLink: normalizeWeappLink(body.weappLink),
           createdAt: now(),
           clicks: 0,
         };
@@ -282,6 +300,31 @@ export function createShortLinkService({
         const link = code ? findLink(code) : null;
         if (!link) {
           send(404, { error: "短链不存在或已删除。" });
+          return true;
+        }
+        // 补录口令：POST /api/links/<code>/weapp  { weappLink }
+        // 微信的 #小程序:// 口令只能在小程序里复制，所以先建链、后补口令。
+        if (action === "weapp") {
+          if (method !== "POST") {
+            send(405, { error: "补录口令请用 POST。" });
+            return true;
+          }
+          if (!config.writeToken) {
+            send(503, { enabled: true, error: "短链管理未配置口令，写接口已关闭。" });
+            return true;
+          }
+          if (!tokenMatches(request?.headers?.["x-rollierank-token"] || "", config.writeToken)) {
+            send(401, { enabled: true, error: "缺少或错误的管理口令。" });
+            return true;
+          }
+          const body = input && typeof input === "object" && !Array.isArray(input) ? input : {};
+          const weappLink = normalizeWeappLink(body.weappLink);
+          await mutateCatalog((catalog) => {
+            const target = linksOf(catalog).find((item) => item.code === code);
+            if (target) target.weappLink = weappLink;
+            return catalog;
+          });
+          send(200, publicView({ ...link, weappLink }));
           return true;
         }
         if (action === "qrcode") {

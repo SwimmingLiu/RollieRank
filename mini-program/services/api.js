@@ -45,7 +45,15 @@ async function request(path, payload, timeout = 15000, extraHeader = {}) {
       }).catch(error => { testReady = undefined; throw error; });
     await testReady;
   }
-  const header = { ...(writing ? { "Content-Type": "application/json" } : {}), ...extraHeader };
+  const hasAuthHeader = Object.keys(extraHeader || {}).some(k => k.toLowerCase() === "authorization");
+  const isAdminPath = /^admin(?:\/|$)/i.test(String(path || ""));
+  const hasStorage = typeof wx !== "undefined" && typeof wx.getStorageSync === "function";
+  const creditToken = !hasAuthHeader && !isAdminPath && hasStorage ? storage.toolCreditToken() : "";
+  const header = {
+    ...(writing ? { "Content-Type": "application/json" } : {}),
+    ...(creditToken ? { Authorization: `Bearer ${creditToken}` } : {}),
+    ...extraHeader,
+  };
   const response = await send({ url: `${API_BASE}/api/${path}`, method: payload === undefined ? "GET" : "POST", header, data: payload, timeout });
   if (IS_TEST_ENVIRONMENT) {
     verifyTestResponse(response);
@@ -93,7 +101,9 @@ async function sync(attemptIds) {
     guestId: storage.guestId(),
     ...(attemptIds ? { attemptIds } : {}),
   });
-  return Array.isArray(result.attempts) ? result.attempts : [];
+  const list = Array.isArray(result.attempts) ? result.attempts : [];
+  Object.defineProperty(list, "scope", { value: result.scope || "guest", enumerable: false });
+  return list;
 }
 
 async function remove(attemptIds) {

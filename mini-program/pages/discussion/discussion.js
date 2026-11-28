@@ -1,7 +1,9 @@
 const api = require("../../services/api.js");
+const cloudSync = require("../../services/cloud-sync.js");
 const profile = require("../../services/profile.js");
 const storage = require("../../utils/storage.js");
-const { storageKey } = require("../../config.js");
+const catalogUtil = require("../../utils/catalog.js");
+const { ASSET, storageKey } = require("../../config.js");
 
 function avatarFor(seed) {
   const value = String(seed || "卷友");
@@ -71,14 +73,21 @@ Page({
     composerFocus: false,
     keyboardHeight: 0,
     hasWechatProfile: false,
+    profileSheetOpen: false,
     uiBase: "/assets/ui",
   },
 
   onLoad(query) {
-    this.paperId = query.paperId || "";
+    this.paperId = decodeURIComponent(query.paperId || "");
     this.attemptId = query.attemptId || "";
+    this.paperTitle = decodeURIComponent(query.title || "");
     this.draftKey = storageKey("rr:discussion:" + this.paperId);
     this.profileSignature = this.currentProfileSignature();
+    if (this.paperTitle) {
+      wx.setNavigationBarTitle?.({ title: `${this.paperTitle}讨论区 · 卷卷小榜` });
+    } else if (this.paperId) {
+      this.resolvePaperTitle();
+    }
     const saved = wx.getStorageSync(this.draftKey);
     const draft = typeof saved === "string" ? saved : saved?.draft || "";
     const replyDraft = saved?.replyDraft || "";
@@ -155,7 +164,20 @@ Page({
   },
 
   openProfile() {
-    wx.navigateTo({ url: "/pages/profile/profile" });
+    this.setData({ profileSheetOpen: true });
+  },
+
+  closeProfileSheet() {
+    this.setData({ profileSheetOpen: false });
+  },
+
+  onProfileSaved() {
+    this.profileSignature = this.currentProfileSignature();
+    this.setData({
+      profileSheetOpen: false,
+      hasWechatProfile: storage.hasWechatProfile(),
+    });
+    this.refreshAfterProfileChange();
   },
 
   retry() {
@@ -176,6 +198,7 @@ Page({
     if (this.data.loadingMore) return;
     this.setData({ loadingMore: true });
     try {
+      if (!more) await cloudSync.ensureSession();
       const cursor = more ? "&before=" + encodeURIComponent(this.data.nextCursor) : "";
       const result = await api.request("discussions?" + this.query() + cursor);
       this.attemptId ||= result.attemptId || "";
@@ -380,6 +403,45 @@ Page({
   },
 
   copyExternalLink(event) {
-    wx.setClipboardData({ data: event.currentTarget.dataset.link });
+    const link = event.currentTarget.dataset.link;
+    if (link) require("../../utils/clipboard.js").copyText(this, link, "已复制链接");
+  },
+
+  async resolvePaperTitle() {
+    try {
+      const versions = await api.catalog();
+      const match = versions.find(item => item.paperId === this.paperId || item.id === this.paperId);
+      if (!match) return;
+      this.paperTitle = catalogUtil.versionTitle(match);
+      wx.setNavigationBarTitle?.({ title: `${this.paperTitle}讨论区 · 卷卷小榜` });
+    } catch {
+      // 标题补全失败不影响讨论列表加载。
+    }
+  },
+
+  onShareAppMessage() {
+    const shareUtil = require("../../utils/share.js");
+    const label = this.paperTitle || "行测同卷";
+    const query = this.paperId
+      ? `?paperId=${encodeURIComponent(this.paperId)}${this.paperTitle ? `&title=${encodeURIComponent(this.paperTitle)}` : ""}`
+      : "";
+    return {
+      title: `${label}估分讨论与复盘 · 卷卷小榜`,
+      path: shareUtil.withReferralPath(this.paperId ? `/pages/discussion/discussion${query}` : "/pages/home/home"),
+      imageUrl: ASSET.logo,
+    };
+  },
+
+  onShareTimeline() {
+    const shareUtil = require("../../utils/share.js");
+    const label = this.paperTitle || "行测同卷";
+    const query = this.paperId
+      ? `paperId=${encodeURIComponent(this.paperId)}${this.paperTitle ? `&title=${encodeURIComponent(this.paperTitle)}` : ""}`
+      : "";
+    return {
+      title: `${label}讨论区 · 卷卷小榜`,
+      query: shareUtil.withReferralQuery(query),
+      imageUrl: ASSET.logo,
+    };
   },
 });

@@ -1,0 +1,71 @@
+.rank__row {
+  display: flex;
+  align-items: center;
+  width: 100% !important;
+  margin: 0 !important;
+  gap: 10px;
+  min-height: 60px;
+  padding: 9px 4px;
+  border-bottom: 1px solid #f2ebe0;
+  text-align: left;
+}
+.rank__row--last { border-bottom: 0; }
+
+.rank__row--me {
+  margin: 4px -6px !important;
+  width: calc(100% + 12px) !important;
+  padding: 9px 10px;
+  border-radius: 13px;
+  background: #fdf6e8;
+  border: 1px solid #ecdab6;
+}
+
+.rank__row--self {
+  padding: 10px 14px;
+  border: 1px solid #e7d4b1;
+  border-radius: 17px;
+  background: #fdf6e8;
+  box-shadow: 0 2px 0 #eadbc0;
+}
+
+.rank__row-rank { width: 24px; flex: none; font-size: 12px; font-weight: 700; color: #968772; text-align: center; }
+.rank__row--self .rank__row-rank, .rank__row--me .rank__row-rank { color: #966820; }
+
+.rank__list-avatar-ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 1.5px;
+  flex: none;
+  border-radius: 50%;
+  background: #fffdf8;
+  border: 1.5px solid #e7dece;
+}
+.rank__list-avatar-ring--me { border-color: #d9b876; }
+.rank__list-avatar { width: 100%; height: 100%; border-radius: 50%; background: #f7efe0; }
+
+.rank__row-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rank__row-name-line { display: flex; align-items: center; gap: 5px; min-width: 0; }
+.rank__row-name { max-width: 100%; min-width: 0; font-size: 14px; line-height: 1.3; font-weight: 600; color: #3c342a; }
+.rank__row-sub { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; line-height: 1.2; color: #927e62; }
+
+.rank__me-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ef7d82;
+  color: #fffdf9;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.rank__row-score-wrap { display: flex; align-items: baseline; gap: 2px; flex: none; }
+.rank__row-score { font-size: 21px; line-height: 1.1; font-weight: 700; letter-spacing: -0.5px; color: #2b2319; white-space: nowrap; }
+.rank__row-unit { font-size: 10px; font-weight: 600; color: #927e62; }

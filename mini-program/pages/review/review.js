@@ -1,8 +1,10 @@
 const api = require("../../services/api.js");
+const cloudSync = require("../../services/cloud-sync.js");
 const storage = require("../../utils/storage.js");
 const format = require("../../utils/format.js");
 const { subjectName } = require("../../utils/catalog.js");
 const { createPageSheetDrag } = require("../../utils/sheet-gesture.js");
+const clipboard = require("../../utils/clipboard.js");
 
 const FILTERS = [
   { key: "wrong", label: "错题" },
@@ -60,6 +62,7 @@ Page({
 
   async load() {
     try {
+      await cloudSync.ensureSession();
       const [attempt] = await api.sync([this.attemptId]);
       if (!attempt) throw new Error("这份成绩不在当前身份下。");
       this.attempt = attempt;
@@ -158,7 +161,8 @@ Page({
   },
 
   copyWrong() {
-    if (this.wrongNumbers.length) wx.setClipboardData({ data: this.wrongNumbers.join(",") });
+    if (!this.wrongNumbers.length) return;
+    clipboard.copyText(this, this.wrongNumbers.join(","), `已复制 ${this.wrongNumbers.length} 个错题号`);
   },
 
   openFeedback() {

@@ -1,5 +1,6 @@
 export const DAY_MS = 24 * 60 * 60 * 1000;
 export const INVITE_CHANNEL = "wechat-group";
+export const REFERRAL_CHANNEL = "share";
 export const TOOL_ID = /^[a-z][a-z0-9-]{0,39}$/;
 export const MAX_HOLD_MS = 30 * 60 * 1000;
 export const CREDIT_SCALE = 10;
@@ -8,6 +9,7 @@ export const defaultCreditRules = {
   welcome: { newAccount: 3, existingMember: 3 },
   costs: { "answer-sheet": 0.1 },
   invite: { enabled: false, groups: false, reward: 2, monthlyLimit: 10, registerDays: 7, useDays: 7 },
+  referral: { enabled: true, reward: 1, monthlyLimit: 0 },
   purchase: {
     directPurchase: false, tokenRecharge: false,
     packages: [
@@ -68,16 +70,17 @@ export function updateCreditRules(previous, input, { groupApproved, directPurcha
     }
     return fromCreditUnits(units, CREDIT_SCALE);
   };
-  const merge = (key) => ({ ...previous[key], ...input[key] });
+  const merge = (key) => ({ ...defaultCreditRules[key], ...previous[key], ...input[key] });
   const welcome = merge("welcome");
   const invite = merge("invite");
+  const referral = merge("referral");
   const purchase = merge("purchase");
   const ads = merge("ads");
-  const costs = merge("costs");
+  const costs = { ...previous.costs, ...input.costs };
   if (Object.keys(costs).length > 30 || Object.keys(costs).some((key) => !TOOL_ID.test(key))) {
     throw creditError(400, "工具标识有误。");
   }
-  if ([invite.enabled, invite.groups, purchase.directPurchase, purchase.tokenRecharge, ads.enabled].some(value => typeof value !== "boolean")) {
+  if ([invite.enabled, invite.groups, referral.enabled, purchase.directPurchase, purchase.tokenRecharge, ads.enabled].some(value => typeof value !== "boolean")) {
     throw creditError(400, "开关设置有误。");
   }
   if (!groupApproved && (input.invite?.enabled === true || input.invite?.groups === true)) {
@@ -110,6 +113,11 @@ export function updateCreditRules(previous, input, { groupApproved, directPurcha
       monthlyLimit: integer(invite.monthlyLimit, 1, 100, "每月奖励人数"),
       registerDays: integer(invite.registerDays, 1, 30, "邀请认领天数"),
       useDays: integer(invite.useDays, 1, 30, "首次有效使用天数"),
+    },
+    referral: {
+      enabled: referral.enabled,
+      reward: credit(referral.reward, 0, 100, "分享注册奖励"),
+      monthlyLimit: integer(referral.monthlyLimit, 0, 10000, "分享奖励每月上限"),
     },
     purchase: {
       directPurchase: purchase.directPurchase, tokenRecharge: purchase.tokenRecharge,

@@ -160,9 +160,19 @@ async function capabilities() {
   const data = await request("tool-credits/capabilities");
   const packages = Array.isArray(data?.purchase?.packages) ? data.purchase.packages.filter(item =>
     Number.isInteger(item?.credits) && item.credits > 0 && item.cents === item.credits * 100) : [];
+  const rawRef = data?.referral || {};
+  const refReward = Number(rawRef.reward);
+  const rawLimit = Number(rawRef.monthlyLimit);
+  const referral = {
+    enabled: Boolean(rawRef.enabled && Number.isFinite(refReward) && refReward > 0),
+    reward: Number.isFinite(refReward) && refReward > 0 ? Math.round(refReward * 10) / 10 : 0,
+    monthlyLimit: Number.isInteger(rawLimit) && rawLimit >= 0 ? rawLimit : 0,
+  };
+  storage.setReferralMeta(referral);
   return {
     login: Boolean(data?.login),
     invite: Boolean(data?.invite),
+    referral,
     purchase: {
       directPurchase: Boolean(data?.purchase?.directPurchase),
       tokenRecharge: Boolean(data?.purchase?.tokenRecharge && packages.length),
@@ -277,7 +287,7 @@ function payRecharge(payData, order) {
   });
 }
 
-async function login({ bindLegacy = false, profileToken, attemptId, inviteClaim } = {}) {
+async function login({ bindLegacy = false, profileToken, attemptId, inviteClaim, referralCode } = {}) {
   const code = await wxLoginCode();
   const payload = {
     code,
@@ -293,12 +303,15 @@ async function login({ bindLegacy = false, profileToken, attemptId, inviteClaim 
   }
   const claim = inviteClaim !== undefined ? inviteClaim : storage.inviteClaim();
   if (claim) payload.inviteClaim = claim;
+  const ref = referralCode !== undefined ? referralCode : storage.pendingReferral();
+  if (ref) payload.referralCode = ref;
 
   const result = await request("tool-credits/login", payload);
   storage.setToolCreditToken(result.token);
   storage.setToolCreditAccountId(result.accountId);
   if (result.uid) storage.setToolCreditUid(result.uid);
   if (claim && result.created) storage.setInviteClaim("");
+  if (ref) storage.setPendingReferral("");
   return result;
 }
 
@@ -346,6 +359,48 @@ async function makeInvite() {
   return authedRequest("tool-credits/invite/code", {}, 15000, true);
 }
 
+async function referralInfo() {
+  const data = await authedRequest("tool-credits/referral", undefined, 15000, true);
+  if (data?.code) storage.setReferralCode(data.code);
+  const reward = Number(data?.reward);
+  const rawLimit = Number(data?.monthlyLimit);
+  const monthlyLimit = Number.isInteger(rawLimit) && rawLimit >= 0 ? rawLimit : 0;
+  storage.setReferralMeta({
+    enabled: Boolean(data?.enabled && Number.isFinite(reward) && reward > 0),
+    reward: Number.isFinite(reward) && reward > 0 ? Math.round(reward * 10) / 10 : 0,
+    monthlyLimit,
+  });
+  return {
+    enabled: Boolean(data?.enabled && Number.isFinite(reward) && reward > 0),
+    reward: Number.isFinite(reward) && reward > 0 ? Math.round(reward * 10) / 10 : 0,
+    monthlyLimit,
+    code: String(data?.code || ""),
+    rewardedCount: Number(data?.rewardedCount) || 0,
+    rewardedTotal: Number(data?.rewardedTotal) || 0,
+    monthCount: Number(data?.monthCount) || 0,
+  };
+}
+
+async function referralQrCode() {
+  let envVersion = IS_TEST_ENVIRONMENT ? "trial" : "release";
+  try {
+    const detected = wx.getAccountInfoSync?.()?.miniProgram?.envVersion;
+    if (detected === "release" || detected === "trial" || detected === "develop") {
+      envVersion = detected;
+    }
+  } catch {
+    // Keep default envVersion when getAccountInfoSync is unavailable.
+  }
+  const data = await authedRequest(
+    `tool-credits/referral/qrcode?env=${encodeURIComponent(envVersion)}`,
+    undefined,
+    15000,
+    true,
+  );
+  if (data?.code) storage.setReferralCode(data.code);
+  return data;
+}
+
 async function visitInvite({ code, scene, proof }) {
   const data = await request("tool-credits/invite/visit", {
     code,
@@ -367,6 +422,8 @@ module.exports = {
   logout,
   makeInvite,
   visitInvite,
+  referralInfo,
+  referralQrCode,
   rechargeDevice,
   createRecharge,
   paidRecharge,

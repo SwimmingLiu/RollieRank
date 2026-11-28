@@ -1,4 +1,5 @@
 const api = require("../../services/api.js");
+const cloudSync = require("../../services/cloud-sync.js");
 const storage = require("../../utils/storage.js");
 const profile = require("../../services/profile.js");
 const credits = require("../../services/tool-credits.js");
@@ -18,7 +19,9 @@ Page({
   data: {
     name: "卷友",
     avatar: "",
+    defaultAvatar: "/assets/avatars/rank-1.svg",
     hasWechatProfile: false,
+    profileSheetOpen: false,
     position: null,
     records: [],
     drafts: [],
@@ -48,13 +51,8 @@ Page({
     const cachedUid = credits.uid();
     if (cachedUid && cachedUid !== this.data.creditUid) this.setData({ creditUid: cachedUid });
     this.refresh();
-    this.refreshProfile();
-    this.refreshCredits();
     this.refreshFeedbackBadge();
-    if (!this.synced) {
-      this.synced = true;
-      this.sync();
-    }
+    this.restoreCloud(!this.synced);
   },
 
   onHide() {
@@ -67,7 +65,23 @@ Page({
 
   onRefresherRefresh() {
     this.setData({ refreshing: true });
-    Promise.all([this.sync(true), this.refreshCredits()]).finally(() => this.setData({ refreshing: false }));
+    Promise.all([this.sync(true), this.refreshCredits({ skipProfile: true })]).finally(() => this.setData({ refreshing: false }));
+  },
+
+  async restoreCloud(forceSync) {
+    await cloudSync.ensureSession();
+    await Promise.all([
+      forceSync ? this.sync(false) : Promise.resolve(),
+      this.refreshProfile(),
+      cloudSync.syncPosition().then(result => {
+        if (!result || !result.ok) return;
+        const nextPos = result.position ? { id: result.position.id, label: result.position.label || result.position.title } : null;
+        if ((nextPos?.id || "") !== (this.data.position?.id || "")) {
+          this.setData({ position: nextPos });
+        }
+      }).catch(() => {}),
+      this.refreshCredits({ skipProfile: true }),
+    ]);
   },
 
   // 先展示本机记录，再向服务端同步订正后的成绩；离线也不丢历史。
@@ -109,6 +123,7 @@ Page({
       loading: false,
       name: storage.name(),
       avatar: profile.avatarUrl(),
+      defaultAvatar: profile.defaultAvatar(),
       hasWechatProfile: storage.hasWechatProfile(),
       position: position ? { id: position.id, label: position.label || position.title } : null,
       records,
@@ -121,9 +136,15 @@ Page({
     if (this.data.syncing) return;
     this.setData({ syncing: true });
     try {
-      const attempts = await api.sync();
-      for (const attempt of attempts) storage.upsertAttempt(attempt);
-      if (attempts.length) this.refresh();
+      const signedIn = await cloudSync.ensureSession();
+      const [attempts, posResult] = await Promise.all([
+        api.sync(),
+        notify ? cloudSync.syncPosition() : Promise.resolve(null),
+      ]);
+      if (signedIn && attempts.scope === "account") storage.replaceHistory(attempts);
+      else for (const attempt of attempts) storage.upsertAttempt(attempt);
+      this.synced = true;
+      this.refresh();
       if (notify) wx.showToast({ title: attempts.length ? "已同步最新成绩" : "已是最新", icon: "none" });
     } catch (error) {
       if (notify) wx.showToast({ title: error.message, icon: "none" });
@@ -146,21 +167,12 @@ Page({
     }
   },
 
-  async refreshCredits() {
+  async refreshCredits({ skipProfile = false } = {}) {
     try {
       const cap = await credits.capabilities().catch(() => ({ login: false }));
       const loginOpen = Boolean(cap?.login);
-      if (!credits.hasSession() && loginOpen && !this.autoLoginTried) {
-        // 微信静默换码，用户进入个人中心即可直接看到当前卷豆余额。
-        this.autoLoginTried = true;
-        const candidate = credits.legacyBindCandidate();
-        try {
-          await credits.login({ bindLegacy: candidate.eligible });
-        } catch (error) {
-          if (candidate.eligible && (error?.statusCode === 400 || error?.statusCode === 409)) {
-            await credits.login({ bindLegacy: false }).catch(() => {});
-          }
-        }
+      if (!credits.hasSession() && loginOpen) {
+        await cloudSync.ensureSession();
       }
       if (!credits.hasSession()) {
         this.setData({
@@ -180,6 +192,7 @@ Page({
         creditBalance: wallet.balance,
         creditHeld: wallet.held,
       });
+      if (!skipProfile) this.refreshProfile();
     } catch {
       this.setData({ creditSignedIn: false });
     }
@@ -188,12 +201,7 @@ Page({
   copyUid() {
     if (!this.data.creditUid) return;
     const text = String(this.data.creditUid);
-    wx.setClipboardData({
-      data: text,
-      success() {
-        wx.showToast({ title: `已复制 UID ${text}`, icon: "success" });
-      },
-    });
+    require("../../utils/clipboard.js").copyText(this, text, `已复制 UID ${text}`);
   },
 
   applyFilter() {
@@ -322,6 +330,25 @@ Page({
   openProfile() {
     if (this.tabSwipeMoved) return;
     wx.navigateTo({ url: "/pages/profile/profile" });
+  },
+
+  openProfileSheet() {
+    if (this.tabSwipeMoved) return;
+    this.setData({ profileSheetOpen: true });
+  },
+
+  closeProfileSheet() {
+    this.setData({ profileSheetOpen: false });
+  },
+
+  onProfileSaved() {
+    this.setData({
+      profileSheetOpen: false,
+      name: storage.name(),
+      avatar: profile.avatarUrl(),
+      defaultAvatar: profile.defaultAvatar(),
+      hasWechatProfile: storage.hasWechatProfile(),
+    });
   },
 
   openCredits() {

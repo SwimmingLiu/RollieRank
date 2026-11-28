@@ -1,5 +1,12 @@
 import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { CHOICES, gradeVersion } from "../src/model.js";
+import {
+  assertGuestNotOwnedByOther,
+  findReceiptForIdentity,
+  linkAccountGuest,
+  linkedGuestIds,
+  resolveRequestAccount,
+} from "./account-identity.mjs";
 
 const fault = (statusCode, message) => Object.assign(new Error(message), { statusCode });
 const id = (value, label) => {
@@ -23,10 +30,11 @@ const versionFor = (store, versionId) => {
   if (!version) throw fault(404, "找不到反馈对应的套卷版本。");
   return version;
 };
-const receiptFor = (store, guestId, attemptId) => {
+const receiptFor = (store, guestId, attemptId, accountId = null) => {
   id(guestId, "本机身份凭证");
   id(attemptId, "答卷凭证");
-  const receipt = store.receipts[`${guestId}:${attemptId}`];
+  const found = findReceiptForIdentity(store, { guestId, attemptId, accountId });
+  const receipt = found?.receipt;
   if (!receipt || receipt.isSample) throw fault(404, "找不到这份已提交答卷，请先同步练习记录。");
   return receipt;
 };
@@ -50,7 +58,7 @@ const isStale = (store, feedback, item) => {
       revision.changes.some((change) => change.question === item.question));
 };
 const viewFeedback = (store, feedback) => {
-  const { guestId, ...publicFields } = feedback;
+  const { guestId, accountId, ...publicFields } = feedback;
   return {
     ...publicFields,
     status: feedbackStatus(feedback.items),
@@ -88,7 +96,7 @@ const questionNumbers = (value) => {
   return [...value].sort((a, b) => a - b);
 };
 
-export function createCorrectionsService({ readCatalog, mutateCatalog }) {
+export function createCorrectionsService({ readCatalog, mutateCatalog, billing }) {
   // POST 查询也要等订正落盘，避免把随后回滚的临时成绩当成正式结果返回。
   let pendingChanges = Promise.resolve();
   const transact = (operation) => {
@@ -96,7 +104,7 @@ export function createCorrectionsService({ readCatalog, mutateCatalog }) {
     pendingChanges = task.catch(() => {});
     return task;
   };
-  const submit = async (input) => {
+  const submit = async (input, accountId = null) => {
     const guestId = id(input.guestId, "本机身份凭证");
     const attemptId = id(input.attemptId, "答卷凭证");
     const feedbackId = id(input.feedbackId, "反馈编号");
@@ -118,7 +126,11 @@ export function createCorrectionsService({ readCatalog, mutateCatalog }) {
           throw fault(409, "反馈编号已使用，请创建新的反馈。");
         return { feedback: viewFeedback(store, prior), replayed: true };
       }
-      const receipt = receiptFor(store, guestId, attemptId);
+      if (accountId) {
+        assertGuestNotOwnedByOther(store, accountId, guestId);
+        linkAccountGuest(store, accountId, guestId);
+      }
+      const receipt = receiptFor(store, guestId, attemptId, accountId);
       const version = versionFor(store, receipt.versionId);
       if (baseRevision !== revisionOf(version)) throw fault(409, "参考答案已修订，请同步报告后重新反馈。");
       const items = changes.map((change) => {
@@ -128,7 +140,7 @@ export function createCorrectionsService({ readCatalog, mutateCatalog }) {
           throw fault(400, `第 ${change.question} 题的建议答案与当前参考答案相同。`);
         return { ...change, originalAnswer: question.correctAnswer, status: "pending" };
       });
-      const feedback = { id: feedbackId, guestId, attemptId, versionId: version.id,
+      const feedback = { id: feedbackId, guestId, ...(accountId ? { accountId } : {}), attemptId, versionId: version.id,
         paperTitle: version.title, versionLabel: version.versionLabel,
         baseRevision, createdAt: Date.now(), items };
       data.feedbacks.unshift(feedback);
@@ -136,11 +148,17 @@ export function createCorrectionsService({ readCatalog, mutateCatalog }) {
     });
   };
 
-  const list = (input) => {
+  const list = (input, accountId = null) => {
     const guestId = id(input.guestId, "本机身份凭证");
     const store = readCatalog();
+    if (accountId) assertGuestNotOwnedByOther(store, accountId, guestId);
     const data = dataOf(store);
-    const ownedReceipts = new Map(Object.entries(store.receipts).filter(([key]) => key.startsWith(`${guestId}:`)));
+    const guests = linkedGuestIds(store, { accountId, guestId });
+    const ownedReceipts = new Map(Object.entries(store.receipts).filter(([key, receipt]) => {
+      const sep = key.indexOf(":");
+      const owner = sep > 0 ? key.slice(0, sep) : "";
+      return guests.has(owner) || Boolean(accountId && receipt?.accountId === accountId);
+    }));
     const notifications = data.revisions.flatMap((revision) => revision.attemptChanges
       .filter((change) => ownedReceipts.has(change.receiptKey))
       .map(({ receiptKey, ...change }) => ({
@@ -151,17 +169,22 @@ export function createCorrectionsService({ readCatalog, mutateCatalog }) {
         reason: revision.reason, createdAt: revision.createdAt, changes: revision.changes,
       })));
     return {
-      feedbacks: data.feedbacks.filter((feedback) => feedback.guestId === guestId).map((feedback) => viewFeedback(store, feedback)),
+      feedbacks: data.feedbacks
+        .filter((feedback) => guests.has(feedback.guestId) || Boolean(accountId && feedback.accountId === accountId))
+        .map((feedback) => viewFeedback(store, feedback)),
       notifications,
     };
   };
 
-  const preview = (input) => {
+  const preview = (input, accountId = null) => {
     const guestId = id(input.guestId, "本机身份凭证");
     const store = readCatalog();
-    const feedback = dataOf(store).feedbacks.find((item) => item.id === input.feedbackId && item.guestId === guestId);
+    if (accountId) assertGuestNotOwnedByOther(store, accountId, guestId);
+    const guests = linkedGuestIds(store, { accountId, guestId });
+    const feedback = dataOf(store).feedbacks.find((item) => item.id === input.feedbackId &&
+      (guests.has(item.guestId) || Boolean(accountId && item.accountId === accountId)));
     if (!feedback) throw fault(404, "找不到这份反馈。");
-    const receipt = receiptFor(store, guestId, input.attemptId ?? feedback.attemptId);
+    const receipt = receiptFor(store, guestId, input.attemptId ?? feedback.attemptId, accountId);
     if (receipt.versionId !== feedback.versionId) throw fault(400, "只能试算同一套卷版本的答卷。");
     const version = versionFor(store, feedback.versionId);
     const pending = feedback.items.filter((item) => item.status === "pending");
@@ -261,7 +284,7 @@ export function createCorrectionsService({ readCatalog, mutateCatalog }) {
     });
   };
 
-  return async function handle({ pathname, method, input, send }) {
+  return async function handle({ request, pathname, method, input, send }) {
     if (!pathname.startsWith("/api/corrections/")) return false;
     if (pathname !== "/api/corrections/submit" && pathname !== "/api/corrections/review") await pendingChanges;
     let result;
@@ -271,7 +294,10 @@ export function createCorrectionsService({ readCatalog, mutateCatalog }) {
         "/api/corrections/preview": preview, "/api/corrections/admin": admin,
         "/api/corrections/review": review }[pathname];
       if (!handler) return false;
-      result = await handler(input);
+      const authAccount = (pathname === "/api/corrections/admin" || pathname === "/api/corrections/review")
+        ? null
+        : await resolveRequestAccount(billing, request);
+      result = await handler(input, authAccount?.id ?? null);
     } else return false;
     send(200, result);
     return true;

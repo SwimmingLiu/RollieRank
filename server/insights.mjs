@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { subjectAttempt, subjectId, subjectName } from "../src/subjects.js";
-import { defaultNickname, isDefaultNickname } from "./wechat-profile.mjs";
+import { avatarUrlForProfile, defaultNickname, isDefaultNickname, wechatProfilesByGuest } from "./wechat-profile.mjs";
+import { accountIdForGuest, findReceiptForIdentity } from "./account-identity.mjs";
 
 export const SCORE_BANDS = [
   { id: "lt60", label: "60 以下", from: 0, to: .6 },
@@ -18,30 +19,82 @@ const inBand = (rate, band) => band === "all" || SCORE_BANDS.some((item) => item
 // Empty cohorts have no observed distribution; null prevents a misleading zero-percent measurement.
 const ratio = (count, total) => total ? count / total : null;
 
-/** Keep one complete published attempt per identity; subject ranking may choose a different complete attempt. */
+/** Keep one complete published attempt per identity (or linked WeChat account); subject ranking may choose a different complete attempt. */
 export function publicParticipants({ store, members, version, positionId = null, dimension = "total" }) {
   const participants = [];
+  const profilesByGuest = wechatProfilesByGuest(store);
+  const profilesByAccount = store?.features?.wechatProfilesByAccount ?? {};
+  const accountSelections = store?.features?.positions?.accountSelections ?? {};
+  const accountOptOut = store?.features?.positions?.accountOptOut ?? {};
+  const grouped = new Map();
   for (const [identity, member] of Object.entries(members)) {
-    // 管理接口的明确撤回优先于旧目录中可能残留的回执 ID。
-    if (member.participationOptOut === true) continue;
-    if (positionId && member.positionId !== positionId) continue;
+    const accountId = member?.accountId || accountIdForGuest(store, identity);
+    const key = accountId ? `account:${accountId}` : identity;
+    if (!grouped.has(key)) grouped.set(key, { accountId: accountId || null, entries: [] });
+    grouped.get(key).entries.push([identity, member]);
+  }
+  for (const { accountId, entries } of grouped.values()) {
+    entries.sort((a, b) => (b[1]?.updatedAt || 0) - (a[1]?.updatedAt || 0));
+    // 管理接口与跨设备撤回优先于旧目录中可能残留的回执 ID。
+    if (accountId && accountOptOut[accountId]?.optOut === true) continue;
+    if (entries.every(([, member]) => member.participationOptOut === true)) continue;
+    const latestEntry = entries[0];
+    const primaryIdentity = latestEntry[0];
+    const latestWithPos = entries.find(([, member]) => member.positionId !== undefined);
+    const effectivePos = accountId && Object.hasOwn(accountSelections, accountId)
+      ? (accountSelections[accountId].positionId ?? null)
+      : (latestWithPos?.[1]?.positionId ?? null);
+    if (positionId && effectivePos !== positionId) continue;
+    const accountProfile = accountId ? profilesByAccount[accountId] : null;
+    const guestProfile = entries.map(([id]) => profilesByGuest.get(id)).find(Boolean) ?? null;
+    const profile = accountProfile || guestProfile;
+    const accountName = typeof accountProfile?.name === "string" ? accountProfile.name.trim() : "";
+    const guestProfileName = typeof guestProfile?.name === "string" ? guestProfile.name.trim() : "";
+    const memberName = entries.map(([, member]) => typeof member?.name === "string" ? member.name.trim() : "")
+      .find((name) => !isDefaultNickname(name)) || "";
+    const displayName = !isDefaultNickname(accountName)
+      ? accountName
+      : !isDefaultNickname(guestProfileName)
+        ? guestProfileName
+        : memberName || anonymous(primaryIdentity);
+    const avatarUrl = avatarUrlForProfile(accountProfile) || avatarUrlForProfile(guestProfile) || avatarUrlForProfile(profile);
+    const guestIds = new Set(entries.map(([id]) => id));
+    const publicIdentity = accountId ? `account:${accountId}` : primaryIdentity;
     let best = null;
-    for (const attemptId of member.attemptIds ?? []) {
-      const receipt = store.receipts?.[`${identity}:${attemptId}`];
-      if (!receipt || receipt.isSample || receipt.versionId !== version.id || !Array.isArray(receipt.answers) || receipt.answers.length !== version.questions.length) continue;
-      const report = subjectAttempt(receipt).report;
-      const part = dimension === "total" ? null : report?.breakdown?.find((item) => item.id === dimension);
-      const value = dimension === "total" ? report?.totalCents : part?.centsEarned;
-      const maxCents = dimension === "total" ? report?.maxCents : part?.maxCents;
-      if (!Number.isFinite(value) || value < 0 || !Number.isFinite(maxCents) || maxCents <= 0 || value > maxCents) continue;
-      const metric = dimension === "total" ? value : value / maxCents;
-      if (!best || metric > best.metric || (metric === best.metric && (receipt.createdAt < best.receipt.createdAt ||
-        (receipt.createdAt === best.receipt.createdAt && receipt.id.localeCompare(best.receipt.id) < 0))))
-        best = { identity, name: !isDefaultNickname(member.name) ? member.name : anonymous(identity), receipt, report, metric, value, maxCents, rate: value / maxCents };
+    for (const [identity, member] of entries) {
+      if (member.participationOptOut === true) continue;
+      for (const attemptId of member.attemptIds ?? []) {
+        const receipt = store.receipts?.[`${identity}:${attemptId}`]
+          ?? (accountId ? findReceiptForIdentity(store, { guestId: identity, attemptId, accountId })?.receipt : null);
+        if (!receipt || receipt.isSample || receipt.versionId !== version.id || !Array.isArray(receipt.answers) || receipt.answers.length !== version.questions.length) continue;
+        const report = subjectAttempt(receipt).report;
+        const part = dimension === "total" ? null : report?.breakdown?.find((item) => item.id === dimension);
+        const value = dimension === "total" ? report?.totalCents : part?.centsEarned;
+        const maxCents = dimension === "total" ? report?.maxCents : part?.maxCents;
+        if (!Number.isFinite(value) || value < 0 || !Number.isFinite(maxCents) || maxCents <= 0 || value > maxCents) continue;
+        const metric = dimension === "total" ? value : value / maxCents;
+        if (!best || metric > best.metric || (metric === best.metric && (receipt.createdAt < best.receipt.createdAt ||
+          (receipt.createdAt === best.receipt.createdAt && receipt.id.localeCompare(best.receipt.id) < 0)))) {
+          best = {
+            identity: primaryIdentity,
+            publicIdentity,
+            accountId,
+            guestIds,
+            name: displayName,
+            avatarUrl,
+            receipt,
+            report,
+            metric,
+            value,
+            maxCents,
+            rate: value / maxCents,
+          };
+        }
+      }
     }
     if (best) participants.push(best);
   }
-  participants.sort((a, b) => b.metric - a.metric || a.receipt.createdAt - b.receipt.createdAt || a.identity.localeCompare(b.identity));
+  participants.sort((a, b) => b.metric - a.metric || a.receipt.createdAt - b.receipt.createdAt || a.publicIdentity.localeCompare(b.publicIdentity));
   const below = new Map();
   for (let index = participants.length - 1; index >= 0; index--) {
     const metric = participants[index].metric;
@@ -50,14 +103,19 @@ export function publicParticipants({ store, members, version, positionId = null,
   let rank = 0;
   return participants.map((person, index) => {
     if (!index || person.metric !== participants[index - 1].metric) rank = index + 1;
-    return { ...person, rank, publicId: publicId(version.id, person.identity),
+    return { ...person, rank, publicId: publicId(version.id, person.publicIdentity),
       surpassedPercent: ratio(below.get(person.metric), participants.length) * 100 };
   });
 }
 
-export function publicLeaderboardRow(person, viewerId) {
-  return { publicId: person.publicId, rank: person.rank, name: person.name, value: person.value, maxCents: person.maxCents,
-    rate: person.rate, createdAt: person.receipt.createdAt, isMe: person.identity === viewerId, surpassedPercent: person.surpassedPercent };
+export function publicLeaderboardRow(person, viewerId, viewerAccountId = null) {
+  const isMe = person.identity === viewerId ||
+    Boolean(person.guestIds && viewerId && person.guestIds.has(viewerId)) ||
+    Boolean(viewerAccountId && person.accountId === viewerAccountId);
+  return { publicId: person.publicId, rank: person.rank, name: person.name,
+    ...(person.avatarUrl ? { avatarUrl: person.avatarUrl } : {}),
+    value: person.value, maxCents: person.maxCents,
+    rate: person.rate, createdAt: person.receipt.createdAt, isMe, surpassedPercent: person.surpassedPercent };
 }
 
 function publicSubjects(report) {
@@ -66,7 +124,9 @@ function publicSubjects(report) {
 }
 
 export function publicResult(person) {
-  return { publicId: person.publicId, name: person.name, totalCents: person.report.totalCents, maxCents: person.report.maxCents,
+  return { publicId: person.publicId, name: person.name,
+    ...(person.avatarUrl ? { avatarUrl: person.avatarUrl } : {}),
+    totalCents: person.report.totalCents, maxCents: person.report.maxCents,
     rate: person.report.totalCents / person.report.maxCents, rank: person.rank, surpassedPercent: person.surpassedPercent,
     subjects: publicSubjects(person.report) };
 }

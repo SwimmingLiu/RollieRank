@@ -1,5 +1,8 @@
 const credits = require("../../services/tool-credits.js");
 const storage = require("../../utils/storage.js");
+const shareUtil = require("../../utils/share.js");
+const clipboard = require("../../utils/clipboard.js");
+const { ASSET } = require("../../config.js");
 const { createPageSheetDrag } = require("../../utils/sheet-gesture.js");
 
 const rechargeStatus = {
@@ -14,6 +17,7 @@ const CASHIER_RESUME_GRACE_MS = 500;
 Page({
   data: {
     uiBase: "/assets/ui",
+    defaultQrSrc: ASSET.qrcode,
     loading: true,
     refreshing: false,
     error: "",
@@ -21,9 +25,16 @@ Page({
     capabilities: {
       login: false,
       invite: false,
+      referral: { enabled: false, reward: 0, monthlyLimit: 0 },
       purchase: { directPurchase: false, tokenRecharge: false, packages: [] },
       ads: false,
     },
+    referralRewardText: "",
+    referral: null,
+    referralLoading: false,
+    referralQrSrc: "",
+    referralQrLoading: false,
+    savingQr: false,
     purchaseReady: false,
     rechargeDeviceMessage: "",
     rechargeTestGuide: "",
@@ -99,6 +110,7 @@ Page({
     this.setData({ error: "", loginError: "" });
     try {
       const cap = await credits.capabilities();
+      const referralRewardText = cap.referral?.enabled ? credits.formatCredit(cap.referral.reward) : "";
       const packages = cap.purchase.packages;
       const previousPack = this.data.signedIn ? this.data.packages[this.data.selectedPackIndex] : null;
       const previousIndex = packages.findIndex(item => item.credits === previousPack?.credits && item.cents === previousPack?.cents);
@@ -113,6 +125,9 @@ Page({
         this.setData({
           loading: false,
           capabilities: cap,
+          referralRewardText,
+          referral: null,
+          referralQrSrc: "",
           purchaseReady,
           rechargeDeviceMessage,
           rechargeTestGuide,
@@ -129,7 +144,10 @@ Page({
         return;
       }
 
-      const wallet = await credits.wallet(0);
+      const [wallet, referral] = await Promise.all([
+        credits.wallet(0),
+        credits.referralInfo().catch(() => null),
+      ]);
       let pending = storage.toolCreditRecharge(wallet.accountId);
       if (!pending?.cashierStarted && !activeRecharges.has(wallet.accountId)) {
         const paid = await credits.paidRecharge().catch(() => null);
@@ -143,9 +161,18 @@ Page({
         }
       }
       const orderPackIndex = pending?.cashierStarted ? packages.findIndex(item => item.credits === pending.credits) : -1;
+      const resolvedRewardText = referral?.enabled
+        ? credits.formatCredit(referral.reward)
+        : referralRewardText;
       this.setData({
         loading: false,
         capabilities: cap,
+        referralRewardText: resolvedRewardText,
+        referral: referral ? {
+          ...referral,
+          rewardText: credits.formatCredit(referral.reward),
+          rewardedTotalText: credits.formatCredit(referral.rewardedTotal),
+        } : this.data.referral,
         purchaseReady,
         rechargeDeviceMessage,
         rechargeTestGuide,
@@ -474,6 +501,78 @@ Page({
     }
   },
 
+  async openReferral() {
+    this._sheetScrollTop = 0;
+    this.sheetDrag?.reset();
+    this.setData({ sheet: "referral" });
+    if (!this.data.referral && !this.data.referralLoading) {
+      this.setData({ referralLoading: true });
+      try {
+        const info = await credits.referralInfo();
+        this.setData({
+          referral: {
+            ...info,
+            rewardText: credits.formatCredit(info.reward),
+            rewardedTotalText: credits.formatCredit(info.rewardedTotal),
+          },
+          referralRewardText: info.enabled ? credits.formatCredit(info.reward) : "",
+        });
+      } catch {
+        // Keep cached capability reward text if network hiccups.
+      } finally {
+        this.setData({ referralLoading: false });
+      }
+    }
+    if (!this.data.referralQrSrc && !this.data.referralQrLoading) {
+      this.setData({ referralQrLoading: true });
+      try {
+        const filePath = await shareUtil.loadPersonalQrFile();
+        if (filePath && !this.unloaded) this.setData({ referralQrSrc: filePath });
+      } finally {
+        if (!this.unloaded) this.setData({ referralQrLoading: false });
+      }
+    }
+  },
+
+  async saveReferralQr() {
+    if (this.data.savingQr) return;
+    let filePath = this.data.referralQrSrc;
+    if (!filePath) {
+      this.setData({ savingQr: true });
+      filePath = await shareUtil.loadPersonalQrFile();
+      if (filePath && !this.unloaded) this.setData({ referralQrSrc: filePath });
+      if (!filePath) {
+        this.setData({ savingQr: false });
+        clipboard.showPageToast(this, "专属码暂不可用，请直接点转发", "warn");
+        return;
+      }
+    } else {
+      this.setData({ savingQr: true });
+    }
+    try {
+      await new Promise((resolve, reject) => wx.saveImageToPhotosAlbum({
+        filePath,
+        success: resolve,
+        fail: reject,
+      }));
+      clipboard.showPageToast(this, "已保存专属小程序码", "ok");
+    } catch (error) {
+      const message = String(error?.errMsg || error?.message || "");
+      if (/auth|deny/.test(message)) {
+        wx.showModal({
+          title: "需要相册权限",
+          content: "允许保存图片到相册后可重试。",
+          confirmText: "去设置",
+          success: result => { if (result.confirm) wx.openSetting(); },
+        });
+      } else {
+        clipboard.showPageToast(this, "保存失败，请重试", "warn");
+      }
+    } finally {
+      this.setData({ savingQr: false });
+    }
+  },
+
   closeSheet() {
     this.sheetDrag?.reset();
     this._sheetScrollTop = 0;
@@ -549,24 +648,29 @@ Page({
 
   copyInviteCode() {
     if (!this.data.invite?.code) return;
-    wx.setClipboardData({
-      data: this.data.invite.code,
-      success() {
-        wx.showToast({ title: "已复制邀请码", icon: "success" });
-      },
-    });
+    clipboard.copyText(this, this.data.invite.code, "已复制邀请码");
   },
 
   onShareAppMessage() {
-    if (this.data.capabilities.invite && this.data.invite?.code) {
+    if (this.data.sheet === "invite" && this.data.capabilities.invite && this.data.invite?.code) {
       return {
         title: "来卷卷小榜一起估分，首次登录送 3 颗卷豆",
         path: `/pages/home/home?inviteCode=${encodeURIComponent(this.data.invite.code)}`,
+        imageUrl: ASSET.logo,
       };
     }
     return {
-      title: "卷卷小榜 · 选卷、估分与复盘",
-      path: "/pages/home/home",
+      title: "卷卷小榜 · 行测拍照扫卡/录答估分与同卷排名",
+      path: shareUtil.withReferralPath("/pages/home/home"),
+      imageUrl: ASSET.logo,
+    };
+  },
+
+  onShareTimeline() {
+    return {
+      title: "卷卷小榜 · 行测拍照扫卡/录答估分与同卷排名",
+      query: shareUtil.withReferralQuery(""),
+      imageUrl: ASSET.logo,
     };
   },
 });

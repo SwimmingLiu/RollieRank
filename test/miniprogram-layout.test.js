@@ -214,14 +214,15 @@ test("single-question mode animates horizontal swipes and all pages hide scrollb
   assert.match(practiceWxml, /binddragstart="onListDragStart"/);
   assert.match(practiceJs, /scrollListToRow\(/);
   assert.match(practiceJs, /scrollerNode\.scrollTo\(/);
-  assert.match(practiceJs, /autoScrollGuardUntil/);
+  assert.match(practiceJs, /schedulePersist\(/);
+  assert.match(practiceJs, /`questions\[\$\{rowIndex\}\]\.answer`/);
   assert.match(practiceJs, /transitionSingleTo\(/);
   assert.match(practiceWxml, /bindtouchmove="moveSwipe"[\s\S]*bindtouchcancel="cancelSwipe"/);
   assert.match(practiceWxml, /practice__single-card--dragging/);
   assert.match(practiceWxss, /\.practice__single-card\s*\{[^}]*transition:\s*transform/);
   assert.match(practiceWxss, /\.practice__row\s*\{[^}]*transition:\s*background-color/);
 
-  // 正常屏内作答不触发滚动，避免逐行抖动；仅在下一题贴底时柔和上滑半屏（保留上方已答题锚点，时长约 0.85~1.25 秒并开启防误触保护）。
+  // 正常屏内舒适区作答不触发滚动，避免逐行抖动；下一题接近底部约 2 行时干脆轻推到视口中部，时长 260~380ms 且不锁死用户连点。
   const list = { top: 130, bottom: 690, height: 560 };
   const inView = practiceScroll.planListScroll({
     list,
@@ -235,15 +236,15 @@ test("single-question mode animates horizontal swipes and all pages hide scrollb
   const bottomEdge = practiceScroll.planListScroll({
     list,
     offset: { scrollTop: 0 },
-    row: { top: 650, bottom: 716 },
+    row: { top: 560, bottom: 626 },
     keepVisible: true,
     animated: true,
   });
   assert.equal(bottomEdge.shouldScroll, true);
   assert.equal(bottomEdge.isAutoTurn, true);
-  assert.ok(bottomEdge.targetTop > 260 && bottomEdge.targetTop < 380, `应柔和上滑约半屏保留锚点，实际 ${bottomEdge.targetTop}`);
-  assert.ok(bottomEdge.duration >= 850 && bottomEdge.duration <= 1250, `自动翻页应控制在 1 秒左右，实际 ${bottomEdge.duration}ms`);
-  assert.ok(bottomEdge.guardMs > bottomEdge.duration, "自动翻页期间需包含防误触保护时长");
+  assert.ok(bottomEdge.targetTop > 120 && bottomEdge.targetTop < 260, `应轻推 2~3 行到视口中部舒适区，实际 ${bottomEdge.targetTop}`);
+  assert.ok(bottomEdge.duration >= 260 && bottomEdge.duration <= 380, `自动跟手滑动应干脆控制在 260~380ms，实际 ${bottomEdge.duration}ms`);
+  assert.equal(bottomEdge.guardMs, 0, "自动轻推期间不应锁死用户连续点击");
 
   // 主动跳题（如答题卡/板块切换）仍快速定位到顶部且不加防误触锁。
   const manualJump = practiceScroll.planListScroll({
@@ -260,6 +261,9 @@ test("single-question mode animates horizontal swipes and all pages hide scrollb
   assert.equal(practiceScroll.easeInOutCubic(0), 0);
   assert.equal(practiceScroll.easeInOutCubic(0.5), 0.5);
   assert.equal(practiceScroll.easeInOutCubic(1), 1);
+  assert.equal(practiceScroll.easeOutCubic(0), 0);
+  assert.ok(practiceScroll.easeOutCubic(0.5) > 0.8);
+  assert.equal(practiceScroll.easeOutCubic(1), 1);
 
   const appWxss = markup("app.wxss");
   assert.match(appWxss, /(?:^|\n)::-webkit-scrollbar/);

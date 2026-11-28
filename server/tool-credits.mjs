@@ -6,10 +6,14 @@ import { createToolCreditsRecharge } from "./tool-credits-recharge.mjs";
 import { createWechatCoinPayment, createWechatToolPayment } from "./wechat-tool-payment.mjs";
 import { creditError, validAccountRef, validCreditAmount, validId } from "./tool-credits-rules.mjs";
 import { wechatProfilesByGuest } from "./wechat-profile.mjs";
+import { accountIdForGuest, canLinkAccountGuest, linkAccountGuest } from "./account-identity.mjs";
 
 const ROOT = "/api/tool-credits";
 const WECHAT_CODE = /^[\w-]{1,256}$/;
 const GROUP_SCENES = [1008, 1044];
+const QR_ENVS = new Set(["release", "trial", "develop"]);
+const QR_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const QR_CACHE_MAX = 500;
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 
 async function wechatSession(code, { appId, secret, fetchImpl }) {
@@ -55,6 +59,87 @@ export function createToolCredits({ readCatalog, mutateCatalog }, {
   const bearer = (request) => /^Bearer ([a-f0-9]{64})$/i.exec(request.headers.authorization ?? "")?.[1];
   const accountKey = (openid) => sha256((appId || "local-test") + ":" + openid);
 
+  let qrAccessToken = "";
+  let qrAccessTokenExpires = 0;
+  let pendingQrToken = null;
+  const qrCache = new Map();
+
+  async function getWechatStableToken() {
+    if (!appId || !secret) throw creditError(503, "专属小程序码暂未配置。");
+    const now = typeof clock === "function" ? clock() : Date.now();
+    if (qrAccessToken && now < qrAccessTokenExpires) return qrAccessToken;
+    pendingQrToken ??= (async () => {
+      let response;
+      try {
+        response = await fetchImpl("https://api.weixin.qq.com/cgi-bin/stable_token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            grant_type: "client_credential",
+            appid: appId,
+            secret,
+            force_refresh: false,
+          }),
+          signal: AbortSignal.timeout(8000),
+        });
+      } catch {
+        throw creditError(502, "暂时连不上微信，请稍后重试。");
+      }
+      if (!response.ok) throw creditError(502, "获取微信凭证失败。");
+      const result = await response.json();
+      if (result?.errcode || !result?.access_token) {
+        throw creditError(502, "暂时无法获取微信凭证。");
+      }
+      qrAccessToken = result.access_token;
+      qrAccessTokenExpires = (typeof clock === "function" ? clock() : Date.now()) +
+        Math.max(0, (Number(result.expires_in) || 7200) - 120) * 1000;
+      return qrAccessToken;
+    })().finally(() => { pendingQrToken = null; });
+    return pendingQrToken;
+  }
+
+  async function generateReferralQr(code, envVersion) {
+    const now = typeof clock === "function" ? clock() : Date.now();
+    const cacheKey = `${code}:${envVersion}`;
+    const cached = qrCache.get(cacheKey);
+    if (cached && cached.expiresAt > now) return cached.image;
+    const token = await getWechatStableToken();
+    const scene = `r=${code}`;
+    let response;
+    try {
+      response = await fetchImpl(
+        `https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=${encodeURIComponent(token)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            scene,
+            page: "pages/home/home",
+            width: 280,
+            check_path: false,
+            env_version: envVersion,
+          }),
+          signal: AbortSignal.timeout(10000),
+        },
+      );
+    } catch {
+      throw creditError(502, "暂时连不上微信，请稍后重试。");
+    }
+    if (!response.ok) throw creditError(502, "生成专属小程序码失败。");
+    const buffer = Buffer.from(await response.arrayBuffer());
+    if (buffer.subarray(0, 1).toString() === "{") {
+      throw creditError(502, "微信未能生成专属小程序码。");
+    }
+    if (buffer.length < 256) throw creditError(502, "微信返回的小程序码数据无效。");
+    const image = buffer.toString("base64");
+    if (qrCache.size >= QR_CACHE_MAX) {
+      const oldestKey = qrCache.keys().next().value;
+      if (oldestKey) qrCache.delete(oldestKey);
+    }
+    qrCache.set(cacheKey, { image, expiresAt: now + QR_CACHE_TTL_MS });
+    return image;
+  }
+
   async function getWechatSession(code) {
     const result = exchange ? await exchange(code) : await wechatSession(code, { appId, secret, fetchImpl });
     const session = typeof result === "string" ? { openid: result } : result;
@@ -78,10 +163,12 @@ export function createToolCredits({ readCatalog, mutateCatalog }, {
     const route = pathname.slice(ROOT.length);
     if (method === "GET" && route === "/capabilities") {
       const purchase = await store.purchaseSettings();
+      const referral = await store.referralSettings();
       const directPurchase = Boolean(payment && purchase.directPurchase);
       const tokenRecharge = Boolean(coinPayment && purchase.tokenRecharge);
       send(200, {
         login: Boolean(database && (exchange || (appId && secret))), invite: await store.inviteEnabled(),
+        referral,
         purchase: {
           directPurchase, tokenRecharge, packages: purchase.packages,
           ...(tokenRecharge ? { tokenRechargeIos: coinPayment.ios } : {}),
@@ -100,6 +187,7 @@ export function createToolCredits({ readCatalog, mutateCatalog }, {
       const { openid } = await getWechatSession(input.code);
       const wechatKey = accountKey(openid);
       let legacyGuestId;
+      let expectedLegacyAccountId = null;
       if (input.bindLegacy === true && validId(input.visitorId)) {
         const catalog = readCatalog();
         const profile = typeof input.profileToken === "string" && /^[a-f0-9]{48}$/.test(input.profileToken)
@@ -115,8 +203,33 @@ export function createToolCredits({ readCatalog, mutateCatalog }, {
           throw creditError(400, "暂时无法确认本机资料，可以取消关联后登录。");
         }
         legacyGuestId = input.visitorId;
+        expectedLegacyAccountId = accountIdForGuest(catalog, input.visitorId);
       }
-      const wallet = await store.login({ wechatKey, legacyGuestId, visitorId: input.visitorId, inviteClaim: input.inviteClaim });
+      const wallet = await store.login({
+        wechatKey,
+        legacyGuestId,
+        expectedLegacyAccountId,
+        visitorId: input.visitorId,
+        inviteClaim: input.inviteClaim,
+        referralCode: input.referralCode,
+      });
+      const loginAccountId = wallet?.accountId || wallet?.account?.id;
+      if (validId(loginAccountId)) {
+        const knownDevices = await store.linkedDevices(loginAccountId).catch(() => []);
+        const candidates = new Set(knownDevices);
+        if (validId(legacyGuestId)) candidates.add(legacyGuestId);
+        const snapshot = readCatalog();
+        const toLink = [...candidates].filter((gid) =>
+          canLinkAccountGuest(snapshot, loginAccountId, gid, { allowLegacyClaim: true }),
+        );
+        if (toLink.length) {
+          await mutateCatalog((catalog) => {
+            for (const gid of toLink) {
+              linkAccountGuest(catalog, loginAccountId, gid, { allowLegacyClaim: true });
+            }
+          }).catch(() => {});
+        }
+      }
       send(200, wallet);
       return true;
     }
@@ -154,6 +267,18 @@ export function createToolCredits({ readCatalog, mutateCatalog }, {
     } else if (method === "POST" && route === "/invite/code") {
       const { id } = await requireAccount(request);
       send(200, await store.makeInvite(id));
+    } else if (method === "GET" && route === "/referral") {
+      const { id } = await requireAccount(request);
+      send(200, await store.referralInfo(id));
+    } else if (method === "GET" && route === "/referral/qrcode") {
+      const { id } = await requireAccount(request);
+      const info = await store.referralInfo(id);
+      const requestedEnv = String(query.get("env") || "").trim();
+      const envVersion = QR_ENVS.has(requestedEnv)
+        ? requestedEnv
+        : (testEnvironment ? "trial" : "release");
+      const image = await generateReferralQr(info.code, envVersion);
+      send(200, { code: info.code, scene: `r=${info.code}`, image, mime: "image/jpeg" });
     } else {
       const context = { route, method, input, request, send };
       return await recharge.handle(context) || commerce.handle(context);

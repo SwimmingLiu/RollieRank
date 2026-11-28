@@ -1,0 +1,54 @@
+<view wx:if="{{winners.length === 1}}" class="rank__solo-wrap">
+  <view class="rank__solo-stack">
+    <view class="rank__solo-back"></view>
+    <button class="rank__podium-card rank__podium-card--1 rank__podium-card--solo" hover-class="press" bindtap="onSelect" data-id="{{winners[0].publicId}}"
+      aria-label="榜单第 {{winners[0].place}} 位，{{winners[0].name}}，{{winners[0].scoreText}} 分">
+      <view class="rank__card-frame"></view>
+      <view class="rank__card-top">
+        <text class="rank__card-place num">{{winners[0].placeText}}</text>
+        <rr-icon name="rank-crown" size="{{22}}" />
+      </view>
+      <view class="rank__avatar-ring rank__avatar-ring--solo">
+        <image class="rank__podium-avatar" src="{{failed[0] ? winners[0].fallbackAvatar : winners[0].avatar}}" mode="aspectFill" data-index="0" binderror="onAvatarError" />
+      </view>
+      <view class="rank__podium-name-row">
+        <text class="rank__podium-name rank__podium-name--solo ellipsis">{{winners[0].name}}</text>
+        <text wx:if="{{winners[0].isMe}}" class="rank__me-tag rank__me-tag--solo">我</text>
+      </view>
+      <view class="rank__podium-score-row">
+        <text class="display-num rank__podium-score rank__podium-score--solo {{winners[0].scoreText.length > 5 ? 'rank__podium-score--solo-wide' : ''}}">{{winners[0].scoreText}}</text>
+        <text class="rank__podium-unit rank__podium-unit--solo">分</text>
+      </view>
+      <view class="rank__percentile rank__percentile--solo" aria-label="首位上榜">
+        <rr-icon name="rank-first-star" size="{{13}}" />
+        <text>首位上榜</text>
+      </view>
+    </button>
+  </view>
+</view>
+
+<view wx:elif="{{winners.length > 1}}" class="rank__podium {{winners.length === 2 ? 'rank__podium--pair' : ''}}">
+  <button wx:for="{{winners}}" wx:key="publicId" class="rank__podium-card rank__podium-card--{{item.place}}" hover-class="press" bindtap="onSelect" data-id="{{item.publicId}}"
+    aria-label="榜单第 {{item.place}} 位，{{item.name}}，{{item.scoreText}} 分{{item.rank !== item.place ? '，并列第 ' + item.rank + ' 名' : ''}}">
+    <view class="rank__card-frame"></view>
+    <view class="rank__card-top">
+      <text class="rank__card-place num">{{item.placeText}}</text>
+      <rr-icon name="{{item.badgeIcon}}" size="{{item.place === 1 ? 19 : 17}}" />
+    </view>
+    <view class="rank__avatar-ring rank__avatar-ring--{{item.place}}">
+      <image class="rank__podium-avatar" src="{{failed[index] ? item.fallbackAvatar : item.avatar}}" mode="aspectFill" data-index="{{index}}" binderror="onAvatarError" />
+    </view>
+    <view class="rank__podium-name-row">
+      <text class="rank__podium-name ellipsis">{{item.name}}</text>
+      <text wx:if="{{item.isMe}}" class="rank__me-tag">我</text>
+    </view>
+    <view class="rank__podium-score-row">
+      <text class="display-num rank__podium-score {{item.scoreText.length > 5 ? 'rank__podium-score--wide' : ''}}">{{item.scoreText}}</text>
+      <text class="rank__podium-unit">分</text>
+    </view>
+    <view wx:if="{{item.showSurpass}}" class="rank__percentile rank__percentile--{{item.place}}" aria-label="超越 {{item.surpassed}} 的考生">
+      <rr-icon name="{{item.surpassIcon}}" size="{{11}}" />
+      <text class="num">{{item.surpassedLabel}}</text>
+    </view>
+  </button>
+</view>

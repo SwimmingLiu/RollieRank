@@ -207,7 +207,10 @@
         <button class="btn btn--ghost" bindtap="discuss" aria-label="本卷交流"><image class="btn__icon" src="{{uiBase}}/comment.svg" mode="aspectFit" /></button>
         <text wx:if="{{commentCount !== null}}" class="report__comment-count">{{commentCount > 99 ? '99+' : commentCount}}</text>
       </view>
-      <button class="btn btn--ghost" bindtap="share" aria-label="成绩分享"><image class="btn__icon" src="{{uiBase}}/share.svg" mode="aspectFit" /></button>
+      <view class="report__share">
+        <button class="btn btn--ghost" bindtap="share" aria-label="成绩分享"><image class="btn__icon" src="{{uiBase}}/share.svg" mode="aspectFit" /></button>
+        <text wx:if="{{referralRewardText}}" class="report__share-badge">+{{referralRewardText}}豆</text>
+      </view>
     </view>
   </view>
 </view>

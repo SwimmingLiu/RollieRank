@@ -257,7 +257,7 @@
                 </view>
                 <view class="share__qr-halo">
                   <view class="share__qr-wrap">
-                    <image class="share__qr" src="{{asset.qrcode}}" mode="aspectFill" aria-label="卷卷小榜小程序码" />
+                    <image class="share__qr" src="{{qrSrc || asset.qrcode}}" mode="aspectFill" aria-label="卷卷小榜小程序码" />
                   </view>
                 </view>
               </view>
@@ -277,6 +277,16 @@
     <button class="btn btn--primary" bindtap="save" disabled="{{!ready || saving}}">
       <image class="btn__icon" src="{{uiBase}}/download-light.svg" mode="aspectFit" />保存海报
     </button>
-    <button class="btn share__invite" open-type="share" aria-label="邀请同卷好友"><image class="btn__icon" src="{{uiBase}}/share-outline.svg" mode="aspectFit" />邀请好友</button>
+    <view class="share__invite-wrap">
+      <button class="btn share__invite" open-type="share" aria-label="邀请同卷好友"><image class="btn__icon" src="{{uiBase}}/share-outline.svg" mode="aspectFit" />邀请好友</button>
+      <view
+        wx:if="{{referralEnabled && referralRewardText}}"
+        class="share__reward-badge"
+        aria-label="新人注册立得 {{referralRewardText}} 颗卷豆"
+      >
+        <image class="share__reward-badge-icon" src="{{uiBase}}/bean-ochre.svg" mode="aspectFit" />
+        <text class="num share__reward-badge-num">+{{referralRewardText}}</text>
+      </view>
+    </view>
   </view>
 </view>

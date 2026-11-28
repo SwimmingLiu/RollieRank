@@ -1,0 +1,21 @@
+<button wx:if="{{item}}" class="rank__row {{variant === 'self' ? 'rank__row--self' : ''}} {{variant === 'row' && item.isMe ? 'rank__row--me' : ''}} {{isLast ? 'rank__row--last' : ''}}" hover-class="press" bindtap="onSelect"
+  aria-label="{{variant === 'self' ? '我的同卷最佳，第 ' + item.rank + ' 名，' + item.scoreText + ' 分' : '榜单第 ' + item.place + ' 位，' + item.name + (item.isMe ? '（我）' : '') + '，' + item.scoreText + ' 分' + (item.rank !== item.place ? '，并列第 ' + item.rank + ' 名' : '')}}">
+  <text class="rank__row-rank num">{{item.placeText}}</text>
+  <view class="rank__list-avatar-ring {{variant === 'self' || item.isMe ? 'rank__list-avatar-ring--me' : ''}}">
+    <image class="rank__list-avatar" src="{{avatarFailed ? item.fallbackAvatar : item.avatar}}" mode="aspectFill" binderror="onAvatarError" />
+  </view>
+  <view class="rank__row-main grow">
+    <view class="rank__row-name-line">
+      <text class="rank__row-name ellipsis">{{variant === 'self' ? '我的同卷最佳' : item.name}}</text>
+      <text wx:if="{{variant === 'self' || item.isMe}}" class="rank__me-tag">我</text>
+    </view>
+    <view wx:if="{{item.showSurpass}}" class="rank__row-sub">
+      <rr-icon name="rank-surpass" size="{{10}}" />
+      <text class="num">{{item.surpassedLabel}}</text>
+    </view>
+  </view>
+  <view class="rank__row-score-wrap">
+    <text class="display-num rank__row-score">{{item.scoreText}}</text>
+    <text class="rank__row-unit">分</text>
+  </view>
+</button>

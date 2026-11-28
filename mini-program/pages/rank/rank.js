@@ -1,4 +1,6 @@
 const api = require("../../services/api.js");
+const cloudSync = require("../../services/cloud-sync.js");
+const profile = require("../../services/profile.js");
 const storage = require("../../utils/storage.js");
 const format = require("../../utils/format.js");
 
@@ -10,10 +12,45 @@ const { publisherName, subjectName, subjectId, LOGO } = catalog;
 const SHORT_LABELS = { 政治理论: "政治", 常识判断: "常识", 言语理解: "言语", 数量关系: "数量", 判断推理: "判断", 资料分析: "资料" };
 
 const SCOPES = [
-  { key: "selected", name: "我的岗位", short: "本岗", icon: "map-pin" },
-  { key: "nationwide", name: "全国", short: "全国", icon: "globe" },
-  { key: "position", name: "其他岗位", short: "查岗", icon: "search" },
+  { key: "selected", name: "我的岗位", short: "本岗", icon: "rank-pin", activeIcon: "rank-pin-on" },
+  { key: "nationwide", name: "全国", short: "全国", icon: "rank-globe", activeIcon: "rank-globe-on" },
+  { key: "position", name: "其他岗位", short: "查岗", icon: "rank-search", activeIcon: "rank-search-on" },
 ];
+
+function fallbackAvatarFor(seed) {
+  const value = String(seed || "卷友");
+  let hash = 0;
+  for (const character of value) hash = (hash * 31 + character.codePointAt(0)) >>> 0;
+  return "/assets/avatars/rank-" + (hash % 8 + 1) + ".svg";
+}
+
+function resolveRowAvatar(row) {
+  const remote = profile.authorAvatarUrl(row);
+  if (remote) return remote;
+  if (row.isMe) {
+    const own = profile.avatarUrl();
+    if (own) return own;
+  }
+  return fallbackAvatarFor(row.publicId || row.name);
+}
+
+function decorateRow(row, totalCount) {
+  const fallbackAvatar = fallbackAvatarFor(row.publicId || row.name);
+  const surpassedValue = Number(row.surpassedPercent || 0);
+  const surpassed = format.percent(surpassedValue / 100);
+  const showSurpass = totalCount > 1 && surpassedValue > 0;
+  return {
+    ...row,
+    scoreText: format.scoreCard(row.value),
+    surpassed,
+    surpassedLabel: showSurpass ? "超越 " + surpassed : "",
+    showSurpass,
+    avatar: resolveRowAvatar(row),
+    fallbackAvatar,
+    badgeIcon: row.place === 1 ? "rank-crown" : row.place === 2 ? "rank-medal-2" : "rank-medal-3",
+    surpassIcon: row.place === 2 ? "rank-surpass-silver" : row.place === 3 ? "rank-surpass-bronze" : "rank-surpass",
+  };
+}
 
 Page({
   data: {
@@ -33,43 +70,68 @@ Page({
     canLoadMore: false,
     dimension: "total",
     dimensions: [{ key: "total", label: "总分" }],
-    uiBase: "/assets/ui",
+    hasWechatProfile: false,
+    defaultAvatar: "/assets/avatars/rank-1.svg",
+    profileSheetOpen: false,
   },
 
   onLoad(query) {
     this.attemptId = query.attemptId || "";
+    this.versionId = decodeURIComponent(query.versionId || "");
+    this.setData({
+      hasWechatProfile: storage.hasWechatProfile(),
+      defaultAvatar: profile.defaultAvatar(),
+    });
     this.load();
   },
 
   async load() {
     this.setData({ loading: true, error: "" });
     try {
-      const attempts = await api.sync([this.attemptId]);
-      const attempt = attempts[0];
-      if (!attempt) throw new Error("这份成绩不在当前身份下。");
-      this.versionId = attempt.versionId;
+      await cloudSync.ensureSession();
+      await cloudSync.syncPosition();
+      let attempt = null;
+      let version = null;
+      if (this.attemptId) {
+        const attempts = await api.sync([this.attemptId]);
+        attempt = attempts[0];
+        if (!attempt) throw new Error("这份成绩不在当前身份下。");
+        this.versionId = attempt.versionId;
+      }
+      if (!this.versionId) throw new Error("缺少套卷参数，请回到选卷页查看。");
+      try {
+        version = (await api.catalog()).find(item => item.id === this.versionId) || null;
+      } catch {
+        // 目录读不到时退回答卷自带的字段。
+      }
+      if (!attempt && !version) throw new Error("没有找到这套卷的公开榜单。");
       const subjects = new Map();
-      for (const type of attempt.report?.breakdown || []) {
-        if (type.maxCents <= 0) continue;
+      const sourceTypes = attempt?.report?.breakdown?.length
+        ? attempt.report.breakdown.filter(type => type.maxCents > 0)
+        : (version?.questionTypes || []).map(type => ({ id: type.id || type.name, name: type.name }));
+      for (const type of sourceTypes) {
         const name = subjectName(type.name);
         const key = subjectId(type.id, type.name);
         subjects.set(key, { key, label: SHORT_LABELS[name] || name });
       }
       // 身份行只写项目、期数和卷号；机构单独显示在左侧，不再重复。
-      let version = null;
-      try {
-        version = (await api.catalog()).find(item => item.id === attempt.versionId) || null;
-      } catch {
-        // 目录读不到时退回答卷自带的字段。
-      }
+      const institution = attempt?.institution || version?.institution || "";
+      const publisher = publisherName(institution);
+      const fullIdentity = attempt
+        ? catalog.attemptIdentity(version, attempt)
+        : catalog.practiceIdentity(version);
+      const identity = fullIdentity.split(" · ").slice(1).join(" · ") || catalog.versionTitle(version || {});
+      this.sharePaperTitle = [publisher, identity].filter(Boolean).join(" ") || "行测同卷";
+      wx.setNavigationBarTitle?.({ title: `${this.sharePaperTitle}同卷榜 · 卷卷小榜` });
       this.setData({
-        publisher: publisherName(attempt.institution),
-        logo: ASSET[LOGO[attempt.institution]] || "",
-        identity: catalog.attemptIdentity(version, attempt).split(" · ").slice(1).join(" · "),
+        publisher,
+        logo: ASSET[LOGO[institution]] || "",
+        identity,
         dimensions: [{ key: "total", label: "总分" }, ...subjects.values()],
       });
       this.setData({ scope: storage.position()?.id ? "selected" : "nationwide" });
       await this.fetchRanking();
+      this.loaded = true;
     } catch (error) {
       this.setData({ loading: false, error: error.message });
     }
@@ -92,17 +154,19 @@ Page({
       const result = await api.request(`positions/leaderboard?${query}`);
       if (request !== this.rankingRequest) return;
       this.rankPage = result.page;
+      const totalCount = result.count || 0;
       // 同分会共享服务端名次，纸卡和后续列表使用实际排序位置。
-      const rows = placeLeaderboardRows(result).map(row => ({
-        ...row,
-        scoreText: format.scoreCard(row.value),
-        surpassed: format.percent((row.surpassedPercent || 0) / 100),
-        initials: /^卷友(\d{4})$/.test(row.name || "") ? row.name.slice(-2) : Array.from(row.name || "卷友").slice(0, 2).join(""),
-      }));
+      const rows = placeLeaderboardRows(result).map(row => decorateRow(row, totalCount));
       const position = result.position;
       const winners = more ? this.data.winners : rows.slice(0, 3);
       const otherRows = more ? [...this.data.otherRows, ...rows] : rows.slice(3);
       const selfVisible = winners.some(row => row.isMe) || otherRows.some(row => row.isMe);
+      const selfRow = result.self && !selfVisible
+        ? {
+            ...decorateRow({ ...result.self, isMe: true }, totalCount),
+            placeText: String(result.self.rank || "").padStart(2, "0"),
+          }
+        : null;
       this.setData({
         loading: false,
         error: "",
@@ -110,8 +174,8 @@ Page({
         dimension: result.dimension || dimension,
         winners,
         otherRows,
-        self: result.self && !selfVisible ? { ...result.self, scoreText: format.scoreCard(result.self.value) } : null,
-        count: result.count || 0,
+        self: selfRow,
+        count: totalCount,
         scopeLabel: position ? position.label || [position.department, position.title].filter(Boolean).join(" · ") : "全国考生",
         canLoadMore: result.page < result.pages,
       });
@@ -168,14 +232,58 @@ Page({
 
   openResult(event) {
     // 公开详情只显示昵称与分数，别人的答案不会公开。
-    const { id } = event.currentTarget.dataset;
+    const id = event.detail?.publicId || event.currentTarget?.dataset?.id;
     if (!id) return;
     const { scope } = this.data;
     const positionId = scope === "position" ? "&positionId=" + encodeURIComponent(this.browsingPosition.id) : "";
     wx.navigateTo({ url: `/pages/report/report?publicId=${id}&paperId=${encodeURIComponent(this.versionId)}&scope=${scope}${positionId}` });
   },
 
-  onShow() {
+  openProfileSheet() {
+    this.setData({ profileSheetOpen: true });
+  },
+
+  closeProfileSheet() {
+    this.setData({ profileSheetOpen: false });
+  },
+
+  onProfileSaved() {
+    this.setData({
+      profileSheetOpen: false,
+      hasWechatProfile: storage.hasWechatProfile(),
+    });
     if (this.versionId) this.fetchRanking();
+  },
+
+  onShow() {
+    const hasWechatProfile = storage.hasWechatProfile();
+    if (hasWechatProfile !== this.data.hasWechatProfile) {
+      this.setData({ hasWechatProfile });
+    }
+    if (this.loaded && this.versionId) this.fetchRanking();
+  },
+
+  onShareAppMessage() {
+    const shareUtil = require("../../utils/share.js");
+    const label = this.sharePaperTitle || "行测同卷";
+    const countText = this.data.count > 0 ? `（已有${this.data.count}人交卷）` : "";
+    const path = this.versionId
+      ? `/pages/rank/rank?versionId=${encodeURIComponent(this.versionId)}`
+      : "/pages/home/home";
+    return {
+      title: `${label}同卷排行榜${countText} · 卷卷小榜`,
+      path: shareUtil.withReferralPath(path),
+      imageUrl: ASSET.logo,
+    };
+  },
+
+  onShareTimeline() {
+    const shareUtil = require("../../utils/share.js");
+    const label = this.sharePaperTitle || "行测同卷";
+    return {
+      title: `${label}估分同卷榜 · 卷卷小榜`,
+      query: shareUtil.withReferralQuery(this.versionId ? `versionId=${encodeURIComponent(this.versionId)}` : ""),
+      imageUrl: ASSET.logo,
+    };
   },
 });

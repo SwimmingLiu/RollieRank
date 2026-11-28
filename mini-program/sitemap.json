@@ -1,6 +1,45 @@
 {
-  "desc": "卷卷小榜",
+  "desc": "卷卷小榜微信搜索收录配置：仅索引公开选卷、录答、同卷榜、讨论区、选岗与计时页，屏蔽个人记录与后台页",
   "rules": [
-    { "action": "allow", "page": "*" }
+    {
+      "action": "allow",
+      "page": "pages/home/home"
+    },
+    {
+      "action": "allow",
+      "page": "pages/catalog/catalog",
+      "params": ["institution"],
+      "matching": "inclusive"
+    },
+    {
+      "action": "allow",
+      "page": "pages/practice/practice",
+      "params": ["versionId"],
+      "matching": "inclusive"
+    },
+    {
+      "action": "allow",
+      "page": "pages/rank/rank",
+      "params": ["versionId"],
+      "matching": "inclusive"
+    },
+    {
+      "action": "allow",
+      "page": "pages/discussion/discussion",
+      "params": ["paperId"],
+      "matching": "inclusive"
+    },
+    {
+      "action": "allow",
+      "page": "pages/positions/positions"
+    },
+    {
+      "action": "allow",
+      "page": "pages/timer/timer"
+    },
+    {
+      "action": "disallow",
+      "page": "*"
+    }
   ]
 }

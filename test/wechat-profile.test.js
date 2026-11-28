@@ -232,3 +232,55 @@ test("avatars upload to Qiniu OSS instead of storing base64 in catalog.json and 
   assert.match(anotherComment.author.name, /^卷友\d{4}$/);
   assert.notEqual(firstComment.author.name, anotherComment.author.name);
 });
+
+test("saved WeChat nickname and avatar auto-restore across fresh devices for the same WeChat account", async t => {
+  const directory = await mkdtemp(join(tmpdir(), "rollierank-account-profile-"));
+  const billing = {
+    async requireAccount(req) {
+      if (req.headers.authorization === "Bearer " + "a".repeat(64)) {
+        return { id: "wallet-acct-001", guestId: "guest-device-a" };
+      }
+      throw Object.assign(new Error("unauth"), { statusCode: 401 });
+    },
+  };
+  const settings = {
+    dataDirectory: pathToFileURL(directory + "/"),
+    featureFactories: [
+      (dependencies) => createWechatProfileService({ ...dependencies, billing }, { config: {} }),
+    ],
+  };
+  const api = await createApi(settings);
+  const server = createServer((req, res) => api(req, res, new URL(req.url, "http://localhost").pathname));
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  t.after(async () => {
+    server.closeAllConnections();
+    await new Promise(resolve => server.close(resolve));
+    await rm(directory, { force: true, recursive: true });
+  });
+  const base = `http://127.0.0.1:${server.address().port}/api/miniprogram-profile/`;
+  const authHeader = { Authorization: "Bearer " + "a".repeat(64) };
+
+  // 1. 设备 A 首次保存微信昵称与头像（携带卷豆账号 Bearer）
+  const { token: deviceAToken } = await (await fetch(base + "session", { method: "POST" })).json();
+  const saveRes = await fetch(base + "profile", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeader },
+    body: JSON.stringify({ token: deviceAToken, guestId: "guest-device-a-01", name: "上岸小张", avatar: pixel }),
+  });
+  assert.equal(saveRes.status, 200);
+  const saved = (await saveRes.json()).profile;
+  assert.equal(saved.name, "上岸小张");
+  assert.ok(saved.avatarId);
+
+  // 2. 全新设备 B（无本地 profile token，全新 guestId）仅凭微信账号 Bearer 登录即自动拉回历史头像与昵称
+  const restoreRes = await fetch(base + "profile", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeader },
+    body: JSON.stringify({ guestId: "guest-device-b-02" }),
+  });
+  assert.equal(restoreRes.status, 200);
+  const restored = (await restoreRes.json()).profile;
+  assert.equal(restored.name, "上岸小张");
+  assert.equal(restored.avatarId, saved.avatarId);
+});

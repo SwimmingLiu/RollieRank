@@ -70,6 +70,7 @@ export function createIOSPositionsFeature(ctx) {
     const dimensions = [{ value: "total", label: "总分" }, ...subjectDimensions(version.questions).map(type => ({ value: type.id, label: type.name }))];
     const dimension = dimensions.find(item => item.value === currentDimension) ?? dimensions[0];
     const convert = (row, index) => ({ key: `${row.rank}:${row.createdAt}:${index}`, place: row.rank, name: row.name,
+      ...(row.avatarUrl ? { avatarSrc: row.avatarUrl } : {}),
       score: currentDimension === "total" ? row.value / 100 : row.rate * 100,
       detail: currentDimension === "total" ? "" : `${score(row.value)} / ${score(row.maxCents)} 分`, isMe: row.isMe,
       publicId: row.publicId, surpassedPercent: row.surpassedPercent });

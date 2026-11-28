@@ -232,6 +232,60 @@ test("过期短链返回 410", async () => {
   assert.equal(out.status, 410);
 });
 
+test("创建时可带 #小程序:// 口令，详情里返回", async () => {
+  const { service, getCatalog } = harness();
+  const weappLink = "#小程序://卷卷小榜/pages/home/home/AbCdEf123";
+  const created = await call(service, {
+    pathname: "/api/links", method: "POST",
+    input: { page: "pages/home/home", weappLink },
+  });
+  assert.equal(created.status, 201);
+  assert.equal(created.body.weappLink, weappLink);
+  assert.equal(getCatalog().features.shortLinks[0].weappLink, weappLink);
+
+  const detail = await call(service, { pathname: `/api/links/${created.body.code}` });
+  assert.equal(detail.body.weappLink, weappLink);
+});
+
+test("口令格式不对时拒绝，且不能借此绕开路径校验", async () => {
+  const { service } = harness();
+  const bad = await call(service, {
+    pathname: "/api/links", method: "POST",
+    input: { weappLink: "https://evil.example.com/" },
+  });
+  assert.equal(bad.status, 400);
+  assert.match(bad.body.error, /#小程序:\/\//);
+
+  const tooLong = await call(service, {
+    pathname: "/api/links", method: "POST",
+    input: { weappLink: "#小程序://" + "a".repeat(400) },
+  });
+  assert.equal(tooLong.status, 400);
+});
+
+test("已有短链可以补录口令，且需要管理口令", async () => {
+  const { service, getCatalog } = harness();
+  const created = await call(service, { pathname: "/api/links", method: "POST", input: {} });
+  const code = created.body.code;
+  assert.equal(created.body.weappLink, "");
+
+  // 不带管理口令补录应被拒。
+  const denied = await call(service, {
+    pathname: `/api/links/${code}/weapp`, method: "POST",
+    input: { weappLink: "#小程序://卷卷小榜/pages/home/home/x" },
+    request: { headers: {} },
+  });
+  assert.equal(denied.status, 401);
+
+  const ok = await call(service, {
+    pathname: `/api/links/${code}/weapp`, method: "POST",
+    input: { weappLink: "#小程序://卷卷小榜/pages/home/home/x" },
+  });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.body.weappLink, "#小程序://卷卷小榜/pages/home/home/x");
+  assert.equal(getCatalog().features.shortLinks[0].weappLink, "#小程序://卷卷小榜/pages/home/home/x");
+});
+
 test("短码只含无歧义字符", async () => {
   const code = createCode((size) => Uint8Array.from({ length: size }, (_, i) => i * 7 % 256));
   assert.equal(code.length, SHORTLINK_CODE_LENGTH);

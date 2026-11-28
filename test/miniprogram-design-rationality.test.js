@@ -83,9 +83,23 @@ test("UI design rationality: clear labels, parameter fidelity and aligned social
 
   const rankWxml = readMp("pages/rank/rank.wxml");
   const rankJs = readMp("pages/rank/rank.js");
+  const rankPodiumWxml = readMp("components/rr-rank-podium/rr-rank-podium.wxml");
+  const rankRowWxml = readMp("components/rr-rank-row/rr-rank-row.wxml");
+  const rankPodiumWxss = readMp("components/rr-rank-podium/rr-rank-podium.wxss");
   assert.match(rankWxml, /\{\{item\.short\}\}/);
   assert.match(rankJs, /判断推理:\s*"判断"/);
   assert.match(rankWxml, /该岗位暂无考生参与/);
+  assert.match(rankWxml, /<rr-rank-podium/);
+  assert.match(rankWxml, /<rr-rank-row/);
+  assert.match(rankWxml, /<rr-icon/);
+  assert.match(rankPodiumWxml, /<image[^>]*class="rank__podium-avatar"/);
+  assert.match(rankRowWxml, /<image[^>]*class="rank__list-avatar"/);
+  assert.match(rankPodiumWxml, /rank__podium-card--solo/);
+  assert.match(rankPodiumWxml, /首位上榜/);
+  assert.match(rankPodiumWxss, /\.rank__me-tag\s*\{[^}]*#ef7d82/);
+  assert.doesNotMatch(rankWxml + rankPodiumWxml + rankRowWxml, /trend\.svg/);
+  assert.match(rankJs, /rank-crown/);
+  assert.match(rankJs, /showSurpass\s*=\s*totalCount\s*>\s*1\s*&&\s*surpassedValue\s*>\s*0/);
 
   const discWxml = readMp("pages/discussion/discussion.wxml");
   const discWxss = readMp("pages/discussion/discussion.wxss");
@@ -262,5 +276,43 @@ test("report bands aggregate question counts and poster Canvas 2D fonts use stri
   assert.ok(assignedFonts.length > 100);
   for (const font of assignedFonts) {
     assert.match(font, /^[1-9]00\s+\d+px\s+/, `非法 Canvas 2D 字体声明（会被微信 iOS 回退为 10px）: ${font}`);
+  }
+});
+
+test("themed copy toast replaces native clipboard toast and share referral wires across pages", () => {
+  const clipboardJs = readMp("utils/clipboard.js");
+  assert.match(clipboardJs, /wx\.hideToast/);
+  assert.match(clipboardJs, /#rr-toast/);
+
+  const toastWxml = readMp("components/rr-toast/rr-toast.wxml");
+  const toastWxss = readMp("components/rr-toast/rr-toast.wxss");
+  assert.match(toastWxml, /rr-toast__card/);
+  assert.match(toastWxss, /#fffdf8/);
+
+  // 错题复盘与其他复制页统一使用 clipboard.copyText + rr-toast，不再裸调 wx.setClipboardData。
+  for (const page of ["review", "records", "credits", "discussion", "admin"]) {
+    const js = readMp(`pages/${page}/${page}.js`);
+    const wxml = readMp(`pages/${page}/${page}.wxml`);
+    const cfg = JSON.parse(readMp(`pages/${page}/${page}.json`));
+    assert.doesNotMatch(js, /wx\.setClipboardData/, `${page}.js 不应再裸调 wx.setClipboardData`);
+    assert.match(wxml, /<rr-toast\s+id="rr-toast"/, `${page}.wxml 应挂载 rr-toast`);
+    assert.equal(cfg.usingComponents?.["rr-toast"], "/components/rr-toast/rr-toast", `${page}.json 应注册 rr-toast`);
+  }
+
+  // 全站分享链路携带推荐归因，分享页/报告页/卷豆页具备克制的主题提醒。
+  const appJs = readMp("app.js");
+  assert.match(appJs, /captureReferral/);
+  const shareWxml = readMp("pages/share/share.wxml");
+  assert.match(shareWxml, /share__reward-badge/);
+  assert.doesNotMatch(shareWxml, /share__voucher-sheet/, "成绩分享页不应再弹出重复的邀请二维码抽屉");
+  assert.match(shareWxml, /qrSrc \|\| asset\.qrcode/);
+  const reportWxml = readMp("pages/report/report.wxml");
+  assert.match(reportWxml, /report__share-badge/);
+  const creditsWxml = readMp("pages/credits/credits.wxml");
+  assert.match(creditsWxml, /分享得卷豆/);
+  assert.match(creditsWxml, /credits__qr-card/);
+  for (const page of ["home", "catalog", "practice", "report", "rank", "discussion", "share", "credits"]) {
+    const js = readMp(`pages/${page}/${page}.js`);
+    assert.match(js, /withReferralPath/, `${page}.js 分享卡片应携带分享归因参数`);
   }
 });

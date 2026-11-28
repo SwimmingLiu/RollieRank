@@ -1,6 +1,7 @@
 import { createCipheriv, createHash, randomBytes } from "node:crypto";
 import { createQiniuAvatarStorage, readQiniuConfig } from "./qiniu-oss.mjs";
 import { createWechatModeration, matchKeywords, normalizeKeywords } from "./wechat-moderation.mjs";
+import { accountIdForGuest, linkAccountGuest } from "./account-identity.mjs";
 
 const PATH = "/api/miniprogram-profile";
 const AVATAR_ID = /^[a-f0-9]{48}$/;
@@ -73,6 +74,19 @@ export function wechatProfilesByGuest(store) {
       byGuest.set(profile.guestId, profile);
     }
   }
+  const byAccount = store?.features?.wechatProfilesByAccount ?? {};
+  const accountGuests = store?.features?.accountGuests ?? {};
+  for (const [accountId, entry] of Object.entries(accountGuests)) {
+    const accountProfile = byAccount[accountId];
+    if (!accountProfile || !Array.isArray(entry?.guestIds)) continue;
+    for (const gid of entry.guestIds) {
+      if (typeof gid !== "string" || !GUEST_ID.test(gid)) continue;
+      const previous = byGuest.get(gid);
+      if (!previous || (accountProfile.updatedAt || 0) >= (previous.updatedAt || 0)) {
+        byGuest.set(gid, { ...previous, ...accountProfile, guestId: gid });
+      }
+    }
+  }
   return byGuest;
 }
 
@@ -98,7 +112,8 @@ function profileView(profile) {
 }
 
 // Device credentials protect editable profiles; phone changes also require WeChat verification.
-export function createWechatProfileService({ readCatalog, mutateCatalog, moderation }, {
+// When an authenticated WeChat wallet session is present, profiles also persist by accountId for cross-device auto-restore.
+export function createWechatProfileService({ readCatalog, mutateCatalog, moderation, billing }, {
   config = configuration(process.env), fetchImpl = globalThis.fetch, oss,
 } = {}) {
   const { appId, secret, phoneKey, qiniu } = config;
@@ -156,19 +171,23 @@ export function createWechatProfileService({ readCatalog, mutateCatalog, moderat
     if (!payload?.traceId || payload.suggest !== "risky") return false;
     let matched = false;
     await mutateCatalog(({ features }) => {
-      const profiles = features.wechatProfiles ?? {};
-      for (const profile of Object.values(profiles)) {
+      for (const profile of Object.values(features.wechatProfiles ?? {})) {
         if (profile?.avatar?.traceId === payload.traceId) {
           matched = true;
           delete profile.avatar;
-          break;
+        }
+      }
+      for (const profile of Object.values(features.wechatProfilesByAccount ?? {})) {
+        if (profile?.avatar?.traceId === payload.traceId) {
+          matched = true;
+          delete profile.avatar;
         }
       }
     });
     return matched;
   }
 
-  async function handle({ pathname, method, input, query, response, send }) {
+  async function handle({ request, pathname, method, input, query, response, send }) {
     if (!pathname.startsWith(PATH + "/")) return false;
     if (method === "GET" && pathname === PATH + "/capabilities") {
       send(200, { phoneEnabled });
@@ -216,9 +235,32 @@ export function createWechatProfileService({ readCatalog, mutateCatalog, moderat
         response.end(bytes);
       }
     } else if (method === "POST" && pathname === PATH + "/profile") {
-      if (typeof input.token !== "string" || !AVATAR_ID.test(input.token)) throw failure(401, "本机资料凭证无效。");
-      const user = createHash("sha256").update(input.token).digest("hex");
+      let walletAccount = null;
+      if (request && typeof billing?.requireAccount === "function") {
+        try {
+          walletAccount = await billing.requireAccount(request);
+        } catch {
+          walletAccount = null;
+        }
+      }
+      const hasDeviceToken = typeof input.token === "string" && AVATAR_ID.test(input.token);
+      if (!hasDeviceToken && !walletAccount?.id) throw failure(401, "本机资料凭证无效。");
+      const accountId = walletAccount?.id || "";
       const guestId = typeof input.guestId === "string" && GUEST_ID.test(input.guestId) ? input.guestId : "";
+      const initialCatalog = readCatalog();
+      if (guestId) {
+        const guestOwner = accountIdForGuest(initialCatalog, guestId);
+        if (guestOwner && guestOwner !== accountId) {
+          throw failure(403, "该本机身份已关联其他微信账号。");
+        }
+      }
+      const tokenUserKey = hasDeviceToken ? createHash("sha256").update(input.token).digest("hex") : "";
+      const tokenProfile = tokenUserKey ? initialCatalog.features.wechatProfiles?.[tokenUserKey] : null;
+      const tokenOwner = tokenProfile?.accountId || accountIdForGuest(initialCatalog, tokenProfile?.guestId);
+      // 若本机旧 profile-token 已归属另一微信账号，切到当前账号独立键，严禁串号覆写或复制手机号密文。
+      const tokenBelongsToOther = Boolean(tokenOwner && accountId && tokenOwner !== accountId);
+      const user = (hasDeviceToken && !tokenBelongsToOther) ? tokenUserKey : `account:${accountId}`;
+      const effectiveHasDeviceToken = hasDeviceToken && !tokenBelongsToOther;
       const patch = {};
       let resolvedOpenId = "";
       if (input.name !== undefined) {
@@ -257,22 +299,86 @@ export function createWechatProfileService({ readCatalog, mutateCatalog, moderat
         if (previousOwner && previousOwner !== owner) throw failure(403, "请使用原微信账号更新手机号。");
         patch.phone = { ...await exchangePhone(input.phoneCode), owner };
       }
-      const existingProfile = readCatalog().features.wechatProfiles?.[user];
-      const shouldBindGuest = Boolean(guestId && (Object.keys(patch).length || existingProfile) && existingProfile?.guestId !== guestId);
-      if (guestId && (Object.keys(patch).length || shouldBindGuest)) {
-        patch.guestId = guestId;
+      const catalogFeatures = readCatalog().features;
+      const existingProfile = catalogFeatures.wechatProfiles?.[user];
+      const accountProfile = accountId ? catalogFeatures.wechatProfilesByAccount?.[accountId] : null;
+      // 仅凭 Bearer token 做只读查询时直接返回云端账号资料，避免多端交替读取重复刷盘。
+      if (!effectiveHasDeviceToken && accountId && Object.keys(patch).length === 0) {
+        send(200, { profile: profileView(accountProfile || existingProfile) });
+        return true;
       }
-      if (Object.keys(patch).length) {
-        patch.updatedAt = Date.now();
+      // 跨设备/清缓存自动恢复：若当前本机资料为空或云端同账号资料更新，自动同步到当前设备。
+      const restored = {};
+      if (accountProfile) {
+        const cloudNewer = (accountProfile.updatedAt || 0) > (existingProfile?.updatedAt || 0);
+        if (patch.name === undefined && accountProfile.name && (!existingProfile?.name || (cloudNewer && accountProfile.name !== existingProfile.name))) {
+          restored.name = accountProfile.name;
+        }
+        if (patch.avatar === undefined && accountProfile.avatar && (!existingProfile?.avatar || (cloudNewer && accountProfile.avatar?.id !== existingProfile.avatar?.id))) {
+          restored.avatar = accountProfile.avatar;
+        }
+        if (patch.phone === undefined && !existingProfile?.phone && accountProfile.phone) restored.phone = accountProfile.phone;
       }
-      const profile = Object.keys(patch).length
-        ? await mutateCatalog(({ features }) => {
+      const mergedPatch = { ...restored, ...patch };
+      const hasEffectiveProfile = Boolean(
+        mergedPatch.name || mergedPatch.avatar || mergedPatch.phone ||
+        existingProfile?.name || existingProfile?.avatar || existingProfile?.phone
+      );
+      const shouldBindGuest = Boolean(guestId && hasEffectiveProfile && existingProfile?.guestId !== guestId);
+      const shouldSyncAccount = Boolean(
+        accountId && hasEffectiveProfile && (
+          Object.keys(patch).length ||
+          !accountProfile ||
+          (existingProfile?.name && !accountProfile.name) ||
+          (existingProfile?.avatar && !accountProfile.avatar)
+        )
+      );
+      if (guestId && (Object.keys(mergedPatch).length || shouldBindGuest)) {
+        mergedPatch.guestId = guestId;
+      }
+      if (accountId && hasEffectiveProfile && existingProfile?.accountId !== accountId) {
+        mergedPatch.accountId = accountId;
+      }
+      if (Object.keys(mergedPatch).length || shouldSyncAccount) {
+        mergedPatch.updatedAt = Date.now();
+      }
+      const profile = (Object.keys(mergedPatch).length || shouldSyncAccount)
+        ? await mutateCatalog((store) => {
+          if (guestId) {
+            const currentOwner = accountIdForGuest(store, guestId);
+            if (currentOwner && currentOwner !== accountId) {
+              throw failure(403, "该本机身份已关联其他微信账号。");
+            }
+          }
+          const features = store.features;
           const profiles = features.wechatProfiles ??= {};
           const previousOwner = profiles[user]?.phone?.owner;
-          if (patch.phone && previousOwner && previousOwner !== patch.phone.owner) throw failure(403, "请使用原微信账号更新手机号。");
-          return profiles[user] = { ...profiles[user], ...patch };
+          if (mergedPatch.phone && previousOwner && previousOwner !== mergedPatch.phone.owner) {
+            throw failure(403, "请使用原微信账号更新手机号。");
+          }
+          const effectiveGuestId = guestId || (typeof profiles[user]?.guestId === "string" ? profiles[user].guestId : "");
+          const canBindGuest = Boolean(
+            accountId && effectiveGuestId && (accountIdForGuest(store, effectiveGuestId) === accountId || linkAccountGuest(store, accountId, effectiveGuestId)),
+          );
+          const next = { ...profiles[user], ...mergedPatch };
+          if (accountId && next.guestId && !canBindGuest) {
+            // 未验证归属的匿名老设备不得通过资料接口自动并入当前微信账号。
+            delete next.guestId;
+          }
+          profiles[user] = next;
+          if (accountId) {
+            const byAccount = features.wechatProfilesByAccount ??= {};
+            byAccount[accountId] = {
+              ...(byAccount[accountId] || {}),
+              ...(next.name ? { name: next.name } : {}),
+              ...(next.avatar ? { avatar: next.avatar } : {}),
+              ...(next.phone ? { phone: next.phone } : {}),
+              updatedAt: next.updatedAt,
+            };
+          }
+          return next;
         })
-        : existingProfile;
+        : (existingProfile || accountProfile);
       if (patch.avatar && sec.isMediaCallbackReady()) {
         resolvedOpenId ||= await sec.resolveOpenId({ openid: input.openid, wxCode: input.wxCode, guestId: user });
         if (resolvedOpenId) {
@@ -282,6 +388,8 @@ export function createWechatProfileService({ readCatalog, mutateCatalog, moderat
             await mutateCatalog(({ features }) => {
               const target = features.wechatProfiles?.[user];
               if (target?.avatar?.id === patch.avatar.id) target.avatar.traceId = check.traceId;
+              const accountTarget = accountId ? features.wechatProfilesByAccount?.[accountId] : null;
+              if (accountTarget?.avatar?.id === patch.avatar.id) accountTarget.avatar.traceId = check.traceId;
             });
           }
         }

@@ -577,3 +577,100 @@ test("答题卡识别接入卷豆扣费：成功扣 0.1 颗、失败释放占用
   assert.equal(insufficient.status, 402);
   assert.equal(insufficient.data.errorId, "balance");
 });
+
+test("分享注册送卷豆：默认送 1 颗且无人数上限、严格防同人/同设备/空设备刷豆、支持后台限额与开关", async (t) => {
+  const server = await serverFor(t);
+  const admin = await adminSession(server);
+
+  // 1. capabilities 默认暴露可配置的分享注册奖励（默认 1 颗、0 = 无上限）
+  const cap0 = (await server.json(walletRoutes + "capabilities")).data;
+  assert.equal(cap0.referral.enabled, true);
+  assert.equal(cap0.referral.reward, 1);
+  assert.equal(cap0.referral.monthlyLimit, 0);
+
+  // 2. 分享者登录并获取专属分享码
+  const sharerGuest = randomUUID();
+  const sharer = await login(server, "sharer-wechat-1", { visitorId: sharerGuest });
+  assert.equal(sharer.balance, 3);
+  const info0 = (await server.json(walletRoutes + "referral", undefined, auth(sharer))).data;
+  assert.equal(info0.enabled, true);
+  assert.equal(info0.reward, 1);
+  assert.equal(info0.monthlyLimit, 0);
+  assert.match(info0.code, /^[a-zA-Z0-9]{8}$/);
+  assert.equal(info0.rewardedCount, 0);
+
+  // 3. 新用户通过分享码注册 -> 立即给分享者发放 1 颗卷豆
+  const newbie1Device = randomUUID();
+  const newbie1 = await login(server, "newbie-wechat-1", { visitorId: newbie1Device, referralCode: info0.code });
+  assert.equal(newbie1.created, true);
+  assert.equal(newbie1.referralRewarded, true);
+  assert.equal(newbie1.balance, 3);
+  const sharerWallet1 = (await server.json(walletRoutes + "wallet", undefined, auth(sharer))).data;
+  assert.equal(sharerWallet1.balance, 4);
+  assert.equal(sharerWallet1.records[0].source, "invite");
+  assert.equal(sharerWallet1.records[0].amount, 1);
+  assert.equal(sharerWallet1.records[0].reason, "好友通过分享注册");
+
+  // 4. 已注册老用户换设备再次登录携带分享码 -> 终身不重复发放
+  const repeatLogin = await login(server, "newbie-wechat-1", { visitorId: randomUUID(), referralCode: info0.code });
+  assert.equal(repeatLogin.created, false);
+  assert.equal(repeatLogin.referralRewarded, false);
+  assert.equal((await server.json(walletRoutes + "wallet", undefined, auth(sharer))).data.balance, 4);
+
+  // 5. 同设备（邀请人本机）切新微信小号 -> 不触发自邀奖励
+  const sameDevice = await login(server, "same-device-wechat", { visitorId: sharerGuest, referralCode: info0.code });
+  assert.equal(sameDevice.created, true);
+  assert.equal(sameDevice.referralRewarded, false);
+  assert.equal((await server.json(walletRoutes + "wallet", undefined, auth(sharer))).data.balance, 4);
+
+  // 5b. 备用机批刷防刷：同一台已领过奖的设备即使退出登录再切新微信小号，也不得重复领奖
+  await server.json(walletRoutes + "logout", {}, auth(newbie1));
+  const burnerAlt = await login(server, "burner-alt-wechat", { visitorId: newbie1Device, referralCode: info0.code });
+  assert.equal(burnerAlt.created, true);
+  assert.equal(burnerAlt.referralRewarded, false);
+  assert.equal((await server.json(walletRoutes + "wallet", undefined, auth(sharer))).data.balance, 4);
+
+  // 5c. 绕过防刷测试：不传 visitorId 直接调登录接口也不发放分享奖励
+  const noDevice = await login(server, "no-device-wechat", { visitorId: undefined, referralCode: info0.code });
+  assert.equal(noDevice.created, true);
+  assert.equal(noDevice.referralRewarded, false);
+  assert.equal((await server.json(walletRoutes + "wallet", undefined, auth(sharer))).data.balance, 4);
+
+  // 6. 后台修改配置为 1.5 颗、显式月上限 2 人 -> 第二位新用户按新配置发放 1.5 颗（支持 UID 兜底）
+  const updated = await server.json(adminRoutes + "tool-credits/rules", {
+    referral: { enabled: true, reward: 1.5, monthlyLimit: 2 },
+  }, admin);
+  assert.equal(updated.status, 200);
+  assert.equal(updated.data.rules.referral.reward, 1.5);
+  assert.equal(updated.data.rules.referral.monthlyLimit, 2);
+
+  const newbie2 = await login(server, "newbie-wechat-2", { visitorId: randomUUID(), referralCode: String(sharer.uid) });
+  assert.equal(newbie2.created, true);
+  assert.equal(newbie2.referralRewarded, true);
+  assert.equal((await server.json(walletRoutes + "wallet", undefined, auth(sharer))).data.balance, 5.5);
+
+  const info2 = (await server.json(walletRoutes + "referral", undefined, auth(sharer))).data;
+  assert.equal(info2.rewardedCount, 2);
+  assert.equal(info2.rewardedTotal, 2.5);
+  assert.equal(info2.monthCount, 2);
+
+  // 7. 显式设置月上限时，达上限后不再发放；改回 0（无上限）后立即恢复发放
+  const newbie3 = await login(server, "newbie-wechat-3", { visitorId: randomUUID(), referralCode: info0.code });
+  assert.equal(newbie3.created, true);
+  assert.equal(newbie3.referralRewarded, false);
+  assert.equal((await server.json(walletRoutes + "wallet", undefined, auth(sharer))).data.balance, 5.5);
+
+  await server.json(adminRoutes + "tool-credits/rules", { referral: { enabled: true, reward: 1, monthlyLimit: 0 } }, admin);
+  const newbie3b = await login(server, "newbie-wechat-3b", { visitorId: randomUUID(), referralCode: info0.code });
+  assert.equal(newbie3b.created, true);
+  assert.equal(newbie3b.referralRewarded, true);
+  assert.equal((await server.json(walletRoutes + "wallet", undefined, auth(sharer))).data.balance, 6.5);
+
+  // 8. 后台关闭分享注册奖励后，capabilities 返回 enabled: false 且新用户注册不送
+  await server.json(adminRoutes + "tool-credits/rules", { referral: { enabled: false, monthlyLimit: 0 } }, admin);
+  const capOff = (await server.json(walletRoutes + "capabilities")).data;
+  assert.equal(capOff.referral.enabled, false);
+  const newbie4 = await login(server, "newbie-wechat-4", { visitorId: randomUUID(), referralCode: info0.code });
+  assert.equal(newbie4.referralRewarded, false);
+  assert.equal((await server.json(walletRoutes + "wallet", undefined, auth(sharer))).data.balance, 6.5);
+});

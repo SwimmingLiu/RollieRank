@@ -1,4 +1,6 @@
 const storage = require("./utils/storage.js");
+const shareUtil = require("./utils/share.js");
+const cloudSync = require("./services/cloud-sync.js");
 const { API_BASE, ASSET_BASE, STORAGE_NAMESPACE } = require("./config.js");
 const { navigationLayout } = require("./utils/navigation.js");
 
@@ -12,8 +14,11 @@ App({
     catalogAt: 0,
   },
 
-  onLaunch() {
+  onLaunch(options) {
     storage.guestId();
+    shareUtil.captureReferral(options);
+    shareUtil.syncReferral();
+    cloudSync.syncAll().catch(() => {});
     // Load the same typefaces as the approved app without increasing the main package.
     if (!wx.loadFontFace) {
       this.globalData.fontsReady = Promise.resolve();
@@ -37,6 +42,10 @@ App({
       Promise.all(loads),
       new Promise(resolve => setTimeout(resolve, 2500)),
     ]);
+  },
+
+  onShow(options) {
+    shareUtil.captureReferral(options);
   },
 
   navMetrics() {

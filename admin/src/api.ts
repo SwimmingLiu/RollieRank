@@ -179,6 +179,11 @@ export interface ToolCreditRules {
     registerDays: number;
     useDays: number;
   };
+  referral?: {
+    enabled: boolean;
+    reward: number;
+    monthlyLimit: number;
+  };
   purchase: {
     directPurchase: boolean;
     tokenRecharge: boolean;

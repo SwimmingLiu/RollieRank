@@ -31,8 +31,20 @@ function checkMarkup(file, markup) {
 
 for (const name of readdirSync(root, { recursive: true })) {
   if (!/^(?:app\.js|config\.js|(?:components|custom-tab-bar|pages|services|utils)\/.*\.js)$/.test(name)) continue;
-  const result = spawnSync(process.execPath, ["--check", path.join(root, name)], { encoding: "utf8" });
+  const fullPath = path.join(root, name);
+  const result = spawnSync(process.execPath, ["--check", fullPath], { encoding: "utf8" });
   if (result.status !== 0) problem(result.stderr.trim() || name);
+  const source = readFileSync(fullPath, "utf8");
+  for (const match of source.matchAll(/\b(?:confirmText|cancelText)\s*:\s*["']([^"']+)["']/g)) {
+    if ([...match[1]].length > 4) {
+      problem(`${name} 的微信弹窗按钮文案「${match[1]}」超过 4 个字符，真机 wx.showModal 会直接失败`);
+    }
+  }
+  for (const match of source.matchAll(/wx\.canvasToTempFilePath\s*\(\s*\{([\s\S]*?)\}\s*\)/g)) {
+    if (!/\bdestWidth\b/.test(match[1]) || !/\bdestHeight\b/.test(match[1])) {
+      problem(`${name} 的 wx.canvasToTempFilePath 必须显式传入 destWidth 与 destHeight，避免离屏 1px canvas 导出残图`);
+    }
+  }
 }
 
 const app = JSON.parse(readFileSync(path.join(root, "app.json"), "utf8"));

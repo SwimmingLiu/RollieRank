@@ -131,9 +131,20 @@
             </view>
 
             <!-- 其他已开通的获取渠道（未开通自动隐藏） -->
-            <view wx:if="{{capabilities.invite || capabilities.ads}}" class="credits__menu">
+            <view wx:if="{{capabilities.referral.enabled || capabilities.invite || capabilities.ads}}" class="credits__menu">
+              <button wx:if="{{capabilities.referral.enabled && referralRewardText}}" class="credits__menu-row" bindtap="openReferral">
+                <view class="credits__menu-icon-wrap">
+                  <image class="credits__menu-icon" src="{{uiBase}}/bean-ochre.svg" mode="aspectFit" />
+                </view>
+                <view class="credits__menu-copy grow">
+                  <text class="credits__menu-label">分享得卷豆</text>
+                  <text class="credits__menu-sub">新人注册 +{{referralRewardText}} 豆</text>
+                </view>
+                <text class="credits__menu-value credits__menu-value--accent">{{referral && referral.rewardedCount > 0 ? ('已得 ' + referral.rewardedTotalText + ' 豆') : '去分享'}}</text>
+                <image class="credits__menu-arrow" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
+              </button>
               <button wx:if="{{capabilities.invite}}" class="credits__menu-row" bindtap="openInvite">
-                <text class="credits__menu-label">邀请好友</text>
+                <text class="credits__menu-label">微信群邀请</text>
                 <text class="credits__menu-value credits__menu-value--accent grow">领卷豆</text>
                 <image class="credits__menu-arrow" src="{{uiBase}}/chevron.svg" mode="aspectFit" />
               </button>
@@ -180,7 +191,7 @@
       class="sheet-panel credits__sheet"
       style="{{sheetDragY ? 'transform: translateY(' + sheetDragY + 'px);' : ''}}"
       aria-role="dialog"
-      aria-label="{{sheet === 'ledger' ? '到账明细' : '邀请好友'}}"
+      aria-label="{{sheet === 'ledger' ? '到账明细' : sheet === 'referral' ? '分享得卷豆' : '邀请好友'}}"
       bindtouchstart="startSheetDrag"
       bindtouchmove="moveSheetDrag"
       bindtouchend="endSheetDrag"
@@ -198,7 +209,7 @@
       </view>
 
       <view class="sheet-head">
-        <text>{{sheet === 'ledger' ? '到账明细' : '邀请好友'}}</text>
+        <text>{{sheet === 'ledger' ? '到账明细' : sheet === 'referral' ? '分享得卷豆' : '邀请好友'}}</text>
         <button class="sheet-close" data-sheet-no-drag="1" catchtap="closeSheet" aria-label="关闭">
           <image data-sheet-no-drag="1" src="{{uiBase}}/close.svg" mode="aspectFit" />
         </button>
@@ -241,6 +252,56 @@
         </button>
         <view wx:elif="{{records.length}}" class="credits__end-note">已显示全部明细</view>
       </scroll-view>
+
+      <!-- 分享得卷豆抽屉 -->
+      <view wx:elif="{{sheet === 'referral'}}" class="credits__referral-sheet">
+        <view class="credits__qr-card">
+          <view class="credits__voucher-top">
+            <view class="credits__voucher-reward">
+              <view class="credits__voucher-badge">
+                <image class="credits__voucher-icon" src="{{uiBase}}/bean-ochre.svg" mode="aspectFit" />
+              </view>
+              <view class="credits__voucher-copy">
+                <text class="credits__voucher-eyebrow">新人注册立得</text>
+                <view class="credits__voucher-value">
+                  <text class="display-num credits__voucher-num">+{{referralRewardText}}</text>
+                  <text class="credits__voucher-unit">颗卷豆</text>
+                </view>
+              </view>
+            </view>
+            <view
+              wx:if="{{referral}}"
+              class="credits__voucher-quota"
+              aria-label="{{referral.monthlyLimit > 0 ? ('本月已得 ' + referral.monthCount + ' / ' + referral.monthlyLimit + ' 位') : ('已成功邀请 ' + referral.rewardedCount + ' 位')}}"
+            >
+              <image class="credits__voucher-quota-icon" src="{{uiBase}}/rank-users.svg" mode="aspectFit" />
+              <text class="num">{{referral.monthlyLimit > 0 ? (referral.monthCount + '/' + referral.monthlyLimit) : ('已邀 ' + referral.rewardedCount + ' 位')}}</text>
+            </view>
+          </view>
+
+          <view class="credits__voucher-cut" aria-hidden="true">
+            <view class="credits__voucher-notch credits__voucher-notch--left"></view>
+            <view class="credits__voucher-dash"></view>
+            <view class="credits__voucher-notch credits__voucher-notch--right"></view>
+          </view>
+
+          <view class="credits__voucher-body">
+            <image class="credits__qr-img" src="{{referralQrSrc || defaultQrSrc}}" mode="aspectFit" aria-label="专属小程序码" />
+            <text class="credits__qr-caption">{{referralQrLoading ? '生成中…' : '专属小程序码'}}</text>
+          </view>
+        </view>
+
+        <view class="credits__referral-actions">
+          <button class="credits__referral-btn credits__referral-btn--soft" bindtap="saveReferralQr" disabled="{{savingQr || referralQrLoading}}">
+            <image class="credits__share-icon" src="{{uiBase}}/download-ink.svg" mode="aspectFit" />
+            <text>{{savingQr ? '保存中…' : '保存图片'}}</text>
+          </button>
+          <button class="credits__referral-btn credits__referral-btn--primary" open-type="share">
+            <image class="credits__share-icon" src="{{uiBase}}/share-light.svg" mode="aspectFit" />
+            <text>发给好友</text>
+          </button>
+        </view>
+      </view>
 
       <!-- 邀请好友抽屉 -->
       <view wx:elif="{{sheet === 'invite'}}" class="credits__invite-sheet">
@@ -302,4 +363,5 @@
       </view>
     </view>
   </view>
+  <rr-toast id="rr-toast" bottom="{{104}}" />
 </view>

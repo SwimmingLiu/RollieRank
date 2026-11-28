@@ -10,6 +10,13 @@
 - 测试包使用独立的本地存储。本机调试和真机联调直接访问测试 API，无需网页测试站口令。写入前校验测试响应标识。本机自动化使用隔离实例与回环地址。真机联调使用开发版或体验版，并配置测试域名的 `request` 和 `downloadFile` 权限。生产验收只做只读检查。
 - 第一次正式发布前，按 [首次上线检查](deploy/README.md#首次上线检查) 运行只读门禁。生产答卷、评论、选岗、小程序资料、反馈与其他用户记录必须为零。发现数据先核对来源并保留可恢复备份。正式上线后，真实用户记录按正常生产数据维护。
 
+## 小程序版本管理
+
+- 小程序版本号遵循语义化格式 `MAJOR.MINOR.PATCH`（当前版本记录在 `mini-program/package.json` 的 `version` 字段）。
+- 日常迭代默认发小版本，每次上传递增修订号 `PATCH`（例如 `1.1.1` → `1.1.2` → `1.1.3`），适用于界面优化、体验微调与问题修复。
+- 只有大版本更新（新增核心功能模块、主要业务流程或架构级改动）才递增次版本号 `MINOR` 并将 `PATCH` 归零（例如 `1.1.x` → `1.2.0`，后续小版本依次为 `1.2.1`、`1.2.2`）。
+- 每次上传微信开发版 / 体验版前，先读取并更新 `mini-program/package.json` 中的 `version`，再用同一版本号执行上传，避免版本重复或跳号。
+
 ## Verification gate
 
 - Before completing a user-visible feature or business-logic change, run `npm run verify -- all`. This command must fail when Node, Python, Playwright, Chromium or beUI dependencies are missing; missing environment capabilities are never a skip.

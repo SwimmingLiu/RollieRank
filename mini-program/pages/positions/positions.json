@@ -3,6 +3,7 @@
     "rr-nav": "/components/rr-nav/rr-nav",
     "rr-position-picker": "/components/rr-position-picker/rr-position-picker"
   },
+  "navigationBarTitleText": "国省考选岗与岗位榜 · 卷卷小榜",
   "navigationStyle": "custom",
   "disableScroll": true
 }

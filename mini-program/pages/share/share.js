@@ -1,7 +1,9 @@
 const api = require("../../services/api.js");
+const cloudSync = require("../../services/cloud-sync.js");
 const storage = require("../../utils/storage.js");
 const format = require("../../utils/format.js");
 const catalog = require("../../utils/catalog.js");
+const shareUtil = require("../../utils/share.js");
 const { reportBands, buildComparison } = require("../../utils/report.js");
 const {
   WIDTH,
@@ -117,6 +119,9 @@ Page({
     comparison: null,
     sections: [],
     timing: null,
+    qrSrc: "",
+    referralEnabled: false,
+    referralRewardText: "",
   },
 
   onLoad(query) {
@@ -126,12 +131,47 @@ Page({
     this.ringsCache = {};
     const initialStyle = savedStyle();
     const theme = getStyle(initialStyle);
+    const cachedRef = shareUtil.cachedReferralState();
     this.setData({
       style: theme.key,
       isRings: theme.layout === "rings",
       isDark: theme.dark,
+      referralEnabled: cachedRef.enabled,
+      referralRewardText: cachedRef.rewardText,
     });
     this.load();
+    this.refreshReferral();
+  },
+
+  onUnload() {
+    this.unloaded = true;
+  },
+
+  onShow() {
+    this.refreshReferral();
+  },
+
+  async refreshReferral() {
+    const state = await shareUtil.syncReferral();
+    if (this.unloaded) return;
+    this.setData({
+      referralEnabled: state.enabled,
+      referralRewardText: state.rewardText,
+    });
+    if (state.signedIn) {
+      const personalQr = await shareUtil.loadPersonalQrFile();
+      if (personalQr && personalQr !== this.data.qrSrc && !this.unloaded) {
+        this.imagePromise = null;
+        this.setData({ qrSrc: personalQr }, () => {
+          if (this.summary) this.paint();
+        });
+      }
+    } else if (this.data.qrSrc) {
+      this.imagePromise = null;
+      this.setData({ qrSrc: "" }, () => {
+        if (this.summary) this.paint();
+      });
+    }
   },
 
   retry() {
@@ -145,6 +185,7 @@ Page({
 
   async load() {
     try {
+      await cloudSync.ensureSession();
       const [attempt] = await api.sync([this.attemptId]);
       if (!attempt) throw new Error("这份成绩不在当前身份下。");
       storage.upsertAttempt(attempt);
@@ -411,11 +452,12 @@ Page({
     this.paintNumber = number;
     const canvas = await this.getCanvas("#shareCanvas");
     if (!canvas || number !== this.paintNumber) return;
+    const qrSource = this.data.qrSrc || ASSET.qrcode;
     this.imagePromise ||= Promise.all([
       canvasImage(canvas, ASSET.logo),
       canvasImage(canvas, this.publisher),
       canvasImage(canvas, ASSET.keepsake),
-      canvasImage(canvas, ASSET.qrcode),
+      canvasImage(canvas, qrSource).then(img => img || (qrSource !== ASSET.qrcode ? canvasImage(canvas, ASSET.qrcode) : null)),
       canvasImage(canvas, "/assets/ui/trophy-ochre.svg"),
       canvasImage(canvas, "/assets/ui/trophy-gold.svg"),
     ]);
@@ -471,9 +513,20 @@ Page({
   },
 
   onShareAppMessage() {
+    const basePath = this.versionId
+      ? "/pages/practice/practice?versionId=" + encodeURIComponent(this.versionId)
+      : "/pages/home/home";
     return {
       title: this.title ? this.title + " · " + this.summary.score + " 分" : "卷卷小榜",
-      path: this.versionId ? "/pages/practice/practice?versionId=" + encodeURIComponent(this.versionId) : "/pages/home/home",
+      path: shareUtil.withReferralPath(basePath),
+    };
+  },
+
+  onShareTimeline() {
+    const query = this.versionId ? "versionId=" + encodeURIComponent(this.versionId) : "";
+    return {
+      title: this.title ? this.title + " · " + this.summary.score + " 分" : "卷卷小榜",
+      query: shareUtil.withReferralQuery(query),
     };
   },
 });

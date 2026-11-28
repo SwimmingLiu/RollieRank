@@ -18,7 +18,12 @@
     "admin": "node scripts/rollie-admin.mjs",
     "db:migrate:wallet": "node scripts/migrate-tool-credits.mjs",
     "omr": "node scripts/omr.mjs",
-    "verify:omr": "python3 scripts/verify-omr.py"
+    "verify:omr": "python3 scripts/verify-omr.py",
+    "wechat:submit-pages": "node scripts/submit-wechat-search.mjs",
+    "mp:generate": "node scripts/wechat-mp/autopilot.mjs --generate",
+    "mp:check": "node scripts/wechat-mp/autopilot.mjs --check",
+    "mp:sync": "node scripts/wechat-mp/autopilot.mjs --sync",
+    "mp:autopilot": "node scripts/wechat-mp/autopilot.mjs --autopilot"
   },
   "engines": {
     "node": ">=20"

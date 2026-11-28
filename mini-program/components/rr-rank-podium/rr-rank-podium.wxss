@@ -1,0 +1,204 @@
+/* 单人上榜：居中立体叠纸纪念卡 */
+.rank__solo-wrap { display: flex; justify-content: center; padding: 14px 0 8px; }
+.rank__solo-stack { position: relative; width: 100%; max-width: 274px; padding-bottom: 10px; }
+.rank__solo-back {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 0;
+  height: 22px;
+  border-radius: 0 0 18px 18px;
+  background: #f0e0bd;
+  border: 1px solid #d9bc80;
+  border-top: 0;
+}
+
+/* 多人领奖台：02 左 / 01 中 / 03 右 */
+.rank__podium { display: flex; align-items: flex-end; justify-content: center; gap: 9px; padding: 10px 0 6px; }
+.rank__podium--pair { gap: 14px; padding: 12px 0 6px; }
+
+.rank__podium-card {
+  position: relative;
+  flex: 1 1 0;
+  width: 0 !important;
+  margin: 0 !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-height: 186px;
+  padding: 10px 7px 11px;
+  color: #3a3124;
+  background: linear-gradient(180deg, #faf8f3 0%, #ede7dc 100%);
+  border: 1px solid #d9d0c0;
+  border-radius: 21px;
+  box-shadow: 0 4px 0 #cbc1b0, 0 10px 18px -14px rgba(84, 68, 46, 0.28);
+  overflow: visible;
+}
+
+/* 精装烫印细内框线 */
+.rank__card-frame {
+  position: absolute;
+  inset: 5px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 253, 248, 0.58);
+  pointer-events: none;
+}
+
+.rank__podium-card--1 {
+  order: 2;
+  z-index: 2;
+  flex: 1.13 1 0;
+  min-height: 206px;
+  padding: 11px 8px 12px;
+  gap: 6px;
+  background: linear-gradient(180deg, #fdf4d9 0%, #f1d99b 100%);
+  border-color: #dabf7f;
+  box-shadow: 0 5px 0 #cfb06f, 0 14px 24px -14px rgba(132, 96, 38, 0.34);
+}
+.rank__podium-card--1 .rank__card-frame { border-color: rgba(255, 250, 236, 0.66); }
+
+.rank__podium-card--2 {
+  order: 1;
+  transform: rotate(-1.2deg);
+}
+
+.rank__podium-card--3 {
+  order: 3;
+  min-height: 180px;
+  transform: rotate(1.2deg);
+  background: linear-gradient(180deg, #fbf0e6 0%, #eed4be 100%);
+  border-color: #ddbda0;
+  box-shadow: 0 4px 0 #caa485, 0 10px 18px -14px rgba(124, 78, 46, 0.26);
+}
+.rank__podium-card--3 .rank__card-frame { border-color: rgba(255, 248, 242, 0.62); }
+
+.rank__podium-card--solo {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  width: 100% !important;
+  min-height: 258px;
+  padding: 16px 20px 18px;
+  gap: 8px;
+  border-radius: 24px;
+  transform: none;
+}
+.rank__podium-card--solo .rank__card-frame { inset: 7px; border-radius: 18px; }
+
+.rank__podium--pair .rank__podium-card { max-width: 156px; }
+.rank__podium--pair .rank__podium-card--2 { transform: rotate(-1deg); }
+
+.rank__card-top { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0 3px; }
+.rank__card-place { font-size: 11px; line-height: 1; font-weight: 700; letter-spacing: 0.4px; color: #847866; }
+.rank__podium-card--1 .rank__card-place { color: #8c5f1a; }
+.rank__podium-card--3 .rank__card-place { color: #925c36; }
+.rank__podium-card--solo .rank__card-place { font-size: 13px; }
+
+/* 真实圆形头像双层暖白+金属外环 */
+.rank__avatar-ring {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin-top: 1px;
+  padding: 2.5px;
+  border-radius: 50%;
+  background: #fffdf8;
+  border: 1.5px solid #d5ccbd;
+  box-shadow: 0 3px 8px rgba(102, 82, 52, 0.14);
+}
+.rank__avatar-ring--1 {
+  width: 62px;
+  height: 62px;
+  padding: 3px;
+  border-color: #d4b064;
+  box-shadow: 0 4px 12px rgba(138, 100, 38, 0.22);
+}
+.rank__avatar-ring--3 { border-color: #d6af8d; }
+.rank__avatar-ring--solo {
+  width: 84px;
+  height: 84px;
+  padding: 3.5px;
+  margin-top: 4px;
+  border: 1.5px solid #d4b064;
+  box-shadow: 0 6px 16px rgba(138, 100, 38, 0.22);
+}
+.rank__podium-avatar { width: 100%; height: 100%; border-radius: 50%; background: #f7efe0; }
+
+/* 昵称与克制珊瑚「我」标 */
+.rank__podium-name-row { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; min-width: 0; padding: 0 6px; margin-top: 2px; }
+.rank__podium-name { display: block; flex: 0 1 auto; max-width: 100%; min-width: 0; font-size: 12px; line-height: 1.35; font-weight: 600; color: #3f3528; }
+.rank__podium-name--solo { font-size: 16px; font-weight: 650; }
+
+.rank__me-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ef7d82;
+  color: #fffdf9;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+}
+.rank__me-tag--solo { height: 19px; padding: 0 7px; font-size: 10px; }
+
+/* 分数与单位同行基线对齐 */
+.rank__podium-score-row { position: relative; z-index: 1; display: flex; align-items: baseline; justify-content: center; gap: 2px; }
+.rank__podium-score { font-size: 25px; line-height: 1.08; letter-spacing: -0.8px; font-weight: 700; color: #2a2218; }
+.rank__podium-card--1 .rank__podium-score { font-size: 29px; }
+.rank__podium-card .rank__podium-score--wide { font-size: 21px; }
+.rank__podium-card--1 .rank__podium-score--wide { font-size: 24px; }
+.rank__podium-score--solo { font-size: 44px !important; letter-spacing: -1.2px; }
+.rank__podium-score--solo-wide { font-size: 36px !important; }
+.rank__podium-unit { font-size: 10px; line-height: 1; font-weight: 600; color: #8c7654; }
+.rank__podium-unit--solo { font-size: 13px; margin-left: 2px; color: #8c6b3b; }
+
+/* 超越胶囊 / 首位上榜胶囊 */
+.rank__percentile {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  margin-top: auto;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.72);
+  color: #7d5b24;
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.rank__percentile--2 { color: #675f54; }
+.rank__percentile--3 { color: #8a5632; }
+.rank__percentile--solo { padding: 5px 13px; gap: 5px; font-size: 12px; margin-top: 4px; background: rgba(255, 253, 248, 0.84); border: 1px solid rgba(214, 182, 114, 0.45); }
+
+@media (max-width: 350px) {
+  .rank__podium { gap: 6px; }
+  .rank__podium-card { padding: 9px 7px 10px; border-radius: 18px; min-height: 176px; }
+  .rank__card-frame { inset: 3.5px; border-radius: 14px; }
+  .rank__podium-card--1 { min-height: 196px; padding: 10px 7px 11px; }
+  .rank__podium-card--2 { transform: rotate(-0.6deg); }
+  .rank__podium-card--3 { min-height: 172px; transform: rotate(0.6deg); }
+  .rank__avatar-ring { width: 45px; height: 45px; }
+  .rank__avatar-ring--1 { width: 53px; height: 53px; }
+  .rank__podium-name-row { padding: 0 4px; }
+  .rank__podium-name { font-size: 11px; }
+  .rank__podium-card--1 .rank__podium-score { font-size: 22px; }
+  .rank__podium-card .rank__podium-score { font-size: 19px; }
+  .rank__podium-card .rank__podium-score--wide { font-size: 16px; }
+  .rank__podium-card--1 .rank__podium-score--wide { font-size: 19px; }
+  .rank__percentile { padding: 2px 5px; font-size: 9px; gap: 2px; }
+  .rank__solo-stack { max-width: 248px; }
+  .rank__podium-score--solo { font-size: 38px !important; }
+}

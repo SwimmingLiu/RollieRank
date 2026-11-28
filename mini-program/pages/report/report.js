@@ -1,7 +1,10 @@
 const api = require("../../services/api.js");
+const cloudSync = require("../../services/cloud-sync.js");
 const storage = require("../../utils/storage.js");
 const format = require("../../utils/format.js");
 const catalog = require("../../utils/catalog.js");
+const shareUtil = require("../../utils/share.js");
+const { ASSET } = require("../../config.js");
 const { reportBands, buildComparison } = require("../../utils/report.js");
 const { createPageSheetDrag } = require("../../utils/sheet-gesture.js");
 const { formatElapsed } = require("../../vendor/practice-timer.js");
@@ -27,12 +30,16 @@ Page({
     commentCount: null,
     timing: null,
     timingOpen: false,
+    referralRewardText: "",
     uiBase: "/assets/ui",
   },
 
   onLoad(query) {
     this.sheetDrag = createPageSheetDrag(this, { onDismiss: () => this.closeVsDetail() });
     this.attemptId = query.attemptId || "";
+    const cachedRef = shareUtil.cachedReferralState();
+    if (cachedRef.rewardText) this.setData({ referralRewardText: cachedRef.rewardText });
+    this.refreshReferral();
     // 从同卷榜进入时只读展示他人公开的分数与题型，不加载其答卷。
     this.publicId = query.publicId || "";
     this.paperId = decodeURIComponent(query.paperId || "");
@@ -78,6 +85,14 @@ Page({
   onShow() {
     // 审核订正后的成绩以服务端为准；每次回到报告都重新同步一次。
     if (this.attempt) this.sync();
+    this.refreshReferral();
+  },
+
+  async refreshReferral() {
+    const state = await shareUtil.syncReferral();
+    if (state.rewardText !== this.data.referralRewardText) {
+      this.setData({ referralRewardText: state.rewardText });
+    }
   },
 
   onRefresherRefresh() {
@@ -99,6 +114,7 @@ Page({
   async load() {
     this.setData({ loading: true, error: "" });
     try {
+      await cloudSync.ensureSession();
       const attempts = await api.sync(this.syncIds());
       attempts.forEach(item => storage.upsertAttempt(item));
       const attempt = attempts.find(item => item.id === this.attemptId) || attempts[0];
@@ -138,6 +154,9 @@ Page({
     const timing = attempt.timing;
     const version = getApp().globalData.versions.find(item => item.id === attempt.versionId);
     const comparison = this.publicId ? null : buildComparison(attempt, storage.history());
+    if (attempt.paperTitle) {
+      wx.setNavigationBarTitle?.({ title: `${attempt.paperTitle}估分报告 · 卷卷小榜` });
+    }
     this.setData({
       loading: false,
       error: "",
@@ -327,5 +346,28 @@ Page({
   practiceAgain() {
     if (!this.data.summary || this.data.publicView) return;
     wx.navigateTo({ url: `/pages/practice/practice?versionId=${this.data.summary.versionId}` });
+  },
+
+  onShareAppMessage() {
+    const summary = this.data.summary;
+    const versionId = summary?.versionId || this.paperId || "";
+    const title = summary?.title
+      ? `${summary.title}估分同卷榜 · 卷卷小榜`
+      : "卷卷小榜 · 行测估分与同卷排名";
+    // 转发指向公开同卷榜，不暴露个人逐题答案。
+    const path = shareUtil.withReferralPath(
+      versionId ? `/pages/rank/rank?versionId=${encodeURIComponent(versionId)}` : "/pages/home/home",
+    );
+    return { title, path, imageUrl: ASSET.logo };
+  },
+
+  onShareTimeline() {
+    const summary = this.data.summary;
+    const versionId = summary?.versionId || this.paperId || "";
+    return {
+      title: summary?.title ? `${summary.title}估分同卷榜 · 卷卷小榜` : "卷卷小榜 · 行测估分与同卷排名",
+      query: shareUtil.withReferralQuery(versionId ? `versionId=${encodeURIComponent(versionId)}` : ""),
+      imageUrl: ASSET.logo,
+    };
   },
 });
